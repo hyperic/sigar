@@ -167,6 +167,51 @@ char *sigar_os_error_string(int err)
     }
 }
 
+static int proc_module_get_self(void *data, char *name, int len)
+{
+    sigar_t *sigar = (sigar_t *)data;
+    char *ptr = rindex(name, '/');
+
+    if (!ptr) {
+        return SIGAR_OK;
+    }
+
+    if (strnEQ(ptr+1, "libsigar-", 9)) {
+        *ptr = '\0'; /* chop libsigar-powerpc-ibm-aix-4.3.x.so */
+
+        SIGAR_SSTRCPY(sigar->self_path, name);
+
+        if (SIGAR_LOG_IS_DEBUG(sigar)) {
+            sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
+                             "detected sigar-lib='%s'",
+                             sigar->self_path);
+        }
+
+        return !SIGAR_OK; /* break loop */
+    }
+
+    return SIGAR_OK;
+}
+
+static char *sigar_get_self_path(sigar_t *sigar)
+{
+    if (sigar->self_path[0] == '\0') {
+        sigar_proc_modules_t procmods;
+        procmods.module_getter = proc_module_get_self;
+        procmods.data = sigar;
+
+        sigar_proc_modules_get(sigar, sigar_pid_get(sigar),
+                               &procmods);
+
+        if (sigar->self_path[0] == '\0') {
+            /* dont try again */
+            SIGAR_SSTRCPY(sigar->self_path, ".");
+        }
+    }
+
+    return sigar->self_path;
+}
+
 /*
  * the perfstat api is only supported in aix 5.2+
  * in order to be binary compatible with 4.3 and 5.1
@@ -940,51 +985,6 @@ int sigar_proc_exe_get(sigar_t *sigar, sigar_pid_t pid,
                        sigar_proc_exe_t *procexe)
 {
     return SIGAR_ENOTIMPL;
-}
-
-static int proc_module_get_self(void *data, char *name, int len)
-{
-    sigar_t *sigar = (sigar_t *)data;
-    char *ptr = rindex(name, '/');
-
-    if (!ptr) {
-        return SIGAR_OK;
-    }
-
-    if (strnEQ(ptr+1, "libsigar-", 9)) {
-        *ptr = '\0'; /* chop libsigar-powerpc-ibm-aix-4.3.x.so */
-
-        SIGAR_SSTRCPY(sigar->self_path, name);
-
-        if (SIGAR_LOG_IS_DEBUG(sigar)) {
-            sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
-                             "detected sigar-lib='%s'",
-                             sigar->self_path);
-        }
-
-        return !SIGAR_OK; /* break loop */
-    }
-
-    return SIGAR_OK;
-}
-
-static char *sigar_get_self_path(sigar_t *sigar)
-{
-    if (sigar->self_path[0] == '\0') {
-        sigar_proc_modules_t procmods;
-        procmods.module_getter = proc_module_get_self;
-        procmods.data = sigar;
-
-        sigar_proc_modules_get(sigar, sigar_pid_get(sigar),
-                               &procmods);
-
-        if (sigar->self_path[0] == '\0') {
-            /* dont try again */
-            SIGAR_SSTRCPY(sigar->self_path, ".");
-        }
-    }
-
-    return sigar->self_path;
 }
 
 static int sigar_proc_modules_local_get(sigar_t *sigar,
