@@ -998,7 +998,12 @@ int sigar_file_system_usage_get(sigar_t *sigar,
     fsusage->free_files = buf.f_files;
     fsusage->use_percent = sigar_file_system_usage_calc_used(sigar, fsusage);
 
+#ifdef DARWIN
     SIGAR_DISK_STATS_NOTIMPL(fsusage);
+#else
+    fsusage->disk_reads  = buf.f_syncreads + buf.f_asyncreads;
+    fsusage->disk_writes = buf.f_syncwrites + buf.f_asyncwrites;
+#endif
 
     return SIGAR_OK;
 }
