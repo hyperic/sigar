@@ -456,7 +456,6 @@ static int boot_time_v5(int fd, time_t *time)
 
 static int boot_time(sigar_t *sigar, time_t *time)
 {
-    struct utmp_v5 data_v5;
     int utmp, status;
 
     if ((utmp = open(UTMP_FILE, O_RDONLY)) < 0) {
