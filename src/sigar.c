@@ -715,14 +715,26 @@ SIGAR_DECLARE(int) sigar_who_list_get(sigar_t *sigar,
     return SIGAR_ENOTIMPL;
 }
 #else
-#include <utmp.h>
+
+#ifdef __sun
+#  include <utmpx.h>
+#  define SIGAR_UTMP_FILE _UTMPX_FILE
+#  define ut_time ut_tv.tv_sec
+#else
+#  include <utmp.h>
+#  define SIGAR_UTMP_FILE UTMP_FILE
+#endif
+
 int sigar_who_list_get(sigar_t *sigar,
                        sigar_who_list_t *wholist)
 {
     FILE *fp;
+#ifdef __sun
+    struct utmpx ut;
+#else
     struct utmp ut;
-
-    if (!(fp = fopen(UTMP_FILE, "r"))) {
+#endif
+    if (!(fp = fopen(SIGAR_UTMP_FILE, "r"))) {
         return errno;
     }
 
@@ -735,7 +747,7 @@ int sigar_who_list_get(sigar_t *sigar,
             continue;
         }
 
-#ifdef __linux__
+#if defined(__linux__) || defined(__sun)
         if (ut.ut_type != USER_PROCESS) {
             continue;
         }
