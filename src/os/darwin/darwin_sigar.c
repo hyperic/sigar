@@ -884,7 +884,56 @@ int sigar_proc_env_get(sigar_t *sigar, sigar_pid_t pid,
 int sigar_proc_fd_get(sigar_t *sigar, sigar_pid_t pid,
                       sigar_proc_fd_t *procfd)
 {
+#ifdef DARWIN
     return SIGAR_ENOTIMPL;
+#else
+    int status;
+    struct kinfo_proc *pinfo;
+    struct filedesc filed;
+#if 0
+    struct file **ofiles;
+    int nfiles, i;
+    size_t size;
+#endif
+    if (!sigar->kmem) {
+        return SIGAR_ENOTIMPL;
+    }
+
+    if ((status = sigar_get_pinfo(sigar, pid)) != SIGAR_OK) {
+        return status;
+    }
+    pinfo = sigar->pinfo;
+
+    status = kread(sigar, &filed, sizeof(filed), (u_long)pinfo->ki_fd);
+    if (status != SIGAR_OK) {
+        return status;
+    }
+#if 0
+    nfiles = filed.fd_lastfile+1;
+    size = sizeof(*ofiles) * nfiles;
+    ofiles = malloc(size);
+    status = kread(sigar, ofiles, size, (u_long)filed.fd_ofiles);
+    if (status != SIGAR_OK) {
+        free(ofiles);
+        return status;
+    }
+
+    procfd->total = 0;
+    for (i=0; i<filed.fd_lastfile; i++) {
+        if (!ofiles[i]) {
+            continue;
+        }
+        procfd->total++;
+    }
+
+    free(ofiles);
+#else
+    /* seems the same as the above */
+    procfd->total = filed.fd_lastfile;
+#endif
+
+    return SIGAR_OK;
+#endif
 }
 
 int sigar_proc_exe_get(sigar_t *sigar, sigar_pid_t pid,
