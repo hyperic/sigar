@@ -63,7 +63,7 @@ public class ShowArgs extends SigarCommandBase {
         }
 
         for (int i=0; i<argv.length; i++) {
-            println("   " + i + "=" + argv[i]);
+            println("   " + i + "=>" + argv[i] + "<=");
         }
     }
 
