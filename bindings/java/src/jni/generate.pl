@@ -739,6 +739,11 @@ my %classes = (
          desc => '',
          plat => 'L'
       },
+      {
+         name => 'state', type => 'Int',
+         desc => '',
+         plat => 'L'
+      },
     ],
     Who => [
       {
@@ -1002,6 +1007,8 @@ my %extra_code = (
 EOF
     NetConnection => <<'EOF',
     public native String getTypeString();
+
+    public native String getStateString();
 EOF
     Mem => <<'EOF',
     public String toString() {
