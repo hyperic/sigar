@@ -4,15 +4,24 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import net.hyperic.sigar.SigarException;
+import net.hyperic.sigar.SigarLoader;
 
 import net.hyperic.sigar.cmd.SigarCommandBase;
 import net.hyperic.sigar.cmd.Shell;
+
+import net.hyperic.sigar.win32.test.TestEventLog;
+import net.hyperic.sigar.win32.test.TestMetaBase;
+import net.hyperic.sigar.win32.test.TestPdh;
+import net.hyperic.sigar.win32.test.TestRegistryKey;
+import net.hyperic.sigar.win32.test.TestService;
 
 public class SigarTestRunner extends SigarCommandBase {
 
     private Collection completions;
 
-    private static final Class[] TESTS = {
+    private static final Class[] TESTS;
+    
+    private static final Class[] ALL_TESTS = {
         TestLog.class,
         TestInvoker.class,
         TestPTQL.class,
@@ -38,6 +47,27 @@ public class SigarTestRunner extends SigarCommandBase {
         TestThreadCpu.class,
         TestUptime.class,
     };
+
+    private static final Class[] WIN32_TESTS = {
+        TestEventLog.class,
+        TestPdh.class,
+        TestMetaBase.class,
+        TestRegistryKey.class,
+        TestService.class,
+    };
+    
+    static {
+        if (SigarLoader.IS_WIN32) {
+            TESTS = new Class[ALL_TESTS.length + WIN32_TESTS.length];
+            System.arraycopy(ALL_TESTS, 0, TESTS,
+                             0, ALL_TESTS.length);
+            System.arraycopy(WIN32_TESTS, 0, TESTS,
+                             ALL_TESTS.length, WIN32_TESTS.length);
+        }
+        else {
+            TESTS = ALL_TESTS;
+        }
+    }
 
     public SigarTestRunner(Shell shell) {
         super(shell);

@@ -18,9 +18,6 @@ import org.apache.log4j.PropertyConfigurator;
 
 public class SigarTestPrinter extends ResultPrinter {
 
-    private static String PACKAGE_NAME = 
-        SigarTestCase.class.getPackage().getName();
-
     private HashMap failures = new HashMap();
     private int maxNameLen = 0;
 
@@ -105,6 +102,18 @@ public class SigarTestPrinter extends ResultPrinter {
         suite.addTestSuite(test);
     }
 
+    private static Class findTest(Class[] tests, String name) {
+        String tname = "Test" + name;
+
+        for (int i=0; i<tests.length; i++) {
+            if (tests[i].getName().endsWith(tname)) {
+                return tests[i];
+            }
+        }
+        
+        return null;
+    }
+    
     public static void runTests(Class[] tests, String[] args) {
         TestSuite suite = new TestSuite("Sigar tests");
 
@@ -124,13 +133,12 @@ public class SigarTestPrinter extends ResultPrinter {
             SigarTestCase.setWriter(printer.getWriter());
 
             for (int i=0; i<args.length; i++) {
-                Class test;
-                try {
-                    test = Class.forName(PACKAGE_NAME + ".Test" + args[i]);
-                } catch (ClassNotFoundException e) {
+                Class test = findTest(tests, args[i]);
+                if (test == null) {
                     String msg = "Invalid test: " + args[i];
                     throw new IllegalArgumentException(msg);
                 }
+
                 addTest(printer, suite, test);
             }
         }
