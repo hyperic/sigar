@@ -7,6 +7,7 @@ import net.hyperic.sigar.SigarException;
 import net.hyperic.sigar.FileSystem;
 import net.hyperic.sigar.FileSystemMap;
 import net.hyperic.sigar.FileSystemUsage;
+import net.hyperic.sigar.NfsFileSystem;
 
 import net.hyperic.sigar.shell.FileCompleter;
 import net.hyperic.sigar.util.GetlineCompleter;
@@ -91,8 +92,16 @@ public class Df extends SigarCommandBase {
         long used, avail, total, pct;
 
         try {
-            FileSystemUsage usage =
-                this.sigar.getFileSystemUsage(fs.getDirName());
+            FileSystemUsage usage;
+            if (fs instanceof NfsFileSystem) {
+                NfsFileSystem nfs = (NfsFileSystem)fs;
+                if (!nfs.ping()) {
+                    println(fs.getDevName() +
+                            " !!! nfs server is down !!!");
+                    return;
+                }
+            }
+            usage = this.sigar.getFileSystemUsage(fs.getDirName());
 
             used = usage.getTotal() - usage.getFree();
             avail = usage.getAvail();
