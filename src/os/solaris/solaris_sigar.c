@@ -581,7 +581,22 @@ int sigar_proc_time_get(sigar_t *sigar, sigar_pid_t pid,
 
     proctime->start_time = usage.pr_create.tv_sec + sigar->boot_time;
     proctime->start_time *= 1000;
-    
+
+    if (usage.pr_utime.tv_sec < 0) {
+        /* XXX wtf?  seen on solaris 10, only for the self process */
+        pstatus_t pstatus;
+
+        status = sigar_get_proc_status(sigar, &pstatus, pid);
+        if (status != SIGAR_OK) {
+            return status;
+        }
+
+        usage.pr_utime.tv_sec  = pstatus.pr_utime.tv_sec;
+        usage.pr_utime.tv_nsec = pstatus.pr_utime.tv_nsec;
+        usage.pr_stime.tv_sec  = pstatus.pr_stime.tv_sec;
+        usage.pr_stime.tv_nsec = pstatus.pr_stime.tv_nsec;
+    }
+
     proctime->user = PRTIME_2SIGAR(usage.pr_utime);
     proctime->sys  = PRTIME_2SIGAR(usage.pr_stime);
     proctime->total = proctime->user + proctime->sys;
