@@ -977,6 +977,11 @@ static int fqdn_ip_get(sigar_t *sigar, char *name)
         }
 
         sigar_inet_ntoa(sigar, ifconfig.address, name);
+
+        sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
+                         "[fqdn] using ip address '%s' for fqdn",
+                         name);
+
         break;
     }
 
@@ -1013,17 +1018,24 @@ SIGAR_DECLARE(int) sigar_fqdn_get(sigar_t *sigar, char *name, int namelen)
 
     if (gethostname(name, namelen - 1) != 0) {
         sigar_log_printf(sigar, SIGAR_LOG_ERROR,
-                         "[%s] gethostname failed: %s",
-                         SIGAR_FUNC, sigar_strerror(sigar, errno));
+                         "[fqdn] gethostname failed: %s",
+                         sigar_strerror(sigar, errno));
         return errno;
+    }
+    else {
+        if (SIGAR_LOG_IS_DEBUG(sigar)) {
+            sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
+                             "[fqdn] gethostname() returned: '%s'",
+                             name);
+        }
     }
 
     /* XXX use _r versions of these functions. */
     if (!(p = gethostbyname(name))) {
         if (SIGAR_LOG_IS_DEBUG(sigar)) {
             sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
-                             "[%s] gethostbyname(%s) failed: %s",
-                             SIGAR_FUNC, name, sigar_strerror(sigar, errno));
+                             "[fqdn] gethostbyname(%s) failed: %s",
+                             name, sigar_strerror(sigar, errno));
         }
 
         if (!IS_FQDN(name)) {
@@ -1037,9 +1049,13 @@ SIGAR_DECLARE(int) sigar_fqdn_get(sigar_t *sigar, char *name, int namelen)
         FQDN_SET(p->h_name);
 
         sigar_log(sigar, SIGAR_LOG_DEBUG,
-                  "FQDN resolved using gethostbyname.h_name");
+                  "[fqdn] resolved using gethostbyname.h_name");
 
         return SIGAR_OK;
+    }
+    else {
+        sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
+                         "[fqdn] unresolved using gethostbyname.h_name");
     }
 
     if (p->h_aliases) {
@@ -1050,12 +1066,15 @@ SIGAR_DECLARE(int) sigar_fqdn_get(sigar_t *sigar, char *name, int namelen)
                 FQDN_SET(p->h_aliases[i]);
 
                 sigar_log(sigar, SIGAR_LOG_DEBUG,
-                          "FQDN resolved using gethostbyname.h_aliases");
+                          "[fqdn] resolved using gethostbyname.h_aliases");
 
                 return SIGAR_OK;
             }
         }
     }
+
+    sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
+                     "[fqdn] unresolved using gethostbyname.h_aliases");
 
     if (p->h_addr_list) {
         int i,j;
@@ -1070,7 +1089,7 @@ SIGAR_DECLARE(int) sigar_fqdn_get(sigar_t *sigar, char *name, int namelen)
                 FQDN_SET(q->h_name);
 
                 sigar_log(sigar, SIGAR_LOG_DEBUG,
-                          "FQDN resolved using gethostbyaddr.h_name");
+                          "[fqdn] resolved using gethostbyaddr.h_name");
 
                 return SIGAR_OK;
             }
@@ -1080,7 +1099,7 @@ SIGAR_DECLARE(int) sigar_fqdn_get(sigar_t *sigar, char *name, int namelen)
                         FQDN_SET(q->h_aliases[j]);
 
                         sigar_log(sigar, SIGAR_LOG_DEBUG,
-                                  "FQDN resolved using "
+                                  "[fqdn] resolved using "
                                   "gethostbyaddr.h_aliases");
 
                         return SIGAR_OK;
@@ -1089,6 +1108,9 @@ SIGAR_DECLARE(int) sigar_fqdn_get(sigar_t *sigar, char *name, int namelen)
             }
         }
     }
+
+    sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
+                     "[fqdn] unresolved using gethostbyname.h_addr_list");
 
 #ifndef WIN32
     if (!IS_FQDN(name) && /* e.g. aix gethostname is already fqdn */
@@ -1105,13 +1127,17 @@ SIGAR_DECLARE(int) sigar_fqdn_get(sigar_t *sigar, char *name, int namelen)
         SIGAR_STRNCPY(ptr, domain, namelen);
 
         sigar_log(sigar, SIGAR_LOG_DEBUG,
-                  "FQDN resolved using getdomainname");
+                  "[fqdn] resolved using getdomainname");
     }
     else {
         sigar_log(sigar, SIGAR_LOG_DEBUG,
-                  "FQDN getdomainname failed");
+                  "[fqdn] getdomainname failed");
     }
 #endif
+
+    if (!IS_FQDN(name)) {
+        fqdn_ip_get(sigar, name);
+    }
 
     return SIGAR_OK;
 }
