@@ -3,6 +3,7 @@
 #include "sigar_os.h"
 #include "sigar_util.h"
 
+#include <dlfcn.h>
 #include <nlist.h>
 #include <stdio.h>
 #include <utmp.h>
@@ -25,6 +26,8 @@
 #include <sys/cfgodm.h>
 #include <sys/cfgdb.h>
 #include <cf.h>
+
+#include "libperfstat.h"
 
 #include "user_v5.h"
 #include "utmp_v5.h"
@@ -118,6 +121,8 @@ int sigar_os_open(sigar_t **sigar)
             return status;
         }
     }
+
+    (*sigar)->cpu_mhz = -1;
 
     (*sigar)->model[0] = '\0';
 
@@ -1099,6 +1104,85 @@ static char *sigar_get_odm_model(sigar_t *sigar)
     return sigar->model;
 }
 
+#define SIGAR_CPU_CACHE_SIZE \
+  (_system_configuration.L2_cache_size / 1024)
+
+/*
+ * the perfstat api is only supported in aix 5.2+
+ * in order to be binary compatible with 4.3 and 5.1
+ * we must jump through some hoops.  libperfstat.a
+ * is a static library, we need dynamic.
+ * libsigar_aixperfstat.so is juat a proxy to libperfstat.a
+ */
+#define SIGAR_AIXPERFSTAT "/libsigar_aixperfstat.so"
+
+typedef int (*perfstat_cpu_func_t)(perfstat_id_t *,
+                                   perfstat_cpu_total_t *,
+                                   int, int);
+
+static int sigar_get_cpu_mhz_perfstat(sigar_t *sigar)
+{
+    int status = 0;
+    perfstat_cpu_total_t data;
+    perfstat_cpu_func_t pcpu;
+    void *handle;
+    char libperfstat[SIGAR_PATH_MAX];
+    char *path = sigar_get_self_path(sigar);
+    int len = strlen(path);
+
+    memcpy(&path[0], sigar->self_path, len);
+    memcpy(&path[len], SIGAR_AIXPERFSTAT, 
+           sizeof(SIGAR_AIXPERFSTAT));
+
+    if (!(handle = dlopen(path, RTLD_LOCAL|RTLD_LAZY))) {
+        return errno;
+    }
+
+    pcpu = (perfstat_cpu_func_t)dlsym(handle,
+                                      "sigar_perfstat_cpu_total");
+
+    if (!pcpu) {
+        dlclose(handle);
+        return ENOENT;
+    }
+
+    if (pcpu(0, &data, sizeof(data), 1)) {
+        sigar->cpu_mhz = data.processorHZ / 1000000;
+    }
+    else {
+        return errno;
+    }
+
+    dlclose(handle);
+    return SIGAR_OK;
+}
+
+static int sigar_get_cpu_mhz(sigar_t *sigar)
+{
+    if (sigar->cpu_mhz == -1) {
+        if (sigar_get_cpu_mhz_perfstat(sigar) != SIGAR_OK) {
+            sigar_uint64_t cache_size = SIGAR_CPU_CACHE_SIZE;
+
+            switch (cache_size) {
+              case 1024:
+                sigar->cpu_mhz = 333;
+                break;
+              case 4096:
+                sigar->cpu_mhz = 400;
+                break;
+              case 8192:
+                sigar->cpu_mhz = 450;
+                break;
+              default:
+                sigar->cpu_mhz = -1;
+                break;
+            }
+        }
+    }
+
+    return sigar->cpu_mhz;
+}
+
 int sigar_cpu_infos_get(sigar_t *sigar,
                         sigar_cpu_infos_t *cpu_infos)
 {
@@ -1116,22 +1200,9 @@ int sigar_cpu_infos_get(sigar_t *sigar,
 
         info = &cpu_infos->data[cpu_infos->number++];        
 
-        info->cache_size = _system_configuration.L2_cache_size / 1024;
+        info->cache_size = SIGAR_CPU_CACHE_SIZE;
 
-        switch (info->cache_size) {
-          case 1024:
-            info->mhz = 333;
-            break;
-          case 4096:
-            info->mhz = 400;
-            break;
-          case 8192:
-            info->mhz = 450;
-            break;
-          default:
-            info->mhz = -1;
-            break;
-        }
+        info->mhz = sigar_get_cpu_mhz(sigar);
 
         switch (_system_configuration.architecture) {
           case POWER_RS:
