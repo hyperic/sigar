@@ -141,6 +141,7 @@ int sigar_os_open(sigar_t **sigar)
 
     version.dwOSVersionInfoSize = sizeof(version);
     GetVersionEx(&version);
+
     (*sigar)->winnt =
         (version.dwPlatformId == VER_PLATFORM_WIN32_NT);
 
@@ -865,6 +866,8 @@ static int sigar_remote_proc_args_get(sigar_t *sigar, sigar_pid_t pid,
         return GetLastError();
     }
 
+    datalen++; /* we want the \0 terminator too */
+
     cmdline = HeapAlloc(GetProcessHeap(),
                         HEAP_ZERO_MEMORY,
                         datalen);
@@ -875,7 +878,7 @@ static int sigar_remote_proc_args_get(sigar_t *sigar, sigar_pid_t pid,
     }
 
     if (ReadProcessMemory(proc, data, cmdline,
-                          datalen+1, &bytes))
+                          datalen, &bytes))
     {
         char *arg, *ptr = cmdline;
 
