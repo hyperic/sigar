@@ -362,7 +362,7 @@ SIGAR_DECLARE(int) sigar_cpu_list_get(sigar_t *sigar, sigar_cpu_list_t *cpulist)
      * for each logical processor.
      * XXX assuming this is correct until have something to test on.
      */
-    if (sigar->ht_enabled && ((sigar->ncpu * 2) == num)) {
+    if (sigar->ht_enabled && ((sigar->ncpu * sigar->lcpu) == num)) {
         hthread = 1;
     }
 
@@ -370,7 +370,7 @@ SIGAR_DECLARE(int) sigar_cpu_list_get(sigar_t *sigar, sigar_cpu_list_t *cpulist)
         PERF_COUNTER_BLOCK *counter_block;
         sigar_cpu_t *cpu;
 
-        if (hthread && (i % 2)) {
+        if (hthread && (i % sigar->lcpu)) {
             /* merge times of logical processors */
             cpu = &cpulist->data[cpulist->number-1];
         }

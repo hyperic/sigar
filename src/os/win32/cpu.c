@@ -241,9 +241,11 @@ unsigned int sigar_cpu_count(sigar_t *sigar)
 
     if (status == HT_ENABLED) {
         sigar->ht_enabled = 1;
+        sigar->lcpu = LogicalNum;
     }
     else {
         sigar->ht_enabled = 0;
+        sigar->lcpu = 0;
     }
 
     return sigar->ncpu;

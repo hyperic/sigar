@@ -113,6 +113,7 @@ struct sigar_t {
     int ws_error;
     LPBYTE peb; //scratch pad for getting peb info
     int ht_enabled;
+    int lcpu; //number of logical cpus
     int winnt;
 };
 
