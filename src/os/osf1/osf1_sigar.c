@@ -264,12 +264,32 @@ int sigar_proc_time_get(sigar_t *sigar, sigar_pid_t pid,
 int sigar_proc_state_get(sigar_t *sigar, sigar_pid_t pid,
                          sigar_proc_state_t *procstate)
 {
-    SIGAR_SSTRCPY(procstate->name, "java");
-    procstate->ppid = -1;
+    struct tbl_procinfo info;
+    int status;
+
+    status = table(TBL_PROCINFO, pid, &info, 1, sizeof(info));
+
+    if (status != 1) {
+        return errno;
+    }
+
+    SIGAR_SSTRCPY(procstate->name, info.pi_comm);
+    procstate->ppid = info.pi_ppid;
     procstate->priority = -1;
     procstate->nice = -1;
-    procstate->tty = -1;
-    procstate->state = 'R';
+    procstate->tty = info.pi_ttyd;
+
+    switch (info.pi_status) {
+      case PI_ACTIVE:
+        procstate->state = 'R';
+        break;
+      case PI_ZOMBIE:
+        procstate->state = 'Z';
+        break;
+      default:
+        procstate->state = 'S';
+        break;
+    }
 
     return SIGAR_OK;
 }
