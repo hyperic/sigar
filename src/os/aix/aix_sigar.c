@@ -1474,7 +1474,7 @@ static void diskio_free(void *data)
  * need to build a mount point => diskname map.
  * see 'lspv -l hdisk0' for example.
  */
-static int create_diskmap(sigar_t *sigar)
+static int create_diskmap_v4(sigar_t *sigar)
 {
     FILE *fp = popen(LSPV_CMD, "r");
     char buffer[BUFSIZ], *ptr;
@@ -1530,6 +1530,87 @@ static int create_diskmap(sigar_t *sigar)
         pclose(lfp);
     }
     pclose(fp);
+}
+
+static int create_diskmap_v5(sigar_t *sigar)
+{
+    int i, total, num;
+    perfstat_disk_t *disk;
+    perfstat_id_t id;
+
+    sigar_perfstat_init(sigar);
+    if (!sigar->perfstat.disk) {
+        return SIGAR_ENOTIMPL;
+    }
+
+    total = sigar->perfstat.disk(NULL, NULL, sizeof(*disk), 0);
+    if (total < 1) {
+        return ENOENT;
+    }
+
+    disk = malloc(total * sizeof(*disk));
+    id.name[0] = '\0';
+
+    num = sigar->perfstat.disk(&id, disk, sizeof(*disk), total);
+    if (num < 1) {
+        free(disk);
+        return ENOENT;
+    }
+
+    sigar->diskmap = sigar_cache_new(25);
+    sigar->diskmap->free_value = diskio_free;
+
+    odm_initialize();
+
+    for (i=0; i<num; i++) {
+        char query[256];
+        struct CuDv *dv, *ptr;
+        struct listinfo info;
+        sigar_cache_entry_t *ent;
+        int j;
+
+        sprintf(query, "parent = '%s'", disk[i].vgname);
+
+        ptr = dv = odm_get_list(CuDv_CLASS, query, &info, 256, 1);
+        if ((int)dv == -1) {
+            continue; /* XXX */
+        }
+
+        for (j=0; j<info.num; j++, ptr++) {
+            struct CuAt *attr;
+            int num, retval;
+            struct stat sb;
+
+            if ((attr = getattr(ptr->name, "label", 0, &num))) {
+                retval = stat(attr->value, &sb);
+                ent = sigar_cache_get(sigar->diskmap, FSDEV_ID(sb));
+
+                if (retval == 0) {
+                    aix_diskio_t *diskio = malloc(sizeof(*diskio));
+                    diskio->name = strdup(disk[i].name);
+                    diskio->addr = -1;
+                    ent->value = diskio;
+                }
+
+                free(attr);
+            }
+        }
+
+        odm_free_list(dv, &info);
+    }
+
+    free(disk);
+    odm_terminate();
+
+    return SIGAR_OK;
+}
+
+static int create_diskmap(sigar_t *sigar)
+{
+    if (create_diskmap_v5(sigar) != SIGAR_OK) {
+        return create_diskmap_v4(sigar);
+    }
+    return SIGAR_OK;
 }
 
 static int get_perfstat_disk_metrics(sigar_t *sigar,
