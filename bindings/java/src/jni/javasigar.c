@@ -993,7 +993,7 @@ static void jsigar_log_impl(sigar_t *sigar, void *data,
 
     message_obj = (jobject)JENV->NewStringUTF(env, message);
 
-    JENV->CallObjectMethod(env, logger, id, message_obj);
+    JENV->CallVoidMethod(env, logger, id, message_obj);
 }
 
 JNIEXPORT void SIGAR_JNI(SigarLog_setLogger)
