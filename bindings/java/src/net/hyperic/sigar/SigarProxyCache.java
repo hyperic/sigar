@@ -9,6 +9,11 @@ import java.lang.reflect.Method;
 
 import net.hyperic.sigar.util.ReferenceMap;
 
+/**
+ * This class implements a caching mechanism to avoid system calls
+ * with heavy Sigar usage in a short period of time.  It is intended
+ * for use in applications such as Top.
+ */
 public class SigarProxyCache
     implements InvocationHandler {
 

@@ -1,5 +1,9 @@
 package net.hyperic.sigar;
 
+/**
+ * This class provides a summary of current process states.
+ * @see net.hyperic.sigar.cmd.Top
+ */
 public class CurrentProcessSummary {
     private int total=0, sleeping=0, running=0, zombie=0, stopped=0;
 

@@ -11,13 +11,22 @@ import net.hyperic.jni.ArchLoaderException;
 import net.hyperic.jni.ArchNotSupportedException;
 
 /**
- * Entry point for the Sigar - System Information GAtheRer
+ * The Sigar class provides access to the sigar objects containing
+ * system information.  The Sigar object itself maintains internal
+ * state specific to each platform.  It also implements the SigarProxy
+ * interface which provides caching at the Java level.
  */
 public class Sigar implements SigarProxy {
 
+    /**
+     * The Sigar version in String form.
+     */
     public static final String VERSION_STRING =
         SigarVersion.VERSION_STRING;
 
+    /**
+     * The date on which the Sigar binaries were built.
+     */
     public static final String BUILD_DATE =
         SigarVersion.BUILD_DATE;
 
@@ -67,7 +76,7 @@ public class Sigar implements SigarProxy {
     public static native String formatSize(long size);
 
     /**
-     * Constructor
+     * Allocate and initialize the native Sigar object.
      */
     public Sigar() {
         try {
@@ -99,6 +108,8 @@ public class Sigar implements SigarProxy {
     /**
      * Release any native resources associated with this sigar instance.
      * The sigar object is no longer usable after it has been closed.
+     * If the close method is not called directly, the finalize method will
+     * call it if the Sigar object is garbage collected.
      */
     public void close() {
         if (this.sigarWrapper != 0) {
@@ -115,7 +126,7 @@ public class Sigar implements SigarProxy {
     public native long getPid();
 
     /**
-     * Send signal to a process.
+     * Send a signal to a process.
      *
      * @param pid The process id.
      * @param signum The signal number.
@@ -395,7 +406,8 @@ public class Sigar implements SigarProxy {
     }
 
     /**
-     * Get process loaded modules.
+     * Get process loaded modules.<p>
+     * Supported Platforms: Linux, Solaris and Windows.
      * @param pid The process id.
      * @return List of loaded modules.
      * @exception SigarException on failure.
@@ -410,6 +422,13 @@ public class Sigar implements SigarProxy {
         return getProcModules(convertPid(pid));
     }
 
+    /**
+     * Find the pid of the process which is listening on the given port.<p>
+     * Supported Platforms: Linux and Windows XP only.
+     * @param port The port number.
+     * @return pid of the process.
+     * @exception SigarException on failure.
+     */
     public native long getProcPort(long port) throws SigarException;
 
     public long getProcPort(String port) throws SigarException {
@@ -580,6 +599,13 @@ public class Sigar implements SigarProxy {
      */
     public native String getFQDN() throws SigarException;
 
+    /**
+     * Enabling logging in the native Sigar code.
+     * This method will hook log4j into the Sigar
+     * native logging methods.  Note that the majority
+     * of logging in the native code is only at the DEBUG
+     * level.
+     */
     public void enableLogging(boolean value) {
         if (value) {
             SigarLog.enable(this);

@@ -427,7 +427,7 @@ import java.text.DecimalFormatSymbols;
  * <p>
  * Most of this specification is quoted from the Unix
  * man page for the sprintf utility.</p>
- *
+ * (c) 2000 Sun Microsystems, Inc.
  * @author Allan Jacobs
  * @version 1
  * Release 1: Initial release.

@@ -21,6 +21,10 @@ import net.hyperic.sigar.shell.ShellCommandUsageException;
 
 import net.hyperic.sigar.test.SigarTestRunner;
 
+/**
+ * The Sigar Shell provides a command shell for running the example
+ * commands and Sigar tests.
+ */
 public class Shell extends ShellBase {
 
     public static final String RCFILE_NAME = ".sigar_shellrc";
@@ -64,6 +68,8 @@ public class Shell extends ShellBase {
         try {
             //requires junit.jar
             registerCommandHandler("test", new SigarTestRunner(this));
+        } catch (NoClassDefFoundError e) { }
+        try {
             //requires bcel-5.1.jar
             registerCommandHandler("ptql", new PTQL(this));
         } catch (NoClassDefFoundError e) { }

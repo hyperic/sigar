@@ -8,7 +8,7 @@ import java.lang.reflect.Method;
 
 /**
  * This class provides a string-ish interface to sigar.
- * It is intended for use via JMX and Covalent CAM measurement
+ * It is intended for use via JMX and Hyperic HQ measurement
  * plugins.  Method lookups are cached and the like for better
  * performance.
  */

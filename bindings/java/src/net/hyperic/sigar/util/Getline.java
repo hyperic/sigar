@@ -4,6 +4,13 @@ import java.io.IOException;
 import java.io.EOFException;
 import java.io.File;
 
+/**
+ * This class provides Emacs style key bindings, history and tab completion
+ * for command shell applications.
+ *
+ * This class is a Java interface to the getline.c package:
+ * Copyright (C) 1991, 1992 by Chris Thewalt (thewalt@ce.berkeley.edu)
+ */
 public class Getline {
 
     private String prompt = "> ";
