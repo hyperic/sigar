@@ -1168,6 +1168,7 @@ static int sigar_get_cpu_mhz_perfstat(sigar_t *sigar)
         sigar->cpu_mhz = data.processorHZ / 1000000;
     }
     else {
+        dlclose(handle);
         return errno;
     }
 
