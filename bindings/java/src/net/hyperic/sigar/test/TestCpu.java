@@ -1,6 +1,7 @@
 package net.hyperic.sigar.test;
 
 import net.hyperic.sigar.Sigar;
+import net.hyperic.sigar.SigarNotImplementedException;
 import net.hyperic.sigar.SigarProxy;
 import net.hyperic.sigar.Cpu;
 
@@ -29,11 +30,15 @@ public class TestCpu extends SigarTestCase {
         traceln("getCpu:");
         checkCpu(cpu);
 
-        Cpu[] cpuList = sigar.getCpuList();
+        try {
+            Cpu[] cpuList = sigar.getCpuList();
 
-        for (int i=0; i<cpuList.length; i++) {
-            traceln("Cpu " + i + ":");
-            checkCpu(cpuList[i]);
+            for (int i=0; i<cpuList.length; i++) {
+                traceln("Cpu " + i + ":");
+                checkCpu(cpuList[i]);
+            }
+        } catch (SigarNotImplementedException e) {
+            //ok
         }
     }
 }
