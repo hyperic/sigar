@@ -3,6 +3,8 @@
 #include "sigar_util.h"
 #include "sigar_os.h"
 
+#include <inet/ip.h>
+#include <inet/tcp.h>
 #include <sys/link.h>
 #include <sys/lwp.h>
 #include <sys/proc.h>
@@ -1801,6 +1803,12 @@ int sigar_net_interface_stat_get(sigar_t *sigar, const char *name,
     return ENXIO;
 }
 
+static void ip_format(char *buffer, IpAddress addr)
+{
+    unsigned char *ap = (unsigned char *)&addr;
+    sprintf(buffer, "%d.%d.%d.%d", ap[0], ap[1], ap[2], ap[3]);
+}
+
 static int tcp_connection_list_get(sigar_t *sigar,
                                    sigar_net_connection_list_t *connlist,
                                    int flags,
@@ -1810,6 +1818,67 @@ static int tcp_connection_list_get(sigar_t *sigar,
     char *end = (char *)entry + len;
 
     while ((char *)entry < end) {
+        int state = entry->tcpConnEntryInfo.ce_state;
+
+        if (((flags & SIGAR_NETCONN_SERVER) && (state == TCPS_LISTEN)) ||
+            ((flags & SIGAR_NETCONN_CLIENT) && (state != TCPS_LISTEN)))
+        {
+            sigar_net_connection_t *conn;
+
+            SIGAR_NET_CONNLIST_GROW(connlist);
+            conn = &connlist->data[connlist->number++];
+
+            ip_format(conn->local_address, entry->tcpConnLocalAddress);
+            ip_format(conn->remote_address, entry->tcpConnRemAddress);
+            conn->local_port = entry->tcpConnLocalPort;
+            conn->remote_port = entry->tcpConnRemPort;
+            conn->type = SIGAR_NETCONN_TCP;
+
+            switch (state) {
+              case TCPS_CLOSED:
+                conn->state = SIGAR_TCP_CLOSE;
+                break;
+              case TCPS_IDLE:
+                conn->state = SIGAR_TCP_UNKNOWN;/*XXX*/
+                break;
+              case TCPS_BOUND:
+                conn->state = SIGAR_TCP_UNKNOWN;/*XXX*/
+                break;
+              case TCPS_LISTEN:
+                conn->state = SIGAR_TCP_LISTEN;
+                break;
+              case TCPS_SYN_SENT:
+                conn->state = SIGAR_TCP_SYN_SENT;
+                break;
+              case TCPS_SYN_RCVD:
+                conn->state = SIGAR_TCP_SYN_RECV;
+                break;
+              case TCPS_ESTABLISHED:
+                conn->state = SIGAR_TCP_ESTABLISHED;
+                break;
+              case TCPS_CLOSE_WAIT:
+                conn->state = SIGAR_TCP_CLOSE_WAIT;
+                break;
+              case TCPS_FIN_WAIT_1:
+                conn->state = SIGAR_TCP_FIN_WAIT1;
+                break;
+              case TCPS_CLOSING:
+                conn->state = SIGAR_TCP_CLOSING;
+                break;
+              case TCPS_LAST_ACK:
+                conn->state = SIGAR_TCP_LAST_ACK;
+                break;
+              case TCPS_FIN_WAIT_2:
+                conn->state = SIGAR_TCP_FIN_WAIT2;
+                break;
+              case TCPS_TIME_WAIT:
+                conn->state = SIGAR_TCP_TIME_WAIT;
+                break;
+              default:
+                conn->state = SIGAR_TCP_UNKNOWN;
+                break;
+            }
+        }
         entry++;
     }
 
@@ -1840,6 +1909,8 @@ int sigar_net_connection_list_get(sigar_t *sigar,
     int rc;
     struct opthdr *op;
 
+    sigar_net_connection_list_create(connlist);
+
     while ((rc = get_mib2(&sigar->mib2, &op, &data, &len)) == GET_MIB2_OK) {
         if ((op->level == MIB2_TCP) && 
             (op->name == MIB2_TCP_13) &&
@@ -1863,5 +1934,5 @@ int sigar_net_connection_list_get(sigar_t *sigar,
         /*XXX*/ 
     }
 
-    return SIGAR_ENOTIMPL;
+    return SIGAR_OK;
 }
