@@ -12,6 +12,7 @@
 #include <malloc.h>
 #include <stdio.h>
 #include <errno.h>
+#include <tlhelp32.h>
 
 #define INT64_C(val) val##i64
 

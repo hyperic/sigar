@@ -1133,6 +1133,91 @@ SIGAR_DECLARE(int) sigar_proc_exe_get(sigar_t *sigar, sigar_pid_t pid,
     return status;
 }
 
+typedef HANDLE (CALLBACK *LPCREATESNAPSHOT)(DWORD, DWORD);
+typedef BOOL (CALLBACK *LPMODULEITER)(HANDLE, LPMODULEENTRY32);
+
+/* not available on NT */
+static int sigar_proc_modules_get_toolhelp(sigar_t *sigar,
+                                           sigar_pid_t pid,
+                                           sigar_proc_modules_t *procmods)
+{
+    HINSTANCE k32_handle;
+    HANDLE snap_shot;
+    MODULEENTRY32 module;
+    LPCREATESNAPSHOT create_snapshot;
+    LPMODULEITER module_first, module_next;
+
+    /* XXX: cache this stuff within sigar_t */
+    k32_handle = LoadLibrary("kernel32.dll");
+    if (!k32_handle) {
+        return GetLastError();
+    }
+
+    create_snapshot =
+        (LPCREATESNAPSHOT)GetProcAddress(k32_handle,
+                                         "CreateToolhelp32Snapshot");
+
+    if (!create_snapshot) {
+        FreeLibrary(k32_handle);
+        return GetLastError();
+    }
+
+    module_first =
+        (LPMODULEITER)GetProcAddress(k32_handle, "Module32First");
+
+    if (!module_first) {
+        FreeLibrary(k32_handle);
+        return GetLastError();
+    }
+
+    module_next =
+        (LPMODULEITER)GetProcAddress(k32_handle, "Module32Next");
+
+    if (!module_next) {
+        FreeLibrary(k32_handle);
+        return GetLastError();
+    }
+
+    snap_shot = create_snapshot(TH32CS_SNAPMODULE, (DWORD)pid);
+
+    if (snap_shot == INVALID_HANDLE_VALUE) {
+        FreeLibrary(k32_handle);
+        return GetLastError();
+    }
+
+    module.dwSize = sizeof(MODULEENTRY32);
+    if (!module_first(snap_shot, &module)) {
+        return SIGAR_OK;
+    }
+
+    do {
+        int status =
+            procmods->module_getter(procmods->data,
+                                    module.szExePath,
+                                    strlen(module.szExePath));
+
+        if (status != SIGAR_OK) {
+            /* not an error; just stop iterating */
+            break;
+        }
+
+        module.dwSize = sizeof(MODULEENTRY32);
+    } while (module_next(snap_shot, &module));
+
+    FreeLibrary(k32_handle);
+
+    return SIGAR_OK;
+}
+
+SIGAR_DECLARE(int) sigar_proc_modules_get(sigar_t *sigar, sigar_pid_t pid,
+                                          sigar_proc_modules_t *procmods)
+{
+    /* XXX need to use psapi.dll for NT */
+    return sigar_proc_modules_get_toolhelp(sigar,
+                                           pid,
+                                           procmods);
+}
+
 int sigar_os_fs_type_get(sigar_file_system_t *fsp)
 {
     return fsp->type;
