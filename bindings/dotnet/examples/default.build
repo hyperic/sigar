@@ -8,6 +8,7 @@
   <property name="build.dir" overwrite="false" value="bin"/>
   <property name="sigarsharp" overwrite="false"
             value="../../bindings/csharp/build/SigarSharp.dll"/>
+  <property name="examples" value="Free,CpuInfo,Df,Ifconfig"/>
 
   <target name="clean">
     <delete dir="${build.dir}"/>
@@ -28,9 +29,18 @@
   <target name="build" description="Build C# Sigar examples">
     <mkdir dir="${build.dir}"/>
 
-    <foreach item="String" in="Free,CpuInfo,Df,Ifconfig"
+    <foreach item="String" in="${examples}"
              delim="," property="name">
       <call target="build-exe"/>
+    </foreach>
+  </target>
+
+  <!-- XXX run w/ mono on unix -->
+  <target name="run" description="Run C# Sigar examples">
+    <foreach item="String" in="${examples}"
+             delim="," property="name">
+      <echo>${name}...</echo>
+      <exec program="${build.dir}/${name}.exe"/>
     </foreach>
   </target>
 </project>

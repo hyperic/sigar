@@ -21,6 +21,15 @@
     </nant>
   </target>
 
+  <target name="run-examples">
+    <nant buildfile="examples/default.build"
+          inheritall="true" target="run">
+      <properties>
+        <property name="build.dir" value="../build"/>
+        <property name="sigarsharp" value="../build/SigarSharp.dll"/>
+      </properties>
+    </nant>
+  </target>
   <target name="build" description="Build C# Sigar bindings">
     <mkdir dir="${build.dir}"/>
 
