@@ -465,7 +465,6 @@ SIGAR_DECLARE(int) sigar_nfs_ping(char *host)
         retval = -1;
     }
 
-    close(sock);
     clnt_destroy(client);
 
     return retval;
