@@ -1,5 +1,7 @@
 2005-02-23  Doug MacEachern  <dougm@hyperic.net>
 
+        * 1.1.16 released
+        
         * Add function to get data seen in the 'who' command
 
 2005-02-20  Doug MacEachern  <dougm@hyperic.net>
