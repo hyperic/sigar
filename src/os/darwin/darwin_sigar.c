@@ -13,6 +13,7 @@
 #include <sys/user.h>
 #endif
 
+#include <sys/ioctl.h>
 #include <sys/mount.h>
 #include <sys/stat.h>
 #include <sys/socket.h>
@@ -245,8 +246,6 @@ int sigar_uptime_get(sigar_t *sigar,
 {
     uptime->uptime   = time(NULL) - sigar->boot_time;
 
-    uptime->idletime = -1;
-
     return SIGAR_OK;
 }
 
@@ -346,7 +345,7 @@ int sigar_proc_mem_get(sigar_t *sigar, sigar_pid_t pid,
         return errno;
     }
 
-    status = task_info(task, TASK_BASIC_INFO, &info, &type);
+    status = task_info(task, TASK_BASIC_INFO, (task_info_t)&info, &type);
 
     if (task != self) {
         mach_port_deallocate(self, task);
@@ -422,7 +421,7 @@ static int get_proc_times(sigar_pid_t pid, sigar_proc_time_t *time)
 
     time->user = utime.seconds;
     time->sys  = stime.seconds;
-    proctime->total = proctime->user + proctime->sys;
+    time->total = time->user + time->sys;
 
     return SIGAR_OK;
 }
@@ -621,8 +620,6 @@ int sigar_cpu_info_list_get(sigar_t *sigar,
 int sigar_net_route_list_get(sigar_t *sigar,
                              sigar_net_route_list_t *routelist)
 {
-    sigar_net_route_t *route;
-
     sigar_net_route_list_create(routelist);
 
     return SIGAR_OK;
