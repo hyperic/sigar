@@ -982,7 +982,7 @@ int sigar_file_system_usage_get(sigar_t *sigar,
 #ifndef POWER_MPC7450
 #define POWER_MPC7450	0x1000
 #endif
-#ifdef POWER_5
+#ifndef POWER_5
 #define POWER_5		0x2000
 #endif
 
