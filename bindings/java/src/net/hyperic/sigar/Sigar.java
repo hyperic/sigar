@@ -33,7 +33,8 @@ public class Sigar implements SigarProxy {
     private static SigarLoader loader = new SigarLoader(Sigar.class);
     private FileSystemMap mounts = null;
 
-    long sigarWrapper = 0; //holds the sigar_t *
+    int sigarWrapper = 0; //holds the sigar_t *
+    long longSigarWrapper = 0; //same, but where sizeof(void*) > sizeof(int)
 
     // lastCpu is used to calculate the cpuPerc;
     private Cpu lastCpu;
