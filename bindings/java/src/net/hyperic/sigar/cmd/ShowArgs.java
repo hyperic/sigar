@@ -32,7 +32,12 @@ public class ShowArgs extends SigarCommandBase {
         long[] pids = this.shell.findPids(args);
 
         for (int i=0; i<pids.length; i++) {
-            output(pids[i]);
+            try {
+                println("pid=" + pids[i]);
+                output(pids[i]);
+            } catch (SigarException e) {
+                println(e.getMessage());
+            }
             println("\n------------------------\n");
         }
     }
@@ -41,8 +46,6 @@ public class ShowArgs extends SigarCommandBase {
 
         String[] argv = this.proxy.getProcArgs(pid);
         
-        println("pid=" + pid);
-
         try {
             String exe = this.proxy.getProcExe(pid).getName();
             println("exe=" + exe);
