@@ -77,6 +77,7 @@ public class OperatingSystem {
             new GenericVendor("slackware-version", "Slackware"),
             new GenericVendor("fedora-release", "Fedora"),
             new RedHatVendor("redhat-release", "Red Hat"),
+            new VMwareVendor("/proc/vmware/version", "VMware"),
         };
 
         for (int i=0; i<info.length; i++) {
@@ -144,9 +145,24 @@ public class OperatingSystem {
         }
     }
 
+    private class VMwareVendor extends GenericVendor {
+        public VMwareVendor(String file, String name) {
+            super(file, name);
+        }
+
+        public String getFileName() {
+            return this.file;
+        }
+
+        public void parse(String line, OperatingSystem os) {
+            os.vendor = this.name;
+            os.vendorVersion = "ESX 2.x"; //XXX
+        }
+    }
+
     private class GenericVendor implements VendorInfo {
-        private String file;
-        private String name;
+        protected String file;
+        protected String name;
 
         public GenericVendor(String file, String name) {
             this.file = file;
