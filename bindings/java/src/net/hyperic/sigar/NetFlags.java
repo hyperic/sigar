@@ -79,6 +79,19 @@ public class NetFlags {
         NetFlags.CONN_TCP | NetFlags.CONN_UDP | 
         NetFlags.CONN_RAW | NetFlags.CONN_UNIX;
 
+    public static final int TCP_ESTABLISHED = 1;
+    public static final int TCP_SYN_SENT    = 2;
+    public static final int TCP_SYN_RECV    = 3;
+    public static final int TCP_FIN_WAIT1   = 4;
+    public static final int TCP_FIN_WAIT2   = 5;
+    public static final int TCP_TIME_WAIT   = 6;
+    public static final int TCP_CLOSE       = 7;
+    public static final int TCP_CLOSE_WAIT  = 8;
+    public static final int TCP_LAST_ACK    = 9;
+    public static final int TCP_LISTEN      = 10;
+    public static final int TCP_CLOSING     = 11;
+    public static final int TCP_UNKNOWN     = 12;
+
     /**
      * @param flags network interface flags.
      * @return String representation of network interface flags.
