@@ -45,7 +45,11 @@
 #define KI_GID  ki_rgid
 #define KI_EUID ki_svuid
 #define KI_EGID ki_svgid
-
+#define KI_SIZE ki_size
+#define KI_RSS  ki_rssize
+#define KI_TSZ  ki_tsize
+#define KI_DSZ  ki_dsize
+#define KI_SSZ  ki_ssize
 #else
 
 #define KI_PID  kp_proc.p_pid
@@ -58,7 +62,11 @@
 #define KI_GID  kp_eproc.e_pcred.p_rgid
 #define KI_EUID kp_eproc.e_pcred.p_svuid
 #define KI_EGID kp_eproc.e_pcred.p_svgid
-
+#define KI_SIZE XXX
+#define KI_RSS  kp_eproc.e_vm.vm_rssize
+#define KI_TSZ  kp_eproc.e_vm.vm_tsize
+#define KI_DSZ  kp_eproc.e_vm.vm_dsize
+#define KI_SSZ  kp_eproc.e_vm.vm_ssize
 #endif
 
 #ifndef DARWIN
@@ -510,12 +518,10 @@ int sigar_proc_mem_get(sigar_t *sigar, sigar_pid_t pid,
     }
 
     procmem->size = procmem->vsize = 
-        (pinfo->kp_eproc.e_vm.vm_tsize +
-         pinfo->kp_eproc.e_vm.vm_dsize +
-         pinfo->kp_eproc.e_vm.vm_ssize) * sigar->pagesize;
+        (pinfo->KI_TSZ + pinfo->KI_DSZ + pinfo->KI_SSZ) * sigar->pagesize;
 
     procmem->resident = procmem->rss =
-        pinfo->kp_eproc.e_vm.vm_rssize * sigar->pagesize;
+        pinfo->KI_RSS * sigar->pagesize;
 
     procmem->share = SIGAR_FIELD_NOTIMPL;
 
