@@ -13,6 +13,8 @@ public class OperatingSystem {
     private static final String ETC =
         System.getProperty("sigar.etc.dir", "/etc") + "/";
 
+    private static OperatingSystem instance = null;
+
     private String name;
     private String version;
     private String arch;
@@ -23,19 +25,23 @@ public class OperatingSystem {
     private OperatingSystem() {
     }
 
-    public static OperatingSystem getInstance() {
-        OperatingSystem os = new OperatingSystem();
-        Properties props = System.getProperties();
-        os.name = props.getProperty("os.name");
-        os.version = props.getProperty("os.version");
-        os.arch = props.getProperty("os.arch");
-        os.patchLevel = props.getProperty("sun.os.patch.level");
+    public static synchronized OperatingSystem getInstance() {
+        if (instance == null) {
+            OperatingSystem os = new OperatingSystem();
+            Properties props = System.getProperties();
+            os.name = props.getProperty("os.name");
+            os.version = props.getProperty("os.version");
+            os.arch = props.getProperty("os.arch");
+            os.patchLevel = props.getProperty("sun.os.patch.level");
 
-        if (os.name.equals("Linux")) {
-            os.getLinuxInfo();
+            if (os.name.equals("Linux")) {
+                os.getLinuxInfo();
+            }
+
+            instance = os;
         }
 
-        return os;
+        return instance;
     }
 
     public String getName() {
