@@ -460,7 +460,8 @@ public class Sigar implements SigarProxy {
 
     /**
      * Find the pid of the process which is listening on the given port.<p>
-     * Supported Platforms: Linux and Windows XP only.
+     * Supported Platforms: Linux, Windows 2003, Windows XP, AIX.
+     * @param protocol NetFlags.CONN_TCP or NetFlags.CONN_UDP.
      * @param port The port number.
      * @return pid of the process.
      * @exception SigarException on failure.
@@ -468,6 +469,12 @@ public class Sigar implements SigarProxy {
     public native long getProcPort(int protocol, long port)
         throws SigarException;
 
+    /**
+     * @param protocol "tcp" or "udp".
+     * @param port The port number.
+     * @return pid of the process.
+     * @exception SigarException on failure.
+     */
     public long getProcPort(String protocol, String port)
         throws SigarException {
 
