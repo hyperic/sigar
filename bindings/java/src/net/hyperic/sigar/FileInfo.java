@@ -91,7 +91,7 @@ public class FileInfo extends FileAttrs {
 
     private static native String getTypeString(int type);
 
-    native void nativeGetLink(Sigar sigar, String name)
+    native void gatherLink(Sigar sigar, String name)
         throws SigarException;
 
     public String getTypeString() {
@@ -160,7 +160,7 @@ public class FileInfo extends FileAttrs {
                     this.stat = this.sigar.getDirStat(this.name);
                 }
                 else {
-                    this.stat.nativeGet(this.sigar, this.name);
+                    this.stat.gather(this.sigar, this.name);
                 }
             } catch (SigarException e) {
                 //ok for now
@@ -381,16 +381,16 @@ public class FileInfo extends FileAttrs {
         long mtime = this.mtime;
 
         if (this.lstat) {
-            this.nativeGetLink(this.sigar, this.name);
+            this.gatherLink(this.sigar, this.name);
         }
         else {
-            this.nativeGet(this.sigar, this.name);
+            this.gather(this.sigar, this.name);
         }
 
         if (this.dirStatEnabled &&
             (mtime != this.mtime)) //no need to fetch stat if unmodified.
         {
-            this.stat.nativeGet(this.sigar, this.name);
+            this.stat.gather(this.sigar, this.name);
         }
     }
 
@@ -401,11 +401,11 @@ public class FileInfo extends FileAttrs {
         FileInfo info = new FileInfo();
 
         if (followSymlinks) {
-            info.nativeGet(sigar, name);
+            info.gather(sigar, name);
             info.lstat = false;
         }
         else {
-            info.nativeGetLink(sigar, name);
+            info.gatherLink(sigar, name);
             info.lstat = true;
         }
 

@@ -17,7 +17,7 @@ public class ProcCpu extends ProcTime {
 
     private void getValues(Sigar sigar, long pid)
         throws SigarException {
-        this.nativeGet(sigar, pid);
+        this.gather(sigar, pid);
     }
 
     static synchronized ProcCpu get(Sigar sigar, long pid)

@@ -1062,7 +1062,7 @@ while (my($name, $fields) = each %classes) {
     $sigar_function = $func_alias{$sigar_function} || $sigar_function;
     my $sigar_type = join '_', $sigar_prefix, 't';
 
-    my $nativefunc = join '_', $jni_prefix, 'nativeGet';
+    my $nativefunc = join '_', $jni_prefix, 'gather';
 
     my $proto = join "\n",
       "JNIEXPORT void JNICALL $nativefunc",
@@ -1121,9 +1121,9 @@ package net.hyperic.sigar;
  */
 public class $name {
 
-    $name() { }
+    public $name() { }
 
-    native void nativeGet($jargs_proto) throws SigarException;
+    public native void gather($jargs_proto) throws SigarException;
 
     /**
      * This method is not intended to be called directly.
@@ -1133,7 +1133,7 @@ public class $name {
      */
     static $name fetch($jargs_proto) throws SigarException {
         $name $jname = new $name();
-        $jname.nativeGet($jargs);
+        $jname.gather($jargs);
         return $jname;
     }
 

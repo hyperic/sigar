@@ -746,10 +746,10 @@ JNIEXPORT jint SIGAR_JNI(FileInfo_getMode)
 
 
 /*
- * copy of the generated FileAttrs_nativeGet function
+ * copy of the generated FileAttrs_gather function
  * but we call the lstat wrapper instead.
  */
-JNIEXPORT void SIGAR_JNI(FileInfo_nativeGetLink)
+JNIEXPORT void SIGAR_JNI(FileInfo_gatherLink)
 (JNIEnv *env, jobject obj, jobject sigar_obj, jstring name)
 {
     sigar_file_attrs_t s;

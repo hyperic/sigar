@@ -10,7 +10,7 @@ public class ThreadCpuTime extends ThreadCpu {
     }
 
     public void getCurrent() throws SigarException {
-        this.nativeGet(this.sigar, 0);
+        this.gather(this.sigar, 0);
     }
 
     public ThreadCpu getDiff() throws SigarException {
