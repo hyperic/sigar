@@ -172,6 +172,8 @@ typedef char * (*proc_exename_func_t)(struct ps_prochandle *, char *, size_t);
 struct sigar_t {
     SIGAR_T_BASE;
 
+    int solaris_version;
+
     kstat_ctl_t *kc;
 
     /* kstat_lookup() as needed */

@@ -7,6 +7,7 @@
 #include <sys/proc.h>
 #include <sys/swap.h>
 #include <sys/stat.h>
+#include <sys/utsname.h>
 #include <dlfcn.h>
 
 #define KSTAT_LIST_INIT(sigar, dev) \
@@ -22,10 +23,21 @@ int sigar_os_open(sigar_t **sig)
     kstat_t *ksp;
     sigar_t *sigar;
     int i, status;
+    struct utsname name;
+    char *ptr;
 
     sigar = malloc(sizeof(*sigar));
     *sig = sigar;
 
+    uname(&name);
+    if ((ptr = strchr(name.release, '.'))) {
+        ptr++;
+        sigar->solaris_version = atoi(ptr);
+    }
+    else {
+        sigar->solaris_version = 6;
+    }
+    
     sigar->pagesize = 0;
     i = sysconf(_SC_PAGESIZE);
     while ((i >>= 1) > 0) {
@@ -827,13 +839,12 @@ int sigar_proc_exe_get(sigar_t *sigar, sigar_pid_t pid,
     char buffer[BUFSIZ];
     struct ps_prochandle *phandle;
 
-    if ((status = sigar_init_libproc(sigar)) != SIGAR_OK) {
-        return status;
+    if (sigar->solaris_version >= 10) {
+        return sigar_proc_path_exe_get(sigar, pid, procexe);
     }
 
-    if (!sigar->pdirname) {
-        /* XXX detect solaris 10+ and skip init_libproc */
-        return sigar_proc_path_exe_get(sigar, pid, procexe);
+    if ((status = sigar_init_libproc(sigar)) != SIGAR_OK) {
+        return status;
     }
 
     procexe->name[0] = '\0';
