@@ -41,7 +41,7 @@ public class SigarProcess implements SigarProcessMBean {
     public void close() {
     }
 
-    private Long getLongValue(SigarInvokerJMX invoker, String attr) {
+    private synchronized Long getLongValue(SigarInvokerJMX invoker, String attr) {
         try {
             return (Long)invoker.invoke(attr);
         } catch (SigarException e) {
