@@ -723,7 +723,7 @@ int sigar_proc_time_get(sigar_t *sigar, sigar_pid_t pid,
 {
     int status = sigar_get_pinfo(sigar, pid);
     struct kinfo_proc *pinfo = sigar->pinfo;
-    
+
     if (status != SIGAR_OK) {
         return status;
     }
@@ -738,7 +738,7 @@ int sigar_proc_time_get(sigar_t *sigar, sigar_pid_t pid,
     proctime->total = proctime->user + proctime->sys;
 #endif
 
-    proctime->start_time = tv2sec(pinfo->KI_START);
+    proctime->start_time = tv2sec(pinfo->KI_START) * 1000;
 
     return SIGAR_OK;
 }
