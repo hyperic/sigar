@@ -539,6 +539,59 @@ JNIEXPORT jstring SIGAR_JNI(ProcEnv_getValue)
     return get.val;
 }
 
+typedef struct {
+    JNIEnv *env;
+    jobject listobj;
+    jmethodID id;
+} jni_proc_module_t;
+
+static int jni_proc_module_get(void *data,
+                               char *name, int len)
+{
+    jni_proc_module_t *module = (jni_proc_module_t *)data;
+    JNIEnv *env = module->env;
+
+    JENV->CallObjectMethod(env, module->listobj, module->id,  
+                           JENV->NewStringUTF(env, name));
+
+    return SIGAR_OK;
+}
+
+JNIEXPORT jobject SIGAR_JNI(Sigar_getProcModulesNative)
+(JNIEnv *env, jobject sigar_obj, jlong pid)
+{
+    int status;
+    sigar_proc_modules_t procmods;
+    jobject listobj;
+    jni_proc_module_t module;
+    jclass listclass =
+        JENV->FindClass(env, "java/util/ArrayList");
+    jmethodID listid =
+        JENV->GetMethodID(env, listclass, "<init>", "()V");
+    jmethodID addid =
+        JENV->GetMethodID(env, listclass, "add",
+                          "(Ljava/lang/Object;)"
+                          "Z");
+    dSIGAR(NULL);
+
+    listobj = JENV->NewObject(env, listclass, listid);
+
+    module.env = env;
+    module.id = addid;
+    module.listobj = listobj;
+
+    procmods.module_getter = jni_proc_module_get;
+    procmods.data = &module;
+
+    if ((status = sigar_proc_modules_get(sigar, pid, &procmods)) != SIGAR_OK) {
+        JENV->DeleteLocalRef(env, listobj);
+        sigar_throw_error(env, sigar, status);
+        return NULL;
+    }
+
+    return listobj;
+}
+
 JNIEXPORT jdoubleArray SIGAR_JNI(Sigar_getLoadAverage)
 (JNIEnv *env, jobject sigar_obj)
 {
