@@ -678,6 +678,36 @@ SIGAR_DECLARE(const char *)sigar_net_connection_type_get(int type)
     }
 }
 
+SIGAR_DECLARE(const char *)sigar_net_connection_state_get(int state)
+{
+    switch (state) {
+      case SIGAR_TCP_ESTABLISHED:
+        return "ESTABLISHED";
+      case SIGAR_TCP_SYN_SENT:
+        return "SYN_SENT";
+      case SIGAR_TCP_SYN_RECV:
+        return "SYN_RECV";
+      case SIGAR_TCP_FIN_WAIT1:
+        return "FIN_WAIT1";
+      case SIGAR_TCP_FIN_WAIT2:
+        return "FIN_WAIT2";
+      case SIGAR_TCP_TIME_WAIT:
+        return "TIME_WAIT";
+      case SIGAR_TCP_CLOSE:
+        return "CLOSE";
+      case SIGAR_TCP_CLOSE_WAIT:
+        return "CLOSE_WAIT";
+      case SIGAR_TCP_LAST_ACK:
+        return "LAST_ACK";
+      case SIGAR_TCP_LISTEN:
+        return "LISTEN";
+      case SIGAR_TCP_CLOSING:
+        return "CLOSING";
+      default:
+        return "UNKNOWN";
+    }
+}
+
 int sigar_who_list_create(sigar_who_list_t *wholist)
 {
     wholist->number = 0;

@@ -508,6 +508,8 @@ sigar_net_connection_list_destroy(sigar_t *sigar,
 
 SIGAR_DECLARE(const char *)sigar_net_connection_type_get(int type);
 
+SIGAR_DECLARE(const char *)sigar_net_connection_state_get(int state);
+
 typedef struct {
     char user[32];
     char device[32];
