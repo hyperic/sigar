@@ -361,7 +361,7 @@ static int get_idle_cpu(sigar_t *sigar, sigar_cpu_t *cpu,
             DWORD retval, num;
             /* XXX unhardcode 16 */
             SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION info[16];
-
+            /* into the lungs of hell */
             sigar->get_ntsys_info(SystemProcessorPerformanceInformation,
                                   &info, sizeof(info), &retval);
 
@@ -393,6 +393,7 @@ static int get_idle_cpu(sigar_t *sigar, sigar_cpu_t *cpu,
 
 SIGAR_DECLARE(int) sigar_cpu_get(sigar_t *sigar, sigar_cpu_t *cpu)
 {
+    int status;
     PERF_INSTANCE_DEFINITION *inst;
     PERF_COUNTER_BLOCK *counter_block;
     DWORD perf_offsets[PERF_IX_CPU_MAX], err;
@@ -411,10 +412,17 @@ SIGAR_DECLARE(int) sigar_cpu_get(sigar_t *sigar, sigar_cpu_t *cpu)
 
     cpu->sys  = PERF_VAL(PERF_IX_CPU_SYS);
     cpu->user = PERF_VAL(PERF_IX_CPU_USER);
-    get_idle_cpu(sigar, cpu, -1, counter_block, perf_offsets);
+    status = get_idle_cpu(sigar, cpu, -1, counter_block, perf_offsets);
     cpu->nice = 0; /* no nice here */
 
     cpu->total = cpu->sys + cpu->user + cpu->idle;
+
+    if (status != SIGAR_OK) {
+        sigar_log_printf(sigar, SIGAR_LOG_WARN,
+                         "unable to determine idle cpu time: %s",
+                         sigar_strerror(sigar, status));
+    }
+
     return SIGAR_OK;
 }
 
