@@ -64,10 +64,16 @@ int sigar_swap_get(sigar_t *sigar, sigar_swap_t *swap)
 
 int sigar_cpu_get(sigar_t *sigar, sigar_cpu_t *cpu)
 {
-    cpu->user = -1;
-    cpu->nice = -1;
-    cpu->sys  = -1;
-    cpu->idle = -1;
+    struct tbl_sysinfo sysinfo;
+    
+    if (table(TBL_SYSINFO, 0, &sysinfo, 1, sizeof(sysinfo)) != 1) {
+        return errno;
+    }
+
+    cpu->user = sysinfo.si_user;
+    cpu->nice = sysinfo.si_nice;
+    cpu->sys  = sysinfo.si_sys;
+    cpu->idle = sysinfo.si_idle;
 
     cpu->total = cpu->user + cpu->nice + cpu->sys + cpu->idle;
 
