@@ -1,6 +1,7 @@
 package net.hyperic.sigar.cmd;
 
 import net.hyperic.sigar.CpuPerc;
+import net.hyperic.sigar.Sigar;
 import net.hyperic.sigar.SigarException;
 
 /**
@@ -31,10 +32,13 @@ public class CpuInfo extends SigarCommandBase {
         for (int i=0; i<infos.length; i++) {
             net.hyperic.sigar.CpuInfo info = infos[i];
             CpuPerc cpu = cpus[i];
+            long cacheSize = info.getCacheSize();
             println("Vendor........" + info.getVendor());
             println("Model........." + info.getModel());
             println("Mhz..........." + info.getMhz());
-            println("Cache size...." + info.getCacheSize());
+            if (cacheSize != Sigar.FIELD_NOTIMPL) {
+                println("Cache size...." + cacheSize);
+            }
             println("User Time....." + CpuPerc.format(cpu.getUser()));
             println("Sys Time......" + CpuPerc.format(cpu.getSys()));
             println("Idle Time....." + CpuPerc.format(cpu.getIdle()));
