@@ -44,6 +44,7 @@ typedef int (*thread_rusage_func_t)(struct rusage *, int);
 struct sigar_t {
     SIGAR_T_BASE;
     int kmem;
+    int dmem;
     /* offsets for seeking on kmem */
     long koffsets[KOFFSET_MAX];
     vminfo_func_t getvminfo;

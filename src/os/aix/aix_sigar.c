@@ -120,6 +120,7 @@ int sigar_os_open(sigar_t **sigar)
     (*sigar)->getvminfo = vminfo;
     (*sigar)->getprocfd = NULL; /*XXX*/
     (*sigar)->kmem = kmem;
+    (*sigar)->dmem = -1;
     (*sigar)->pagesize = 0;
     (*sigar)->boot_time = 0;
     (*sigar)->last_pid = -1;
@@ -165,6 +166,9 @@ int sigar_os_close(sigar_t *sigar)
     swaps_free(&sigar->swaps);
     if (sigar->kmem > 0) {
         close(sigar->kmem);
+    }
+    if (sigar->dmem > 0) {
+        close(sigar->dmem);
     }
     if (sigar->pinfo) {
         free(sigar->pinfo);
@@ -1515,22 +1519,26 @@ static int get_disk_metrics(sigar_t *sigar,
                             sigar_file_system_usage_t *fsusage,
                             aix_diskio_t *diskio)
 {
-    int fd, i;
-    int cnt;
+    int i, cnt, fd;
     struct iostat iostat;
     struct dkstat dkstat, *dp;
     struct nlist nl[] = {
         { "iostat" },
     };
 
-    if ((fd = open("/dev/mem", O_RDONLY)) <= 0) {
-        return errno;
+    if (sigar->dmem == -1) {
+        if ((sigar->dmem = open("/dev/mem", O_RDONLY)) <= 0) {
+            return errno;
+        }
     }
+
+    fd = sigar->dmem;
 
     if (diskio->addr != -1) {
         int status;
         lseek(fd, diskio->addr, SEEK_SET);
         read(fd, &dkstat, sizeof(dkstat));
+
         if (strEQ(diskio->name, dkstat.diskname)) {
             fsusage->disk_reads = dkstat.dk_rblks;
             fsusage->disk_writes = dkstat.dk_wblks;
@@ -1539,14 +1547,12 @@ static int get_disk_metrics(sigar_t *sigar,
         else {
             status = ENOENT;
         }
-        close(fd);
         return status;
     }
 
     i = knlist(nl, 1, sizeof(struct nlist));
 
     if (i == -1) {
-        close(fd);
         return errno;
     }
 
@@ -1572,7 +1578,6 @@ static int get_disk_metrics(sigar_t *sigar,
         }
     }
 
-    close(fd);
     return SIGAR_OK;
 }
 
