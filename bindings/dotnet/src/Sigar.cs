@@ -34,16 +34,14 @@ namespace Hyperic.Sigar {
         internal HandleRef sigar;
 
         [DllImport(LIBSIGAR)]
-        unsafe private static extern int sigar_open(IntPtr *sigar);
+        private static extern int sigar_open(ref IntPtr sigar);
 
         [DllImport(LIBSIGAR)]
         private static extern int sigar_close(IntPtr sigar);
 
         public Sigar() {
-            IntPtr handle;
-            unsafe { //&pointers are considered "unsafe"
-                sigar_open(&handle);
-            }
+            IntPtr handle = IntPtr.Zero;
+            sigar_open(ref handle);
             this.sigar = new HandleRef(this, handle);
         }
 
