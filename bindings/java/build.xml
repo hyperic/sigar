@@ -183,7 +183,52 @@
 
  <target name="test" depends="build,xtest"/>
 
- <target name="dist" depends="javadoc">
+ <target name="dist-pack">
+   <zip destfile="${dist}.zip"
+        basedir="${build}"
+        includes="${dist.name}/**/*"/>
+
+    <!-- Stupid ant tar task, doesn't preserve file permissions
+         without making you jump through some hoops -->
+   <tar tarfile="${dist}.tar.gz"
+        longfile="gnu"
+        compression="gzip">
+      <tarfileset dir="${dist}/.." mode="755">
+        <include name="${dist.name}/**/bin/*"/>
+        <include name="${dist.name}/**/*.sh"/>
+        <include name="${dist.name}/**/*.bat"/>
+        <include name="${dist.name}/**/*.cmd"/>
+        <include name="${dist.name}/**/*.sl"/>
+      </tarfileset>
+      <tarfileset dir="${dist}/..">
+        <exclude name="${dist.name}/**/bin/*"/>
+        <exclude name="${dist.name}/**/*.sh"/>
+        <exclude name="${dist.name}/**/*.bat"/>
+        <exclude name="${dist.name}/**/*.cmd"/>
+        <exclude name="${dist.name}/**/*.sl"/>
+        <include name="${dist.name}/**"/>
+      </tarfileset>
+   </tar>
+ </target>
+
+ <target name="dist-bin">
+   <!-- binaries -->
+   <mkdir dir="${dist}/sigar-bin"/>
+   <copy toDir="${dist}/sigar-bin" overwrite="true">
+     <fileset dir="${sigar-bin}">
+       <include name="lib/*.jar"/>
+       <include name="lib/*.dll"/>
+       <include name="lib/*.sl"/>
+       <include name="lib/*.so"/>
+       <include name="lib/*.dylib"/>
+     </fileset>
+     <fileset dir=".">
+       <include name="lib/*.jar"/>
+     </fileset>
+   </copy>
+ </target>
+
+ <target name="dist-support" depends="javadoc">
    <!-- docs -->
    <mkdir dir="${dist}/docs"/>
    <copy toDir="${dist}/docs" overwrite="true">
@@ -215,47 +260,14 @@
      </fileset>
    </copy>
 
-   <!-- binaries and header files -->
-   <mkdir dir="${dist}/sigar-bin"/>
+   <!-- header files -->
    <copy toDir="${dist}/sigar-bin" overwrite="true">
      <fileset dir="${sigar-bin}">
-       <include name="lib/*.jar"/>
-       <include name="lib/*.dll"/>
-       <include name="lib/*.sl"/>
-       <include name="lib/*.so"/>
-       <include name="lib/*.dylib"/>
        <include name="include/*.h"/>
      </fileset>
-     <fileset dir=".">
-       <include name="lib/*.jar"/>
-     </fileset>
    </copy>
-
-   <zip destfile="${dist}.zip"
-        basedir="${build}"
-        includes="${dist.name}/**/*"/>
-
-    <!-- Stupid ant tar task, doesn't preserve file permissions
-         without making you jump through some hoops -->
-   <tar tarfile="${dist}.tgz"
-        longfile="gnu"
-        compression="gzip">
-      <tarfileset dir="${dist}/.." mode="755">
-        <include name="${dist.name}/**/bin/*"/>
-        <include name="${dist.name}/**/*.sh"/>
-        <include name="${dist.name}/**/*.bat"/>
-        <include name="${dist.name}/**/*.cmd"/>
-        <include name="${dist.name}/**/*.sl"/>
-      </tarfileset>
-      <tarfileset dir="${dist}/..">
-        <exclude name="${dist.name}/**/bin/*"/>
-        <exclude name="${dist.name}/**/*.sh"/>
-        <exclude name="${dist.name}/**/*.bat"/>
-        <exclude name="${dist.name}/**/*.cmd"/>
-        <exclude name="${dist.name}/**/*.sl"/>
-        <include name="${dist.name}/**"/>
-      </tarfileset>
-   </tar>
  </target>
+
+ <target name="dist" depends="dist-bin,dist-support,dist-pack"/>
 
 </project>
