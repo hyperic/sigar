@@ -820,7 +820,7 @@ public class ProcessQueryBuilder {
         }
 
         byte[] bytecode = this.generator.getJavaClass().getBytes();
-        ClassLoader parent = ClassLoader.getSystemClassLoader();
+        ClassLoader parent = this.getClass().getClassLoader();
         ClassLoader cl = new ProcessQueryClassLoader(parent, bytecode);
         Class genclass;
 
