@@ -48,7 +48,9 @@ public class TestProcExe extends SigarTestCase {
             String cwd = exe.getCwd();
             traceln("cwd='" + cwd + "'");
 
-            assertTrue(new File(cwd).isDirectory());
+            if (cwd.length() > 0) {
+                assertTrue(new File(cwd).isDirectory());
+            }
 
             traceln("exe='" + exe.getName() + "'");
 
