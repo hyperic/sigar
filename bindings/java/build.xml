@@ -111,13 +111,17 @@
     <patternset id="jni.source.files">
       <include name="src/*.c"/>
       <include name="src/os/${jni.src}/*.c"/>
-      <include name="bindings/java/src/jni/javasigar.c"/>
+      <include name="bindings/java/src/jni/*.c"/>
+      <exclude name="bindings/java/src/jni/javasigar_generated.c"/>
+      <include name="bindings/java/src/jni/win32/*.cpp"/>
+      <include name="bindings/java/src/jni/win32/*.c"/>
     </patternset>
 
     <path id="jni.include.dirs">
       <path location="../../include"/>
       <path location="../../src/os/${jni.src}"/>
       <path location="${build}/src"/>
+      <path location="src/jni"/>
     </path>
 
     <!-- extra solaris libs -->
