@@ -1,3 +1,7 @@
+2004-10-05  Doug MacEachern  <dougm@hyperic.net>
+
+        * make sigar_swap and sigar_mem compatible with linux 2.6 kernel
+
 2004-09-07  Doug MacEachern  <dougm@hyperic.net>
 
         * starting ChangeLog for version 1.1.10
