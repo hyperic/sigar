@@ -27,5 +27,7 @@ public class TestProcTime extends SigarTestCase {
         assertGtEqZeroTrace("User", procTime.getUser());
 
         assertGtEqZeroTrace("Sys", procTime.getSys());
+
+        assertGtEqZeroTrace("Total", procTime.getTotal());
     }
 }
