@@ -801,7 +801,7 @@ int sigar_proc_env_get(sigar_t *sigar, sigar_pid_t pid,
     int num;
 
     if (!sigar->kmem) {
-        return SIGAR_EPERM_KMEM;
+        return SIGAR_ENOTIMPL;
     }
 
     pinfo = kvm_getprocs(sigar->kmem, KERN_PROC_PID, pid, &num);
