@@ -28,6 +28,18 @@ public class NetPortMap {
         }
     }
 
+    public static class IpEntry {
+        int count;
+
+        IpEntry() {
+            this.count = 0;
+        }
+
+        public String toString() {
+            return "count:" + this.count;
+        }
+    }
+
     private static void parseServices(String type, Map services) {
         File file = new File(SERVICE_FILE);
         if (!file.exists()) {
@@ -119,10 +131,10 @@ public class NetPortMap {
         for (int i=0; i<connections.length; i++) {
             NetConnection conn = connections[i];
             Long port = new Long(conn.getLocalPort());
-            List addresses = (List)map.get(port);
+            Map addresses = (Map)map.get(port);
 
             if (addresses == null) {
-                addresses = new ArrayList();
+                addresses = new HashMap();
                 map.put(port, addresses);
             }
         }
@@ -130,17 +142,24 @@ public class NetPortMap {
         //second pass, get addresses connected to listening ports
         flags = NetFlags.CONN_CLIENT | NetFlags.CONN_TCP;
         connections = sigar.getNetConnectionList(flags);
+        IpEntry key = new IpEntry();
 
         for (int i=0; i<connections.length; i++) {
             NetConnection conn = connections[i];
             Long port = new Long(conn.getLocalPort());
-            List addresses = (List)map.get(port);
+            Map addresses = (Map)map.get(port);
 
             if (addresses == null) {
                 continue;
             }
 
-            addresses.add(conn.getRemoteAddress());
+            String ip = conn.getRemoteAddress();
+            IpEntry entry = (IpEntry)addresses.get(ip);
+            if (entry == null) {
+                entry = new IpEntry();
+                addresses.put(ip, entry);
+            }
+            entry.count++;
         }
 
         return map;
@@ -155,7 +174,7 @@ public class NetPortMap {
         {
             Map.Entry entry = (Map.Entry)it.next();
             Long port = (Long)entry.getKey();
-            List addresses = (List)entry.getValue();
+            Map addresses = (Map)entry.getValue();
             System.out.println(port + "=" + addresses);
         }
     }
