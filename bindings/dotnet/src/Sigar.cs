@@ -32,6 +32,10 @@ namespace Hyperic.Sigar {
             return Hyperic.Sigar.Swap.NativeGet(this);
         }
 
+        public Cpu Cpu() {
+            return Hyperic.Sigar.Cpu.NativeGet(this);
+        }
+
         public CpuInfo[] CpuInfoList() {
             return Hyperic.Sigar.CpuInfoList.NativeGet(this);
         }
@@ -112,6 +116,35 @@ namespace Hyperic.Sigar {
             Marshal.FreeHGlobal(ptr);
 
             return swap;
+        }
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct Cpu {
+        public readonly ulong User;
+        public readonly ulong Sys;
+        private readonly ulong NA_Nice;
+        public readonly ulong Idle;
+        public readonly ulong Total;
+
+        [DllImport(Sigar.LIBSIGAR)]
+        private static extern int sigar_cpu_get(IntPtr sigar, IntPtr cpu);
+
+        internal static Cpu NativeGet(Sigar sigar) {
+            Type type = typeof(Cpu);
+            IntPtr ptr = Marshal.AllocHGlobal(Marshal.SizeOf(type));
+
+            int status = sigar_cpu_get(sigar.sigar.Handle, ptr);
+
+            if (status != Sigar.OK) {
+                Marshal.FreeHGlobal(ptr);
+                throw new ApplicationException("cpu_get");
+            }
+
+            Cpu cpu = (Cpu)Marshal.PtrToStructure(ptr, type);
+            Marshal.FreeHGlobal(ptr);
+
+            return cpu;
         }
     }
 
