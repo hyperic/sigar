@@ -980,11 +980,27 @@ int sigar_proc_modules_get(sigar_t *sigar, sigar_pid_t pid,
     return SIGAR_ENOTIMPL;
 }
 
+#define SIGAR_MICROSEC2NANO(s) \
+    ((sigar_uint64_t)(s) * (sigar_uint64_t)1000)
+
+#define TIME_NSEC(t) \
+    (SIGAR_SEC2NANO((t).tv_sec) + SIGAR_MICROSEC2NANO((t).tv_usec))
+
 int sigar_thread_cpu_get(sigar_t *sigar,
                          sigar_uint64_t id,
                          sigar_thread_cpu_t *cpu)
 {
-    return SIGAR_ENOTIMPL;
+    /* XXX this is not per-thread, it is for the whole-process.
+     * just want to use for the shell time command at the moment.
+     */
+    struct rusage usage;
+    getrusage(RUSAGE_SELF, &usage);
+
+    cpu->user  = TIME_NSEC(usage.ru_utime);
+    cpu->sys   = TIME_NSEC(usage.ru_stime);
+    cpu->total = TIME_NSEC(usage.ru_utime) + TIME_NSEC(usage.ru_stime);
+
+    return SIGAR_OK;
 }
 
 int sigar_os_fs_type_get(sigar_file_system_t *fsp)
