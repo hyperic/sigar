@@ -13,6 +13,7 @@ int sigar_os_open(sigar_t **sigar)
     (*sigar)->pagesize = getpagesize();
     (*sigar)->boot_time = 0;
     (*sigar)->mhz = 0;
+    (*sigar)->nproc = -1;
 
     return SIGAR_OK;
 }
@@ -140,10 +141,39 @@ int sigar_loadavg_get(sigar_t *sigar,
     return SIGAR_OK;
 }
 
+#define PROC_ELTS 16
+
 int sigar_proc_list_get(sigar_t *sigar,
                         sigar_proc_list_t *proclist)
 {
-    return SIGAR_ENOTIMPL;
+    struct tbl_procinfo procinfo[PROC_ELTS];
+    int offset;
+
+    if (sigar->nproc == -1) {
+        /* this number will not change while we are running */
+        sigar->nproc = table(TBL_PROCINFO, 0, NULL, INT_MAX, 0);
+    }
+
+    sigar_proc_list_create(proclist);
+
+    for (offset=0; offset<sigar->nproc; offset+=PROC_ELTS) {
+        int i;
+        int elts = table(TBL_PROCINFO, offset, &procinfo,
+                         PROC_ELTS, sizeof(procinfo[0]));
+
+        for (i=0; i<elts; i++) {
+            struct tbl_procinfo *info = &procinfo[i];
+            if (!info->pi_status) {
+                continue;
+            }
+
+            SIGAR_PROC_LIST_GROW(proclist);
+            
+            proclist->data[proclist->number++] = info->pi_pid;
+        }
+    }
+
+    return SIGAR_OK;
 }
 
 int sigar_proc_stat_get(sigar_t *sigar,
