@@ -1,5 +1,6 @@
 package net.hyperic.sigar.test;
 
+import net.hyperic.sigar.CpuTimer;
 import net.hyperic.sigar.Sigar;
 import net.hyperic.sigar.SigarNotImplementedException;
 import net.hyperic.sigar.ThreadCpu;
@@ -26,13 +27,15 @@ public class TestThreadCpu extends SigarTestCase {
 
         assertGtEqZeroTrace("Total", cpu.getTotal());
 
+        CpuTimer timer = new CpuTimer(sigar);
+
         for (int i=0; i<1000000; i++) {
             System.getProperty("java.home");
         }
 
         traceln("\nDiff...\n");
 
-        ThreadCpu diff = sigar.getThreadCpuDiff(cpu);
+        ThreadCpu diff = timer.getDiff();
 
         assertGtEqZeroTrace("User", diff.getUser());
 
