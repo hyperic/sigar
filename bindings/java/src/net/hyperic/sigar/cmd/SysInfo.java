@@ -93,6 +93,12 @@ public class SysInfo extends SigarCommandBase {
         this.out.println("");
 
         /**
+         * uptime
+         */
+        new Uptime(this.shell).output(args);
+        this.out.println("");
+
+        /**
          * CPU info
          */
         net.hyperic.sigar.CpuInfo[] infos =
