@@ -99,12 +99,22 @@
       <path location="${build}/src"/>
     </path>
 
+    <!-- extra solaris libs -->
     <condition property="jni.libset.dir" value="/usr/lib">
       <isset property="solaris"/>
     </condition>
 
     <condition property="jni.libset.libs" value="kstat">
       <isset property="solaris"/>
+    </condition>
+
+    <!-- extra aix libs -->
+    <condition property="jni.libset.dir" value="/usr/lib">
+      <isset property="aix"/>
+    </condition>
+
+    <condition property="jni.libset.libs" value="odm,cfg">
+      <isset property="aix"/>
     </condition>
   </target>
 
