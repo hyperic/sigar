@@ -235,6 +235,22 @@
      </fileset>
    </copy>
 
+   <!-- bindings -->
+   <mkdir dir="${dist}/bindings/perl"/>
+   <copy toDir="${dist}/bindings/perl" overwrite="true">
+     <fileset dir="../perl">
+       <include name="Makefile.PL"/>
+       <include name="typemap"/>
+       <include name="*.xs"/>
+       <include name="*.pm"/>
+       <include name="lib/*.pm"/>
+       <include name="lib/Sigar/*.pm"/>
+     </fileset>
+     <fileset dir="${build}/src">
+       <include name="Sigar_generated.xs"/>
+     </fileset>
+   </copy>
+
    <!-- docs -->
    <mkdir dir="${dist}/docs"/>
    <copy toDir="${dist}/docs" overwrite="true">
