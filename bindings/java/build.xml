@@ -252,6 +252,7 @@
    <copy toDir="${dist}" overwrite="true">
      <fileset dir="../..">
        <include name="README"/>
+       <include name="LICENSE"/>
      </fileset>
    </copy>
 
