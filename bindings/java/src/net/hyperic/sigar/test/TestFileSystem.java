@@ -41,10 +41,10 @@ public class TestFileSystem extends SigarTestCase {
                 assertGtEqZeroTrace("  Free", usage.getFree());
                 assertGtEqZeroTrace("  Avail", usage.getAvail());
                 double usePercent = usage.getUsePercent() * 100;
-                traceln("Used=" + usePercent + "%");
+                traceln("  Used=" + usePercent + "%");
                 assertTrue(usePercent <= 100.0);
-                traceln("DiskReads=" + usage.getDiskReads());
-                traceln("DiskWrites=" + usage.getDiskWrites());
+                traceln("  DiskReads=" + usage.getDiskReads());
+                traceln("  DiskWrites=" + usage.getDiskWrites());
                 break;
             }
         }
