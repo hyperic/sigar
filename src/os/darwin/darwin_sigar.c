@@ -50,6 +50,7 @@
 #define KI_TSZ  ki_tsize
 #define KI_DSZ  ki_dsize
 #define KI_SSZ  ki_ssize
+#define KI_FLAG ki_flag
 #else
 
 #define KI_PID  kp_proc.p_pid
@@ -67,6 +68,7 @@
 #define KI_TSZ  kp_eproc.e_vm.vm_tsize
 #define KI_DSZ  kp_eproc.e_vm.vm_dsize
 #define KI_SSZ  kp_eproc.e_vm.vm_ssize
+#define KI_FLAG kp_eproc.e_flag
 #endif
 
 #ifndef DARWIN
@@ -389,6 +391,11 @@ int sigar_loadavg_get(sigar_t *sigar,
     return SIGAR_OK;
 }
 
+#ifndef KERN_PROC_PROC
+/* freebsd 4.x */
+#define KERN_PROC_PROC KERN_PROC_ALL
+#endif
+
 int sigar_proc_list_get(sigar_t *sigar,
                         sigar_proc_list_t *proclist)
 {
@@ -434,7 +441,7 @@ int sigar_proc_list_get(sigar_t *sigar,
     sigar_proc_list_create(proclist);
 
     for (i=0; i<num; i++) {
-        if (proc[i].ki_flag & P_SYSTEM) {
+        if (proc[i].KI_FLAG & P_SYSTEM) {
             continue;
         }
         SIGAR_PROC_LIST_GROW(proclist);
