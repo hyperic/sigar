@@ -7,6 +7,7 @@ import java.util.ArrayList;
 
 import net.hyperic.sigar.Sigar;
 import net.hyperic.sigar.SigarException;
+import net.hyperic.sigar.SigarLoader;
 import net.hyperic.sigar.SigarProxy;
 import net.hyperic.sigar.SigarProxyCache;
 
@@ -125,8 +126,9 @@ public class Shell extends ShellBase {
         return this.foundPids;
     }
 
-    public void readCommandFile(File rc) {
+    public void readCommandFile(String dir) {
         try {
+            File rc = new File(dir, RCFILE_NAME);
             readRCFile(rc, false);
             this.out.println("Loaded rc file: " + rc);
         } catch (IOException e) { }
@@ -138,10 +140,10 @@ public class Shell extends ShellBase {
         try {
             shell.init("sigar", System.out, System.err);
             shell.registerCommands();
-            String home = System.getProperty("user.home");
 
-            shell.readCommandFile(new File(home, RCFILE_NAME));
-            shell.readCommandFile(new File(RCFILE_NAME));
+            shell.readCommandFile(System.getProperty("user.home"));
+            shell.readCommandFile(".");
+            shell.readCommandFile(SigarLoader.getLocation());
 
             if (args.length == 0) {
                 shell.isInteractive = true;
