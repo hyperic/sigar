@@ -80,9 +80,9 @@ public class NetFlags {
         NetFlags.CONN_RAW | NetFlags.CONN_UNIX;
 
     /**
-     * @param flags network inteface flags.
-     * @return String representation of network inteface flags.
-     * @see net.hyperic.sigar.NetIfconfig#getFlags
+     * @param flags network interface flags.
+     * @return String representation of network interface flags.
+     * @see net.hyperic.sigar.NetInterfaceConfig#getFlags
      */
     public static String getIfFlagsString(long flags) {
         String retval = "";
