@@ -209,6 +209,10 @@ int sigar_os_open(sigar_t **sigar)
                                             "TcpExTableFromStack");
         (*sigar)->get_udp_table = 
             (LPGETUDPTABLE)GetProcAddress(h, "GetUdpTable");
+        (*sigar)->get_udpx_table = 
+            (LPGETUDPEXTABLE)GetProcAddress(h,
+                                            "AllocateAndGet"
+                                            "UdpExTableFromStack");
         (*sigar)->ip_handle = h;
     }
     else {
@@ -2156,37 +2160,62 @@ SIGAR_DECLARE(int) sigar_proc_port_get(sigar_t *sigar,
                                        unsigned long port,
                                        sigar_pid_t *pid)
 {
-    int status;
     DWORD rc, i;
-    PMIB_TCPEXTABLE tcp;
 
-    if (!sigar->get_tcpx_table) {
+    if (protocol == SIGAR_NETCONN_TCP) {
+        PMIB_TCPEXTABLE tcp;
+
+        if (!sigar->get_tcpx_table) {
+            return SIGAR_ENOTIMPL;
+        }
+
+        rc = sigar->get_tcpx_table(&tcp, FALSE, GetProcessHeap(),
+                                   2, 2);
+
+        if (rc) {
+            return GetLastError();
+        }
+
+        for (i=0; i<tcp->dwNumEntries; i++) {
+            if (tcp->table[i].dwState != MIB_TCP_STATE_LISTEN) {
+                continue;
+            }
+
+            if (htons((WORD)tcp->table[i].dwLocalPort) != port) {
+                continue;
+            }
+
+            *pid = tcp->table[i].dwProcessId;
+            
+            return SIGAR_OK;
+        }
+    }
+    else if (protocol == SIGAR_NETCONN_UDP) {
+        PMIB_UDPEXTABLE udp;
+
+        if (!sigar->get_udpx_table) {
+            return SIGAR_ENOTIMPL;
+        }
+
+        rc = sigar->get_udpx_table(&udp, FALSE, GetProcessHeap(),
+                                   2, 2);
+
+        if (rc) {
+            return GetLastError();
+        }
+
+        for (i=0; i<udp->dwNumEntries; i++) {
+            if (htons((WORD)udp->table[i].dwLocalPort) != port) {
+                continue;
+            }
+
+            *pid = udp->table[i].dwProcessId;
+            
+            return SIGAR_OK;
+        }
+    }
+    else {
         return SIGAR_ENOTIMPL;
-    }
-
-    if (protocol != SIGAR_NETCONN_TCP) {
-        return SIGAR_ENOTIMPL; /* XXX UDP */
-    }
-
-    rc = sigar->get_tcpx_table(&tcp, FALSE, GetProcessHeap(),
-                               2, 2);
-
-    if (rc) {
-        return GetLastError();
-    }
-
-    for (i=0; i<tcp->dwNumEntries; i++) {
-        if (tcp->table[i].dwState != MIB_TCP_STATE_LISTEN) {
-            continue;
-        }
-
-        if (htons((WORD)tcp->table[i].dwLocalPort) != port) {
-            continue;
-        }
-
-        *pid = tcp->table[i].dwProcessId;
-
-        return SIGAR_OK;
     }
 
     return ENOENT;

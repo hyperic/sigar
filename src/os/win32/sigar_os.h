@@ -84,6 +84,9 @@ typedef DWORD (CALLBACK *LPGETUDPTABLE)(PMIB_UDPTABLE, PDWORD, BOOL);
 typedef DWORD (CALLBACK *LPGETTCPEXTABLE)(PMIB_TCPEXTABLE *, BOOL, HANDLE,
                                           DWORD, DWORD);
 
+typedef DWORD (CALLBACK *LPGETUDPEXTABLE)(PMIB_UDPEXTABLE *, BOOL, HANDLE,
+                                          DWORD, DWORD);
+
 typedef DWORD (CALLBACK *LPSYSINFO)(DWORD, PVOID, ULONG, PULONG);
 
 /* no longer in the standard header files */
@@ -124,6 +127,7 @@ struct sigar_t {
     LPGETTCPTABLE get_tcp_table;
     LPGETTCPEXTABLE get_tcpx_table;
     LPGETUDPTABLE get_udp_table;
+    LPGETUDPEXTABLE get_udpx_table;
     LPSYSINFO get_ntsys_info;
     sigar_win32_pinfo_t pinfo;
     WORD ws_version;
