@@ -844,11 +844,10 @@ my %pfields = (
     Int    => "IV",
     Char   => "char",
     String => "char *",
+    NetAddr => "Sigar::NetAddr",
 );
 
 $jfields{'NetAddr'} = $jfields{'String'};
-
-$pfields{'NetAddr'} = 'UV'; #XXX in java is a String
 
 my %jinit = (
     String => 'null',
