@@ -498,7 +498,7 @@ int sigar_cpu_get(sigar_t *sigar, sigar_cpu_t *cpu)
     if (sigar_perfstat_init(sigar) == SIGAR_OK) {
         sigar_log(sigar, SIGAR_LOG_DEBUG, "[cpu] using libperfstat");
 
-        if (sigar->perfstat.cpu_total(0, &cpu_data, sizeof(cpu_data), 1)) {
+        if (sigar->perfstat.cpu_total(&cpu_data, sizeof(cpu_data))) {
             cpu->user  = cpu_data.user;
             cpu->nice  = -1; /* N/A */
             cpu->sys   = cpu_data.sys;
@@ -743,7 +743,7 @@ int sigar_loadavg_get(sigar_t *sigar,
         sigar_log(sigar, SIGAR_LOG_DEBUG,
                   "[loadavg] using libperfstat");
 
-        if (sigar->perfstat.cpu_total(0, &cpu_data, sizeof(cpu_data), 1)) {
+        if (sigar->perfstat.cpu_total(&cpu_data, sizeof(cpu_data))) {
             for (i=0; i<3; i++) {
                 loadavg->loadavg[i] = FIXED_TO_DOUBLE(cpu_data.loadavg[i]);
             }
@@ -1334,7 +1334,7 @@ static int sigar_get_cpu_mhz_perfstat(sigar_t *sigar)
     perfstat_cpu_total_t data;
 
     if (sigar_perfstat_init(sigar) == SIGAR_OK) {
-        if (sigar->perfstat.cpu_total(0, &data, sizeof(data), 1)) {
+        if (sigar->perfstat.cpu_total(&data, sizeof(data))) {
             sigar->cpu_mhz = data.processorHZ / 1000000;
             return SIGAR_OK;
         }
