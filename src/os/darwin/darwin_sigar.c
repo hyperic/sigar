@@ -145,7 +145,7 @@ int sigar_os_open(sigar_t **sigar)
 #ifdef DARWIN
     (*sigar)->mach_port = mach_host_self();
 #else
-    (*sigar)->kmem = kvm_open(NULL, NULL, NULL, O_RDONLY, "kvm_open");
+    (*sigar)->kmem = kvm_open(NULL, NULL, NULL, O_RDONLY, NULL);
     if (stat("/proc/curproc", &sb) < 0) {
         (*sigar)->proc_mounted = 0;
     }
