@@ -1,0 +1,37 @@
+#common cpu model names
+#linux /proc/cpuinfo model name
+#win32 HKLM/HARDWARE/DESCRIPTION/System/CentralProcessor/0/ProcessorNameString
+
+Intel(R) Xeon(TM) CPU 2.40GHz
+Pentium III (Cascades)
+Celeron (Mendocino)
+Pentium III (Coppermine)
+Pentium 75 - 200
+AMD-K6(tm)-III Processor
+AMD Opteron(tm) Processor 246
+Opteron MP w/ 1MB
+Intel(R) XEON(TM) CPU 1.80GHz
+Pentium II (Deschutes)
+Intel(R) Pentium(R) 4 CPU 1.80GHz
+AMD-K6(tm) 3D+ Processor
+AMD Athlon(tm) processor
+AMD Athlon(tm) XP 1900+
+Intel(R) Celeron(R) CPU 1.70GHz
+AMD Athlon(TM) XP 2400+
+AMD Athlon (TM)
+Pentium Pro
+Pentium III (Katmai)
+mobile AMD Athlon(tm) 4 Processor
+AMD Duron(tm) Processor
+AMD Athlon(TM) XP1700+
+Pentium II (Klamath)
+Pentium III (Katmai)
+AMD Athlon(tm) MP Processor 1800+
+Pentium MMX
+Intel(R) Pentium(R) 4 Mobile CPU 1.60GHz
+Intel(R) Celeron(TM) CPU                1200MHz
+Intel(R) Pentium(R) III CPU family 1400MHz
+Mobile Intel(R) Pentium(R) 4 - M CPU 2.00GHz
+Intel(R) Celeron(R) CPU 2.30GHz
+Intel(R) Pentium(R) M processor 1500MHz
+Intel(R) Xeon(TM) MP CPU 2.80GHz
