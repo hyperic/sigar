@@ -681,7 +681,7 @@ void sigar_hwaddr_format(char *buff, unsigned char *ptr)
 #include <sys/sockio.h>
 #endif
 
-#if defined(_AIX)
+#if defined(_AIX) || defined(__osf__) /* good buddies */
 
 #include <net/if_dl.h>
 
@@ -815,7 +815,7 @@ int sigar_net_interface_config_get(sigar_t *sigar, const char *name,
         if (!ioctl(sock, SIOCGIFHWADDR, &ifr)) {
             sigar_hwaddr_format(ifconfig->hwaddr, ifr.ifr_hwaddr.sa_data);
         }
-#elif defined(_AIX)
+#elif defined(_AIX) || defined(__osf__)
         hwaddr_aix_lookup(sigar, ifconfig);
 #else
         hwaddr_arp_lookup(ifconfig, sock);
