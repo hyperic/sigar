@@ -214,8 +214,10 @@ public class SigarInvoker {
                                              typeGetter,
                                              args);
         } catch (Throwable t) {
+            String parms =
+                (args == null) ? "" : Arrays.asList(args).toString();
             String msg = "Failed to invoke " + 
-                typeGetter.getName() + Arrays.asList(args) +
+                typeGetter.getName() + parms +
                 ": " + t.getMessage();
             throw new SigarException(msg);
         }
