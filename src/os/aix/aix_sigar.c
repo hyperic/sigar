@@ -852,6 +852,12 @@ static int proc_module_get_self(void *data, char *name, int len)
 
         SIGAR_SSTRCPY(sigar->self_path, name);
 
+        if (SIGAR_LOG_IS_DEBUG(sigar)) {
+            sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
+                             "detected sigar-lib='%s'",
+                             sigar->self_path);
+        }
+
         return !SIGAR_OK; /* break loop */
     }
 
@@ -870,7 +876,7 @@ static char *sigar_get_self_path(sigar_t *sigar)
 
         if (sigar->self_path[0] == '\0') {
             /* dont try again */
-            SIGAR_SSTRCPY(sigar->self_path, "unknown");
+            SIGAR_SSTRCPY(sigar->self_path, ".");
         }
     }
 
@@ -1135,6 +1141,12 @@ static int sigar_get_cpu_mhz_perfstat(sigar_t *sigar)
            sizeof(SIGAR_AIXPERFSTAT));
 
     if (!(handle = dlopen(path, RTLD_LOCAL|RTLD_LAZY))) {
+        if (SIGAR_LOG_IS_DEBUG(sigar)) {
+            sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
+                             "failed to open '%s': %s",
+                             path, sigar_strerror(sigar, errno));
+        }
+
         return errno;
     }
 
@@ -1142,6 +1154,12 @@ static int sigar_get_cpu_mhz_perfstat(sigar_t *sigar)
                                       "sigar_perfstat_cpu_total");
 
     if (!pcpu) {
+        if (SIGAR_LOG_IS_DEBUG(sigar)) {
+            sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
+                             "dlsym(sigar_perfstat_cpu_total) failed: %s",
+                             dlerror());
+        }
+
         dlclose(handle);
         return ENOENT;
     }
