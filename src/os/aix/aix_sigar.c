@@ -1,3 +1,7 @@
+#define _KERNEL 1 /* for struct file */
+#include <sys/file.h>
+#undef  _KERNEL
+
 #include "sigar.h"
 #include "sigar_private.h"
 #include "sigar_util.h"
@@ -24,6 +28,12 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <net/if.h>
+
+/* for proc_port */
+#include <netinet/in_pcb.h>
+#include <sys/domain.h>
+#include <sys/protosw.h>
+#include <sys/socketvar.h>
 
 /* for odm api */
 #include <sys/cfgodm.h>
@@ -2015,4 +2025,109 @@ int sigar_net_connection_list_get(sigar_t *sigar,
                                   int flags)
 {
     return SIGAR_ENOTIMPL;
+}
+
+/* derived from pidentd's k_aix432.c */
+int sigar_proc_port_get(sigar_t *sigar, unsigned long port, sigar_pid_t *pidp)
+{
+    struct procsinfo pinfo;
+    struct fdsinfo finfo;
+    pid_t pid = 0;
+
+    for (;;) {
+        int fd, status;
+        int num = getprocs(&pinfo, sizeof(pinfo),
+                           &finfo, sizeof(finfo),
+                           &pid, 1);
+
+        if (num == 0) {
+            break;
+        }
+
+        if ((pinfo.pi_state == 0) || (pinfo.pi_state == SZOMB)) {
+            continue;
+        }
+
+        for (fd = 0; fd < pinfo.pi_maxofile; fd++) {
+            struct file file;
+            struct socket socket, *sockp;
+            struct protosw protosw;
+            struct domain domain;
+            struct inpcb inpcb;
+            long ptr;
+            
+            if (!(ptr = (long)finfo.pi_ufd[fd].fp)) {
+                continue;
+            }
+            
+            status = kread(sigar, &file, sizeof(file), ptr);
+            if (status != SIGAR_OK) {
+                continue;
+            }
+
+            if (file.f_type != DTYPE_SOCKET) {
+                continue;
+            }
+            
+            if (!(sockp = (struct socket *)file.f_data)) {
+                continue;
+            }
+            
+            status = kread(sigar, &socket, sizeof(socket), (long)sockp);
+            if (status != SIGAR_OK) {
+                continue;
+            }
+
+            if (!(ptr = (long)socket.so_proto)) {
+                continue;
+            }
+            
+            status = kread(sigar, &protosw, sizeof(protosw), ptr);
+            if (status != SIGAR_OK) {
+                continue;
+            }
+
+            if (protosw.pr_protocol != IPPROTO_TCP) {
+                continue;
+            }
+            
+            if (!(ptr = (long)protosw.pr_domain)) {
+                continue;
+            }
+            
+            status = kread(sigar, &domain, sizeof(domain), ptr);
+            if (status != SIGAR_OK) {
+                continue;
+            }
+
+            if ((domain.dom_family != AF_INET) &&
+                domain.dom_family != AF_INET6)
+            {
+                continue;
+            }
+            
+            if (!(ptr = (long)socket.so_pcb)) {
+                continue;
+            }
+            
+            status = kread(sigar, &inpcb, sizeof(inpcb), ptr);
+            if (status != SIGAR_OK) {
+                continue;
+            }
+
+            if (sockp != inpcb.inp_socket) {
+                continue;
+            }
+
+            if (inpcb.inp_lport != port) {
+                continue;
+            }
+            
+            *pidp = pinfo.pi_pid;
+
+            return SIGAR_OK;
+        }
+    }
+
+    return ENOENT;
 }
