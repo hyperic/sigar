@@ -1,6 +1,12 @@
 package net.hyperic.sigar.test;
 
 import java.io.PrintStream;
+import java.io.IOException;
+import java.io.File;
+import java.io.FileInputStream;
+
+import java.util.Properties;
+
 import junit.framework.TestCase;
 
 import net.hyperic.sigar.Sigar;
@@ -9,11 +15,31 @@ import net.hyperic.sigar.Sigar;
 public abstract class SigarTestCase extends TestCase {
 
     private Sigar sigar = null;
+    private Properties props = new Properties();
+
     private static boolean verbose = false;
     private static PrintStream out = System.out;
 
     public SigarTestCase(String name) {
         super(name);
+
+        File f = new File(System.getProperty("user.home"),
+                          ".sigar.properties");
+
+        if (f.exists()) {
+            FileInputStream is = null;
+
+            try {
+                is = new FileInputStream(f);
+                this.props.load(is);
+            } catch (IOException e) {
+                e.printStackTrace();
+            } finally {
+                if (is != null) {
+                    try { is.close(); } catch (IOException e) { }
+                }
+            }
+        }
     }
 
     public Sigar getSigar() {
@@ -24,6 +50,18 @@ public abstract class SigarTestCase extends TestCase {
             }
         }
         return this.sigar;
+    }
+
+    public Properties getProperties() {
+        return this.props;
+    }
+    
+    public String getProperty(String key, String val) {
+        return getProperties().getProperty(key, val);
+    }
+
+    public String getProperty(String key) {
+        return getProperty(key, null);
     }
 
     public static void setVerbose(boolean value) {
