@@ -142,8 +142,11 @@ int sigar_os_open(sigar_t **sigar)
     version.dwOSVersionInfoSize = sizeof(version);
     GetVersionEx(&version);
 
-    (*sigar)->winnt =
-        (version.dwPlatformId == VER_PLATFORM_WIN32_NT);
+    /*
+     * 4 == NT 4.0
+     * 5 == 2000, XP, 2003 Server
+     */
+    (*sigar)->winnt = (version.dwMajorVersion == 4);
 
     if (USING_WIDE_S(*sigar)) {
         WCHAR wmachine[MAX_PATH+1];
