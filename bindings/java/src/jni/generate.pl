@@ -744,6 +744,16 @@ my %classes = (
          desc => '',
          plat => 'L'
       },
+      {
+         name => 'send_queue', type => 'Long',
+         desc => '',
+         plat => 'L'
+      },
+      {
+         name => 'receive_queue', type => 'Long',
+         desc => '',
+         plat => 'L'
+      },
     ],
     Who => [
       {
