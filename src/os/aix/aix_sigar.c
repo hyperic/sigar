@@ -477,6 +477,22 @@ int sigar_cpu_get(sigar_t *sigar, sigar_cpu_t *cpu)
 {
     int i, status;
     struct sysinfo data;
+    perfstat_cpu_total_t cpu_data;
+
+    if (sigar_perfstat_init(sigar) == SIGAR_OK) {
+        sigar_log(sigar, SIGAR_LOG_DEBUG, "[cpu] using libperfstat");
+
+        if (sigar->perfstat.cpu_total(0, &cpu_data, sizeof(cpu_data), 1)) {
+            cpu->user  = cpu_data.user;
+            cpu->nice  = -1; /* N/A */
+            cpu->sys   = cpu_data.sys;
+            cpu->idle  = cpu_data.idle;
+            cpu->total = cpu->user + cpu->sys + cpu->idle + cpu_data.wait;
+            return SIGAR_OK;
+        }
+    }
+
+    sigar_log(sigar, SIGAR_LOG_DEBUG, "[cpu] using /dev/kmem");
 
     status = kread(sigar, &data, sizeof(data),
                    sigar->koffsets[KOFFSET_SYSINFO]);
