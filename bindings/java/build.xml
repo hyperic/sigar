@@ -10,6 +10,7 @@
   <property name="project.name" value="sigar"/>
   <property name="jni.define.name" value="SIGAR"/>
   <property name="sigar-bin" location="sigar-bin"/>
+  <property name="sigar-bin-dir" location="${sigar-bin}"/>
   <property name="jni.bin" location="${sigar-bin}"/>
   <property name="jni.source.dir" location="../.."/>
   <property name="jni.src.java" value="hyperic_jni/src"/>
@@ -234,7 +235,7 @@
    <!-- binaries -->
    <mkdir dir="${dist}/sigar-bin"/>
    <copy toDir="${dist}/sigar-bin" overwrite="true">
-     <fileset dir="${sigar-bin}">
+     <fileset dir="${sigar-bin-dir}">
        <include name="lib/*.jar"/>
        <include name="lib/*.dll"/>
        <include name="lib/*.sl"/>
