@@ -3,14 +3,27 @@ package net.hyperic.sigar.test;
 import java.io.PrintStream;
 import junit.framework.TestCase;
 
+import net.hyperic.sigar.Sigar;
+
 //helper to add optional tracing.
 public abstract class SigarTestCase extends TestCase {
 
+    private Sigar sigar = null;
     private static boolean verbose = false;
     private static PrintStream out = System.out;
 
     public SigarTestCase(String name) {
         super(name);
+    }
+
+    public Sigar getSigar() {
+        if (this.sigar == null) {
+            this.sigar = new Sigar();
+            if (getVerbose()) {
+                this.sigar.enableLogging(true);
+            }
+        }
+        return this.sigar;
     }
 
     public static void setVerbose(boolean value) {
