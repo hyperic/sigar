@@ -18,17 +18,25 @@ static int sigar_peb_get(sigar_t *sigar, HANDLE proc, DWORD *base)
 {
     MEMORY_BASIC_INFORMATION mbi;
     DWORD bytes;
+    SIZE_T size = sigar->pagesize;
 
     if (!sigar->peb) {
-        sigar->peb = malloc(sigar->pagesize);
+        sigar->peb = malloc(sigar->pagesize*2);
     }
 
     if (!VirtualQueryEx(proc, (char*)START_ADDRESS, &mbi, sizeof(mbi))) {
         return GetLastError();
     }
 
+    if (mbi.RegionSize > sigar->pagesize) {
+        /* in the event args crosses the first page boundry.
+         * seen with WebSphere.
+         */
+        size *= 2;
+    }
+
     if (!ReadProcessMemory(proc, mbi.BaseAddress, sigar->peb,
-                           sigar->pagesize, &bytes))
+                           size, &bytes))
     {
         return GetLastError();
     }
