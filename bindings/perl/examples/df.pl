@@ -11,7 +11,13 @@ print "Filesytem\tSize\tUsed\tAvail\tUse%\tMounted on\tType\n";
 
 for my $fs (@$fslist) {
     my $dirname = $fs->dir_name;
-    my $usage = $sigar->file_system_usage($dirname);
+    my $usage;
+
+    #e.g. on win32 D:\ fails with "Device not ready"
+    #if there is no cd in the drive.
+    eval {
+        $usage = $sigar->file_system_usage($dirname);
+    } or next;
 
     my $total = $usage->total;
     my $used  = $total - $usage->free;
