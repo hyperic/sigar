@@ -1124,6 +1124,6 @@ JNIEXPORT jlong SIGAR_JNI(Sigar_getServicePid)
 
     return pid;
 #else
-    sigar_throw_notimpl(env, "Win32 only");
+    sigar_throw_error(env, jsigar, SIGAR_ENOTIMPL);
 #endif
 }
