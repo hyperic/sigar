@@ -618,7 +618,53 @@ int sigar_proc_args_get(sigar_t *sigar, sigar_pid_t pid,
 int sigar_proc_env_get(sigar_t *sigar, sigar_pid_t pid,
                        sigar_proc_env_t *procenv)
 {
+#ifdef DARWIN
     return SIGAR_ENOTIMPL;
+#else
+    char **env;
+    struct kinfo_proc *pinfo;
+    int num;
+
+    pinfo = kvm_getprocs(sigar->kmem, KERN_PROC_PID, pid, &num);
+    if (!pinfo || (num < 1)) {
+        return errno;
+    }
+
+    if (!(env = kvm_getenvv(sigar->kmem, pinfo, 9086))) {
+        return errno;
+    }
+
+    while (*env) {
+        char *ptr = *env++;
+        char *val = strchr(ptr, '=');
+        int klen, vlen, status;
+        char key[128]; /* XXX is there a max key size? */
+
+        if (val == NULL) {
+            /* not key=val format */
+            procenv->env_getter(procenv->data, ptr, strlen(ptr), NULL, 0);
+            break;
+        }
+
+        klen = val - ptr;
+        SIGAR_SSTRCPY(key, ptr);
+        key[klen] = '\0';
+        ++val;
+
+        vlen = strlen(val);
+        status = procenv->env_getter(procenv->data,
+                                     key, klen, val, vlen);
+
+        if (status != SIGAR_OK) {
+            /* not an error; just stop iterating */
+            break;
+        }
+
+        ptr += (klen + 1 + vlen + 1);
+    }
+
+    return SIGAR_OK;
+#endif
 }
 
 int sigar_proc_fd_get(sigar_t *sigar, sigar_pid_t pid,
