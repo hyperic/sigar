@@ -4,6 +4,10 @@
 
         * Add sigar_net_connection_t.state field
 
+        * Add sigar_net_connection_t.{send,receive}_queue fields
+
+        * Implement sigar_net_connection for solaris
+        
         * Netstat enhancements
         
 2005-03-09  Doug MacEachern  <dougm@hyperic.net>
