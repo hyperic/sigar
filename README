@@ -29,6 +29,8 @@ The following platforms are currently supported:
 
 - AIX (4.3, 5.1, 5.2)
 
+- FreeBSD (5.3)
+
 To test drive run the following command:
 
 % java -jar sigar-bin/lib/sigar.jar
