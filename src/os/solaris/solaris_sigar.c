@@ -1839,10 +1839,10 @@ static int tcp_connection_list_get(sigar_t *sigar,
                 conn->state = SIGAR_TCP_CLOSE;
                 break;
               case TCPS_IDLE:
-                conn->state = SIGAR_TCP_UNKNOWN;/*XXX*/
+                conn->state = SIGAR_TCP_IDLE;
                 break;
               case TCPS_BOUND:
-                conn->state = SIGAR_TCP_UNKNOWN;/*XXX*/
+                conn->state = SIGAR_TCP_BOUND;
                 break;
               case TCPS_LISTEN:
                 conn->state = SIGAR_TCP_LISTEN;
