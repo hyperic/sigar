@@ -292,7 +292,10 @@ static void get_cpu_metrics(sigar_cpu_t *cpu, char *line)
     cpu->nice += sigar_strtoul(ptr);
     cpu->sys  += sigar_strtoul(ptr);
     cpu->idle += sigar_strtoul(ptr);
-    cpu->wait = 0; /*XXX*/
+    if (*ptr == ' ') {
+        /* 2.6+ kernels only */
+        cpu->wait += sigar_strtoul(ptr);
+    }
     cpu->total += cpu->user + cpu->nice + cpu->sys + cpu->idle + cpu->wait;
 }
 
