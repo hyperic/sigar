@@ -2,6 +2,7 @@ package net.hyperic.sigar.cmd;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 
 import net.hyperic.sigar.SigarException;
 import net.hyperic.sigar.NetConnection;
@@ -13,14 +14,29 @@ import net.hyperic.sigar.NetPortMap;
  */
 public class Netstat extends SigarCommandBase {
 
+    private static final int LADDR_LEN = 20;
+    private static final int RADDR_LEN = 35;
+
+    private static final String OUTPUT_FORMAT =
+        "%-5s %-" + LADDR_LEN + "s %-" + RADDR_LEN + "s %s";
+
+    private static final String[] HEADER = new String[] {
+        "Proto",
+        "Local Address",
+        "Foreign Address",
+        "State"
+    };
+
     private static boolean isNumeric;
 
     public Netstat(Shell shell) {
         super(shell);
+        setOutputFormat(OUTPUT_FORMAT);
     }
 
     public Netstat() {
         super();
+        setOutputFormat(OUTPUT_FORMAT);
     }
 
     protected boolean validateArgs(String[] args) {
@@ -93,21 +109,32 @@ public class Netstat extends SigarCommandBase {
         return String.valueOf(port);
     }
 
-    private String formatAddress(String address) {
+    private String formatAddress(String proto, String ip,
+                                 long portnum, int max) {
+        
+        String port = formatPort(proto, portnum);
+        String address;
+
         if (isNumeric) {
-            return address;
+            address = ip;
         }
-        if (address.equals("0.0.0.0")) {
-            return "*";
+        else if (ip.equals("0.0.0.0")) {
+            address = "*";
+        }
+        else {
+            try {
+                address = InetAddress.getByName(ip).getHostName();
+            } catch (UnknownHostException e) {
+                address = ip;
+            }
         }
 
-        //advantage of InetAddress' lookup cache.
-        try {
-            InetAddress addr = InetAddress.getByName(address);
-            return addr.getHostName();
-        } catch (UnknownHostException e) {
-            return address;
+        max -= port.length() + 1;
+        if (address.length() > max) {
+            address = address.substring(0, max);
         }
+
+        return address + ":" + port; 
     }
 
     //XXX currently weak sauce.  should end up like netstat command.
@@ -120,7 +147,7 @@ public class Netstat extends SigarCommandBase {
         }
 
         NetConnection[] connections = this.sigar.getNetConnectionList(flags);
-        println("Proto\tLocal Address\tForeign Address\tState");
+        printf(HEADER);
 
         for (int i=0; i<connections.length; i++) {
             NetConnection conn = connections[i];
@@ -134,14 +161,18 @@ public class Netstat extends SigarCommandBase {
                 state = conn.getStateString();
             }
 
-            println(proto +
-                    "\t" +
-                    formatAddress(conn.getLocalAddress()) + ":" +
-                    formatPort(proto, conn.getLocalPort()) +
-                    "\t" +
-                    formatAddress(conn.getRemoteAddress()) + ":" +
-                    formatPort(proto, conn.getRemotePort()) + "\t" +
-                    state);
+            ArrayList items = new ArrayList();
+            items.add(proto);
+            items.add(formatAddress(proto,
+                                    conn.getLocalAddress(),
+                                    conn.getLocalPort(),
+                                    LADDR_LEN));
+            items.add(formatAddress(proto,
+                                    conn.getRemoteAddress(),
+                                    conn.getRemotePort(),
+                                    RADDR_LEN));
+            items.add(state);
+            printf(items);
         }
     }
 
