@@ -52,7 +52,7 @@
   <target name="javadoc" depends="javadoc_check">
     <mkdir dir="${build.javadoc}"/>
     <javadoc packagenames="net.hyperic.sigar.*"
-             excludepackagenames="net.hyperic.sigar.test.*,net.hyperic.jni.*"
+             excludepackagenames="net.hyperic.sigar.test.*,net.hyperic.jni.*,net.hyperic.sigar.pager.*,net.hyperic.sigar.jmx.*"
              useexternalfile="yes"
              sourcepathref="javadoc.path"
              destdir="${build.javadoc}"
