@@ -165,7 +165,7 @@ public class Ps extends SigarCommandBase {
     }
 
     private static String getCpuTime(ProcTime time) {
-        long t = (time.getUser() + time.getSys());
+        long t = time.getTotal();
         return t/60 + ":" + t%60;
     }
 
