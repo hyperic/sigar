@@ -263,7 +263,17 @@ int sigar_group_name_get(sigar_t *sigar, int gid, char *buf, int buflen)
     }
 # endif
 
-    strncpy(buf, gr->gr_name, buflen);
+    if (gr && gr->gr_name) {
+        strncpy(buf, gr->gr_name, buflen);
+    }
+    else {
+        /* seen on linux.. apache httpd.conf has:
+         * Group #-1
+         * results in uid == -1 and gr == NULL.
+         * wtf getgrgid_r doesnt fail instead? 
+         */
+        sprintf(buf, "%d", gid);
+    }
     buf[buflen-1] = '\0';
 
     return SIGAR_OK;
