@@ -235,9 +235,18 @@ int sigar_proc_modules_get(sigar_t *sigar, sigar_pid_t pid,
 
 int sigar_os_fs_type_get(sigar_file_system_t *fsp)
 {
-    fsp->type = SIGAR_FSTYPE_UNKNOWN;
+    char *type = fsp->sys_type_name;
 
-    return SIGAR_OK;
+    switch (*type) {
+      case 'a':
+        if (strEQ(type, "advfs")) {
+            fsp->type = SIGAR_FSTYPE_LOCAL_DISK;
+        }
+        break;
+        /* XXX */
+    }
+
+    return fsp->type;
 }
 
 static int sigar_fsstat(struct statfs **fs, int *num)
@@ -290,15 +299,25 @@ int sigar_file_system_list_get(sigar_t *sigar,
     return SIGAR_OK;
 }
 
+#define SIGAR_FS_BLOCKS_TO_BYTES(buf, f) \
+    ((buf.f * (buf.f_bsize / 512)) >> 1)
+
 int sigar_file_system_usage_get(sigar_t *sigar,
                                 const char *dirname,
                                 sigar_file_system_usage_t *fsusage)
 {
-    fsusage->total = -1;
-    fsusage->free  = -1;
-    fsusage->avail = -1;
-    fsusage->files = -1;
-    fsusage->free_files = -1;
+    struct statfs buf;
+
+    if (statfs((char *)dirname, &buf) != 0) {
+        return errno;
+    }
+
+    fsusage->total = SIGAR_FS_BLOCKS_TO_BYTES(buf, f_blocks);
+    fsusage->free  = SIGAR_FS_BLOCKS_TO_BYTES(buf, f_bfree);
+    fsusage->avail = SIGAR_FS_BLOCKS_TO_BYTES(buf, f_bavail);
+    fsusage->files = buf.f_files;
+    fsusage->free_files = buf.f_ffree;
+    fsusage->use_percent = sigar_file_system_usage_calc_used(sigar, fsusage);
 
     return SIGAR_OK;
 }
