@@ -80,7 +80,7 @@ static PERF_OBJECT_TYPE *get_perf_object(sigar_t *sigar, char *counter_key,
     *err = SIGAR_OK;
 
     if (!sigar->perfbuf) {
-        sigar->perfbuf = (char *)malloc(PERFBUF_SIZE);
+        sigar->perfbuf = malloc(PERFBUF_SIZE);
         sigar->perfbuf_size = PERFBUF_SIZE;
     }
 
@@ -92,8 +92,8 @@ static PERF_OBJECT_TYPE *get_perf_object(sigar_t *sigar, char *counter_key,
         if (retval == ERROR_MORE_DATA) {
             sigar->perfbuf_size += PERFBUF_SIZE;
 
-            sigar->perfbuf = (char *)realloc(sigar->perfbuf,
-                                             sigar->perfbuf_size);
+            sigar->perfbuf =
+                realloc(sigar->perfbuf, sigar->perfbuf_size);
         }
         else {
             *err = retval;
@@ -1727,8 +1727,7 @@ sigar_net_interface_list_get(sigar_t *sigar,
     iflist->number = 0;
     iflist->size = num;
     iflist->data =
-        (char **)malloc(sizeof(*(iflist->data)) *
-                        iflist->size);
+        malloc(sizeof(*(iflist->data)) * iflist->size);
 
     for (i=0; i<num ; i++) {
         INTERFACE_INFO *if_info = ((INTERFACE_INFO *)buffer) + i;
@@ -1774,7 +1773,7 @@ static int net_conn_get_tcp(sigar_t *sigar,
     if (rc != ERROR_INSUFFICIENT_BUFFER) {
         return GetLastError();
     }
-    tcp = (PMIB_TCPTABLE)malloc(size);
+    tcp = malloc(size);
     rc = sigar->get_tcp_table(tcp, &size, FALSE);
     if (rc) {
         free(tcp);
@@ -1831,7 +1830,7 @@ static int net_conn_get_udp(sigar_t *sigar,
     if (rc != ERROR_INSUFFICIENT_BUFFER) {
         return GetLastError();
     }
-    udp = (PMIB_UDPTABLE)malloc(size);
+    udp = malloc(size);
     rc = sigar->get_udp_table(udp, &size, FALSE);
     if (rc) {
         free(udp);
