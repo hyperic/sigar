@@ -399,6 +399,46 @@ int sigar_loadavg_get(sigar_t *sigar,
     return SIGAR_OK;
 }
 
+#define LIBPROC "/usr/lib/libproc.so"
+
+#define CHECK_PSYM(s) \
+    if (!sigar->s) { \
+        sigar_log_printf(sigar, SIGAR_LOG_WARN, \
+                         "[%s] Symbol not found: %s", \
+                         SIGAR_FUNC, #s); \
+        dlclose(sigar->plib); \
+        sigar->plib = NULL; \
+        return SIGAR_ENOTIMPL; \
+    }
+
+static int sigar_init_libproc(sigar_t *sigar)
+{
+    if (sigar->plib) {
+        return SIGAR_OK;
+    }
+
+    /* libproc.so ships with 5.8+ */
+    /* interface is undocumented, see libproc.h in the sun jdk sources */
+    sigar->plib = dlopen(LIBPROC, RTLD_LAZY);
+
+    if (!sigar->plib) {
+        sigar_log_printf(sigar, SIGAR_LOG_WARN,
+                         "[%s] dlopen(%s) = %s",
+                         SIGAR_FUNC, LIBPROC, dlerror());
+        return SIGAR_ENOTIMPL;
+    }
+
+    sigar->pgrab    = (proc_grab_func_t)dlsym(sigar->plib, "Pgrab");
+    sigar->pfree    = (proc_free_func_t)dlsym(sigar->plib, "Pfree");
+    sigar->pobjname = (proc_objname_func_t)dlsym(sigar->plib, "Pobjname");
+
+    CHECK_PSYM(pgrab);
+    CHECK_PSYM(pfree);
+    CHECK_PSYM(pobjname);
+
+    return SIGAR_OK;
+}
+
 int sigar_proc_list_get(sigar_t *sigar,
                         sigar_proc_list_t *proclist)
 {
@@ -716,18 +756,6 @@ static int sigar_read_xmaps(sigar_t *sigar,
     return SIGAR_OK;
 }
 
-#define LIBPROC "/usr/lib/libproc.so"
-
-#define CHECK_PSYM(s) \
-    if (!sigar->s) { \
-        sigar_log_printf(sigar, SIGAR_LOG_WARN, \
-                         "[%s] Symbol not found: %s", \
-                         SIGAR_FUNC, #s); \
-        dlclose(sigar->plib); \
-        sigar->plib = NULL; \
-        return SIGAR_ENOTIMPL; \
-    }
-
 static int sigar_pgrab_modules(sigar_t *sigar, sigar_pid_t pid,
                                sigar_proc_modules_t *procmods)
 {
@@ -739,25 +767,8 @@ static int sigar_pgrab_modules(sigar_t *sigar, sigar_pid_t pid,
     struct stat statbuf;
     char buffer[BUFSIZ];
 
-    if (!sigar->plib) {
-        /* libproc.so ships with 5.8+ */
-        /* interface is undocumented, see libproc.h in the sun jdk sources */
-        sigar->plib = dlopen(LIBPROC, RTLD_LAZY);
-
-        if (!sigar->plib) {
-            sigar_log_printf(sigar, SIGAR_LOG_WARN,
-                             "[%s] dlopen(%s) = %s",
-                             SIGAR_FUNC, LIBPROC, dlerror());
-            return SIGAR_ENOTIMPL;
-        }
-
-        sigar->pgrab    = (proc_grab_func_t)dlsym(sigar->plib, "Pgrab");
-        sigar->pfree    = (proc_free_func_t)dlsym(sigar->plib, "Pfree");
-        sigar->pobjname = (proc_objname_func_t)dlsym(sigar->plib, "Pobjname");
-
-        CHECK_PSYM(pgrab);
-        CHECK_PSYM(pfree);
-        CHECK_PSYM(pobjname);
+    if ((pstatus = sigar_init_libproc(sigar)) != SIGAR_OK) {
+        return pstatus;
     }
 
     if (!(phandle = sigar->pgrab(pid, 0x01, &pstatus))) {
