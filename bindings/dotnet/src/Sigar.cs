@@ -48,6 +48,10 @@ namespace Hyperic.Sigar {
             return Hyperic.Sigar.FileSystemUsage.NativeGet(this, dirname);
         }
 
+        public String[] NetInterfaceList() {
+            return Hyperic.Sigar.NetInterfaceList.NativeGet(this);
+        }
+
         ~Sigar() {
             sigar_close(this.sigar.Handle);
         }
@@ -300,6 +304,51 @@ namespace Hyperic.Sigar {
             Marshal.FreeHGlobal(ptr);
 
             return fsusage;
+        }
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    internal struct NetInterfaceList {
+        private readonly uint number;
+        private readonly uint size;
+        private readonly IntPtr data;
+
+        [DllImport(Sigar.LIBSIGAR)]
+        private static extern int sigar_net_interface_list_get(IntPtr sigar,
+                                                               IntPtr iflist);
+
+        [DllImport(Sigar.LIBSIGAR)]
+        private static extern int sigar_net_interface_list_destroy(IntPtr sigar,
+                                                                   IntPtr iflist);
+
+        internal static String[] NativeGet(Sigar sigar) {
+            Type type = typeof(NetInterfaceList);
+            IntPtr ptr = Marshal.AllocHGlobal(Marshal.SizeOf(type));
+
+            int status = sigar_net_interface_list_get(sigar.sigar.Handle, ptr);
+
+            if (status != Sigar.OK) {
+                Marshal.FreeHGlobal(ptr);
+                throw new ApplicationException("sigar_net_interface_list_get");
+            }
+
+            NetInterfaceList ifPtr =
+                (NetInterfaceList)Marshal.PtrToStructure(ptr, type);
+
+            String[] iflist = new String[ifPtr.number];
+
+            IntPtr iptr = ifPtr.data;
+
+            for (int i=0; i<ifPtr.number; i++) {
+                IntPtr str = Marshal.ReadIntPtr(iptr, i * IntPtr.Size);
+                iflist[i] = Marshal.PtrToStringAnsi(str);
+            }
+
+            sigar_net_interface_list_destroy(sigar.sigar.Handle, ptr);
+
+            Marshal.FreeHGlobal(ptr);
+
+            return iflist;
         }
     }
 }
