@@ -23,7 +23,7 @@
       </compiler>
 
       <linker name="xlc_r">
-        <libset dir="." libs="perfstat"/>
+        <libset dir="." libs="perfstat,pthreads"/>
       </linker>
 
       <includepath location="../"/>
