@@ -289,22 +289,21 @@ int sigar_cpu_get(sigar_t *sigar, sigar_cpu_t *cpu)
 int sigar_cpu_list_get(sigar_t *sigar, sigar_cpu_list_t *cpulist)
 {
     FILE *fp;
-    char buffer[BUFSIZ], *ptr;
+    char buffer[BUFSIZ], cpu_total[BUFSIZ], *ptr;
     int hthread = is_ht_enabled(sigar), i=0;
+    sigar_cpu_t *cpu;
 
     if (!(fp = fopen(PROC_STAT, "r"))) {
         return errno;
     }
 
     /* skip first line */
-    (void)fgets(buffer, sizeof(buffer), fp);
+    (void)fgets(cpu_total, sizeof(cpu_total), fp);
 
     sigar_cpu_list_create(cpulist);
 
     /* XXX: merge times of logical processors if hyperthreading */
     while ((ptr = fgets(buffer, sizeof(buffer), fp))) {
-        sigar_cpu_t *cpu;
-
         if (!strnEQ(ptr, "cpu", 3)) {
             break;
         }
@@ -325,6 +324,13 @@ int sigar_cpu_list_get(sigar_t *sigar, sigar_cpu_list_t *cpulist)
     }
 
     fclose(fp);
+
+    if (cpulist->number == 0) {
+        /* likely older kernel where cpu\d is not present */
+        cpu = &cpulist->data[cpulist->number++];
+        SIGAR_ZERO(cpu);
+        get_cpu_metrics(cpu, cpu_total);
+    }
 
     return SIGAR_OK;
 }
