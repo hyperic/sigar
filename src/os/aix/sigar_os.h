@@ -27,11 +27,11 @@ typedef int (*vminfo_func_t) (void *, int, int);
 
 typedef int (*proc_fd_func_t) (sigar_t *, sigar_pid_t, sigar_proc_fd_t *);
 
-typedef int (*perfstat_cpu_total_func_t)(perfstat_cpu_total_t *, int);
+typedef int (*perfstat_cpu_total_func_t)(perfstat_cpu_total_t *, size_t);
 
 typedef int (*perfstat_cpu_func_t)(perfstat_id_t *,
                                    perfstat_cpu_t *,
-                                   int, int);
+                                   size_t, int);
 
 struct sigar_t {
     SIGAR_T_BASE;
