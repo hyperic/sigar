@@ -229,6 +229,12 @@
  </target>
 
  <target name="dist-support" depends="javadoc">
+   <copy toDir="${dist}" overwrite="true">
+     <fileset dir="../..">
+       <include name="README"/>
+     </fileset>
+   </copy>
+
    <!-- docs -->
    <mkdir dir="${dist}/docs"/>
    <copy toDir="${dist}/docs" overwrite="true">
