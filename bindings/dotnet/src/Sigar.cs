@@ -52,6 +52,10 @@ namespace Hyperic.Sigar {
             return Hyperic.Sigar.NetInterfaceList.NativeGet(this);
         }
 
+        public NetInterfaceConfig NetInterfaceConfig(string name) {
+            return Hyperic.Sigar.NetInterfaceConfig.NativeGet(this, name);
+        }
+
         ~Sigar() {
             sigar_close(this.sigar.Handle);
         }
@@ -349,6 +353,47 @@ namespace Hyperic.Sigar {
             Marshal.FreeHGlobal(ptr);
 
             return iflist;
+        }
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct NetInterfaceConfig {
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst=16)]
+        public readonly string Name; //char[16]
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst=64)]
+        public readonly string Hwaddr; //char[64]
+        private readonly ulong address;
+        private readonly ulong destination;
+        private readonly ulong broadcast;
+        private readonly ulong netmask;
+        public readonly ulong Flags;
+        public readonly ulong Mtu;
+        public readonly ulong Metric;
+
+        [DllImport(Sigar.LIBSIGAR)]
+        private static extern int
+        sigar_net_interface_config_get(IntPtr sigar, string name,
+                                       IntPtr ifconfig);
+
+        internal static NetInterfaceConfig NativeGet(Sigar sigar,
+                                                     string name) {
+            Type type = typeof(NetInterfaceConfig);
+            IntPtr ptr = Marshal.AllocHGlobal(Marshal.SizeOf(type));
+
+            int status = sigar_net_interface_config_get(sigar.sigar.Handle,
+                                                        name, ptr);
+
+            if (status != Sigar.OK) {
+                Marshal.FreeHGlobal(ptr);
+                throw new ApplicationException("net_interface_config_get");
+            }
+
+            NetInterfaceConfig ifconfig =
+                (NetInterfaceConfig)Marshal.PtrToStructure(ptr, type);
+
+            Marshal.FreeHGlobal(ptr);
+
+            return ifconfig;
         }
     }
 }
