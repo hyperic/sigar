@@ -740,7 +740,28 @@ my %classes = (
          plat => 'L'
       },
     ],
-
+    Who => [
+      {
+         name => 'user', type => 'String',
+         desc => '',
+         plat => ''
+      },
+      {
+         name => 'device', type => 'String',
+         desc => '',
+         plat => ''
+      },
+      {
+         name => 'host', type => 'String',
+         desc => '',
+         plat => ''
+      },
+      {
+         name => 'time', type => 'Long',
+         desc => '',
+         plat => ''
+      },
+    ],
 );
 
 my %cmds = (
@@ -1013,7 +1034,7 @@ EOF
 my %has_name_arg = map { $_, 1 } qw(FileSystemUsage FileAttrs DirStat
                                     NetInterfaceConfig NetInterfaceStat);
 my %proc_no_arg = map { $_, 1 } qw(stat);
-my %get_not_impl = map { $_, 1 } qw(net_route net_connection
+my %get_not_impl = map { $_, 1 } qw(net_route net_connection who
                                     cpu_info file_system); #list funcs only
 
 my %field_cache;

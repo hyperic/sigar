@@ -760,6 +760,37 @@ JNIEXPORT jstring SIGAR_JNI(NetConnection_getTypeString)
                               sigar_net_connection_type_get(type));
 }
 
+JNIEXPORT jobjectArray SIGAR_JNI(Sigar_getWhoList)
+(JNIEnv *env, jobject sigar_obj)
+{
+    int status;
+    unsigned int i;
+    sigar_who_list_t wholist;
+    jobjectArray whoarray;
+    jclass cls = SIGAR_FIND_CLASS("Who");
+    dSIGAR(NULL);
+
+    if ((status = sigar_who_list_get(sigar, &wholist)) != SIGAR_OK) {
+        sigar_throw_error(env, jsigar, status);
+        return NULL;
+    }
+
+    JAVA_SIGAR_INIT_FIELDS_WHO(cls);
+
+    whoarray = JENV->NewObjectArray(env, wholist.number, cls, 0);
+
+    for (i=0; i<wholist.number; i++) {
+        jobject info_obj = JENV->AllocObject(env, cls);
+        JAVA_SIGAR_SET_FIELDS_WHO(cls, info_obj,
+                                  wholist.data[i]);
+        JENV->SetObjectArrayElement(env, whoarray, i, info_obj);
+    }
+
+    sigar_who_list_destroy(sigar, &wholist);
+
+    return whoarray;
+}
+
 /* XXX perhaps it would be better to duplicate these strings
  * in java land as static final so we dont create a new String
  * everytime.
