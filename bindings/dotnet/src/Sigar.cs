@@ -39,6 +39,16 @@ namespace Hyperic.Sigar {
             this.sigar = new HandleRef(this, handle);
         }
 
+        [DllImport(Sigar.LIBSIGAR)]
+        private static extern string
+        sigar_format_size(ulong size, StringBuilder buffer);
+
+        public static string FormatSize(ulong size) {
+            StringBuilder buffer = new StringBuilder();
+            buffer.Capacity = 56;
+            return sigar_format_size(size, buffer);
+        }
+
         public Mem Mem() {
             return Hyperic.Sigar.Mem.NativeGet(this);
         }
