@@ -412,6 +412,9 @@ void sigar_cpu_model_adjust(sigar_t *sigar, sigar_cpu_info_t *info)
 #include <rpc/pmap_prot.h>
 #include <rpc/pmap_clnt.h>
 #include <rpcsvc/nfs_prot.h>
+#ifdef __FreeBSD__
+#include <arpa/inet.h>
+#endif
 
 static int get_sockaddr(struct sockaddr_in *addr, char *host)
 {
