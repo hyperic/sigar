@@ -44,3 +44,6 @@ alias java ptql State.Name.eq=java,Pid.Pid.ne=$$
 
 #find all processes owned by the current user
 alias myproc ptql CredName.User.eq=$user.name
+
+#VMware GSX VMs
+ptql State.Name.eq=vmware-vmx,Args.1.eq=-C
