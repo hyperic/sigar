@@ -360,6 +360,23 @@ my %classes = (
          },
       },
     ],
+    ThreadCpu => [
+      {
+         name => 'user', type => 'Long',
+         desc => 'Thread cpu user time',
+         plat => 'HLSW'
+      },
+      {
+         name => 'sys', type => 'Long',
+         desc => 'Thread cpu kernel time',
+         plat => 'HLSW'
+      },
+      {
+         name => 'total', type => 'Long',
+         desc => 'Thread cpu time (sum of User and Sys)',
+         plat => 'HLSW'
+      },
+    ],
     FileSystem => [
       {
          name => 'dir_name', type => 'String',
@@ -991,7 +1008,7 @@ while (my($name, $fields) = each %classes) {
     ($cname = $name) =~ s/([a-z])([A-Z])/$1_$2/g;
     $cname = lc $cname;
 
-    if ($cname =~ /^proc_(\w+)/) {
+    if ($cname =~ /^proc_(\w+)/ or $cname =~ /^thread_cpu/) {
         unless ($proc_no_arg{$1}) {
             $args_proto = ", jlong pid";
             $arg_type = 'sigar_pid_t';
