@@ -349,8 +349,8 @@ static const cpu_model_str_t cpu_models[] = {
     /* intel */
     CPU_MODEL_ENT("Xeon"),
     CPU_MODEL_ENT_R("XEON", "Xeon"),
-    CPU_MODEL_ENT("Pentium II"),
     CPU_MODEL_ENT("Pentium III"),
+    CPU_MODEL_ENT("Pentium II"),
     CPU_MODEL_ENT_R("Pentium(R) III", "Pentium III"),
     CPU_MODEL_ENT_R("Pentium(R) 4", "Pentium 4"),
     CPU_MODEL_ENT_R("Pentium(R) M", "Pentium M"),
