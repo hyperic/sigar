@@ -374,9 +374,20 @@ int sigar_proc_list_get(sigar_t *sigar,
 
     return SIGAR_OK;
 #else
-    /*XXX above compiles on freebsd but no workie */
-    return sigar_proc_list_procfs_get(sigar, proclist);
+    int i, num;
+    struct kinfo_proc *proc =
+        kvm_getprocs(sigar->kmem, KERN_PROC_ALL, 0, &num);
+    
+    proclist->number = 0;
+    proclist->size = num;
+    proclist->data = malloc(sizeof(*(proclist->data)) * num);
+
+    for (i=0; i<num; i++) {
+        proclist->data[proclist->number++] = proc[i].kp_proc.p_pid;
+    }
 #endif
+
+    return SIGAR_OK;
 }
 
 int sigar_proc_stat_get(sigar_t *sigar,
