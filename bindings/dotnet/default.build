@@ -25,6 +25,7 @@
     <mkdir dir="${build.dir}"/>
 
     <csc target="library" debug="${debug}"
+         unsafe="true"
          output="${sigarsharp}">
       <sources>
         <includes name="src/Sigar.cs"/>
