@@ -145,7 +145,12 @@ int sigar_os_close(sigar_t *sigar)
 
 char *sigar_os_error_string(sigar_t *sigar, int err)
 {
-    return NULL;
+    switch (err) {
+      case SIGAR_EMIB2:
+        return sigar->mib2.errmsg;
+      default:
+        return NULL;
+    }
 }
 
 static SIGAR_INLINE int sigar_kstat_update(sigar_t *sigar)
@@ -1499,7 +1504,7 @@ int sigar_net_route_list_get(sigar_t *sigar,
     }
 
     if (rc != GET_MIB2_EOD) {
-        /*XXX*/
+        return SIGAR_EMIB2;
     }
 
     return SIGAR_OK;
@@ -1997,7 +2002,7 @@ int sigar_net_connection_list_get(sigar_t *sigar,
     }
 
     if (rc != GET_MIB2_EOD) {
-        /*XXX*/ 
+        return SIGAR_EMIB2;
     }
 
     return SIGAR_OK;

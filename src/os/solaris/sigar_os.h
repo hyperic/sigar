@@ -270,5 +270,7 @@ struct sigar_t {
 #define HAVE_GETPWNAM_R
 #define HAVE_GETPWUID_R
 
+#define SIGAR_EMIB2 (SIGAR_OS_START_ERROR+1)
+
 #endif /* SIGAR_OS_H */
 
