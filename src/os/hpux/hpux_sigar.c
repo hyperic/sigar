@@ -1,10 +1,11 @@
 #include "sigar.h"
 #include "sigar_private.h"
-#include "sigar_os.h"
 #include "sigar_util.h"
+#include "sigar_os.h"
 
 #include <sys/dk.h>
 #include <sys/lwp.h>
+#include <sys/stat.h>
 #include <errno.h>
 
 int sigar_os_open(sigar_t **sigar)
@@ -21,6 +22,8 @@ int sigar_os_open(sigar_t **sigar)
     (*sigar)->last_pid = -1;
 
     (*sigar)->pinfo = NULL;
+
+    (*sigar)->fsdev = NULL;
     
     return SIGAR_OK;
     
@@ -30,6 +33,9 @@ int sigar_os_close(sigar_t *sigar)
 {
     if (sigar->pinfo) {
         free(sigar->pinfo);
+    }
+    if (sigar->fsdev) {
+        sigar_cache_destroy(sigar->fsdev);
     }
     free(sigar);
     return SIGAR_OK;
@@ -542,11 +548,44 @@ int sigar_file_system_list_get(sigar_t *sigar,
 #define SIGAR_FS_BLOCKS_TO_BYTES(buf, f) \
     ((buf.f * (buf.f_bsize / 512)) >> 1)
 
+#define FSDEV_ID(sb) (sb.st_ino + sb.st_dev)
+
+static int create_fsdev_cache(sigar_t *sigar)
+{
+    sigar_file_system_list_t fslist;
+    int i;
+    int status =
+        sigar_file_system_list_get(sigar, &fslist);
+
+    if (status != SIGAR_OK) {
+        return status;
+    }
+
+    sigar->fsdev = sigar_cache_new(15);
+
+    for (i=0; i<fslist.number; i++) {
+        sigar_file_system_t *fsp = &fslist.data[i];
+
+        if (fsp->type == SIGAR_FSTYPE_LOCAL_DISK) {
+            sigar_cache_entry_t *ent;
+            struct stat sb;
+
+            if (stat(fsp->dir_name, &sb) < 0) {
+                continue;
+            }
+
+            ent = sigar_cache_get(sigar->fsdev, FSDEV_ID(sb));
+            ent->value = strdup(fsp->dev_name);
+        }
+    }
+}
+
 int sigar_file_system_usage_get(sigar_t *sigar,
                                 const char *dirname,
                                 sigar_file_system_usage_t *fsusage)
 {
     struct statfs buf;
+    struct stat sb;
 
     if (statfs(dirname, &buf) != 0) {
         return errno;
@@ -560,6 +599,36 @@ int sigar_file_system_usage_get(sigar_t *sigar,
     fsusage->use_percent = sigar_file_system_usage_calc_used(sigar, fsusage);
 
     SIGAR_DISK_STATS_NOTIMPL(fsusage);
+
+    if (!sigar->fsdev) {
+        if (create_fsdev_cache(sigar) != SIGAR_OK) {
+            return SIGAR_OK;
+        }
+    }
+
+    if (stat(dirname, &sb) == 0) {
+        sigar_cache_entry_t *ent;
+        struct pst_lvinfo lv;
+        struct stat devsb;
+        char *devname;
+        int retval;
+
+        ent = sigar_cache_get(sigar->fsdev, FSDEV_ID(sb));
+        if (ent->value == NULL) {
+            return SIGAR_OK;
+        }
+
+        if (stat((char *)ent->value, &devsb) < 0) {
+            return SIGAR_OK;
+        }
+
+        retval = pstat_getlv(&lv, sizeof(lv), 0, (int)devsb.st_rdev);
+
+        if (retval == 1) {
+            fsusage->disk_reads  = lv.psl_rxfer;
+            fsusage->disk_writes = lv.psl_wxfer;
+        }
+    }
 
     return SIGAR_OK;
 }

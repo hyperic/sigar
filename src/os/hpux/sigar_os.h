@@ -12,6 +12,8 @@ struct sigar_t {
     time_t last_getprocs;
     sigar_pid_t last_pid;
     struct pst_status *pinfo;
+
+    sigar_cache_t *fsdev;
 };
 
 int hpux_get_mib_ifentry(int ppa, mib_ifEntry *mib);
