@@ -804,6 +804,7 @@ int sigar_cpu_info_list_get(sigar_t *sigar,
     int i, mhz;
     unsigned long long value;
     size_t size;
+    char model[128], vendor[128], *ptr;
 
     size = sizeof(value);
     if (!sysctlbyname(CTL_HW_FREQ, &value, &size, NULL, 0)) {
@@ -811,6 +812,24 @@ int sigar_cpu_info_list_get(sigar_t *sigar,
     }
     else {
         mhz = SIGAR_FIELD_NOTIMPL;
+    }
+
+    size = sizeof(model);
+    if (sysctlbyname("hw.model", &model, &size, NULL, 0) == -1) {
+        strcpy(model, "Unknown");
+    }
+    else if ((ptr = strchr(model, ' '))) {
+        *ptr = '\0';
+        if (strstr(model, "Intel")) {
+            SIGAR_SSTRCPY(vendor, "Intel");
+        }
+        else if (strstr(model, "AMD")) {
+            SIGAR_SSTRCPY(vendor, "AMD");
+        }
+        else {
+            SIGAR_SSTRCPY(vendor, "Unknown");
+        }
+        SIGAR_SSTRCPY(model, ptr+1);
     }
 
     sigar_cpu_info_list_create(cpu_infos);
@@ -821,10 +840,14 @@ int sigar_cpu_info_list_get(sigar_t *sigar,
         SIGAR_CPU_INFO_LIST_GROW(cpu_infos);
 
         info = &cpu_infos->data[cpu_infos->number++];
-
+#ifdef DARWIN
         SIGAR_SSTRCPY(info->vendor, "Apple");
         SIGAR_SSTRCPY(info->model, "powerpc");
-
+#else
+        SIGAR_SSTRCPY(info->vendor, vendor);
+        SIGAR_SSTRCPY(info->model, model);
+        sigar_cpu_model_adjust(sigar, info);
+#endif
         info->mhz = mhz;
         info->cache_size = SIGAR_FIELD_NOTIMPL;
     }
