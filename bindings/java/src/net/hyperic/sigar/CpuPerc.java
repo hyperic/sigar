@@ -10,7 +10,7 @@ public class CpuPerc {
     private double idle;
     private double wait;
 
-    CpuPerc(){ }
+    CpuPerc() {}
 
     static CpuPerc calculate(Cpu oldCpu, Cpu curCpu) {
         double diffUser, diffSys, diffNice, diffIdle, diffWait, diffTotal;
@@ -32,52 +32,32 @@ public class CpuPerc {
         diffTotal = diffUser + diffSys + diffNice + diffIdle + diffWait;
 
         CpuPerc perc = new CpuPerc();
-        perc.setUser(diffUser / diffTotal);
-        perc.setSys(diffSys / diffTotal);
-        perc.setNice(diffNice / diffTotal);
-        perc.setIdle(diffIdle / diffTotal);
-        perc.setWait(diffWait / diffTotal);
+        perc.user = diffUser / diffTotal;
+        perc.sys  = diffSys / diffTotal;
+        perc.nice = diffNice / diffTotal;
+        perc.idle = diffIdle / diffTotal;
+        perc.wait = diffWait / diffTotal;
         return perc;
     }
 
-    public double getUser(){
+    public double getUser() {
         return this.user;
     }
 
-    void setUser(double user){
-        this.user = user;
-    }
-
-    public double getSys(){
+    public double getSys() {
         return this.sys;
     }
 
-    void setSys(double sys){
-        this.sys = sys;
-    }
-
-    public double getNice(){
+    public double getNice() {
         return this.nice;
     }
 
-    void setNice(double nice){
-        this.nice = nice;
-    }
-
-    public double getIdle(){
+    public double getIdle() {
         return this.idle;
     }
 
-    void setIdle(double idle){
-        this.idle = idle;
-    }
-
-    public double getWait(){
+    public double getWait() {
         return this.wait;
-    }
-
-    void setWait(double wait){
-        this.wait = wait;
     }
 
     public double getCombined() {
@@ -100,6 +80,7 @@ public class CpuPerc {
             format(this.user) + " user, " +
             format(this.sys)  + " system, " +
             format(this.nice) + " nice, " +
+            format(this.wait) + " wait, " +
             format(this.idle) + " idle";
     }
 }
