@@ -822,6 +822,12 @@ int sigar_proc_exe_get(sigar_t *sigar, sigar_pid_t pid,
     return SIGAR_ENOTIMPL;
 }
 
+int sigar_proc_modules_get(sigar_t *sigar, sigar_pid_t pid,
+                           sigar_proc_modules_t *procmods)
+{
+    return SIGAR_ENOTIMPL;
+}
+
 int sigar_os_fs_type_get(sigar_file_system_t *fsp)
 {
     return fsp->type;

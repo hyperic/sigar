@@ -837,6 +837,12 @@ int sigar_proc_exe_get(sigar_t *sigar, sigar_pid_t pid,
     return SIGAR_OK;
 }
 
+int sigar_proc_modules_get(sigar_t *sigar, sigar_pid_t pid,
+                           sigar_proc_modules_t *procmods)
+{
+    return SIGAR_ENOTIMPL;
+}
+
 #include <mntent.h>
 #include <sys/statfs.h>
 
