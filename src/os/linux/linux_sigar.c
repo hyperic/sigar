@@ -1586,9 +1586,17 @@ static int proc_net_read(net_conn_getter_t *getter,
 
         /* SIGAR_TCP_* currently matches TCP_* in linux/tcp.h */
         sscanf(ptr, "%2x", &conn.state);
+        ptr = sigar_skip_token(ptr);
+        SIGAR_SKIP_SPACE(ptr);
 
-        /* XXX rx/tx queue info would be useful */
-        ptr = sigar_skip_multiple_token(ptr, 4);
+        conn.send_queue = hex2int(ptr);
+        ptr += 9; /* tx + ':' */;
+        conn.receive_queue = hex2int(ptr);
+        ptr += 8;
+        SIGAR_SKIP_SPACE(ptr);
+
+        ptr = sigar_skip_multiple_token(ptr, 2); /* tr:tm->when retrnsmt */
+
         conn.uid = sigar_strtoul(ptr);
 
         ptr = sigar_skip_token(ptr);
