@@ -760,55 +760,6 @@ static int get_proc_info(sigar_t *sigar, sigar_pid_t pid)
     return -1; /*XXX*/
 }
 
-static char *getarg(char **line)
-{
-    char *str = *line, *end;
-    char *res;
-    int len;
-
-    while (*str && isspace(*str)) {
-        ++str;
-    }
-
-    if (!*str) {
-        *line = str;
-        return NULL;
-    }
-
-    if (*str == '"') {
-        end = str + 1;
-
-        while (*end && (*end != '"')) {
-            ++end;
-        }
-
-        len = end - str - 1;
-        res = malloc(len+1);
-        memcpy(res, str+1, len);
-        res[len] = '\0';
-        end++;
-    }
-    else {
-        end = str;
-        while (*end && !isspace(*end)) {
-            ++end;
-        }
-
-        len = end - str;
-        res = malloc(len+1);
-        memcpy(res, str, len);
-        res[len] = '\0';
-    }
-
-    while (*end && isspace(*end)) {
-        ++end;
-    }
-
-    *line = end;
-
-    return res;
-}
-
 static int sigar_remote_proc_args_get(sigar_t *sigar, sigar_pid_t pid,
                                       sigar_proc_args_t *procargs)
 {
@@ -827,27 +778,11 @@ static int sigar_remote_proc_args_get(sigar_t *sigar, sigar_pid_t pid,
     return status;
 }
 
-static int sigar_local_proc_args_get(sigar_t *sigar, sigar_pid_t pid,
-                                     sigar_proc_args_t *procargs)
-{
-    LPTSTR cmdline = GetCommandLine();
-    char *arg, *ptr = cmdline;
-
-    sigar_proc_args_create(procargs);
-
-    while (*ptr && (arg = getarg(&ptr))) {
-        SIGAR_PROC_ARGS_GROW(procargs);
-        procargs->data[procargs->number++] = arg;
-    }
-
-    return SIGAR_OK;
-}
-
 SIGAR_DECLARE(int) sigar_proc_args_get(sigar_t *sigar, sigar_pid_t pid,
                                        sigar_proc_args_t *procargs)
 {
     if (pid == sigar->pid) {
-        return sigar_local_proc_args_get(sigar, pid, procargs);
+        return sigar_parse_proc_args(sigar, NULL, procargs);
     }
     else {
         return sigar_remote_proc_args_get(sigar, pid, procargs);

@@ -127,6 +127,9 @@ int sigar_proc_exe_peb_get(sigar_t *sigar, HANDLE proc,
 int sigar_proc_args_peb_get(sigar_t *sigar, HANDLE proc,
                             sigar_proc_args_t *procargs);
 
+int sigar_parse_proc_args(sigar_t *sigar, WCHAR *buf,
+                          sigar_proc_args_t *procargs);
+
 unsigned int sigar_cpu_count(sigar_t *sigar);
 
 int sigar_cpu_info_get(sigar_t *sigar, sigar_cpu_info_t *info);

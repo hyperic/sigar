@@ -80,12 +80,16 @@ int sigar_proc_exe_peb_get(sigar_t *sigar, HANDLE proc,
     return SIGAR_OK;
 }
 
-static int sigar_parse_proc_args(sigar_t *sigar, WCHAR *buf,
-                                 sigar_proc_args_t *procargs)
+int sigar_parse_proc_args(sigar_t *sigar, WCHAR *buf,
+                          sigar_proc_args_t *procargs)
 {
     char arg[SIGAR_CMDLINE_MAX];
     LPWSTR *args;
     int num, i;
+
+    if (!buf) {
+        buf = GetCommandLine();
+    }
 
     sigar_proc_args_create(procargs);
 
