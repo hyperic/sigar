@@ -1,3 +1,17 @@
+2004-11-12  John Sachs  <jsachs@hyperic.net>
+
+        * added sysinfo shell command
+
+2004-11-10  Doug MacEachern  <dougm@hyperic.net>
+
+        * added MultiProcCpu and MultiProcMem classes
+
+        * added mps (multi-process ps) shell command
+
+2004-11-02  Doug MacEachern  <dougm@hyperic.net>
+
+        * fix cpu idle metric for windows 2000 and NT versions
+        
 2004-10-05  Doug MacEachern  <dougm@hyperic.net>
 
         * make sigar_swap and sigar_mem compatible with linux 2.6 kernel
