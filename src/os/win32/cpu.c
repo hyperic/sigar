@@ -299,6 +299,9 @@ int sigar_cpu_info_get(sigar_t *sigar, sigar_cpu_info_t *info)
             SIGAR_SSTRCPY(info->model, "x86");
         }
     }
+    else {
+        sigar_cpu_model_adjust(sigar, info);
+    }
 
     size = sizeof(info->mhz); // == sizeof(DWORD)
     if (RegQueryValueEx(cpu, "~MHz", NULL, NULL,
