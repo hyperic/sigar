@@ -333,6 +333,32 @@ JNIEXPORT jobjectArray SIGAR_JNI(Sigar_getFileSystemList)
     return fsarray;
 }
 
+JNIEXPORT jboolean SIGAR_JNI(NfsFileSystem_ping)
+(JNIEnv *env, jclass cls_obj, jstring jhostname)
+{
+#ifdef WIN32
+    return JNI_FALSE; /*XXX*/
+#else
+    jboolean is_copy;
+    const char *hostname;
+    jboolean retval;
+
+    if (!jhostname) {
+        return JNI_FALSE;
+    }
+
+    hostname = JENV->GetStringUTFChars(env, jhostname, &is_copy);
+
+    retval = (sigar_nfs_ping((char *)hostname) == SIGAR_OK);
+
+    if (is_copy) {
+        JENV->ReleaseStringUTFChars(env, jhostname, hostname);
+    }
+
+    return retval;
+#endif
+}
+
 JNIEXPORT jobjectArray SIGAR_JNI(Sigar_getCpuInfoList)
 (JNIEnv *env, jobject sigar_obj)
 {
