@@ -287,6 +287,16 @@ typedef struct {
 SIGAR_DECLARE(int) sigar_proc_modules_get(sigar_t *sigar, sigar_pid_t pid,
                                           sigar_proc_modules_t *procmods);
 
+typedef struct {
+    sigar_uint64_t user;
+    sigar_uint64_t sys;
+    sigar_uint64_t total;
+} sigar_thread_cpu_t;
+
+SIGAR_DECLARE(int) sigar_thread_cpu_get(sigar_t *sigar,
+                                        sigar_uint64_t id,
+                                        sigar_thread_cpu_t *cpu);
+                                            
 typedef enum {
     SIGAR_FSTYPE_UNKNOWN,
     SIGAR_FSTYPE_NONE,
