@@ -160,7 +160,9 @@ int sigar_os_open(sigar_t **sigar)
     }
 #endif
 
+#ifndef DARWIN
     get_koffsets(*sigar);
+#endif
 
     (*sigar)->ncpu = ncpu;
 
