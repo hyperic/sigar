@@ -1,0 +1,20 @@
+Hyperic SIGAR includes some third-party open source components 
+in its distribution. The list below identifies the community or 
+organization and links to their appropriate license terms.
+
+As users and contributors to many open source projects, the 
+Hyperic engineering team would like to thank all the communities 
+of the projects listed below for their contributions. 
+---------------------------------------------------------------------
+
+- BCEL -
+Information: http://jakarta.apache.org/bcel/index.html
+License: http://www.apache.org/licenses/LICENSE-2.0
+
+- log4j -
+Information: http://logging.apache.org/
+License: http://www.apache.org/licenses/LICENSE-2.0
+
+- junit -
+Information: http://www.junit.org/index.htm
+License: http://www.opensource.org/licenses/cpl.php
