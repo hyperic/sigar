@@ -8,12 +8,12 @@ public class SynchronizedSigarProxyCache
     private static Object lock = new Object();
     private static SigarProxy instance = null;
 
-    public static SigarProxy getInstance(Sigar sigar)
+    public static SigarProxy getInstance()
         throws SigarException {
 
         synchronized (lock) {
             if (instance == null) {
-                instance = SigarProxyCache.newInstance(sigar);
+                instance = SigarProxyCache.newInstance(new Sigar());
             }
         }
 

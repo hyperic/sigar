@@ -134,10 +134,7 @@ public class TestPTQL extends SigarTestCase {
     }
 
     public void testCreate() throws Exception {
-        Sigar sigar = new Sigar();
-
-        SigarProxy proxy =
-            SynchronizedSigarProxyCache.getInstance(sigar);
+        SigarProxy proxy = SynchronizedSigarProxyCache.getInstance();
 
         traceln("");
         testOK(proxy);
