@@ -791,6 +791,13 @@ int sigar_file_system_usage_get(sigar_t *sigar,
     return SIGAR_OK;
 }
 
+#ifdef DARWIN
+#define CTL_HW_FREQ "hw.cpufrequency"
+#else
+/* XXX FreeBSD 5.x+ only? */ 
+#define CTL_HW_FREQ "machdep.tsc_freq"
+#endif
+
 int sigar_cpu_info_list_get(sigar_t *sigar,
                             sigar_cpu_info_list_t *cpu_infos)
 {
@@ -799,7 +806,7 @@ int sigar_cpu_info_list_get(sigar_t *sigar,
     size_t size;
 
     size = sizeof(value);
-    if (!sysctlbyname("hw.cpufrequency", &value, &size, NULL, 0)) {
+    if (!sysctlbyname(CTL_HW_FREQ, &value, &size, NULL, 0)) {
         mhz = value;
     }
     else {
