@@ -18,3 +18,10 @@ int sigar_perfstat_cpu(perfstat_id_t *id,
     return perfstat_cpu(id, cpu, size, num);
 }
 
+int sigar_perfstat_pagingspace(perfstat_id_t *id,
+                               perfstat_pagingspace_t *pagingspace,
+                               size_t size,
+                               int num)
+{
+    return perfstat_pagingspace(id, pagingspace, size, num);
+}

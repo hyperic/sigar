@@ -297,6 +297,23 @@ static int sigar_perfstat_init(sigar_t *sigar)
         return ENOENT;
     }
 
+    sigar->perfstat.swap =
+        (perfstat_swap_func_t)dlsym(handle,
+                                    "sigar_perfstat_pagingspace");
+
+    if (!sigar->perfstat.swap) {
+        if (SIGAR_LOG_IS_DEBUG(sigar)) {
+            sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
+                             "dlsym(sigar_perfstat_pagingspace) failed: %s",
+                             dlerror());
+        }
+
+        dlclose(handle);
+
+        sigar->perfstat.avail = -1;
+        return ENOENT;
+    }
+
     sigar->perfstat.avail = 1;
     sigar->perfstat.handle = handle;
 
@@ -441,7 +458,7 @@ static int swaps_get(swaps_t *swaps)
 
 int swapqry(char *path, struct pginfo *info);
 
-int sigar_swap_get(sigar_t *sigar, sigar_swap_t *swap)
+static int sigar_swap_get_swapqry(sigar_t *sigar, sigar_swap_t *swap)
 {
     int status, i;
 
@@ -487,6 +504,59 @@ int sigar_swap_get(sigar_t *sigar, sigar_swap_t *swap)
     swap->used = swap->total - swap->free;
 
     return SIGAR_OK;
+}
+
+#define SWAP_DEV(ps) \
+   ((ps.type == LV_PAGING) ? \
+     ps.id.lv_paging.vgname : \
+     ps.id.nfs_paging.filename)
+
+#define SWAP_MB_TO_BYTES(v) ((v) * (1024 * 1024))
+
+static int sigar_swap_get_perfstat(sigar_t *sigar, sigar_swap_t *swap)
+{
+    perfstat_pagingspace_t ps;
+    perfstat_id_t id;
+
+    id.name[0] = '\0';
+
+    SIGAR_ZERO(swap);
+
+    do {
+        if (sigar->perfstat.swap(&id, &ps, sizeof(ps), 1) != 1) {
+            if (SIGAR_LOG_IS_DEBUG(sigar)) {
+                sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
+                                 "[swap] dev=%s query failed: %s",
+                                 SWAP_DEV(ps),
+                                 sigar_strerror(sigar, errno));
+            }
+            continue;
+        }
+        if (SIGAR_LOG_IS_DEBUG(sigar)) {
+            sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
+                             "[swap] dev=%s: total=%lluMb, used=%lluMb",
+                             SWAP_DEV(ps), ps.mb_size, ps.mb_used);
+        }
+        /* convert MB sizes to bytes */
+        swap->total += SWAP_MB_TO_BYTES(ps.mb_size);
+        swap->used  += SWAP_MB_TO_BYTES(ps.mb_used);
+    } while (id.name[0] != '\0');
+
+    swap->free = swap->total - swap->used;
+
+    return SIGAR_OK;
+}
+
+int sigar_swap_get(sigar_t *sigar, sigar_swap_t *swap)
+{
+    if (sigar_perfstat_init(sigar) == SIGAR_OK) {
+        sigar_log(sigar, SIGAR_LOG_DEBUG, "[swap] using libperfstat");
+        return sigar_swap_get_perfstat(sigar, swap);
+    }
+    else {
+        sigar_log(sigar, SIGAR_LOG_DEBUG, "[swap] using /dev/kmem");
+        return sigar_swap_get_swapqry(sigar, swap);
+    }
 }
 
 int sigar_cpu_get(sigar_t *sigar, sigar_cpu_t *cpu)

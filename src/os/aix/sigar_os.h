@@ -33,6 +33,10 @@ typedef int (*perfstat_cpu_func_t)(perfstat_id_t *,
                                    perfstat_cpu_t *,
                                    size_t, int);
 
+typedef int (*perfstat_swap_func_t)(perfstat_id_t *,
+                                    perfstat_pagingspace_t *,
+                                    size_t, int);
+
 struct sigar_t {
     SIGAR_T_BASE;
     int kmem;
@@ -44,6 +48,7 @@ struct sigar_t {
         int avail;
         perfstat_cpu_func_t cpu;
         perfstat_cpu_total_func_t cpu_total;
+        perfstat_swap_func_t swap;
         void *handle;
     } perfstat;
     int pagesize;
