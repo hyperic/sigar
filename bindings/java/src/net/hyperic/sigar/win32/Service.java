@@ -187,6 +187,14 @@ public class Service extends Win32Bindings implements java.io.Serializable
         DeleteService(this.m_hService);
     }
 
+    public void control(int control)
+        throws Win32Exception
+    {
+        if (!ControlService(this.m_hService, control)) {
+            Service.throwLastErrorException();
+        }
+    }
+
     public void setDescription(String description)
     {
         Service.ChangeServiceDescription(this.m_hService, description);
