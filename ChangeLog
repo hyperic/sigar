@@ -1,3 +1,9 @@
+2004-11-21  Doug MacEachern  <dougm@hyperic.net>
+
+        * merged hyperic win32bindings package into sigar.win32
+
+        * added sigar_cpu_t.wait metric
+
 2004-11-19  Doug MacEachern  <dougm@hyperic.net>
 
         * added sigar_mem_t.actual_{used,free} fields.
