@@ -46,9 +46,19 @@ public class Time extends SigarCommandBase {
         return nano / 1000000;
     }
 
-    private static String format(long t) {
-        t /= 1000;
-        return t/60 + ":" + t%60;
+    private static String format(long elap) {
+        String fraction = (elap % 1000) + "";
+        int pad = 3 - fraction.length();
+
+        StringBuffer buf = new StringBuffer()
+            .append(elap / 1000).append('.');
+
+        //for example, 15 millseconds formatted as ".015" rather than ".15"
+        while (pad-- > 0) {
+            buf.append("0");
+        }
+        buf.append(fraction).append(" seconds");
+        return buf.toString();
     }
 
     public static void main(String[] args) throws Exception {
