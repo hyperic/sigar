@@ -464,6 +464,8 @@ SIGAR_DECLARE(int) sigar_nfs_ping(char *host)
     if (rpc_stat != RPC_SUCCESS) {
         retval = -1;
     }
+
+    close(sock);
     clnt_destroy(client);
 
     return retval;
