@@ -43,6 +43,8 @@ public class TestPTQL extends SigarTestCase {
         "Port.tcp.eq=8080,Cred.Uid.eq=1003", //dougm owned jboss port
         "Pid.PidFile.eq=pid.file",
         "Pid.Pid.eq=1",
+        "Pid.Service.eq=Eventlog",
+        "Pid.Service.eq=Hyperic HQ Agent",
         "State.Name.eq=java,Pid.Pid.ne=$$", //all java procs cept this one
         "Cpu.Percent.ge=0.2",
     };
@@ -61,6 +63,7 @@ public class TestPTQL extends SigarTestCase {
         "Time.Stime.gt=x",
         "Pid.PidFile.ne=pid.file",
         "Pid.Pid.eq=foo",
+        "Pid.Service.ne=Eventlog",
         "Cpu.Percent.ge=x",
         "",
         null
