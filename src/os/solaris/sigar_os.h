@@ -19,6 +19,8 @@ typedef unsigned long long int u_int64_t;
 #include <kstat.h>
 #include <procfs.h>
 
+#include "get_mib2.h"
+
 /* avoid -Wall warning since solaris doesnt have a prototype for this */
 int getdomainname(char *, int);
 
@@ -222,6 +224,8 @@ struct sigar_t {
     proc_exename_func_t pexename;
 
     sigar_cache_t *fsdev;
+
+    solaris_mib2_t mib2;
 };
 
 #define kSTAT_uint(v, type) \

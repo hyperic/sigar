@@ -96,6 +96,9 @@ int sigar_os_open(sigar_t **sig)
 
     sigar->fsdev = NULL;
 
+    SIGAR_ZERO(&sigar->mib2);
+    sigar->mib2.sd = -1;
+
     return SIGAR_OK;
 }
 
