@@ -55,6 +55,10 @@ public class OperatingSystem {
             }
             else if (os.name.equals("SunOS")) {
                 os.vendor = "Sun Microsystems";
+                int ix = os.version.indexOf(".");
+                //5.8 == solaris 8, etc.
+                os.vendorVersion = os.version.substring(ix);
+                os.name = "Solaris";
             }
             else if (os.name.equals("HP-UX")) {
                 os.vendor = "Hewlett-Packard";
