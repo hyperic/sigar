@@ -118,6 +118,9 @@ int sigar_os_open(sigar_t **sigar)
     int ncpu;
     size_t len;
     struct timeval boottime;
+#ifndef DARWIN
+    struct stat sb;
+#endif
 
     len = sizeof(ncpu);
     mib[0] = CTL_HW;
@@ -139,6 +142,12 @@ int sigar_os_open(sigar_t **sigar)
     (*sigar)->mach_port = mach_host_self();
 #else
     (*sigar)->kmem = kvm_open(NULL, NULL, NULL, O_RDONLY, "kvm_open");
+    if (stat("/proc/curproc", &sb) < 0) {
+        (*sigar)->proc_mounted = 0;
+    }
+    else {
+        (*sigar)->proc_mounted = 1;
+    }
 #endif
 
     get_koffsets(*sigar);
@@ -170,6 +179,8 @@ char *sigar_os_error_string(int err)
     switch (err) {
       case SIGAR_EPERM_KMEM:
         return "Failed to open /dev/kmem for reading";
+      case SIGAR_EPROC_NOENT:
+        return "/proc filesystem is not mounted";
       default:
         return NULL;
     }
@@ -688,6 +699,9 @@ int sigar_proc_args_get(sigar_t *sigar, sigar_pid_t pid,
 #ifdef DARWIN
     return SIGAR_ENOTIMPL;
 #else
+    if (!sigar->proc_mounted) {
+        return SIGAR_EPROC_NOENT;
+    }
     return sigar_procfs_args_get(sigar, pid, procargs);
 #endif
 }

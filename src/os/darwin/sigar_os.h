@@ -28,9 +28,11 @@ struct sigar_t {
     kvm_t *kmem;
     /* offsets for seeking on kmem */
     unsigned long koffsets[KOFFSET_MAX];
+    int proc_mounted;
 #endif
 };
 
 #define SIGAR_EPERM_KMEM (SIGAR_OS_START_ERROR+1)
+#define SIGAR_EPROC_NOENT (SIGAR_OS_START_ERROR+2)
 
 #endif /* SIGAR_OS_H */
