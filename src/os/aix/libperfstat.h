@@ -241,7 +241,7 @@ enum {
 	LV_PAGING=1,
 	NFS_PAGING
 };
-#if 0 /* xlc_r does not like unnamed union */
+
 typedef struct { /* Paging space data for a specific logical volume */
 	char name[IDENTIFIER_LENGTH];    /* Paging space name */
 	char type; /* type of paging device (LV_PAGING or NFS_PAGING) *
@@ -256,7 +256,7 @@ typedef struct { /* Paging space data for a specific logical volume */
 	       struct{
 		      char vgname[IDENTIFIER_LENGTH];/*  volume group name  */
 	       } lv_paging;
-	};
+	} id;
 	longlong_t lp_size;    /* size in number of logical partitions  */
 	longlong_t mb_size;    /* size in megabytes  */
 	longlong_t mb_used;    /* portion used in megabytes  */
@@ -264,7 +264,6 @@ typedef struct { /* Paging space data for a specific logical volume */
 	char active;           /* indicates if active (1 if so, 0 if not) */
 	char automatic;        /* indicates if automatic (1 if so, 0 if not) */
 } perfstat_pagingspace_t;
-#endif
 
 typedef struct {  /* network buffers  */
 	char name[IDENTIFIER_LENGTH]; /* size in ascii, always power of 2 (ex: "32", "64", "128") */
@@ -276,7 +275,7 @@ typedef struct {  /* network buffers  */
 	u_longlong_t highwatermark;   /* high threshold for number of buffer allocated */
 	u_longlong_t freed;           /* number of buffers freed */
 } perfstat_netbuffer_t;
-#if 0 /* xlc_r does not like unnamed union */
+
 typedef struct { /* utilization of protocols */
 	char name[IDENTIFIER_LENGTH]; /* ip, ipv6, icmp, icmpv6, udp, tcp, rpc, nfs, nfsv2, nfsv3*/
 	union{
@@ -478,9 +477,9 @@ typedef struct { /* utilization of protocols */
 			      u_longlong_t commit;      /* NFS V3 server commit requests */
 		      } server; /* nfsv3 server */
 		} nfsv3;
-	};
+	} dummy_name;
 } perfstat_protocol_t;
-#endif
+
 extern int perfstat_cpu_total(perfstat_id_t *name,
                               perfstat_cpu_total_t* userbuff,
                               int sizeof_userbuff,
@@ -517,22 +516,22 @@ extern int perfstat_netinterface(perfstat_id_t *name,
                                  perfstat_netinterface_t* userbuff,
                                  int sizeof_userbuff,
                                  int desired_number);
-#if 0
+
 extern int perfstat_pagingspace(perfstat_id_t *name,
                                 perfstat_pagingspace_t* userbuff,	   
                                 int sizeof_userbuff,			   
                                 int desired_number);			   
-#endif
+
 extern int perfstat_netbuffer(perfstat_id_t *name,
                               perfstat_netbuffer_t* userbuff,
                               int sizeof_userbuff,
                               int desired_number);
-#if 0
+
 extern int perfstat_protocol(perfstat_id_t *name,
                              perfstat_protocol_t* userbuff,
                              int sizeof_userbuff,
                              int desired_number);
-#endif
+
 extern void perfstat_reset(void);
 
 #ifdef __cplusplus
