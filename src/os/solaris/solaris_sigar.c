@@ -5,6 +5,8 @@
 
 #include <sys/proc.h>
 #include <sys/swap.h>
+#include <sys/stat.h>
+#include <dlfcn.h>
 
 #define KSTAT_LIST_INIT(sigar, dev) \
     sigar->koffsets.dev[0] = -1; \
@@ -71,6 +73,11 @@ int sigar_os_open(sigar_t **sig)
     sigar->last_pid = -1;
     sigar->pinfo = NULL;
 
+    sigar->plib = NULL;
+    sigar->pgrab = NULL;
+    sigar->pfree = NULL;
+    sigar->pobjname = NULL;
+
     return SIGAR_OK;
 }
 
@@ -102,6 +109,9 @@ int sigar_os_close(sigar_t *sigar)
     }
     if (sigar->cpulist.size != 0) {
         sigar_cpu_list_destroy(sigar, &sigar->cpulist);
+    }
+    if (sigar->plib) {
+        dlclose(sigar->plib);
     }
     free(sigar);
     return SIGAR_OK;
@@ -651,10 +661,182 @@ int sigar_proc_exe_get(sigar_t *sigar, sigar_pid_t pid,
     return SIGAR_ENOTIMPL;
 }
 
+/* from libproc.h, not included w/ solaris distro */
+/* Error codes from Pgrab(), Pfgrab_core(), and Pgrab_core() */
+#define	G_STRANGE	-1	/* Unanticipated error, errno is meaningful */
+#define	G_NOPROC	1	/* No such process */
+#define	G_NOCORE	2	/* No such core file */
+#define	G_NOPROCORCORE	3	/* No such proc or core (for proc_arg_grab) */
+#define	G_NOEXEC	4	/* Cannot locate executable file */
+#define	G_ZOMB		5	/* Zombie process */
+#define	G_PERM		6	/* No permission */
+#define	G_BUSY		7	/* Another process has control */
+#define	G_SYS		8	/* System process */
+#define	G_SELF		9	/* Process is self */
+#define	G_INTR		10	/* Interrupt received while grabbing */
+#define	G_LP64		11	/* Process is _LP64, self is ILP32 */
+#define	G_FORMAT	12	/* File is not an ELF format core file */
+#define	G_ELF		13	/* Libelf error, elf_errno() is meaningful */
+#define	G_NOTE		14	/* Required PT_NOTE Phdr not present in core */
+
+static int sigar_read_xmaps(sigar_t *sigar, 
+                            prxmap_t *xmaps, int total,
+                            unsigned long *last_inode,
+                            struct ps_prochandle *phandle,
+                            sigar_proc_modules_t *procmods)
+{
+    int status, i;
+    unsigned long inode;
+    char buffer[BUFSIZ];
+
+    for (i=0; i<total; i++) {
+        if (xmaps[i].pr_mflags & MA_ANON) {
+            continue; /* heap, stack, etc */
+        }
+
+        inode = xmaps[i].pr_ino;
+
+        if ((inode == 0) || (inode == *last_inode)) {
+            *last_inode = 0;
+            continue;
+        }
+
+        *last_inode = inode;
+
+        sigar->pobjname(phandle, xmaps[i].pr_vaddr, buffer, sizeof(buffer));
+
+        status = 
+            procmods->module_getter(procmods->data, buffer, strlen(buffer));
+
+        if (status != SIGAR_OK) {
+            /* not an error; just stop iterating */
+            return status;
+        }
+    }
+
+    return SIGAR_OK;
+}
+
+#define LIBPROC "/usr/lib/libproc.so"
+
+#define CHECK_PSYM(s) \
+    if (!sigar->s) { \
+        sigar_log_printf(sigar, SIGAR_LOG_WARN, \
+                         "[%s] Symbol not found: %s", \
+                         SIGAR_FUNC, #s); \
+        dlclose(sigar->plib); \
+        sigar->plib = NULL; \
+        return SIGAR_ENOTIMPL; \
+    }
+
+static int sigar_pgrab_modules(sigar_t *sigar, sigar_pid_t pid,
+                               sigar_proc_modules_t *procmods)
+{
+    int fd, pstatus;
+    off_t map_size, nread;
+    unsigned long last_inode = 0;
+    prxmap_t xmaps[15]; /* ~2K */
+    struct ps_prochandle *phandle;
+    struct stat statbuf;
+    char buffer[BUFSIZ];
+
+    if (!sigar->plib) {
+        /* libproc.so ships with 5.8+ */
+        /* interface is undocumented, see libproc.h in the sun jdk sources */
+        sigar->plib = dlopen(LIBPROC, RTLD_LAZY);
+
+        if (!sigar->plib) {
+            sigar_log_printf(sigar, SIGAR_LOG_WARN,
+                             "dlopen(%s) = %s",
+                             LIBPROC, dlerror());
+            return SIGAR_ENOTIMPL;
+        }
+
+        sigar->pgrab    = (proc_grab_func_t)dlsym(sigar->plib, "Pgrab");
+        sigar->pfree    = (proc_free_func_t)dlsym(sigar->plib, "Pfree");
+        sigar->pobjname = (proc_objname_func_t)dlsym(sigar->plib, "Pobjname");
+
+        CHECK_PSYM(pgrab);
+        CHECK_PSYM(pfree);
+        CHECK_PSYM(pobjname);
+    }
+
+    if (!(phandle = sigar->pgrab(pid, 0x01, &pstatus))) {
+        switch (pstatus) {
+          case G_NOPROC:
+            return ESRCH;
+          case G_PERM:
+            return EACCES;
+          default:
+            sigar_log_printf(sigar, SIGAR_LOG_ERROR,
+                             "[%s] Pgrab error=%d",
+                             SIGAR_FUNC, pstatus);
+            return ENOTSUP; /*XXX*/
+        }
+    }
+
+    (void)SIGAR_PROC_FILENAME(buffer, pid, "/xmap");
+
+    if ((fd = open(buffer, O_RDONLY)) < 0) {
+        return errno;
+    }
+
+    if (fstat(fd, &statbuf) < 0) {
+        close(fd);
+        return errno;
+    }
+
+    map_size = statbuf.st_size;
+
+    if (SIGAR_LOG_IS_DEBUG(sigar)) {
+        sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
+                         "[%s] pid=%d, size=%d",
+                         SIGAR_FUNC, pid, map_size);
+    }
+
+    for (nread=0; nread<statbuf.st_size; ) {
+        off_t wanted = map_size > sizeof(xmaps) ? sizeof(xmaps) : map_size;
+        int total = wanted / sizeof(prxmap_t);
+
+        if (pread(fd, xmaps, wanted, nread) != wanted) {
+            close(fd);
+            return errno;
+        }
+
+        if (SIGAR_LOG_IS_DEBUG(sigar)) {
+            sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
+                             "[%s] nread=%d, map_size=%d, wanted=%d, total=%d",
+                             SIGAR_FUNC,
+                             nread, map_size, wanted, total);
+        }
+
+        if (sigar_read_xmaps(sigar, xmaps, total,
+                             &last_inode,
+                             phandle, procmods) != SIGAR_OK)
+        {
+            break;
+        }
+
+        nread += wanted;
+        map_size -= wanted;
+    }
+
+    close(fd);
+
+    sigar->pfree(phandle);
+
+    return SIGAR_OK;
+}
+
 int sigar_proc_modules_get(sigar_t *sigar, sigar_pid_t pid,
                            sigar_proc_modules_t *procmods)
 {
-    return SIGAR_ENOTIMPL;
+    if (pid == sigar_pid_get(sigar)) {
+        return SIGAR_ENOTIMPL;
+    }
+    else {
+        return sigar_pgrab_modules(sigar, pid, procmods);
+    }
 }
 
 #include <sys/mnttab.h>

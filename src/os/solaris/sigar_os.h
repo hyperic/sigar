@@ -160,6 +160,12 @@ enum {
     KSTAT_KEYS_syspages,
 } kstat_keys_e;
 
+typedef struct ps_prochandle * (*proc_grab_func_t)(pid_t, int, int *);
+
+typedef void (*proc_free_func_t)(void *);
+
+typedef void (*proc_objname_func_t)(void *, uintptr_t, const char *, size_t);
+
 struct sigar_t {
     SIGAR_T_BASE;
 
@@ -201,6 +207,12 @@ struct sigar_t {
     sigar_pid_t last_pid;
     psinfo_t *pinfo;
     sigar_cpu_list_t cpulist;
+
+    /* libproc.so interface */
+    void *plib;
+    proc_grab_func_t pgrab;
+    proc_free_func_t pfree;
+    proc_objname_func_t pobjname;
 };
 
 #define kSTAT_uint(v, type) \
