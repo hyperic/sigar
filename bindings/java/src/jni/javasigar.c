@@ -130,8 +130,8 @@ static jni_sigar_t *sigar_get_pointer(JNIEnv *env, jobject obj) {
       
     cls = JENV->GetObjectClass(env, obj);
 
-    pointer_field = JENV->GetFieldID(env, cls, "sigarWrapper", "I");
-    jsigar = (jni_sigar_t *) JENV->GetIntField(env, obj, pointer_field);
+    pointer_field = JENV->GetFieldID(env, cls, "sigarWrapper", "J");
+    jsigar = (jni_sigar_t *) JENV->GetLongField(env, obj, pointer_field);
 
     if (!jsigar) {
         sigar_throw_exception(env, "sigar has been closed");
@@ -149,15 +149,10 @@ static jni_sigar_t *sigar_get_pointer(JNIEnv *env, jobject obj) {
 
 static void sigar_set_pointer(JNIEnv *env, jobject obj, const void *ptr) {
     jfieldID pointer_field;
-    int pointer_int;
-    jclass cls;
-    
-    cls = JENV->GetObjectClass(env, obj);
+    jclass cls = JENV->GetObjectClass(env, obj);
 
-    pointer_field = JENV->GetFieldID(env, cls, "sigarWrapper", "I");
-    pointer_int = (int)ptr;
-
-    JENV->SetIntField(env, obj, pointer_field, pointer_int);
+    pointer_field = JENV->GetFieldID(env, cls, "sigarWrapper", "J");
+    JENV->SetLongField(env, obj, pointer_field, (jlong)ptr);
 }
 
 JNIEXPORT jstring SIGAR_JNI(Sigar_formatSize)
