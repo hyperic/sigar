@@ -70,11 +70,14 @@ typedef enum {
     perf_offsets[ix] ? \
         *((DWORD *)((BYTE *)counter_block + perf_offsets[ix])) : 0
 
-static PERF_OBJECT_TYPE *get_perf_object(sigar_t *sigar, char *counter_key)
+static PERF_OBJECT_TYPE *get_perf_object(sigar_t *sigar, char *counter_key,
+                                         DWORD *err)
 {
     DWORD retval, type;
     WCHAR wcounter_key[MAX_PATH+1];
     PERF_DATA_BLOCK *block;
+
+    *err = SIGAR_OK;
 
     if (!sigar->perfbuf) {
         sigar->perfbuf = (char *)malloc(PERFBUF_SIZE);
@@ -93,7 +96,7 @@ static PERF_OBJECT_TYPE *get_perf_object(sigar_t *sigar, char *counter_key)
                                              sigar->perfbuf_size);
         }
         else {
-            printf("RegQueryValueEx failed: %d\n", retval);
+            *err = retval;
             return NULL;
         }
     }
@@ -270,9 +273,9 @@ SIGAR_DECLARE(int) sigar_swap_get(sigar_t *sigar, sigar_swap_t *swap)
 
 static PERF_INSTANCE_DEFINITION *get_cpu_instance(sigar_t *sigar,
                                                   DWORD *perf_offsets,
-                                                  DWORD *num)
+                                                  DWORD *num, DWORD *err)
 {
-    PERF_OBJECT_TYPE *object = get_perf_object(sigar, "238");
+    PERF_OBJECT_TYPE *object = get_perf_object(sigar, "238", err);
     PERF_INSTANCE_DEFINITION *inst;
     PERF_COUNTER_DEFINITION *counter;
     DWORD i;
@@ -311,12 +314,12 @@ SIGAR_DECLARE(int) sigar_cpu_get(sigar_t *sigar, sigar_cpu_t *cpu)
 {
     PERF_INSTANCE_DEFINITION *inst;
     PERF_COUNTER_BLOCK *counter_block;
-    DWORD perf_offsets[PERF_IX_CPU_MAX];
+    DWORD perf_offsets[PERF_IX_CPU_MAX], err;
 
     SIGAR_ZERO(cpu);
     memset(&perf_offsets, 0, sizeof(perf_offsets));
 
-    inst = get_cpu_instance(sigar, (DWORD*)&perf_offsets, 0);
+    inst = get_cpu_instance(sigar, (DWORD*)&perf_offsets, 0, &err);
 
     if (!inst) {
         return GetLastError();
@@ -338,16 +341,16 @@ SIGAR_DECLARE(int) sigar_cpu_list_get(sigar_t *sigar, sigar_cpu_list_t *cpulist)
 {
     int status, i, j, hthread=0;
     PERF_INSTANCE_DEFINITION *inst;
-    DWORD perf_offsets[PERF_IX_CPU_MAX], num;
+    DWORD perf_offsets[PERF_IX_CPU_MAX], num, err;
 
     memset(&perf_offsets, 0, sizeof(perf_offsets));
 
     /* first instance is total, rest are per-cpu */
-    inst = get_cpu_instance(sigar, (DWORD*)&perf_offsets, &num);
+    inst = get_cpu_instance(sigar, (DWORD*)&perf_offsets, &num, &err);
     --num;
 
     if (!inst) {
-        return GetLastError();
+        return err;
     }
 
     sigar_cpu_count(sigar);
@@ -410,8 +413,8 @@ SIGAR_DECLARE(int) sigar_loadavg_get(sigar_t *sigar,
     return SIGAR_ENOTIMPL;
 }
 
-#define get_process_object(sigar) \
-    get_perf_object(sigar, PERF_TITLE_PROC_KEY)
+#define get_process_object(sigar, err) \
+    get_perf_object(sigar, PERF_TITLE_PROC_KEY, err)
 
 SIGAR_DECLARE(int) sigar_proc_list_get(sigar_t *sigar,
                                        sigar_proc_list_t *proclist)
@@ -419,15 +422,15 @@ SIGAR_DECLARE(int) sigar_proc_list_get(sigar_t *sigar,
     PERF_OBJECT_TYPE *object;
     PERF_INSTANCE_DEFINITION *inst;
     PERF_COUNTER_DEFINITION *counter;
-    DWORD i;
+    DWORD i, err;
     DWORD perf_offsets[PERF_IX_MAX];
 
     perf_offsets[PERF_IX_PID] = 0;
 
-    object = get_process_object(sigar);
+    object = get_process_object(sigar, &err);
 
     if (!object) {
-        return GetLastError();
+        return err;
     }
 
     sigar_proc_list_create(proclist);
@@ -646,7 +649,7 @@ static int get_proc_info(sigar_t *sigar, sigar_pid_t pid)
     PERF_OBJECT_TYPE *object;
     PERF_INSTANCE_DEFINITION *inst;
     PERF_COUNTER_DEFINITION *counter;
-    DWORD i;
+    DWORD i, err;
     DWORD perf_offsets[PERF_IX_MAX];
     sigar_win32_pinfo_t *pinfo = &sigar->pinfo;
     time_t timenow = time(NULL);
@@ -662,7 +665,11 @@ static int get_proc_info(sigar_t *sigar, sigar_pid_t pid)
 
     memset(&perf_offsets, 0, sizeof(perf_offsets));
 
-    object = get_process_object(sigar);
+    object = get_process_object(sigar, &err);
+
+    if (object == NULL) {
+        return err;
+    }
 
     /*
      * note we assume here:
