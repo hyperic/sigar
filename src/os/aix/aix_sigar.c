@@ -29,6 +29,8 @@
 #include "user_v5.h"
 #include "utmp_v5.h"
 
+#include <sys/ldr.h>
+
 #define FIXED_TO_DOUBLE(x) (((double)x) / 65536.0)
 
 /* these offsets wont change so just lookup them up during open */
@@ -829,10 +831,54 @@ int sigar_proc_exe_get(sigar_t *sigar, sigar_pid_t pid,
     return SIGAR_ENOTIMPL;
 }
 
+static int sigar_proc_modules_local_get(sigar_t *sigar,
+                                        sigar_proc_modules_t *procmods)
+{
+    struct ld_info *info;
+    char *buffer;
+    int size = 2048, status;
+    unsigned int offset;
+
+    buffer = malloc(size);
+    while ((loadquery(L_GETINFO, buffer, size) == -1) &&
+           (errno == ENOMEM))
+    {
+        size += 2048;
+        buffer = realloc(buffer, size);
+    }
+
+    info = (struct ld_info *)buffer;
+
+    do {
+        char *name = info->ldinfo_filename;
+
+        status = 
+            procmods->module_getter(procmods->data, name, strlen(name));
+
+        if (status != SIGAR_OK) {
+            /* not an error; just stop iterating */
+            free(buffer);
+            return status;
+        }
+        
+        offset = info->ldinfo_next;
+        info = (struct ld_info *)((char*)info + offset);
+    } while(offset);
+
+    free(buffer);
+
+    return SIGAR_OK;
+}
+
 int sigar_proc_modules_get(sigar_t *sigar, sigar_pid_t pid,
                            sigar_proc_modules_t *procmods)
 {
-    return SIGAR_ENOTIMPL;
+    if (pid == sigar_pid_get(sigar)) {
+        return sigar_proc_modules_local_get(sigar, procmods);
+    }
+    else {
+        return SIGAR_ENOTIMPL;
+    }
 }
 
 int sigar_os_fs_type_get(sigar_file_system_t *fsp)
