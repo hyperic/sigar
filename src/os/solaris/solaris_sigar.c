@@ -1894,6 +1894,24 @@ static int udp_connection_list_get(sigar_t *sigar,
     char *end = (char *)entry + len;
 
     while ((char *)entry < end) {
+        int state = entry->udpEntryInfo.ue_state;
+
+        /* XXX dunno if this state check is right */
+        if (((flags & SIGAR_NETCONN_SERVER) && (state == MIB2_UDP_idle)) ||
+            ((flags & SIGAR_NETCONN_CLIENT) && (state != MIB2_UDP_idle)))
+        {
+            sigar_net_connection_t *conn;
+
+            SIGAR_NET_CONNLIST_GROW(connlist);
+            conn = &connlist->data[connlist->number++];
+
+            ip_format(conn->local_address, entry->udpLocalAddress);
+            SIGAR_SSTRCPY(conn->remote_address, "0.0.0.0");
+            conn->local_port = entry->udpLocalPort;
+            conn->remote_port = 0;
+            conn->type = SIGAR_NETCONN_UDP;
+        }
+
         entry++;
     }
 
