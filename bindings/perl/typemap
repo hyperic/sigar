@@ -2,6 +2,7 @@ Sigar       T_PTROBJ
 sigar_pid_t T_UV
 const char *	T_PV
 UV		T_UV
+Sigar::NetAddr	T_NETADDR
 
 #generated list
 Sigar::Uptime T_PTROBJ
@@ -25,3 +26,11 @@ Sigar::FileSystemUsage T_PTROBJ
 Sigar::ProcStat T_PTROBJ
 Sigar::NetRoute T_PTROBJ
 Sigar::NetInterfaceStat T_PTROBJ
+
+OUTPUT
+T_NETADDR
+	{
+	    char addr_str[SIGAR_INET_ADDR_LEN];
+	    sigar_inet_ntoa(NULL, $var, addr_str);
+	    sv_setpv($arg, addr_str);
+	}

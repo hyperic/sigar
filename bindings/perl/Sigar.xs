@@ -6,6 +6,7 @@
 #include "sigar_fileinfo.h"
 
 typedef sigar_t * Sigar;
+typedef sigar_uint64_t Sigar__NetAddr;
 
 /* generated list */
 typedef sigar_uptime_t * Sigar__Uptime;
