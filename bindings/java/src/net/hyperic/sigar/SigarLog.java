@@ -37,6 +37,10 @@ public class SigarLog {
         getLogger().error(msg, exc);
     }
 
+    static void debug(String msg, Throwable exc) {
+        getLogger().debug(msg, exc);
+    }
+
     //XXX want to make this automatic, but also dont always
     //want to turn on logging, since most sigar logging will be DEBUG
     public static void enable(Sigar sigar) {
