@@ -1,6 +1,7 @@
 package net.hyperic.sigar.test;
 
 import net.hyperic.sigar.Sigar;
+import net.hyperic.sigar.SigarException;
 import net.hyperic.sigar.SigarLoader;
 import net.hyperic.sigar.SigarProxy;
 import net.hyperic.sigar.SigarProxyCache;
@@ -26,6 +27,14 @@ public class TestInvoker extends SigarTestCase {
         { "sigar:Type=ProcTime,Arg=$$", "Stime" },
         { "sigar:Type=ProcTime,Arg=$$", "Utime" },
         { "sigar:Type=CpuPercList,Arg=0", "Idle" },
+    };
+
+    private static final String[][] BROKEN_QUERIES = {
+        { "sigar:Type=BREAK", "Free" },
+        { "sigar:Type=Mem", "BREAK" },
+        { "sigar:Type=ProcTime,Arg=BREAK", "Stime" },
+        { "sigar:Type=CpuPercList,Arg=1000", "Idle" },
+        { "sigar:Type=CpuPercList,Arg=BREAK", "Idle" },
     };
 
     public TestInvoker(String name) {
@@ -56,8 +65,26 @@ public class TestInvoker extends SigarTestCase {
                  */
                 continue;
             }
-            Object o = invoker.invoke(query[1]);
-            traceln(query[0] + ":" + query[1] + "=" + o);
+            try {
+                Object o = invoker.invoke(query[1]);
+                traceln(query[0] + ":" + query[1] + "=" + o);
+                assertTrue(true);
+            } catch (SigarException e) {
+                assertTrue(false);
+            }
+        }
+
+        for (int i=0; i<BROKEN_QUERIES.length; i++) {
+            String[] query = BROKEN_QUERIES[i];
+            SigarInvokerJMX invoker =
+                SigarInvokerJMX.getInstance(proxy, query[0]);
+            try {
+                Object o = invoker.invoke(query[1]);
+                assertTrue(false);
+            } catch (SigarException e) {
+                traceln(query[0] + ":" + query[1] + "=" + e.getMessage());
+                assertTrue(true);
+            }
         }
     }
 }
