@@ -44,7 +44,6 @@ static char copyright[] =
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stropts.h>
 #include <unistd.h>
 
 /*
@@ -100,14 +99,9 @@ get_mib2(solaris_mib2_t *mib2,
          char **data,
          int *datalen)
 {
-    struct T_optmgmt_ack *a;	/* message ACK pointer */
-    struct strbuf c;		/* streams control buffer */
     struct strbuf d;		/* streams data buffer */
-    struct T_error_ack *e;	/* message error pointer */
     int err;			/* error code */
     int f;				/* flags */
-    struct opthdr *o;	/* message option pointer */
-    struct T_optmgmt_req *r;	/* message request pointer */
     int rc;				/* reply code */
 
     /*
@@ -115,7 +109,6 @@ get_mib2(solaris_mib2_t *mib2,
      * messages.
      */
     if (mib2->sd < 0) {
-
 	/*
 	 * Open access.  Return on error.
 	 */
@@ -125,30 +118,30 @@ get_mib2(solaris_mib2_t *mib2,
 	/*
 	 * Set up message request and option.
 	 */
-        r = (struct T_optmgmt_req *)mib2->smb;
-        o = (struct opthdr *)&mib2->smb[sizeof(struct T_optmgmt_req)];
-        r->PRIM_type = T_OPTMGMT_REQ;
-        r->OPT_offset = sizeof(struct T_optmgmt_req);
-        r->OPT_length = sizeof(struct opthdr);
+        mib2->req = (struct T_optmgmt_req *)mib2->smb;
+        mib2->op = (struct opthdr *)&mib2->smb[sizeof(struct T_optmgmt_req)];
+        mib2->req->PRIM_type = T_OPTMGMT_REQ;
+        mib2->req->OPT_offset = sizeof(struct T_optmgmt_req);
+        mib2->req->OPT_length = sizeof(struct opthdr);
 
 #if	defined(MI_T_CURRENT)
-        r->MGMT_flags = MI_T_CURRENT;
+        mib2->req->MGMT_flags = MI_T_CURRENT;
 #else	/* !defined(MI_T_CURRENT) */
 # if	defined(T_CURRENT)
-        r->MGMT_flags = T_CURRENT;
+        mib2->req->MGMT_flags = T_CURRENT;
 # else	/* !defined(T_CURRENT) */
 #error	"Neither MI_T_CURRENT nor T_CURRENT are defined."
 # endif	/* defined(T_CURRENT) */
 #endif	/* defined(MI_T_CURRENT) */
 
-        o->level = MIB2_IP;
-        o->name = o->len = 0;
-        c.buf = mib2->smb;
-        c.len = r->OPT_offset + r->OPT_length;
+        mib2->op->level = MIB2_IP;
+        mib2->op->name = mib2->op->len = 0;
+        mib2->ctlbuf.buf = mib2->smb;
+        mib2->ctlbuf.len = mib2->req->OPT_offset + mib2->req->OPT_length;
 	/*
 	 * Put the message.
 	 */
-        if (putmsg(mib2->sd, &c, (struct strbuf *)NULL, 0) == -1) {
+        if (putmsg(mib2->sd, &mib2->ctlbuf, (struct strbuf *)NULL, 0) == -1) {
             (void) sprintf(mib2->errmsg,
                            "get_mib2: putmsg request: %s", strerror(errno));
             return(GET_MIB2_ERR_PUTMSG);
@@ -156,16 +149,16 @@ get_mib2(solaris_mib2_t *mib2,
 	/*
 	 * Set up to process replies.
 	 */
-        a = (struct T_optmgmt_ack *)mib2->smb;
-        c.maxlen = mib2->smb_len;
-        e = (struct T_error_ack *)mib2->smb;
-        o = (struct opthdr *)&mib2->smb[sizeof(struct T_optmgmt_ack)];
+        mib2->op_ack = (struct T_optmgmt_ack *)mib2->smb;
+        mib2->ctlbuf.maxlen = mib2->smb_len;
+        mib2->err_ack = (struct T_error_ack *)mib2->smb;
+        mib2->op = (struct opthdr *)&mib2->smb[sizeof(struct T_optmgmt_ack)];
     }
     /*
      * Get the next (first) reply message.
      */
     f = 0;
-    if ((rc = getmsg(mib2->sd, &c, NULL, &f)) < 0) {
+    if ((rc = getmsg(mib2->sd, &mib2->ctlbuf, NULL, &f)) < 0) {
         (void) sprintf(mib2->errmsg, "get_mib2: getmsg(reply): %s",
                        strerror(errno));
         return(GET_MIB2_ERR_GETMSGR);
@@ -174,10 +167,10 @@ get_mib2(solaris_mib2_t *mib2,
      * Check for end of data.
      */
     if (rc == 0
-	&&  c.len >= sizeof(struct T_optmgmt_ack)
-	&&  a->PRIM_type == T_OPTMGMT_ACK
-	&&  a->MGMT_flags == T_SUCCESS
-	&&  o->len == 0)
+	&&  mib2->ctlbuf.len >= sizeof(struct T_optmgmt_ack)
+	&&  mib2->op_ack->PRIM_type == T_OPTMGMT_ACK
+	&&  mib2->op_ack->MGMT_flags == T_SUCCESS
+	&&  mib2->op->len == 0)
     {
         err = close_mib2(mib2);
         if (err) {
@@ -188,33 +181,37 @@ get_mib2(solaris_mib2_t *mib2,
     /*
      * Check for error.
      */
-    if (c.len >= sizeof(struct T_error_ack)
-	&&  e->PRIM_type == T_ERROR_ACK)
+    if (mib2->ctlbuf.len >= sizeof(struct T_error_ack)
+	&&  mib2->err_ack->PRIM_type == T_ERROR_ACK)
     {
         (void) sprintf(mib2->errmsg,
                        "get_mib2: T_ERROR_ACK: len=%d, TLI=%#x, UNIX=%#x",
-                       c.len, (int)e->TLI_error, (int)e->UNIX_error);
+                       mib2->ctlbuf.len,
+                       (int)mib2->err_ack->TLI_error,
+                       (int)mib2->err_ack->UNIX_error);
         return(GET_MIB2_ERR_ACK);
     }
     /*
      * Check for no data.
      */
     if (rc != MOREDATA
-	||  c.len < sizeof(struct T_optmgmt_ack)
-	||  a->PRIM_type != T_OPTMGMT_ACK
-	||  a->MGMT_flags != T_SUCCESS)
+	||  mib2->ctlbuf.len < sizeof(struct T_optmgmt_ack)
+	||  mib2->op_ack->PRIM_type != T_OPTMGMT_ACK
+	||  mib2->op_ack->MGMT_flags != T_SUCCESS)
     {
         (void) sprintf(mib2->errmsg,
                        "get_mib2: T_OPTMGMT_ACK: "
                        "rc=%d len=%d type=%#x flags=%#x",
-                       rc, c.len, (int)a->PRIM_type, (int)a->MGMT_flags);
+                       rc, mib2->ctlbuf.len,
+                       (int)mib2->op_ack->PRIM_type,
+                       (int)mib2->op_ack->MGMT_flags);
         return(GET_MIB2_ERR_NODATA);
     }
     /*
      * Allocate (or enlarge) the data buffer.
      */
-    if (o->len >= mib2->db_len) {
-        mib2->db_len = o->len;
+    if (mib2->op->len >= mib2->db_len) {
+        mib2->db_len = mib2->op->len;
         if (mib2->db == NULL) {
             mib2->db = (char *)malloc(mib2->db_len);
         }
@@ -231,7 +228,7 @@ get_mib2(solaris_mib2_t *mib2,
     /*
      * Get the data part of the message -- the MIB2 part.
      */
-    d.maxlen = o->len;
+    d.maxlen = mib2->op->len;
     d.buf = mib2->db;
     d.len = 0;
     f = 0;
@@ -249,7 +246,7 @@ get_mib2(solaris_mib2_t *mib2,
     /*
      * Compose a successful return.
      */
-    *opt = o;
+    *opt = mib2->op;
     *data = mib2->db;
     *datalen = d.len;
     return(GET_MIB2_OK);

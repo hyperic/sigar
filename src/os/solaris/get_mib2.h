@@ -44,9 +44,10 @@
  * Required header files
  */
 
+#include <stropts.h>
 #include <sys/types.h>
 #include <sys/socket.h>
-#include <sys/stream.h> 
+#include <sys/stream.h>
 #include <sys/tihdr.h>
 #include <sys/tiuser.h>
 #include <inet/mib2.h>
@@ -95,7 +96,12 @@ typedef struct {
     char *smb;      /* stream message buffer */
     size_t smb_len; /* size of Smb[] */
     int sd;         /* stream device descriptor */
-    char errmsg[GET_MIB2_ERRMSGL]; /* error message buffer */
+    char errmsg[GET_MIB2_ERRMSGL];      /* error message buffer */
+    struct T_optmgmt_ack *op_ack;       /* message ACK pointer */ 
+    struct strbuf ctlbuf;               /* streams control buffer */
+    struct T_error_ack *err_ack;        /* message error pointer */
+    struct opthdr *op;                  /* message option pointer */
+    struct T_optmgmt_req *req;          /* message request pointer */
 } solaris_mib2_t;
 
 /*
