@@ -722,7 +722,15 @@ SIGAR_DECLARE(int) sigar_who_list_get(sigar_t *sigar,
 #  define ut_time ut_tv.tv_sec
 #else
 #  include <utmp.h>
-#  define SIGAR_UTMP_FILE UTMP_FILE
+#  ifdef UTMP_FILE
+#    define SIGAR_UTMP_FILE UTMP_FILE
+#  else
+#    define SIGAR_UTMP_FILE _PATH_UTMP
+#  endif
+#endif
+
+#ifdef __FreeBSD__
+#  define ut_user ut_name
 #endif
 
 int sigar_who_list_get(sigar_t *sigar,
