@@ -8,6 +8,7 @@ import net.hyperic.jni.ArchNotSupportedException;
 public class SigarLoader extends ArchLoader {
 
     private static String location = null;
+    private static String nativeName = null;
 
     public SigarLoader(Class loaderClass) {
         super(loaderClass);
@@ -51,5 +52,22 @@ public class SigarLoader extends ArchLoader {
             }
         }
         return location;
+    }
+
+    /**
+     * Returns the name of the native sigar library.
+     */
+    public synchronized static String getNativeLibraryName() {
+        if (nativeName == null) {
+            SigarLoader loader = new SigarLoader(Sigar.class);
+
+            try {
+                nativeName = loader.getLibraryName();
+            } catch (ArchNotSupportedException e) {
+                nativeName = null;
+            }
+        }
+
+        return nativeName;
     }
 }
