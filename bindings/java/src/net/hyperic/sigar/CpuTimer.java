@@ -29,6 +29,13 @@ public class CpuTimer {
         this.cpuSys   = 0;
     }
 
+    public void add(CpuTimer timer) {
+        this.cpuTotal  += timer.cpuTotal;
+        this.cpuUser   += timer.cpuUser;
+        this.cpuSys    += timer.cpuSys;
+        this.totalTime += timer.totalTime;
+    }
+
     public void start() {
         this.startTime = System.currentTimeMillis();
 
