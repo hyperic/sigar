@@ -5,7 +5,7 @@ import java.net.UnknownHostException;
 
 public class NfsFileSystem extends FileSystem {
 
-    private static native boolean ping(String hostname);
+    public static native boolean ping(String hostname);
 
     String hostname = null;
 
