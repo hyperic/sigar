@@ -1394,8 +1394,12 @@ static int create_diskmap(sigar_t *sigar)
     while ((ptr = fgets(buffer, sizeof(buffer), fp))) {
         FILE *lfp;
         char cmd[256], disk[56];
-        char *s = strchr(ptr, ' ');
-        if (s) {
+        char *s;
+
+        if (strstr(ptr, " None")) {
+            continue; /* no volume group */
+        }
+        if ((s = strchr(ptr, ' '))) {
             *s = '\0';
         }
         strcpy(disk, ptr);
