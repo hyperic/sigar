@@ -3,6 +3,8 @@
         * 1.1.18 released
 
         * fix bug in ptql args glob substring operators (Args.*.{sw,ew,ct})
+
+        * fix bug where Pentium III was reported as II
         
         * added OperatingSystem class to help determine linux
         vendor/version info, etc.
