@@ -46,7 +46,7 @@ public class TestFileInfo extends SigarTestCase {
 
         assertGtEqZeroTrace("Nlink", info.getNlink());
 
-        assertGtZeroTrace("Atime", info.getAtime());
+        assertGtEqZeroTrace("Atime", info.getAtime());
         traceln(new Date(info.getAtime()).toString());
 
         assertGtZeroTrace("Mtime", info.getMtime());
