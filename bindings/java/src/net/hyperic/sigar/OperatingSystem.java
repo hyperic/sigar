@@ -219,7 +219,11 @@ public class OperatingSystem {
 
     public static void main(String[] args) {
         OperatingSystem os = OperatingSystem.getInstance();
-        System.out.println("vendor..." + os.vendor);
+        System.out.println("name............." + os.name);
+        System.out.println("version.........." + os.version);
+        System.out.println("arch............." + os.arch);
+        System.out.println("patch level......" + os.patchLevel);
+        System.out.println("vendor..........." + os.vendor);
         System.out.println("vendor version..." + os.vendorVersion);
     }
 }
