@@ -41,6 +41,7 @@ struct sigar_t {
     struct cpuinfo *cpuinfo;
     int cpuinfo_size;
     char model[128];
+    char self_path[1024]; /* path to where libsigar.so lives */
 };
 
 #define HAVE_STRERROR_R
