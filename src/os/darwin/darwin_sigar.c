@@ -11,6 +11,7 @@
 #include <sys/types.h>
 #include <sys/param.h>
 #include <sys/user.h>
+#include <fcntl.h>
 #endif
 
 #include <sys/ioctl.h>
@@ -55,6 +56,8 @@ int sigar_os_open(sigar_t **sigar)
 
 #ifdef DARWIN
     (*sigar)->mach_port = mach_host_self();
+#else
+    (*sigar)->kp = kvm_open(NULL, NULL, NULL, O_RDONLY, "kvm_open");
 #endif
 
     (*sigar)->ncpu = ncpu;
@@ -193,10 +196,22 @@ int sigar_swap_get(sigar_t *sigar, sigar_swap_t *swap)
     swap->free = swap->total - swap->used;
 
 #else
-    /*XXX*/
-    swap->total  = 0;
-    swap->used   = 0;
-    swap->free   = 0;
+    struct kvm_swap kswap[1];
+
+    if (kvm_getswapinfo(sigar->kp, kswap, 1, 0) < 0) {
+        return errno;
+    }
+
+    if (kswap[0].ksw_total == 0) {
+        swap->total = 0;
+        swap->used  = 0;
+        swap->free  = 0;
+        return SIGAR_OK;
+    }
+
+    swap->total = kswap[0].ksw_total * sigar->pagesize;
+    swap->used  = kswap[0].ksw_used * sigar->pagesize;
+    swap->free  = swap->total - swap->used;
 #endif
 
     return SIGAR_OK;
