@@ -33,7 +33,7 @@ public class Sigar implements SigarProxy {
         } catch (SigarException e) {
             String msg = "Sigar.load: " + e.getMessage();
             try {
-                SigarLog.error(msg, e);
+                SigarLog.debug(msg, e);
             } catch (NoClassDefFoundError ne) {
                 //no log4j.jar
                 System.err.println(msg);
