@@ -137,17 +137,27 @@ JNIEXPORT jint SIGAR_JNI(win32_RegistryKey_RegQueryIntValue)
     DWORD   dwType;
     LPBYTE  lpValue;
     DWORD   cbValue;
+    LPTSTR copy;
+    jsize len = env->GetStringLength(valueName);
+    LPTSTR lpValueName = (LPTSTR)env->GetStringChars(valueName, NULL);
+    LONG    lErr;
+    /* required under IBM/WebSphere 4.0 for certain keys */
+    if (lpValueName[len] != '\0') {
+        copy = wcsdup(lpValueName);
+        copy[len] = '\0';
+    }
+    else {
+        copy = lpValueName;
+    }
 
-    LPCTSTR lpValueName = (LPCTSTR)env->GetStringChars(valueName, NULL);
-    LONG    lErr        = RegQueryValueEx((HKEY)hkey, lpValueName, 
-                                          NULL, (LPDWORD)&dwType, 
-                                          NULL, &cbValue);
-    
+    lErr = RegQueryValueEx((HKEY)hkey, copy, 
+                           NULL, (LPDWORD)&dwType, 
+                           NULL, &cbValue);
     if(lErr == ERROR_SUCCESS) {
         lpValue = (LPBYTE)HeapAlloc(GetProcessHeap(), 
                                     HEAP_ZERO_MEMORY, cbValue);
 
-        if(RegQueryValueEx((HKEY)hkey, lpValueName, NULL, 
+        if(RegQueryValueEx((HKEY)hkey, copy, NULL, 
                            NULL, lpValue, &cbValue) == ERROR_SUCCESS)
         {
             switch(dwType) {
@@ -169,6 +179,9 @@ JNIEXPORT jint SIGAR_JNI(win32_RegistryKey_RegQueryIntValue)
         lErr = ERROR_SUCCESS - 1;
 
     env->ReleaseStringChars(valueName, (const jchar *)lpValueName);
+    if (copy != lpValueName) {
+        free(copy);
+    }
     
     if(lErr != ERROR_SUCCESS)
     {
@@ -187,18 +200,28 @@ JNIEXPORT jstring SIGAR_JNI(win32_RegistryKey_RegQueryStringValue)
     DWORD   dwType;
     LPBYTE  lpValue;
     DWORD   cbValue;
+    jsize len = env->GetStringLength(name);
+    LPTSTR lpValueName = (LPTSTR)env->GetStringChars(name, NULL);
+    LPTSTR copy;
+    LONG    lErr;
+    /* required under IBM/WebSphere 4.0 for certain keys */
+    if (lpValueName[len] != '\0') {
+        copy = wcsdup(lpValueName);
+        copy[len] = '\0';
+    }
+    else {
+        copy = lpValueName;
+    }
 
-    LPCTSTR lpValueName = (LPCTSTR)env->GetStringChars(name, NULL);
-    LONG    lErr        = RegQueryValueEx((HKEY)hkey, 
-                                          lpValueName, NULL, 
-                                          (LPDWORD)&dwType, NULL, &cbValue);
-
+    lErr = RegQueryValueEx((HKEY)hkey, 
+                           copy, NULL, 
+                           (LPDWORD)&dwType, NULL, &cbValue);
     if(lErr == ERROR_SUCCESS)
     {
         lpValue = (LPBYTE)HeapAlloc(GetProcessHeap(), 
                                     HEAP_ZERO_MEMORY, cbValue);
 
-        if(RegQueryValueEx((HKEY)hkey, lpValueName, NULL, NULL, 
+        if(RegQueryValueEx((HKEY)hkey, copy, NULL, NULL, 
                            lpValue, &cbValue) == ERROR_SUCCESS)
         {
             switch(dwType) {
@@ -228,6 +251,9 @@ JNIEXPORT jstring SIGAR_JNI(win32_RegistryKey_RegQueryStringValue)
     }
 
     env->ReleaseStringChars(name, (const jchar *)lpValueName);
+    if (copy != lpValueName) {
+        free(copy);
+    }
     
     if(lErr == ERROR_SUCCESS)
         return strResult;
