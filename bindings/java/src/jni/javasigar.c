@@ -307,7 +307,8 @@ JNIEXPORT jobjectArray SIGAR_JNI(Sigar_getFileSystemList)
         jclass obj_cls;
 
         if ((fs->type == SIGAR_FSTYPE_NETWORK) &&
-            (strcmp(fs->sys_type_name, "nfs") == 0))
+            (strcmp(fs->sys_type_name, "nfs") == 0) &&
+            strstr(fs->dev_name, ":/"))
         {
             if (!nfs_cls) {
                 nfs_cls = SIGAR_FIND_CLASS("NfsFileSystem");
