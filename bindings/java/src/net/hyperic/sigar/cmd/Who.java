@@ -28,10 +28,14 @@ public class Who extends SigarCommandBase {
     public void output(String[] args) throws SigarException {
         net.hyperic.sigar.Who[] who = this.sigar.getWhoList();
         for (int i=0; i<who.length; i++) {
+            String host = who[i].getHost();
+            if (host.length() != 0) {
+                host = "(" + host + ")";
+            }
             println(who[i].getUser() + "\t" +
                     who[i].getDevice() + "\t" +
                     getTime(who[i].getTime() * 1000) + "\t" +
-                    who[i].getHost());
+                    host);
         }
     }
 
