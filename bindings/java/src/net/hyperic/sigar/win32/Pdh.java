@@ -28,7 +28,7 @@ public class Pdh extends Win32Bindings {
         }
     }
 
-    public void close() throws Win32Exception {
+    public synchronized void close() throws Win32Exception {
         if (h_counter != -1l) {
             pdhRemoveCounter(h_counter);
             h_counter = -1l;

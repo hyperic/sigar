@@ -125,7 +125,7 @@ public class Service extends Win32Bindings implements java.io.Serializable
         this.close();
     }
 
-    public void close()
+    public synchronized void close()
     {
         if(this.m_hService != 0) {
             CloseServiceHandle(this.m_hService);

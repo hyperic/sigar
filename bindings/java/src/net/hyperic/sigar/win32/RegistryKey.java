@@ -41,7 +41,7 @@ public class RegistryKey extends Win32Bindings
         this.m_hkey = hkey;
     }
     
-    public void close()
+    public synchronized void close()
     {
         if (this.m_hkey != 0) {
             RegCloseKey(this.m_hkey);
