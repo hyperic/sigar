@@ -66,6 +66,7 @@ public class Shell extends ShellBase {
         registerCommandHandler("kill", new Kill(this));
         registerCommandHandler("netstat", new Netstat(this));
         registerCommandHandler("version", new Version(this));
+        registerCommandHandler("mps", new MultiPs(this));
         try {
             //requires junit.jar
             registerCommandHandler("test", new SigarTestRunner(this));
