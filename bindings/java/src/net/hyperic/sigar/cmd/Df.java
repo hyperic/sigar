@@ -96,8 +96,7 @@ public class Df extends SigarCommandBase {
             if (fs instanceof NfsFileSystem) {
                 NfsFileSystem nfs = (NfsFileSystem)fs;
                 if (!nfs.ping()) {
-                    println(fs.getDevName() +
-                            " !!! nfs server is down !!!");
+                    println(nfs.getUnreachableMessage());
                     return;
                 }
             }
