@@ -24,6 +24,7 @@
 #define PROC_PSTATUS "/status"
 
 #define SYS_BLOCK "/sys/block"
+#define PROC_PARTITIONS "/proc/partitions"
 
 /*
  * /proc/self/stat fields:
@@ -129,6 +130,10 @@ int sigar_os_open(sigar_t **sigar)
 
     if (stat(SYS_BLOCK, &sb) == 0) {
         (*sigar)->iostat = IOSTAT_SYS;
+    }
+    else if (stat(PROC_PARTITIONS, &sb) == 0) {
+        /* XXX file exists does not mean is has the fields */
+        (*sigar)->iostat = IOSTAT_PARTITIONS;
     }
     else {
         (*sigar)->iostat = IOSTAT_NONE;
@@ -1006,42 +1011,57 @@ int sigar_file_system_list_get(sigar_t *sigar,
     return SIGAR_OK;
 }
 
-static int get_iostat_sys(sigar_t *sigar,
-                          const char *dirname,
-                          sigar_file_system_usage_t *fsusage)
+static char *get_fsdev(sigar_t *sigar,
+                       const char *dirname,
+                       char *fsdev)
 {
-    /* open source is really great */
-    /* see how intuitive this is */
+    /* XXX cache this shit */
     struct mntent ent;
     char buf[1025]; /* buffer for strings within ent */
-    char stat[1025];
     FILE *fp;
-    char *name, *fsdev = NULL, *ptr;
-    int partition, status;
+    char *ptr = NULL;
 
     if (!(fp = setmntent(MOUNTED, "r"))) {
-        return errno;
+        return NULL;
     }
 
     while (getmntent_r(fp, &ent, buf, sizeof(buf))) {
         if (strEQ(ent.mnt_dir, dirname)) {
-            fsdev = ent.mnt_fsname;
+            ptr = ent.mnt_fsname;
             break;
         }
     }
 
     endmntent(fp);
 
-    if (!fsdev) {
-        return ENOENT;
+    if (!ptr) {
+        return NULL;
     }
 
-    if (!strnEQ(fsdev, "/dev/", 5)) {
-        return ENOENT;
+    if (!strnEQ(ptr, "/dev/", 5)) {
+        return NULL;
     }
 
-    fsdev += 5;
-    name = fsdev;
+    ptr += 5;
+
+    strcpy(fsdev, ptr);
+
+    return ptr;
+}
+
+static int get_iostat_sys(sigar_t *sigar,
+                          const char *dirname,
+                          sigar_file_system_usage_t *fsusage)
+{
+    char stat[1025], dev[1025];
+    char *name, *ptr, *fsdev;
+    int partition, status;
+
+    name = fsdev = get_fsdev(sigar, dirname, dev);
+
+    if (!name) {
+        return ENOENT;
+    }
 
     while (!sigar_isdigit(*fsdev)) {
         fsdev++;
@@ -1052,18 +1072,61 @@ static int get_iostat_sys(sigar_t *sigar,
 
     sprintf(stat, SYS_BLOCK "/%s/%s%d/stat", name, name, partition);
 
-    status = sigar_file2str(stat, buf, sizeof(buf));
+    status = sigar_file2str(stat, dev, sizeof(dev));
     if (status != SIGAR_OK) {
         return status;
     }
 
-    ptr = buf;
+    ptr = dev;
     ptr = sigar_skip_token(ptr);
     fsusage->disk_reads = sigar_strtoul(ptr);
     ptr = sigar_skip_token(ptr);
     fsusage->disk_writes = sigar_strtoul(ptr);
 
     return SIGAR_OK;
+}
+
+static int get_iostat_procp(sigar_t *sigar,
+                            const char *dirname,
+                            sigar_file_system_usage_t *fsusage)
+{
+    FILE *fp;
+    char buffer[1025], dev[1025];
+    char *name, *ptr;
+    int len;
+
+    name = get_fsdev(sigar, dirname, dev);
+
+    if (!name) {
+        return ENOENT;
+    }
+
+    len = strlen(name);
+
+    if (!(fp = fopen(PROC_PARTITIONS, "r"))) {
+        return errno;
+    }
+
+    (void)fgets(buffer, sizeof(buffer), fp); /* skip header */
+    while ((ptr = fgets(buffer, sizeof(buffer), fp))) {
+        /* major, minor, #blocks */
+        ptr = sigar_skip_multiple_token(ptr, 3);
+        SIGAR_SKIP_SPACE(ptr);
+
+        if (strnEQ(ptr, name, len)) {
+            ptr = sigar_skip_token(ptr); /* name */
+            fsusage->disk_reads = sigar_strtoul(ptr); /* rio */
+            /* rmerge, rsect, ruse */
+            ptr = sigar_skip_multiple_token(ptr, 3);
+            fsusage->disk_writes = sigar_strtoul(ptr); /* wio */
+            fclose(fp);
+            return SIGAR_OK;
+        }
+    }
+
+    fclose(fp);
+
+    return ENOENT;
 }
 
 #include <sys/vfs.h>
@@ -1088,10 +1151,30 @@ int sigar_file_system_usage_get(sigar_t *sigar,
     fsusage->free_files = buf.f_ffree;
     fsusage->use_percent = sigar_file_system_usage_calc_used(sigar, fsusage);
 
-    if (sigar->iostat == IOSTAT_SYS) {
+    /*
+     * 2.2 has metrics /proc/stat, but wtf is the device mapping?
+     * 2.4 has /proc/partitions w/ the metrics.
+     * 2.6 has /proc/partitions w/o the metrics.
+     *     instead the metrics are within the /proc-like /sys filesystem.
+     *     also has /proc/diskstats
+     */
+    switch (sigar->iostat) {
+      case IOSTAT_SYS:
         if (get_iostat_sys(sigar, dirname, fsusage) == SIGAR_OK) {
             return SIGAR_OK;
         }
+        break;
+      case IOSTAT_PARTITIONS:
+        if (get_iostat_procp(sigar, dirname, fsusage) == SIGAR_OK) {
+            return SIGAR_OK;
+        }
+        break;
+      /*
+       * case IOSTAT_SOME_OTHER_WIERD_THING:
+       * break;
+       */
+      case IOSTAT_NONE:
+        break;
     }
 
     fsusage->disk_reads = fsusage->disk_writes = 0;

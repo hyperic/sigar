@@ -32,6 +32,7 @@ typedef struct {
 
 typedef enum {
     IOSTAT_NONE,
+    IOSTAT_PARTITIONS,
     IOSTAT_SYS /* 2.6 */
 } linux_iostat_e;
 
