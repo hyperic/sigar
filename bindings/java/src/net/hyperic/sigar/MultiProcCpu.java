@@ -57,6 +57,10 @@ public class MultiProcCpu extends ProcCpu {
         }
 
         cpu.percent = ((cpu.total - otime) / diff);
+        if (cpu.percent < 0.0) {
+            //counter wrapped
+            cpu.percent = (0.0 - cpu.percent);
+        }
         if (cpu.percent >= 1.0) {
             cpu.percent = 0.99;
         }
