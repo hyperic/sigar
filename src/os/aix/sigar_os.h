@@ -39,6 +39,10 @@ typedef int (*perfstat_swap_func_t)(perfstat_id_t *,
                                     perfstat_pagingspace_t *,
                                     size_t, int);
 
+typedef int (*perfstat_disk_func_t)(perfstat_id_t *,
+                                    perfstat_disk_t *,
+                                    size_t, int);
+
 typedef int (*thread_rusage_func_t)(struct rusage *, int);
 
 struct sigar_t {
@@ -54,6 +58,7 @@ struct sigar_t {
         perfstat_cpu_func_t cpu;
         perfstat_cpu_total_func_t cpu_total;
         perfstat_swap_func_t swap;
+        perfstat_disk_func_t disk;
         thread_rusage_func_t thread_rusage;
         void *handle;
     } perfstat;

@@ -349,6 +349,23 @@ static int sigar_perfstat_init(sigar_t *sigar)
         return ENOENT;
     }
 
+    sigar->perfstat.disk =
+        (perfstat_disk_func_t)dlsym(handle,
+                                    "sigar_perfstat_disk");
+
+    if (!sigar->perfstat.disk) {
+        if (SIGAR_LOG_IS_DEBUG(sigar)) {
+            sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
+                             "dlsym(sigar_perfstat_disk) failed: %s",
+                             dlerror());
+        }
+
+        dlclose(handle);
+
+        sigar->perfstat.avail = -1;
+        return ENOENT;
+    }
+
     sigar->perfstat.avail = 1;
     sigar->perfstat.handle = handle;
 
@@ -1515,16 +1532,45 @@ static int create_diskmap(sigar_t *sigar)
     pclose(fp);
 }
 
+static int get_perfstat_disk_metrics(sigar_t *sigar,
+                                     sigar_file_system_usage_t *fsusage,
+                                     aix_diskio_t *diskio)
+{
+    perfstat_disk_t disk;
+    perfstat_id_t id;
+
+    sigar_perfstat_init(sigar);
+    if (!sigar->perfstat.disk) {
+        return SIGAR_ENOTIMPL;
+    }
+
+    SIGAR_SSTRCPY(id.name, diskio->name);
+
+    if (sigar->perfstat.disk(&id, &disk, sizeof(disk), 1) != 1) {
+        return ENOENT;
+    }
+
+    fsusage->disk_reads = disk.rblks;
+    fsusage->disk_writes = disk.wblks;
+
+    return SIGAR_OK;
+}
+
 static int get_disk_metrics(sigar_t *sigar,
                             sigar_file_system_usage_t *fsusage,
                             aix_diskio_t *diskio)
 {
-    int i, cnt, fd;
+    int i, cnt, fd, status;
     struct iostat iostat;
     struct dkstat dkstat, *dp;
     struct nlist nl[] = {
         { "iostat" },
     };
+
+    status = get_perfstat_disk_metrics(sigar, fsusage, diskio);
+    if (status == SIGAR_OK) {
+        return SIGAR_OK;
+    }
 
     if (sigar->dmem == -1) {
         if ((sigar->dmem = open("/dev/mem", O_RDONLY)) <= 0) {
@@ -1602,7 +1648,7 @@ int sigar_file_system_usage_get(sigar_t *sigar,
     fsusage->use_percent = sigar_file_system_usage_calc_used(sigar, fsusage);
 
     SIGAR_DISK_STATS_NOTIMPL(fsusage);
-#if 0
+
     if (!sigar->diskmap) {
         status = create_diskmap(sigar);
         if (status != SIGAR_OK) {
@@ -1619,7 +1665,7 @@ int sigar_file_system_usage_get(sigar_t *sigar,
         }
         get_disk_metrics(sigar, fsusage, (aix_diskio_t *)ent->value);
     }
-#endif
+
     return SIGAR_OK;
 }
 
