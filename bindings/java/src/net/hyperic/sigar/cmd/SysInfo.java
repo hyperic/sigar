@@ -27,6 +27,12 @@ public class SysInfo extends SigarCommandBase {
         return "Display system information";
     }
 
+    private static boolean contains(String value, String substr) {
+        //matches does not work w/ jre 1.3
+        //value.toLowerCase().matches(".*" + substr + ".*");
+        return value.toLowerCase().indexOf(substr) != -1;
+    }
+
     public void output(String[] args) throws SigarException {
         String osName = System.getProperty("os.name");
 
@@ -46,10 +52,10 @@ public class SysInfo extends SigarCommandBase {
             {
                 public boolean accept(File dir, String name)
                 {
-                    boolean distroFile =
-                        name.toLowerCase().matches(".*elease.*");
+                    boolean distroFile = contains(name, "elease");
+
                     if (!distroFile) {
-                        distroFile = name.toLowerCase().matches(".*ersion.*");
+                        distroFile = contains(name, "ersion");
                     }
                     return distroFile;
                 }
