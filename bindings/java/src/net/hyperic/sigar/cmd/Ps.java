@@ -58,8 +58,7 @@ public class Ps extends SigarCommandBase {
                 output(pid);
             } catch (SigarException e) {
                 this.err.println("Exception getting process info for " +
-                                 pid + ": ");
-                e.printStackTrace();
+                                 pid + ": " + e.getMessage());
             }
         }
     }
