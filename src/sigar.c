@@ -678,6 +678,84 @@ SIGAR_DECLARE(const char *)sigar_net_connection_type_get(int type)
     }
 }
 
+int sigar_who_list_create(sigar_who_list_t *wholist)
+{
+    wholist->number = 0;
+    wholist->size = SIGAR_WHO_LIST_MAX;
+    wholist->data = malloc(sizeof(*(wholist->data)) *
+                           wholist->size);
+    return SIGAR_OK;
+}
+
+int sigar_who_list_grow(sigar_who_list_t *wholist)
+{
+    wholist->data = realloc(wholist->data,
+                            sizeof(*(wholist->data)) *
+                            (wholist->size + SIGAR_WHO_LIST_MAX));
+    wholist->size += SIGAR_WHO_LIST_MAX;
+
+    return SIGAR_OK;
+}
+
+SIGAR_DECLARE(int) sigar_who_list_destroy(sigar_t *sigar,
+                                          sigar_who_list_t *wholist)
+{
+    if (wholist->size) {
+        free(wholist->data);
+        wholist->number = wholist->size = 0;
+    }
+
+    return SIGAR_OK;
+}
+
+#ifdef WIN32
+SIGAR_DECLARE(int) sigar_who_list_get(sigar_t *sigar,
+                                      sigar_who_list_t *wholist)
+{
+    return SIGAR_ENOTIMPL;
+}
+#else
+#include <utmp.h>
+int sigar_who_list_get(sigar_t *sigar,
+                       sigar_who_list_t *wholist)
+{
+    FILE *fp;
+    struct utmp ut;
+
+    if (!(fp = fopen(_PATH_UTMP, "r"))) {
+        return errno;
+    }
+
+    sigar_who_list_create(wholist);
+
+    while (fread(&ut, sizeof(ut), 1, fp) == 1) {
+        sigar_who_t *who;
+
+        if (*ut.ut_name == '\0') {
+            continue;
+        }
+
+#ifdef __linux__
+        if (ut.ut_type != USER_PROCESS) {
+            continue;
+        }
+#endif
+
+        SIGAR_WHO_LIST_GROW(wholist);
+        who = &wholist->data[wholist->number++];
+
+        SIGAR_SSTRCPY(who->user, ut.ut_user);
+        SIGAR_SSTRCPY(who->device, ut.ut_line);
+        SIGAR_SSTRCPY(who->host, ut.ut_host);
+        who->time = ut.ut_time;
+    }
+
+    fclose(fp);
+
+    return SIGAR_OK;
+}
+#endif
+
 void sigar_hwaddr_format(char *buff, unsigned char *ptr)
 {
     sprintf(buff, "%02X:%02X:%02X:%02X:%02X:%02X",
