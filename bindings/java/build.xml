@@ -173,6 +173,9 @@
        <include name="lib/*.so"/>
        <include name="lib/*.dylib"/>
      </fileset>
+     <fileset dir=".">
+       <include name="lib/*.jar"/>
+     </fileset>
    </copy>
 
    <zip destfile="${dist}.zip"
