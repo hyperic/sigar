@@ -7,6 +7,7 @@ import java.util.ArrayList;
 
 import net.hyperic.sigar.Sigar;
 import net.hyperic.sigar.SigarException;
+import net.hyperic.sigar.SigarPermissionDeniedException;
 import net.hyperic.sigar.SigarLoader;
 import net.hyperic.sigar.SigarProxy;
 import net.hyperic.sigar.SigarProxyCache;
@@ -138,6 +139,12 @@ public class Shell extends ShellBase {
             readRCFile(rc, false);
             this.out.println("Loaded rc file: " + rc);
         } catch (IOException e) { }
+    }
+
+    public String getUserDeniedMessage(long pid) {
+        return
+            SigarPermissionDeniedException.getUserDeniedMessage(this.proxy,
+                                                                pid);
     }
 
     public static void main(String[] args) {
