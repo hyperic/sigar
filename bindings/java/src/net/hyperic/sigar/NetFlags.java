@@ -92,6 +92,26 @@ public class NetFlags {
     public static final int TCP_CLOSING     = 11;
     public static final int TCP_UNKNOWN     = 12;
 
+    public static int getConnectionProtocol(String protocol) 
+        throws SigarException {
+
+        if (protocol.equals("tcp")) {
+            return NetFlags.CONN_TCP;
+        }
+        else if (protocol.equals("udp")) {
+            return NetFlags.CONN_UDP;
+        }
+        else if (protocol.equals("raw")) {
+            return NetFlags.CONN_RAW;
+        }
+        else if (protocol.equals("unix")) {
+            return NetFlags.CONN_UNIX;
+        }
+
+        String msg = "Protocol '" + protocol + "' not supported";
+        throw new SigarException(msg);
+    }
+
     /**
      * @param flags network interface flags.
      * @return String representation of network interface flags.
