@@ -2,6 +2,7 @@ package net.hyperic.sigar.test;
 
 import java.io.PrintStream;
 import java.util.HashMap;
+import java.util.Properties;
 
 import junit.framework.AssertionFailedError;
 import junit.framework.Test;
@@ -13,6 +14,8 @@ import junit.textui.TestRunner;
 
 import net.hyperic.sigar.cmd.Version;
 
+import org.apache.log4j.PropertyConfigurator;
+
 public class SigarTestPrinter extends ResultPrinter {
 
     private static String PACKAGE_NAME = 
@@ -20,6 +23,25 @@ public class SigarTestPrinter extends ResultPrinter {
 
     private HashMap failures = new HashMap();
     private int maxNameLen = 0;
+
+    private static final String[][] LOG_PROPS = {
+        {
+            "log4j.rootLogger",
+            "DEBUG, R"
+        },
+        {
+            "log4j.appender.R",
+            "org.apache.log4j.ConsoleAppender"
+        },
+        {
+            "log4j.appender.R.layout",
+            "org.apache.log4j.PatternLayout"
+        },
+        {
+            "log4j.appender.R.layout.ConversionPattern",
+            "%d [%t] %-5p %c - %m%n"
+        },
+    };
 
     public SigarTestPrinter(PrintStream writer) {
         super(writer);
@@ -88,6 +110,13 @@ public class SigarTestPrinter extends ResultPrinter {
         printer.printVersionInfo();
 
         if (args.length > 0) {
+            Properties props = new Properties();
+            for (int i=0; i<LOG_PROPS.length; i++) {
+                props.setProperty(LOG_PROPS[i][0],
+                                  LOG_PROPS[i][1]);
+            }
+            PropertyConfigurator.configure(props);
+
             SigarTestCase.setVerbose(true);
             SigarTestCase.setWriter(printer.getWriter());
 
