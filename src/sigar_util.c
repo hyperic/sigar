@@ -261,10 +261,48 @@ double sigar_file_system_usage_calc_used(sigar_t *sigar,
 #define IS_CPU_R(p) \
    ((*p == '(') && (*(p+1) == 'R') && (*(p+2) == ')'))
 
+typedef struct {
+    char *name;  /* search */
+    int len;
+    char *rname; /* replace */
+    int rlen;
+} cpu_model_str_t;
+
+/* to later replace 's' with 'r' */
+#define CPU_MODEL_ENT_R(s, r) \
+    { s, sizeof(s)-1, r, sizeof(r) }
+
+#define CPU_MODEL_ENT(s) \
+    CPU_MODEL_ENT_R(s, s)
+
+/* after the vendor part of the string is removed,
+ * looking for startsWith the entries below
+ * to remove the crap after the model name, see
+ * ../exp/intel_amd_cpu_models.txt
+ */
+static const cpu_model_str_t cpu_models[] = {
+    /* intel */
+    CPU_MODEL_ENT("Xeon"),
+    CPU_MODEL_ENT_R("XEON", "Xeon"),
+    CPU_MODEL_ENT("Pentium II"),
+    CPU_MODEL_ENT("Pentium III"),
+    CPU_MODEL_ENT_R("Pentium(R) III", "Pentium III"),
+    CPU_MODEL_ENT_R("Pentium(R) 4", "Pentium 4"),
+    CPU_MODEL_ENT_R("Pentium(R) M", "Pentium M"),
+    CPU_MODEL_ENT("Pentium Pro"),
+    CPU_MODEL_ENT("Celeron"),
+
+    /* amd */
+    CPU_MODEL_ENT("Opteron"),
+    CPU_MODEL_ENT("Athlon"),
+    CPU_MODEL_ENT("Duron"),
+    { NULL }
+};
+
 /* common to win32 and linux */
 void sigar_cpu_model_adjust(sigar_t *sigar, sigar_cpu_info_t *info)
 {
-    int len;
+    int len, i;
     char model[128], *ptr=model, *end;
 
     memcpy(model, info->model, sizeof(model));
@@ -283,6 +321,15 @@ void sigar_cpu_model_adjust(sigar_t *sigar, sigar_cpu_info_t *info)
             ptr += 3; /* remove (R) */
         }
         while (*ptr == ' ') ++ptr;
+    }
+
+    for (i=0; cpu_models[i].name; i++) {
+        const cpu_model_str_t *cpu_model = &cpu_models[i];
+
+        if (strnEQ(ptr, cpu_model->name, cpu_model->len)) {
+            memcpy(info->model, cpu_model->rname, cpu_model->rlen);
+            return;
+        }
     }
 
     strcpy(info->model, ptr);
