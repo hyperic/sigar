@@ -2,6 +2,7 @@ package net.hyperic.sigar.cmd;
 
 import net.hyperic.sigar.Sigar;
 import net.hyperic.sigar.SigarException;
+import net.hyperic.sigar.SigarPermissionDeniedException;
 import net.hyperic.sigar.ProcFd;
 import net.hyperic.sigar.ProcExe;
 
@@ -36,6 +37,8 @@ public class ProcFileInfo extends SigarCommandBase {
         for (int i=0; i<pids.length; i++) {
             try {
                 output(pids[i]);
+            } catch (SigarPermissionDeniedException e) {
+                println(this.shell.getUserDeniedMessage(pids[i]));
             } catch (SigarException e) {
                 println("(" + e.getMessage() + ")");
             }
