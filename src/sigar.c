@@ -755,7 +755,7 @@ int sigar_who_list_get(sigar_t *sigar,
             continue;
         }
 
-#if defined(__linux__) || defined(__sun)
+#if defined(__linux__) || defined(__sun) || defined(_AIX)
         if (ut.ut_type != USER_PROCESS) {
             continue;
         }
