@@ -47,6 +47,8 @@ public interface SigarProxy {
 
     public ProcCpu getProcCpu(String pid) throws SigarException;
 
+    public MultiProcCpu getMultiProcCpu(String query) throws SigarException;
+
     public ProcCred getProcCred(long pid) throws SigarException;
 
     public ProcCred getProcCred(String pid) throws SigarException;

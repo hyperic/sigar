@@ -318,6 +318,10 @@ public class Sigar implements SigarProxy {
         return getProcCpu(convertPid(pid));
     }
 
+    public MultiProcCpu getMultiProcCpu(String query) throws SigarException {
+        return MultiProcCpu.get(this, query);
+    }
+
     /**
      * Get process credential info.
      * @param pid The process id.
