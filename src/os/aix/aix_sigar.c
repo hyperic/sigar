@@ -21,6 +21,11 @@
 #include <arpa/inet.h>
 #include <net/if.h>
 
+/* for odm api */
+#include <sys/cfgodm.h>
+#include <sys/cfgdb.h>
+#include <cf.h>
+
 #include "user_v5.h"
 #include "utmp_v5.h"
 
@@ -111,6 +116,8 @@ int sigar_os_open(sigar_t **sigar)
             return status;
         }
     }
+
+    (*sigar)->model[0] = '\0';
 
     return SIGAR_OK;
 }
@@ -985,6 +992,25 @@ int sigar_file_system_usage_get(sigar_t *sigar,
 #ifndef POWER_5
 #define POWER_5		0x2000
 #endif
+
+static char *sigar_get_odm_model(sigar_t *sigar)
+{
+    if (sigar->model[0] == '\0') {
+        struct CuAt *odm_obj;
+        int num;
+
+        odm_initialize();
+
+        if ((odm_obj = getattr("proc0", "type", 0, &num))) {
+            SIGAR_SSTRCPY(sigar->model, odm_obj->value);
+            free(odm_obj);
+        }
+
+        odm_terminate();
+    }
+
+    return sigar->model;
+}
 
 int sigar_cpu_infos_get(sigar_t *sigar,
                         sigar_cpu_infos_t *cpu_infos)
