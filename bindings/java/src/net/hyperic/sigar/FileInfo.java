@@ -1,6 +1,5 @@
 package net.hyperic.sigar;
 
-import java.io.File;
 import java.util.Date;
 
 public class FileInfo extends FileAttrs {

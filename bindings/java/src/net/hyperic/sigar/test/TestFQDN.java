@@ -1,7 +1,5 @@
 package net.hyperic.sigar.test;
 
-import net.hyperic.sigar.Sigar;
-
 public class TestFQDN extends SigarTestCase {
 
     public TestFQDN(String name) {

@@ -1,6 +1,5 @@
 package net.hyperic.sigar.test;
 
-import java.io.File;
 import java.util.List;
 
 import net.hyperic.sigar.Sigar;

@@ -1,6 +1,5 @@
 package net.hyperic.sigar;
 
-import java.util.Map;
 import java.util.HashMap;
 
 import java.io.IOException;

@@ -1,9 +1,6 @@
 package net.hyperic.sigar.test;
 
-import junit.framework.TestCase;
-
 import net.hyperic.sigar.Sigar;
-import net.hyperic.sigar.Cpu;
 import net.hyperic.sigar.CpuInfo;
 
 public class TestCpuInfo extends SigarTestCase {

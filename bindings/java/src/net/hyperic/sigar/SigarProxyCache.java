@@ -156,7 +156,7 @@ public class SigarProxyCache
         if (cacheVal.value != null) {
             String argDebug = "";
 
-            if (this.debugEnabled) {
+            if (debugEnabled) {
                 if ((args != null) && (args.length != 0)) {
                     argDebug = " with args=" +
                         getDebugArgs(args, argKey);
@@ -167,7 +167,7 @@ public class SigarProxyCache
             }
 
             if ((timeNow - cacheVal.timestamp) > cacheVal.expire) {
-                if (this.debugEnabled) {
+                if (debugEnabled) {
                     debug("expiring " + method.getName() +
                           " from cache" + argDebug);
                 }

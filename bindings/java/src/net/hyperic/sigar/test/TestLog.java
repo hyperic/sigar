@@ -1,7 +1,6 @@
 package net.hyperic.sigar.test;
 
 import net.hyperic.sigar.Sigar;
-import net.hyperic.sigar.SigarNotImplementedException;
 
 public class TestLog extends SigarTestCase {
 
