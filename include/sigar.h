@@ -23,6 +23,8 @@ typedef unsigned long long sigar_uint64_t;
 
 #endif
 
+#define SIGAR_FIELD_NOTIMPL -1
+
 #define SIGAR_OK 0
 #define SIGAR_START_ERROR 20000
 #define SIGAR_ENOTIMPL       (SIGAR_START_ERROR + 1)

@@ -49,7 +49,7 @@ int sigar_mem_get(sigar_t *sigar, sigar_mem_t *mem)
 
     sigar_mem_calc_ram(sigar, mem);
 
-    mem->shared = -1;
+    mem->shared = SIGAR_FIELD_NOTIMPL;
 
     mem->actual_free = mem->free;
     mem->actual_used = mem->used;
@@ -220,7 +220,7 @@ int sigar_proc_mem_get(sigar_t *sigar, sigar_pid_t pid,
     status = table(TBL_UAREA, pid, &s_user, 1, sizeof(s_user));
 
     if (status != 1) {
-        procmem->share = -1;
+        procmem->share = SIGAR_FIELD_NOTIMPL;
         return SIGAR_OK;
     }
 
@@ -234,10 +234,10 @@ int sigar_proc_mem_get(sigar_t *sigar, sigar_pid_t pid,
 int sigar_proc_cred_get(sigar_t *sigar, sigar_pid_t pid,
                         sigar_proc_cred_t *proccred)
 {
-    proccred->uid = -1;
-    proccred->gid = -1;
-    proccred->euid = -1;
-    proccred->egid = -1;
+    proccred->uid = SIGAR_FIELD_NOTIMPL;
+    proccred->gid = SIGAR_FIELD_NOTIMPL;
+    proccred->euid = SIGAR_FIELD_NOTIMPL;
+    proccred->egid = SIGAR_FIELD_NOTIMPL;
 
     return SIGAR_OK;
 }
@@ -276,8 +276,8 @@ int sigar_proc_state_get(sigar_t *sigar, sigar_pid_t pid,
 
     SIGAR_SSTRCPY(procstate->name, info.pi_comm);
     procstate->ppid = info.pi_ppid;
-    procstate->priority = -1;
-    procstate->nice = -1;
+    procstate->priority = SIGAR_FIELD_NOTIMPL;
+    procstate->nice = SIGAR_FIELD_NOTIMPL;
     procstate->tty = info.pi_ttyd;
 
     switch (info.pi_status) {
@@ -310,7 +310,7 @@ int sigar_proc_env_get(sigar_t *sigar, sigar_pid_t pid,
 int sigar_proc_fd_get(sigar_t *sigar, sigar_pid_t pid,
                       sigar_proc_fd_t *procfd)
 {
-    procfd->total = -1;
+    procfd->total = SIGAR_FIELD_NOTIMPL;
     return SIGAR_OK;
 }
 
@@ -487,7 +487,7 @@ int sigar_cpu_info_list_get(sigar_t *sigar,
     SIGAR_SSTRCPY(info->vendor, "DEC");
     SIGAR_SSTRCPY(info->model, "alpha");
     info->mhz = sigar->mhz;
-    info->cache_size = -1;
+    info->cache_size = SIGAR_FIELD_NOTIMPL;
 
     return SIGAR_OK;
 }
@@ -501,20 +501,20 @@ int sigar_net_route_list_get(sigar_t *sigar,
 int sigar_net_interface_stat_get(sigar_t *sigar, const char *name,
                                  sigar_net_interface_stat_t *ifstat)
 {
-    ifstat->rx_bytes      = -1;
-    ifstat->rx_packets    = -1;
-    ifstat->rx_errors     = -1;
-    ifstat->rx_dropped    = -1;
-    ifstat->rx_overruns   = -1;
-    ifstat->rx_frame      = -1;
+    ifstat->rx_bytes      = SIGAR_FIELD_NOTIMPL;
+    ifstat->rx_packets    = SIGAR_FIELD_NOTIMPL;
+    ifstat->rx_errors     = SIGAR_FIELD_NOTIMPL;
+    ifstat->rx_dropped    = SIGAR_FIELD_NOTIMPL;
+    ifstat->rx_overruns   = SIGAR_FIELD_NOTIMPL;
+    ifstat->rx_frame      = SIGAR_FIELD_NOTIMPL;
 
-    ifstat->tx_bytes      = -1;
-    ifstat->tx_packets    = -1;
-    ifstat->tx_errors     = -1;
-    ifstat->tx_dropped    = -1;
-    ifstat->tx_overruns   = -1;
-    ifstat->tx_collisions = -1;
-    ifstat->tx_carrier    = -1;
+    ifstat->tx_bytes      = SIGAR_FIELD_NOTIMPL;
+    ifstat->tx_packets    = SIGAR_FIELD_NOTIMPL;
+    ifstat->tx_errors     = SIGAR_FIELD_NOTIMPL;
+    ifstat->tx_dropped    = SIGAR_FIELD_NOTIMPL;
+    ifstat->tx_overruns   = SIGAR_FIELD_NOTIMPL;
+    ifstat->tx_collisions = SIGAR_FIELD_NOTIMPL;
+    ifstat->tx_carrier    = SIGAR_FIELD_NOTIMPL;
 
     return SIGAR_OK;
 }

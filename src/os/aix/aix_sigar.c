@@ -357,7 +357,7 @@ int sigar_mem_get(sigar_t *sigar, sigar_mem_t *mem)
     mem->actual_used = mem->used;
     mem->actual_free = mem->free;
 
-    mem->shared = -1;
+    mem->shared = SIGAR_FIELD_NOTIMPL;
     
     sigar_mem_calc_ram(sigar, mem);
 
@@ -576,7 +576,7 @@ int sigar_cpu_get(sigar_t *sigar, sigar_cpu_t *cpu)
 
         if (sigar->perfstat.cpu_total(&cpu_data, sizeof(cpu_data)) == 1) {
             cpu->user  = cpu_data.user;
-            cpu->nice  = -1; /* N/A */
+            cpu->nice  = SIGAR_FIELD_NOTIMPL; /* N/A */
             cpu->sys   = cpu_data.sys;
             cpu->idle  = cpu_data.idle;
             cpu->wait  = cpu_data.wait;
@@ -595,7 +595,7 @@ int sigar_cpu_get(sigar_t *sigar, sigar_cpu_t *cpu)
     }
 
     cpu->user = data.cpu[CPU_USER];
-    cpu->nice = -1; /* N/A */
+    cpu->nice = SIGAR_FIELD_NOTIMPL; /* N/A */
     cpu->sys  = data.cpu[CPU_KERNEL];
     cpu->idle = data.cpu[CPU_IDLE];
     cpu->total = 0;
@@ -700,7 +700,7 @@ static int sigar_cpu_list_get_pstat(sigar_t *sigar, sigar_cpu_list_t *cpulist)
 
         if (sigar->perfstat.cpu(&id, &data, sizeof(data), 1) == 1) {
             cpu->user  = data.user;
-            cpu->nice  = -1; /* N/A */
+            cpu->nice  = SIGAR_FIELD_NOTIMPL; /* N/A */
             cpu->sys   = data.sys;
             cpu->idle  = data.idle;
             cpu->wait  = data.wait;
@@ -925,7 +925,7 @@ int sigar_proc_mem_get(sigar_t *sigar, sigar_pid_t pid,
     procmem->vsize = PAGESHIFT(pinfo->pi_dvm);
     procmem->share = PAGESHIFT(pinfo->pi_sdsize);
     procmem->rss   = PAGESHIFT(pinfo->pi_drss + pinfo->pi_trss);
-    procmem->resident = -1; /* N/A */
+    procmem->resident = SIGAR_FIELD_NOTIMPL; /* N/A */
 
     return SIGAR_OK;
 }
@@ -988,7 +988,7 @@ int sigar_proc_state_get(sigar_t *sigar, sigar_pid_t pid,
     procstate->ppid = pinfo->pi_ppid;
     procstate->nice = pinfo->pi_nice;
     procstate->tty  = pinfo->pi_ttyd;
-    procstate->priority = -1; /* XXX getthrds() */
+    procstate->priority = SIGAR_FIELD_NOTIMPL; /* XXX getthrds() */
                 
     switch (pinfo->pi_state) {
       case SACTIVE:
@@ -1440,7 +1440,7 @@ static int sigar_get_cpu_mhz_perfstat(sigar_t *sigar)
 
 static int sigar_get_cpu_mhz(sigar_t *sigar)
 {
-    if (sigar->cpu_mhz == -1) {
+    if (sigar->cpu_mhz == SIGAR_FIELD_NOTIMPL) {
         if (sigar_get_cpu_mhz_perfstat(sigar) != SIGAR_OK) {
             sigar_uint64_t cache_size = SIGAR_CPU_CACHE_SIZE;
 
@@ -1455,7 +1455,7 @@ static int sigar_get_cpu_mhz(sigar_t *sigar)
                 sigar->cpu_mhz = 450;
                 break;
               default:
-                sigar->cpu_mhz = -1;
+                sigar->cpu_mhz = SIGAR_FIELD_NOTIMPL;
                 break;
             }
         }
@@ -1629,16 +1629,16 @@ int sigar_net_interface_stat_get(sigar_t *sigar, const char *name,
         ifstat->rx_packets    = data.if_ipackets;
         ifstat->rx_errors     = data.if_ierrors;
         ifstat->rx_dropped    = data.if_iqdrops;
-        ifstat->rx_overruns   = -1;
-        ifstat->rx_frame      = -1;
+        ifstat->rx_overruns   = SIGAR_FIELD_NOTIMPL;
+        ifstat->rx_frame      = SIGAR_FIELD_NOTIMPL;
 
         ifstat->tx_bytes      = data.if_obytes;
         ifstat->tx_packets    = data.if_opackets;
         ifstat->tx_errors     = data.if_oerrors;
-        ifstat->tx_dropped    = -1;
-        ifstat->tx_overruns   = -1;
+        ifstat->tx_dropped    = SIGAR_FIELD_NOTIMPL;
+        ifstat->tx_overruns   = SIGAR_FIELD_NOTIMPL;
         ifstat->tx_collisions = data.if_collisions;
-        ifstat->tx_carrier    = -1;
+        ifstat->tx_carrier    = SIGAR_FIELD_NOTIMPL;
 
         return SIGAR_OK;
     }

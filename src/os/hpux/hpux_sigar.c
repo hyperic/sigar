@@ -55,7 +55,7 @@ int sigar_mem_get(sigar_t *sigar, sigar_mem_t *mem)
     mem->used = mem->total - mem->free;
 
     /*XXX*/
-    mem->shared = 0;
+    mem->shared = SIGAR_FIELD_NOTIMPL;
 
     mem->actual_free = mem->free;
     mem->actual_used = mem->used;
@@ -589,7 +589,7 @@ int sigar_cpu_info_list_get(sigar_t *sigar,
         SIGAR_SSTRCPY(info->vendor, "HP"); /*XXX*/
         SIGAR_SSTRCPY(info->model, "PA RISC"); /*XXX*/
         info->mhz = sigar->ticks * proc.psp_iticksperclktick / 1000000;
-        info->cache_size = -1; /*XXX*/
+        info->cache_size = SIGAR_FIELD_NOTIMPL; /*XXX*/
     }
 
     return SIGAR_OK;
@@ -717,16 +717,16 @@ int sigar_net_interface_stat_get(sigar_t *sigar, const char *name,
     ifstat->rx_packets  = mib.ifInUcastPkts + mib.ifInNUcastPkts;
     ifstat->rx_errors   = mib.ifInErrors;
     ifstat->rx_dropped  = mib.ifInDiscards;
-    ifstat->rx_overruns = 0; /*XXX*/
-    ifstat->rx_frame    = 0; /*XXX*/
+    ifstat->rx_overruns = SIGAR_FIELD_NOTIMPL;
+    ifstat->rx_frame    = SIGAR_FIELD_NOTIMPL;
 
     ifstat->tx_bytes      = mib.ifOutOctets;
     ifstat->tx_packets    = mib.ifOutUcastPkts + mib.ifOutNUcastPkts;
     ifstat->tx_errors     = mib.ifOutErrors;
     ifstat->tx_dropped    = mib.ifOutDiscards;
-    ifstat->tx_overruns   = 0; /*XXX*/
-    ifstat->tx_collisions = 0; /*XXX*/
-    ifstat->tx_carrier    = 0; /*XXX*/
+    ifstat->tx_overruns   = SIGAR_FIELD_NOTIMPL;
+    ifstat->tx_collisions = SIGAR_FIELD_NOTIMPL;
+    ifstat->tx_carrier    = SIGAR_FIELD_NOTIMPL;
 
     return SIGAR_OK;
 }

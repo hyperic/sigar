@@ -19,6 +19,8 @@ import net.hyperic.jni.ArchNotSupportedException;
  */
 public class Sigar implements SigarProxy {
 
+    public static final long FIELD_NOTIMPL = -1;
+
     /**
      * The Sigar version in String form.
      */

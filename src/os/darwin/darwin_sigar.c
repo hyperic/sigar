@@ -123,7 +123,7 @@ int sigar_mem_get(sigar_t *sigar, sigar_mem_t *mem)
 #endif
 
     mem->used = mem->total - mem->free;
-    mem->shared = -1; /*XXX*/
+    mem->shared = SIGAR_FIELD_NOTIMPL; /*XXX*/
 
     mem->actual_free = mem->free;
     mem->actual_used = mem->used;
@@ -363,8 +363,8 @@ int sigar_proc_mem_get(sigar_t *sigar, sigar_pid_t pid,
 
     /*XXX*/
     procmem->size = 1; /* 1 == let ant test pass for now */
-    procmem->rss = -1;
-    procmem->share = -1;
+    procmem->rss = SIGAR_FIELD_NOTIMPL;
+    procmem->share = SIGAR_FIELD_NOTIMPL;
 
     return SIGAR_OK;
 }
@@ -470,7 +470,7 @@ int sigar_proc_state_get(sigar_t *sigar, sigar_pid_t pid,
     procstate->ppid     = pinfo->kp_eproc.e_ppid;
     procstate->priority = pinfo->kp_proc.p_priority;
     procstate->nice     = pinfo->kp_proc.p_nice;
-    procstate->tty      = -1; /*XXX*/
+    procstate->tty      = SIGAR_FIELD_NOTIMPL; /*XXX*/
 
     switch (pinfo->kp_proc.p_stat) {
       case SIDL:
@@ -624,8 +624,8 @@ int sigar_cpu_info_list_get(sigar_t *sigar,
         SIGAR_SSTRCPY(info->vendor, "Apple");
         SIGAR_SSTRCPY(info->model, "powerpc");
 
-        info->mhz = -1; /*XXX*/
-        info->cache_size = -1;
+        info->mhz = SIGAR_FIELD_NOTIMPL; /*XXX*/
+        info->cache_size = SIGAR_FIELD_NOTIMPL;
     }
 
     return SIGAR_OK;
@@ -850,16 +850,16 @@ int sigar_net_interface_stat_get(sigar_t *sigar, const char *name,
     ifstat->rx_packets    = ifm->ifm_data.ifi_ipackets;
     ifstat->rx_errors     = ifm->ifm_data.ifi_ierrors;
     ifstat->rx_dropped    = ifm->ifm_data.ifi_iqdrops;
-    ifstat->rx_overruns   = -1;
-    ifstat->rx_frame      = -1;
+    ifstat->rx_overruns   = SIGAR_FIELD_NOTIMPL;
+    ifstat->rx_frame      = SIGAR_FIELD_NOTIMPL;
 
     ifstat->tx_bytes      = ifm->ifm_data.ifi_obytes;
     ifstat->tx_packets    = ifm->ifm_data.ifi_opackets;
     ifstat->tx_errors     = ifm->ifm_data.ifi_oerrors;
     ifstat->tx_collisions = ifm->ifm_data.ifi_collisions;
-    ifstat->tx_dropped    = -1;
-    ifstat->tx_overruns   = -1;
-    ifstat->tx_carrier    = -1;
+    ifstat->tx_dropped    = SIGAR_FIELD_NOTIMPL;
+    ifstat->tx_overruns   = SIGAR_FIELD_NOTIMPL;
+    ifstat->tx_carrier    = SIGAR_FIELD_NOTIMPL;
 
     return SIGAR_OK;
 }

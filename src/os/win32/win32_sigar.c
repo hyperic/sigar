@@ -613,9 +613,9 @@ SIGAR_DECLARE(int) sigar_proc_mem_get(sigar_t *sigar, sigar_pid_t pid,
 
     procmem->vsize    = pinfo->vsize;
     procmem->size     = pinfo->size;
-    procmem->resident = -1;
-    procmem->share    = -1;
-    procmem->rss      = -1;
+    procmem->resident = SIGAR_FIELD_NOTIMPL;
+    procmem->share    = SIGAR_FIELD_NOTIMPL;
+    procmem->rss      = SIGAR_FIELD_NOTIMPL;
 
     return SIGAR_OK;
 }
@@ -754,8 +754,8 @@ SIGAR_DECLARE(int) sigar_proc_state_get(sigar_t *sigar, sigar_pid_t pid,
     procstate->state = pinfo->state;
     procstate->ppid = pinfo->ppid;
     procstate->priority = pinfo->priority;
-    procstate->nice = -1;
-    procstate->tty = -1;
+    procstate->nice = SIGAR_FIELD_NOTIMPL;
+    procstate->tty =  SIGAR_FIELD_NOTIMPL;
 
     return SIGAR_OK;
 }
@@ -1451,13 +1451,14 @@ sigar_file_system_usage_get(sigar_t *sigar,
 
     fsusage->use_percent = sigar_file_system_usage_calc_used(sigar, fsusage);
 
-    /* XXX */
-    fsusage->files = 0;
-    fsusage->free_files = 0;
+    /* N/A */
+    fsusage->files      = SIGAR_FIELD_NOTIMPL;
+    fsusage->free_files = SIGAR_FIELD_NOTIMPL;
 
     status = get_disk_metrics(sigar, dirname, fsusage);
     if (status != SIGAR_OK) {
-        fsusage->disk_reads = fsusage->disk_writes = 0;
+        fsusage->disk_reads = fsusage->disk_writes =
+            SIGAR_FIELD_NOTIMPL;
     }
 
     return SIGAR_OK;
@@ -1634,16 +1635,16 @@ sigar_net_interface_stat_get(sigar_t *sigar, const char *name,
     ifstat->rx_packets  = ifr->dwInUcastPkts + ifr->dwInNUcastPkts; 
     ifstat->rx_errors   = ifr->dwInErrors;
     ifstat->rx_dropped  = ifr->dwInDiscards;
-    ifstat->rx_overruns = 0; /*XXX*/
-    ifstat->rx_frame    = 0; /*XXX*/
+    ifstat->rx_overruns = SIGAR_FIELD_NOTIMPL;
+    ifstat->rx_frame    = 
 
     ifstat->tx_bytes      = ifr->dwOutOctets;
     ifstat->tx_packets    = ifr->dwOutUcastPkts + ifr->dwOutNUcastPkts; 
     ifstat->tx_errors     = ifr->dwOutErrors;
     ifstat->tx_dropped    = ifr->dwOutDiscards;
-    ifstat->tx_overruns   = 0; /*XXX*/
-    ifstat->tx_collisions = 0; /*XXX*/
-    ifstat->tx_carrier    = 0; /*XXX*/
+    ifstat->tx_overruns   = SIGAR_FIELD_NOTIMPL;
+    ifstat->tx_collisions = SIGAR_FIELD_NOTIMPL;
+    ifstat->tx_carrier    = SIGAR_FIELD_NOTIMPL;
 
     free(buffer);
 

@@ -568,9 +568,9 @@ int sigar_proc_mem_get(sigar_t *sigar, sigar_pid_t pid,
 
     procmem->size     = pinfo->pr_size << 10;
     procmem->rss      = pinfo->pr_rssize << 10;
-    procmem->resident = procmem->rss; /*XXX*/
-    procmem->vsize    = procmem->size; /*XXX*/
-    procmem->share    = 0; /*XXX*/
+    procmem->resident = SIGAR_FIELD_NOTIMPL;
+    procmem->vsize    = SIGAR_FIELD_NOTIMPL;
+    procmem->share    = SIGAR_FIELD_NOTIMPL;
 
     return SIGAR_OK;
 }
@@ -1191,7 +1191,7 @@ int sigar_cpu_info_list_get(sigar_t *sigar,
         }
 
         info->mhz = stats.pi_clock;
-        info->cache_size = -1; /*XXX*/
+        info->cache_size = SIGAR_FIELD_NOTIMPL; /*XXX*/
     }
 
     return SIGAR_OK;
@@ -1379,19 +1379,19 @@ static int sigar_net_ifstat_get_lo(sigar_t *sigar, const char *name,
     sigar_koffsets_init_lo(sigar, ksp);
 
     ifstat->rx_packets    = kLO(KSTAT_LO_RX_PACKETS);
-    ifstat->rx_bytes      = -1;
-    ifstat->rx_errors     = -1;
-    ifstat->rx_dropped    = -1;
-    ifstat->rx_overruns   = -1;
-    ifstat->rx_frame      = -1;
+    ifstat->rx_bytes      = SIGAR_FIELD_NOTIMPL;
+    ifstat->rx_errors     = SIGAR_FIELD_NOTIMPL;
+    ifstat->rx_dropped    = SIGAR_FIELD_NOTIMPL;
+    ifstat->rx_overruns   = SIGAR_FIELD_NOTIMPL;
+    ifstat->rx_frame      = SIGAR_FIELD_NOTIMPL;
 
     ifstat->tx_packets    = kLO(KSTAT_LO_TX_PACKETS);
-    ifstat->tx_bytes      = -1;
-    ifstat->tx_errors     = -1;
-    ifstat->tx_dropped    = -1;
-    ifstat->tx_overruns   = -1;
-    ifstat->tx_collisions = -1;
-    ifstat->tx_carrier    = -1;
+    ifstat->tx_bytes      = SIGAR_FIELD_NOTIMPL;
+    ifstat->tx_errors     = SIGAR_FIELD_NOTIMPL;
+    ifstat->tx_dropped    = SIGAR_FIELD_NOTIMPL;
+    ifstat->tx_overruns   = SIGAR_FIELD_NOTIMPL;
+    ifstat->tx_collisions = SIGAR_FIELD_NOTIMPL;
+    ifstat->tx_carrier    = SIGAR_FIELD_NOTIMPL;
 
     return SIGAR_OK;
 }

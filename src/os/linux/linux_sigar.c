@@ -274,7 +274,7 @@ int sigar_mem_get(sigar_t *sigar, sigar_mem_t *mem)
     mem->actual_free = mem->free + kern;
     mem->actual_used = mem->used - kern;
 
-    mem->shared = 0; /* XXX where did this go in 2.6?? */
+    mem->shared = SIGAR_FIELD_NOTIMPL; /* XXX where did this go in 2.6?? */
 
     if (get_ram(sigar, mem) != SIGAR_OK) {
         /* XXX other options on failure? */
@@ -1229,7 +1229,8 @@ int sigar_file_system_usage_get(sigar_t *sigar,
         break;
     }
 
-    fsusage->disk_reads = fsusage->disk_writes = 0;
+    fsusage->disk_reads = fsusage->disk_writes =
+        SIGAR_FIELD_NOTIMPL;
 
     return SIGAR_OK;
 }
