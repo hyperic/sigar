@@ -768,8 +768,18 @@ int sigar_cpu_infos_get(sigar_t *sigar,
 
         info = &cpu_infos->data[cpu_infos->number++];
 
-        SIGAR_SSTRCPY(info->vendor, "Sun Microsystems"); /*XXX?*/
+
         SIGAR_SSTRCPY(info->model, stats.pi_processor_type);
+
+        if (strEQ(info->model, "i386")) {
+            /* XXX assuming Intel on x86 */
+            SIGAR_SSTRCPY(info->vendor, "Intel");
+        }
+        else {
+            /* sparc */
+            SIGAR_SSTRCPY(info->vendor, "Sun Microsystems");
+        }
+
         info->mhz = stats.pi_clock;
         info->cache_size = -1; /*XXX*/
     }
