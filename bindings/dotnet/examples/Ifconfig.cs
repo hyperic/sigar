@@ -74,8 +74,7 @@ public class Ifconfig {
                     "  " +
                     "TX bytes:" + txBytes + 
                     " (" + Sigar.FormatSize(txBytes) + ")");
-        } catch (ApplicationException e) {
-        }
+        } catch { }
 
         println("");
     }
