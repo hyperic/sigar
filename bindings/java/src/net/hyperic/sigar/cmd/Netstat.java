@@ -6,6 +6,7 @@ import java.net.UnknownHostException;
 import net.hyperic.sigar.SigarException;
 import net.hyperic.sigar.NetConnection;
 import net.hyperic.sigar.NetFlags;
+import net.hyperic.sigar.NetPortMap;
 
 /**
  * Display network connections.
@@ -79,9 +80,15 @@ public class Netstat extends SigarCommandBase {
         return flags;
     }
 
-    private String formatPort(long port) {
+    private String formatPort(String proto, long port) {
         if (port == 0) {
             return "*";
+        }
+        if (!isNumeric) {
+            String service = NetPortMap.getServiceName(proto, port);
+            if (service != null) {
+                return service;
+            }
         }
         return String.valueOf(port);
     }
@@ -117,14 +124,14 @@ public class Netstat extends SigarCommandBase {
 
         for (int i=0; i<connections.length; i++) {
             NetConnection conn = connections[i];
-
-            println(conn.getTypeString() +
+            String proto = conn.getTypeString();
+            println(proto +
                     "\t" +
                     formatAddress(conn.getLocalAddress()) + ":" +
-                    formatPort(conn.getLocalPort()) +
+                    formatPort(proto, conn.getLocalPort()) +
                     "\t" +
                     formatAddress(conn.getRemoteAddress()) + ":" +
-                    formatPort(conn.getRemotePort()));
+                    formatPort(proto, conn.getRemotePort()));
         }
     }
 
