@@ -74,15 +74,22 @@ public class Pdh extends Win32Bindings {
         this.counterPath = cp;
     }
     
-    private static final native long pdhOpenQuery();
-    private static final native void pdhCloseQuery(long query);
-    private static final native long pdhAddCounter(long query, String cp);
-    private static final native void pdhRemoveCounter(long counter);
+    private static final native long pdhOpenQuery() throws Win32Exception;
+    private static final native void pdhCloseQuery(long query)
+        throws Win32Exception;
+    private static final native long pdhAddCounter(long query, String cp)
+        throws Win32Exception;
+    private static final native void pdhRemoveCounter(long counter)
+        throws Win32Exception;
     private static final native double pdhGetSingleValue(long query, 
-                                                         long counter);
-    private static final native String[] pdhGetInstances(String cp);
-    private static final native String[] pdhGetKeys(String cp);
-    private static final native String[] pdhGetObjects();
+                                                         long counter)
+        throws Win32Exception;
+    private static final native String[] pdhGetInstances(String cp)
+        throws Win32Exception;
+    private static final native String[] pdhGetKeys(String cp)
+        throws Win32Exception;
+    private static final native String[] pdhGetObjects()
+        throws Win32Exception;
 
     /**
      * Main method for dumping the entire PDH
