@@ -166,7 +166,7 @@ public class Ps extends SigarCommandBase {
         println(join(getInfo(this.proxy, pid)));
     }
 
-    private static String getCpuTime(ProcTime time) {
+    public static String getCpuTime(ProcTime time) {
         long t = time.getTotal();
         return t/60 + ":" + t%60;
     }
