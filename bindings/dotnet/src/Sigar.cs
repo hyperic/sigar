@@ -77,7 +77,6 @@ namespace Hyperic.Sigar {
         public readonly ulong Shared;
         private readonly ulong NA_buffer;
         private readonly ulong NA_cached;
-        private readonly ulong NA_user;
 
         [DllImport(Sigar.LIBSIGAR)]
         private static extern int sigar_mem_get(IntPtr sigar, IntPtr mem);
