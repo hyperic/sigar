@@ -28,6 +28,21 @@
 #define SIGAR_LOG_IS_TRACE(sigar) \
     (sigar->log_level >= SIGAR_LOG_TRACE)
 
+#define SIGAR_STRINGIFY(n) #n
+
+#define SIGAR_LOG_FILELINE \
+   __FILE__ ":" SIGAR_STRINGIFY(__LINE__)
+
+#if defined(__GNUC__)
+#   if (__GNUC__ > 2)
+#      define SIGAR_FUNC __func__
+#   else
+#      define SIGAR_FUNC __FUNCTION__
+#   endif
+#else
+#   define SIGAR_FUNC SIGAR_LOG_FILELINE
+#endif
+
 typedef void (*sigar_log_impl_t)(sigar_t *, void *, int, char *);
 
 SIGAR_DECLARE(void) sigar_log_printf(sigar_t *sigar, int level,
