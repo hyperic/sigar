@@ -341,6 +341,7 @@ static int sigar_get_pinfo(sigar_t *sigar, sigar_pid_t pid)
 int sigar_proc_mem_get(sigar_t *sigar, sigar_pid_t pid,
                        sigar_proc_mem_t *procmem)
 {
+#ifdef DARWIN
     mach_port_t task, self = mach_task_self();
     kern_return_t status;
     task_basic_info_data_t info;
@@ -367,6 +368,9 @@ int sigar_proc_mem_get(sigar_t *sigar, sigar_pid_t pid,
     procmem->share = SIGAR_FIELD_NOTIMPL;
 
     return SIGAR_OK;
+#else
+    return SIGAR_ENOTIMPL;
+#endif
 }
 
 int sigar_proc_cred_get(sigar_t *sigar, sigar_pid_t pid,
@@ -389,6 +393,7 @@ int sigar_proc_cred_get(sigar_t *sigar, sigar_pid_t pid,
 
 static int get_proc_times(sigar_pid_t pid, sigar_proc_time_t *time)
 {
+#ifdef DARWIN
     unsigned int count;
     time_value_t utime = {0, 0}, stime = {0, 0};
     task_basic_info_data_t ti;
@@ -431,6 +436,9 @@ static int get_proc_times(sigar_pid_t pid, sigar_proc_time_t *time)
     time->total = time->user + time->sys;
 
     return SIGAR_OK;
+#else
+    return SIGAR_ENOTIMPL;
+#endif
 }
 
 int sigar_proc_time_get(sigar_t *sigar, sigar_pid_t pid,
