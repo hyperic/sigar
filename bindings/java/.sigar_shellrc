@@ -11,9 +11,11 @@ alias jbfind ptql State.Name.eq=java,Args.*.eq=org.jboss.Main
 #find tomcat
 alias tcfind ptql State.Name.eq=java,Args.*.eq=org.apache.catalina.startup.Bootstrap
 
-#find ers apache worker or prefork httpsd
+#find apache parent processes
 #($1 is the return value of the first query in the string)
-alias erfind ptql State.Name.sw=httpsd.,State.Name.Pne=$1
+#'Pne' => 'P' flags means parent of matched process
+#to filter out httpd child processes
+alias apfind ptql State.Name.re=^(https?d.*|[Aa]pache)$,State.Name.Pne=$1
 
 #find ant processes (ant hangs on me sometimes)
 #(* matches any value in the array)
