@@ -23,10 +23,19 @@ char *sigar_os_error_string(int err)
 
 int sigar_mem_get(sigar_t *sigar, sigar_mem_t *mem)
 {
-    mem->total  = -1;
-    mem->ram    = -1;
-    mem->used   = -1;
-    mem->free   = -1;
+    vm_statistics_data_t vmstats;
+    
+    vm_statistics(task_self(), &vmstats);
+
+    mem->free = vmstats.free_count   * vmstats.pagesize;
+    mem->used = vmstats.active_count * vmstats.pagesize;
+    
+    mem->total =
+        mem->free + mem->used +
+        ((vmstats.inactive_count + vmstats.wire_count) * vmstats.pagesize);
+
+    sigar_mem_calc_ram(sigar, mem);
+
     mem->shared = -1;
     mem->buffer = -1;
     mem->cached = -1;
