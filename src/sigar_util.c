@@ -258,6 +258,9 @@ double sigar_file_system_usage_calc_used(sigar_t *sigar,
     return 0;
 }
 
+#define IS_CPU_R(p) \
+   ((*p == '(') && (*(p+1) == 'R') && (*(p+2) == ')'))
+
 /* common to win32 and linux */
 void sigar_cpu_model_adjust(sigar_t *sigar, sigar_cpu_info_t *info)
 {
@@ -271,6 +274,16 @@ void sigar_cpu_model_adjust(sigar_t *sigar, sigar_cpu_info_t *info)
     end = &model[len-1];
     while (*ptr == ' ') ++ptr;
     while (*end == ' ') *--end = '\0';
+
+    /* remove vendor from model name */
+    len = strlen(info->vendor);
+    if (strnEQ(ptr, info->vendor, len)) {
+        ptr += len;
+        if (IS_CPU_R(ptr)) {
+            ptr += 3; /* remove (R) */
+            while (*ptr == ' ') ++ptr;
+        }
+    }
 
     strcpy(info->model, ptr);
 }
