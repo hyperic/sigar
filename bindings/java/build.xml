@@ -20,7 +20,7 @@
 
   <property name="src" location="src"/>
   <property name="build" location="build"/>
-  <property name="build.javadocs" value="${build}/javadocs"/>
+  <property name="build.javadoc" value="${build}/javadoc"/>
   <property name="dist.name" value="hyperic-sigar"/>
   <property name="dist" location="${build}/${dist.name}"/>
   <property name="perl" value="perl"/>
@@ -38,23 +38,23 @@
 
   <target name="javadoc_check">
     <uptodate property="javadoc.notrequired"
-              targetfile="${build.javadocs}/packages.html" >
+              targetfile="${build.javadoc}/packages.html" >
         <srcfiles dir="src" includes="**/*.java"/>
     </uptodate>
   </target>
 
-  <path id="javadocs.path">
+  <path id="javadoc.path">
     <pathelement path="src"/>
     <pathelement path="${build}/src"/>
   </path>
 
-  <target name="javadocs" depends="javadoc_check">
-    <mkdir dir="${build.javadocs}"/>
+  <target name="javadoc" depends="javadoc_check">
+    <mkdir dir="${build.javadoc}"/>
     <javadoc packagenames="net.hyperic.sigar.*"
              excludepackagenames="net.hyperic.sigar.test.*,net.hyperic.jni.*"
              useexternalfile="yes"
-             sourcepathref="javadocs.path"
-             destdir="${build.javadocs}"
+             sourcepathref="javadoc.path"
+             destdir="${build.javadoc}"
              author="false"
              version="false"
              windowtitle="Sigar API"
