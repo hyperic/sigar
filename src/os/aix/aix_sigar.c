@@ -975,6 +975,17 @@ int sigar_file_system_usage_get(sigar_t *sigar,
     return SIGAR_OK;
 }
 
+/* from sys/systemcfg.h, not defined in 4.3 headers */
+#ifndef POWER_4
+#define POWER_4		0x0800
+#endif
+#ifndef POWER_MPC7450
+#define POWER_MPC7450	0x1000
+#endif
+#ifdef POWER_5
+#define POWER_5		0x2000
+#endif
+
 int sigar_cpu_infos_get(sigar_t *sigar,
                         sigar_cpu_infos_t *cpu_infos)
 {
@@ -1056,10 +1067,19 @@ int sigar_cpu_infos_get(sigar_t *sigar,
                 model = "A35";
                 break;
               case POWER_RS64II:
-                model = "RS64II";
+                model = "RS64-II";
                 break;
               case POWER_RS64III:
-                model = "RS64III";
+                model = "RS64-III";
+                break;
+              case POWER_4:
+                model = "POWER4";
+                break;
+              case POWER_MPC7450:
+                model = "MPC7450";
+                break;
+              case POWER_5:
+                model = "POWER5";
                 break;
               default:
                 model = "unknown";
