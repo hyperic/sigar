@@ -4,34 +4,28 @@
 
 <project name="SigarSharp" default="build">
   <property name="debug" value="true"/>
+  <property name="build.dir" value="build"/>
+  <property name="sigarsharp" value="${build.dir}/SigarSharp.dll"/>
 
   <target name="clean">
-    <delete dir="build"/>
-  </target>
-
-  <target name="build-exe">
-    <csc target="exe" output="build/${name}.exe" debug="${debug}">
-      <sources>
-        <includes name="examples/${name}.cs"/>
-      </sources>
-      <references>
-        <includes name="build/SigarSharp.dll"/>
-      </references>
-    </csc>
-
+    <delete dir="${build.dir}"/>
   </target>
 
   <target name="build-examples">
-    <foreach item="String" in="Free,CpuInfo,Df"
-             delim="," property="name">
-      <call target="build-exe"/>
-    </foreach>
+    <nant buildfile="examples/default.build"
+          inheritall="true">
+      <properties>
+        <property name="build.dir" value="../build"/>
+        <property name="sigarsharp" value="../build/SigarSharp.dll"/>
+      </properties>
+    </nant>
   </target>
 
   <target name="build" description="Build C# Sigar bindings">
-    <mkdir dir="build"/>
+    <mkdir dir="${build.dir}"/>
 
-    <csc target="library" output="build/SigarSharp.dll" debug="${debug}">
+    <csc target="library" debug="${debug}"
+         output="${sigarsharp}">
       <sources>
         <includes name="src/Sigar.cs"/>
       </sources>
