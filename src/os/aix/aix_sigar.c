@@ -2034,7 +2034,19 @@ int sigar_proc_port_get(sigar_t *sigar, int protocol,
     struct procsinfo pinfo;
     struct fdsinfo finfo;
     pid_t pid = 0;
-
+    int type;
+    
+    switch (protocol) {
+        case SIGAR_NETCONN_TCP:
+            type = IPPROTO_TCP;
+            break;
+        case SIGAR_NETCONN_UDP:
+            type = IPPROTO_UDP;
+            break;
+        default:
+          return SIGAR_ENOTIMPL;
+    }
+    
     for (;;) {
         int fd, status;
         int num = getprocs(&pinfo, sizeof(pinfo),
@@ -2088,7 +2100,7 @@ int sigar_proc_port_get(sigar_t *sigar, int protocol,
                 continue;
             }
 
-            if (protosw.pr_protocol != IPPROTO_TCP) {
+            if (protosw.pr_protocol != type) {
                 continue;
             }
             
