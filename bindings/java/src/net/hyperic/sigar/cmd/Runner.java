@@ -13,6 +13,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.net.URLClassLoader;
 import java.net.URL;
 
+import net.hyperic.sigar.SigarLoader;
+
 public class Runner {
 
     private static HashMap wantedJars = new HashMap();
@@ -121,7 +123,10 @@ public class Runner {
         String[] pargs = new String[args.length - 1];
         System.arraycopy(args, 1, pargs, 0, args.length-1);
 
-        String[] dirs = { "lib", "." };
+        String sigarLib = 
+            new SigarLoader(SigarLoader.class).findJarPath("sigar.jar");
+
+        String[] dirs = { sigarLib, "lib", "." };
         for (int i=0; i<dirs.length; i++) {
             if (addJarDir(dirs[i])) {
                 break;
