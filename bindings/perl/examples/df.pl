@@ -7,7 +7,7 @@ my $sigar = new Sigar;
 
 my $fslist = $sigar->file_system_list;
 
-print "Filesytem\tSize\tUsed\tAvail\tUse%\tMounted on\tType\n";
+print "Filesystem\tSize\tUsed\tAvail\tUse%\tMounted on\tType\n";
 
 for my $fs (@$fslist) {
     my $dirname = $fs->dir_name;
@@ -34,11 +34,16 @@ for my $fs (@$fslist) {
 
     print
       $fs->dev_name . "\t" .
-      $total . "\t" .
-      $used . "\t" .
-      $avail . "\t" .
+      format_size($total) . "\t" .
+      format_size($used) . "\t" .
+      format_size($avail) . "\t" .
       $usePct . "\t" .
       $dirname . "\t" .
       $fs->sys_type_name . "/" . $fs->type_name . "\n";
 
+}
+
+sub format_size {
+    my($size) = @_;
+    return Sigar::format_size($size * 1024);
 }
