@@ -33,15 +33,19 @@ public class Time extends SigarCommandBase {
         this.shell.handleCommand("time " + args[0], args);
 
         cpu.gather(this.sigar, 0);
-        System.out.println("real....." +
-                           (System.currentTimeMillis() - start) / 1000);
-        System.out.println("user....." + toMillis(cpu.getUser()));
-        System.out.println("sys......" + toMillis(cpu.getSys()));
-        System.out.println("total...." + toMillis(cpu.getTotal()));
+        println("real....." +
+                format((System.currentTimeMillis() - start)));
+        println("user....." + format(toMillis(cpu.getUser())));
+        println("sys......" + format(toMillis(cpu.getSys())));
     }
 
     private static long toMillis(long nano) {
         return nano / 1000000;
+    }
+
+    private static String format(long t) {
+        t /= 1000;
+        return t/60 + ":" + t%60;
     }
 
     public static void main(String[] args) throws Exception {
