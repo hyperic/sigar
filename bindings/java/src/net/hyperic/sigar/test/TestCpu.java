@@ -18,6 +18,9 @@ public class TestCpu extends SigarTestCase {
         traceln("Sys=" + cpu.getSys());
         assertTrue(cpu.getSys() >= 0);
 
+        traceln("Idle=" + cpu.getIdle());
+        assertTrue(cpu.getIdle() >= 0);
+
         traceln("Total=" + cpu.getTotal());
         assertTrue(cpu.getTotal() >= 0);
     }
