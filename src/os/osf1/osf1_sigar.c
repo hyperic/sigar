@@ -235,17 +235,6 @@ int sigar_proc_modules_get(sigar_t *sigar, sigar_pid_t pid,
 
 int sigar_os_fs_type_get(sigar_file_system_t *fsp)
 {
-    char *type = fsp->sys_type_name;
-
-    switch (*type) {
-      case 'a':
-        if (strEQ(type, "advfs")) {
-            fsp->type = SIGAR_FSTYPE_LOCAL_DISK;
-        }
-        break;
-        /* XXX */
-    }
-
     return fsp->type;
 }
 
@@ -283,6 +272,7 @@ int sigar_file_system_list_get(sigar_t *sigar,
 
     for (i=0; i<num; i++) {
         sigar_file_system_t *fsp;
+        const char *typename = NULL;
 
         SIGAR_FILE_SYSTEM_LIST_GROW(fslist);
 
@@ -291,7 +281,60 @@ int sigar_file_system_list_get(sigar_t *sigar,
         SIGAR_SSTRCPY(fsp->dir_name, fs[i].f_mntonname);
         SIGAR_SSTRCPY(fsp->dev_name, fs[i].f_mntfromname);
         SIGAR_SSTRCPY(fsp->sys_type_name, mnt_names[fs[i].f_type]);
-        sigar_fs_type_init(fsp);
+
+        switch (fs[i].f_type) {
+          case MOUNT_UFS:
+            typename = "ufs";
+            fsp->type = SIGAR_FSTYPE_LOCAL_DISK;
+            break;
+          case MOUNT_MFS:
+          case MOUNT_MSFS:
+            typename = "advfs";
+            fsp->type = SIGAR_FSTYPE_LOCAL_DISK;
+            break;
+          case MOUNT_FDFS:
+            typename = "fdfs";
+            fsp->type = SIGAR_FSTYPE_LOCAL_DISK;
+            break;
+          case MOUNT_DVDFS:
+          case MOUNT_CDFS:
+            fsp->type = SIGAR_FSTYPE_CDROM;
+            break;
+          case MOUNT_DFS: /* DCE */
+            typename = "dfs";
+            fsp->type = SIGAR_FSTYPE_NETWORK;
+            break;
+          case MOUNT_EFS: /* DCE */
+            typename = "efs";
+            fsp->type = SIGAR_FSTYPE_NETWORK;
+            break;
+          case MOUNT_NFS:
+          case MOUNT_NFS3:
+            typename = "nfs";
+            fsp->type = SIGAR_FSTYPE_NETWORK;
+            break;
+          case MOUNT_CSPEC:
+          case MOUNT_CFS:
+            typename = "cfs";
+            fsp->type = SIGAR_FSTYPE_NETWORK;
+            break;
+          case MOUNT_NONE:
+          case MOUNT_PC:
+          case MOUNT_S5FS:
+          case MOUNT_PROCFS:
+          case MOUNT_FFM:
+          case MOUNT_ADDON:
+          case MOUNT_AUTOFS:
+          default:
+            break;
+        }
+
+        /* we set fsp->type, just looking up sigar.c:fstype_names[type] */
+        sigar_fs_type_get(fsp);
+
+        if (typename == NULL) {
+            typename = fsp->type_name;
+        }
     }
 
     free(fs);
