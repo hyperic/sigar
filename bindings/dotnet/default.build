@@ -5,8 +5,27 @@
 <project name="SigarSharp" default="build">
   <property name="debug" value="true"/>
 
- <target name="clean" description="clean build files">
+  <target name="clean">
     <delete dir="build"/>
+  </target>
+
+  <target name="build-exe">
+    <csc target="exe" output="build/${name}.exe" debug="${debug}">
+      <sources>
+        <includes name="examples/${name}.cs"/>
+      </sources>
+      <references>
+        <includes name="build/SigarSharp.dll"/>
+      </references>
+    </csc>
+
+  </target>
+
+  <target name="build-examples">
+    <foreach item="String" in="Free,CpuInfo,Df"
+             delim="," property="name">
+      <call target="build-exe"/>
+    </foreach>
   </target>
 
   <target name="build" description="Build C# Sigar bindings">
@@ -16,33 +35,6 @@
       <sources>
         <includes name="src/Sigar.cs"/>
       </sources>
-    </csc>
-
-    <csc target="exe" output="build/Free.exe" debug="${debug}">
-      <sources>
-        <includes name="examples/Free.cs"/>
-      </sources>
-      <references>
-        <includes name="build/SigarSharp.dll"/>
-      </references>
-    </csc>
-
-    <csc target="exe" output="build/CpuInfo.exe" debug="${debug}">
-      <sources>
-        <includes name="examples/CpuInfo.cs"/>
-      </sources>
-      <references>
-        <includes name="build/SigarSharp.dll"/>
-      </references>
-    </csc>
-
-    <csc target="exe" output="build/Df.exe" debug="${debug}">
-      <sources>
-        <includes name="examples/Df.cs"/>
-      </sources>
-      <references>
-        <includes name="build/SigarSharp.dll"/>
-      </references>
     </csc>
   </target>
 </project>
