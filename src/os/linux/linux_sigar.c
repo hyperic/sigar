@@ -899,6 +899,13 @@ int sigar_proc_modules_get(sigar_t *sigar, sigar_pid_t pid,
     return SIGAR_OK;
 }
 
+int sigar_thread_cpu_get(sigar_t *sigar,
+                         sigar_uint64_t id,
+                         sigar_thread_cpu_t *cpu)
+{
+    return SIGAR_ENOTIMPL;
+}
+
 #include <mntent.h>
 #include <sys/statfs.h>
 

@@ -171,6 +171,13 @@ int sigar_proc_modules_get(sigar_t *sigar, sigar_pid_t pid,
     return SIGAR_ENOTIMPL;
 }
 
+int sigar_thread_cpu_get(sigar_t *sigar,
+                         sigar_uint64_t id,
+                         sigar_thread_cpu_t *cpu)
+{
+    return SIGAR_ENOTIMPL;
+}
+
 int sigar_os_fs_type_get(sigar_file_system_t *fsp)
 {
     fsp->type = SIGAR_FSTYPE_UNKNOWN;
