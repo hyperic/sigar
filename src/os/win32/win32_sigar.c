@@ -1993,7 +1993,6 @@ static int net_conn_get_tcp(sigar_t *sigar,
 
     for (i = 0; i < tcp->dwNumEntries; i++) {
         sigar_net_connection_t conn;
-        int tcp_state;
         DWORD state = tcp->table[i].dwState;
 
         if (flags & SIGAR_NETCONN_SERVER) {
@@ -2022,45 +2021,44 @@ static int net_conn_get_tcp(sigar_t *sigar,
 
         switch (state) {
           case MIB_TCP_STATE_CLOSED:
-            tcp_state = SIGAR_TCP_CLOSE;
+            conn.state = SIGAR_TCP_CLOSE;
             break;
           case MIB_TCP_STATE_LISTEN:
-            tcp_state = SIGAR_TCP_LISTEN;
+            conn.state = SIGAR_TCP_LISTEN;
             break;
           case MIB_TCP_STATE_SYN_SENT:
-            tcp_state = SIGAR_TCP_SYN_SENT;
+            conn.state = SIGAR_TCP_SYN_SENT;
             break;
           case MIB_TCP_STATE_SYN_RCVD:
-            tcp_state = SIGAR_TCP_SYN_RECV;
+            conn.state = SIGAR_TCP_SYN_RECV;
             break;
           case MIB_TCP_STATE_ESTAB:
-            tcp_state = SIGAR_TCP_ESTABLISHED;
+            conn.state = SIGAR_TCP_ESTABLISHED;
             break;
           case MIB_TCP_STATE_FIN_WAIT1:
-            tcp_state = SIGAR_TCP_FIN_WAIT1;
+            conn.state = SIGAR_TCP_FIN_WAIT1;
             break;
           case MIB_TCP_STATE_FIN_WAIT2:
-            tcp_state = SIGAR_TCP_FIN_WAIT2;
+            conn.state = SIGAR_TCP_FIN_WAIT2;
             break;
           case MIB_TCP_STATE_CLOSE_WAIT:
-            tcp_state = SIGAR_TCP_CLOSE_WAIT;
+            conn.state = SIGAR_TCP_CLOSE_WAIT;
             break;
           case MIB_TCP_STATE_CLOSING:
-            tcp_state = SIGAR_TCP_CLOSING;
+            conn.state = SIGAR_TCP_CLOSING;
             break;
           case MIB_TCP_STATE_LAST_ACK:
-            tcp_state = SIGAR_TCP_LAST_ACK;
+            conn.state = SIGAR_TCP_LAST_ACK;
             break;
           case MIB_TCP_STATE_TIME_WAIT:
-            tcp_state = SIGAR_TCP_TIME_WAIT;
+            conn.state = SIGAR_TCP_TIME_WAIT;
             break;
           case MIB_TCP_STATE_DELETE_TCB:
           default:
-            tcp_state = SIGAR_TCP_ESTABLISHED; /*XXX*/
+            conn.state = SIGAR_TCP_UNKNOWN;
             break;
         }
 
-        /* XXX conn.state = tcp_state */
         SIGAR_NET_CONNLIST_GROW(connlist);
         memcpy(&connlist->data[connlist->number++],
                &conn, sizeof(conn));
