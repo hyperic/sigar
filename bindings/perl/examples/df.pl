@@ -11,7 +11,7 @@ print "Filesytem\tSize\tUsed\tAvail\tUse%\tMounted on\tType\n";
 
 for my $fs (@$fslist) {
     my $dirname = $fs->dir_name;
-    my $usage = $sigar->filesystemusage($dirname);
+    my $usage = $sigar->file_system_usage($dirname);
 
     my $total = $usage->total;
     my $used  = $total - $usage->free;
