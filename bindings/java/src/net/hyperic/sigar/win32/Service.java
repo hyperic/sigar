@@ -120,7 +120,7 @@ public class Service extends Win32Bindings implements java.io.Serializable
             Service.throwLastErrorException();
     }
 
-    public void finalize()
+    protected void finalize()
     {
         this.close();
     }
