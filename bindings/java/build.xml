@@ -253,6 +253,7 @@
      <fileset dir="../..">
        <include name="README"/>
        <include name="LICENSE"/>
+       <include name="ChangeLog"/>
      </fileset>
    </copy>
 
