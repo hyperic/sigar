@@ -990,8 +990,11 @@ static int fqdn_ip_get(sigar_t *sigar, char *name)
 #include <netdb.h>
 #endif
 
+#define IS_FQDN(name) \
+    strchr(name, '.')
+
 #define H_ALIAS_MATCH(alias, name) \
-    (strchr(alias, '.') && strnEQ(alias, name, strlen(name)))
+    (IS_FQDN(alias) && strnEQ(alias, name, strlen(name)))
 
 #define FQDN_SET(fqdn) \
     SIGAR_STRNCPY(name, fqdn, namelen)
@@ -1023,14 +1026,14 @@ SIGAR_DECLARE(int) sigar_fqdn_get(sigar_t *sigar, char *name, int namelen)
                              SIGAR_FUNC, name, sigar_strerror(sigar, errno));
         }
 
-        if (!strchr(name, '.')) {
+        if (!IS_FQDN(name)) {
             fqdn_ip_get(sigar, name);
         }
 
         return SIGAR_OK;
     }
 
-    if (strchr(p->h_name, '.')) {
+    if (IS_FQDN(p->h_name)) {
         FQDN_SET(p->h_name);
 
         sigar_log(sigar, SIGAR_LOG_DEBUG,
@@ -1063,7 +1066,7 @@ SIGAR_DECLARE(int) sigar_fqdn_get(sigar_t *sigar, char *name, int namelen)
                               p->h_length,
                               p->h_addrtype);
             
-            if (strchr(q->h_name, '.')) {
+            if (IS_FQDN(q->h_name)) {
                 FQDN_SET(q->h_name);
 
                 sigar_log(sigar, SIGAR_LOG_DEBUG,
@@ -1088,7 +1091,7 @@ SIGAR_DECLARE(int) sigar_fqdn_get(sigar_t *sigar, char *name, int namelen)
     }
 
 #ifndef WIN32
-    if (!strchr(name, '.') && /* e.g. aix gethostname is already fqdn */
+    if (!IS_FQDN(name) && /* e.g. aix gethostname is already fqdn */
         (getdomainname(domain, sizeof(domain) - 1) == 0) &&
         (domain[0] != '\0') &&
         (domain[0] != '('))  /* linux default is "(none)" */
