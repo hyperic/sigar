@@ -84,6 +84,19 @@ typedef DWORD (CALLBACK *LPGETUDPTABLE)(PMIB_UDPTABLE, PDWORD, BOOL);
 typedef DWORD (CALLBACK *LPGETTCPEXTABLE)(PMIB_TCPEXTABLE *, BOOL, HANDLE,
                                           DWORD, DWORD);
 
+typedef DWORD (CALLBACK *LPSYSINFO)(DWORD, PVOID, ULONG, PULONG);
+
+/* no longer in the standard header files */
+typedef struct {
+    LARGE_INTEGER IdleTime;
+    LARGE_INTEGER KernelTime;
+    LARGE_INTEGER UserTime;
+    LARGE_INTEGER Reserved1[2];
+    ULONG Reserved2;
+} SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION;
+
+#define SystemProcessorPerformanceInformation 8
+
 typedef struct {
     sigar_pid_t pid;
     int ppid;
@@ -105,11 +118,13 @@ struct sigar_t {
     char *perfbuf;
     DWORD perfbuf_size;
     HINSTANCE ip_handle;
+    HINSTANCE nt_handle;
     LPGETIFTABLE get_if_table;
     LPGETIPFORWARDTABLE get_ipforward_table;
     LPGETTCPTABLE get_tcp_table;
     LPGETTCPEXTABLE get_tcpx_table;
     LPGETUDPTABLE get_udp_table;
+    LPSYSINFO get_ntsys_info;
     sigar_win32_pinfo_t pinfo;
     WORD ws_version;
     int ws_error;

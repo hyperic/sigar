@@ -179,13 +179,24 @@ int sigar_os_open(sigar_t **sigar)
                                             "TcpExTableFromStack");
         (*sigar)->get_udp_table = 
             (LPGETUDPTABLE)GetProcAddress(h, "GetUdpTable");
+        (*sigar)->ip_handle = h;
     }
     else {
         (*sigar)->get_if_table = NULL;
         (*sigar)->get_ipforward_table = NULL;
+        (*sigar)->ip_handle = NULL;
     }
 
-    (*sigar)->ip_handle = h;
+    if ((h = LoadLibrary("Ntdll.dll"))) {
+        (*sigar)->get_ntsys_info =
+            (LPSYSINFO)GetProcAddress(h, "NtQuerySystemInformation");
+        (*sigar)->nt_handle = h;
+    }
+    else {
+        (*sigar)->get_ntsys_info = NULL;
+        (*sigar)->nt_handle = NULL;
+    }
+
     (*sigar)->pinfo.pid = -1;
     (*sigar)->ws_version = 0;
     (*sigar)->ncpu = 0;
@@ -206,6 +217,10 @@ int sigar_os_close(sigar_t *sigar)
 
     if (sigar->ip_handle) {
         FreeLibrary(sigar->ip_handle);
+    }
+
+    if (sigar->nt_handle) {
+        FreeLibrary(sigar->nt_handle);
     }
 
     if (sigar->ws_version != 0) {
@@ -329,6 +344,53 @@ static PERF_INSTANCE_DEFINITION *get_cpu_instance(sigar_t *sigar,
     return PdhFirstInstance(object);
 }
 
+static int get_idle_cpu(sigar_t *sigar, sigar_cpu_t *cpu,
+                        DWORD idx,
+                        PERF_COUNTER_BLOCK *counter_block,
+                        DWORD *perf_offsets)
+{
+    cpu->idle = 0;
+
+    if (perf_offsets[PERF_IX_CPU_IDLE]) {
+        cpu->idle = PERF_VAL(PERF_IX_CPU_IDLE);
+    }
+    else {
+        /* windows NT and 2000 do not have an Idle counter */
+        sigar_cpu_count(sigar);
+        if (sigar->get_ntsys_info) {
+            DWORD retval, num;
+            /* XXX unhardcode 16 */
+            SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION info[16];
+
+            sigar->get_ntsys_info(SystemProcessorPerformanceInformation,
+                                  &info, sizeof(info), &retval);
+
+            if (!retval) {
+                return GetLastError();
+            }
+            num = retval/sizeof(info[0]);
+
+            if (idx == -1) {
+                int i;
+                for (i=0; i<num; i++) {
+                    cpu->idle += info[i].IdleTime.QuadPart;
+                }
+            }
+            else if (idx < num) {
+                cpu->idle = info[idx].IdleTime.QuadPart;
+            }
+            else {
+                return ERROR_INVALID_DATA;
+            }
+        }
+        else {
+            return ERROR_INVALID_FUNCTION;
+        }
+    }
+
+    return SIGAR_OK;
+}
+
 SIGAR_DECLARE(int) sigar_cpu_get(sigar_t *sigar, sigar_cpu_t *cpu)
 {
     PERF_INSTANCE_DEFINITION *inst;
@@ -349,7 +411,7 @@ SIGAR_DECLARE(int) sigar_cpu_get(sigar_t *sigar, sigar_cpu_t *cpu)
 
     cpu->sys  = PERF_VAL(PERF_IX_CPU_SYS);
     cpu->user = PERF_VAL(PERF_IX_CPU_USER);
-    cpu->idle = PERF_VAL(PERF_IX_CPU_IDLE);
+    get_idle_cpu(sigar, cpu, -1, counter_block, perf_offsets);
     cpu->nice = 0; /* no nice here */
 
     cpu->total = cpu->sys + cpu->user + cpu->idle;
@@ -408,7 +470,7 @@ SIGAR_DECLARE(int) sigar_cpu_list_get(sigar_t *sigar, sigar_cpu_list_t *cpulist)
 
         cpu->sys  += PERF_VAL(PERF_IX_CPU_SYS);
         cpu->user += PERF_VAL(PERF_IX_CPU_USER);
-        cpu->idle += PERF_VAL(PERF_IX_CPU_IDLE);
+        get_idle_cpu(sigar, cpu, i, counter_block, perf_offsets);
         cpu->nice = 0; /* no nice here */
         
         cpu->total += cpu->sys + cpu->user + cpu->idle;
