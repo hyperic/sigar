@@ -121,7 +121,7 @@ public class Service extends Win32Bindings implements java.io.Serializable
         this.close();
     }
 
-    private void close()
+    public void close()
     {
         if(this.m_hService != 0) {
             CloseServiceHandle(this.m_hService);
@@ -130,7 +130,7 @@ public class Service extends Win32Bindings implements java.io.Serializable
 
         if(this.m_hMgr != 0) {
             CloseServiceHandle(this.m_hMgr);
-            this.m_hService = 0;
+            this.m_hMgr = 0;
         }
     }
     

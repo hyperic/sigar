@@ -13,6 +13,7 @@ public class TestService extends TestCase {
 
     public void testServiceOpen() throws Exception {
         Service service = new Service("Eventlog");
+        service.close();
     }
 
     public void testServiceCreateDelete() throws Exception {
