@@ -19,6 +19,8 @@ import net.hyperic.jni.ArchNotSupportedException;
  */
 public class Sigar implements SigarProxy {
 
+    private static String loadError = null;
+
     public static final long FIELD_NOTIMPL = -1;
 
     /**
@@ -46,7 +48,7 @@ public class Sigar implements SigarProxy {
 
     static {
         try {
-            load();
+            loadLibrary();
         } catch (SigarException e) {
             String msg = "Sigar.load: " + e.getMessage();
             try {
@@ -59,7 +61,13 @@ public class Sigar implements SigarProxy {
         }
     }
 
-    private static void load() throws SigarException {
+    public static void load() throws SigarException {
+        if (loadError != null) {
+            throw new SigarException(loadError);
+        }
+    }
+
+    private static void loadLibrary() throws SigarException {
         try {
             if (SigarLoader.IS_WIN32 &&
                 System.getProperty("os.version").equals("4.0"))
