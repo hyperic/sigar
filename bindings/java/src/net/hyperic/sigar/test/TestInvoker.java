@@ -1,14 +1,12 @@
 package net.hyperic.sigar.test;
 
 import net.hyperic.sigar.Sigar;
+import net.hyperic.sigar.SigarLoader;
 import net.hyperic.sigar.SigarProxy;
 import net.hyperic.sigar.SigarProxyCache;
 import net.hyperic.sigar.jmx.SigarInvokerJMX;
 
 public class TestInvoker extends SigarTestCase {
-
-    private final static boolean IS_WIN32 =
-        System.getProperty("os.name").startsWith("Windows");
 
     private static final String[][] OK_QUERIES = {
         { "sigar:Type=Mem", "Free" },
@@ -50,7 +48,7 @@ public class TestInvoker extends SigarTestCase {
             String[] query = OK_QUERIES[i];
             SigarInvokerJMX invoker =
                 SigarInvokerJMX.getInstance(proxy, query[0]);
-            if (IS_WIN32 &&
+            if (SigarLoader.IS_WIN32 &&
                 invoker.getType().equals("LoadAverage"))
             {
                 /* XXX not implemented on win32
