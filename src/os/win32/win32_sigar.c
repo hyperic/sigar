@@ -60,11 +60,11 @@ typedef enum {
         RegQueryValueExW(sigar->handle, \
                          wcounter_key, NULL, &type, \
                          sigar->perfbuf, \
-                         &sigar->perfbuf_size) : \
+                         &bytes) : \
         RegQueryValueExA(sigar->handle, \
                          counter_key, NULL, &type, \
                          sigar->perfbuf, \
-                         &sigar->perfbuf_size))
+                         &bytes))
 
 #define PERF_VAL(ix) \
     perf_offsets[ix] ? \
@@ -73,7 +73,7 @@ typedef enum {
 static PERF_OBJECT_TYPE *get_perf_object(sigar_t *sigar, char *counter_key,
                                          DWORD *err)
 {
-    DWORD retval, type;
+    DWORD retval, type, bytes;
     WCHAR wcounter_key[MAX_PATH+1];
     PERF_DATA_BLOCK *block;
 
@@ -88,10 +88,11 @@ static PERF_OBJECT_TYPE *get_perf_object(sigar_t *sigar, char *counter_key,
         SIGAR_A2W(counter_key, wcounter_key, sizeof(wcounter_key));
     }
 
+    bytes = sigar->perfbuf_size;
     while ((retval = MyRegQueryValue()) != ERROR_SUCCESS) {
         if (retval == ERROR_MORE_DATA) {
             sigar->perfbuf_size += PERFBUF_SIZE;
-
+            bytes = sigar->perfbuf_size;
             sigar->perfbuf =
                 realloc(sigar->perfbuf, sigar->perfbuf_size);
         }
