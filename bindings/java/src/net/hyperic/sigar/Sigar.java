@@ -489,32 +489,6 @@ public class Sigar implements SigarProxy {
         return ThreadCpu.fetch(this, 0);
     }
 
-    private ThreadCpu diff = null;
-    
-    /**
-     * Get cpu time since the last time cpu.gather was called
-     * for the calling thread.
-     */
-    public ThreadCpu getThreadCpuDiff(ThreadCpu cpu)
-        throws SigarException {
-
-        long startTotal = cpu.total;
-        long startUser  = cpu.user;
-        long startSys   = cpu.sys;
-    
-        if (this.diff == null) {
-            this.diff = new ThreadCpu();
-        }
-
-        cpu.gather(this, 0);
-        
-        this.diff.total = cpu.total - startTotal;
-        this.diff.user  = cpu.user  - startUser;
-        this.diff.sys   = cpu.sys   - startSys;
-        
-        return this.diff;
-    }
-    
     /**
      * Get list of file systems.
      * @exception SigarException on failure.
