@@ -3,6 +3,9 @@
 #include "sigar_os.h"
 #include "sigar_util.h"
 
+#include <sys/mount.h>
+#include <sys/fs_types.h>
+
 int sigar_os_open(sigar_t **sigar)
 {
     *sigar = malloc(sizeof(**sigar));
@@ -237,10 +240,52 @@ int sigar_os_fs_type_get(sigar_file_system_t *fsp)
     return SIGAR_OK;
 }
 
+static int sigar_fsstat(struct statfs **fs, int *num)
+{
+    int size;
+
+    if ((*num = getfsstat(NULL, 0, MNT_WAIT)) < 0) {
+        return errno;
+    }
+
+    size = ((*num)+1) * sizeof(struct statfs);
+
+    *fs = malloc(size);
+
+    if ((*num = getfsstat(*fs, size, MNT_WAIT)) < 0) {
+        free(fs);
+        return errno;
+    }
+
+    return SIGAR_OK;
+}
+
 int sigar_file_system_list_get(sigar_t *sigar,
                                sigar_file_system_list_t *fslist)
 {
+    int i, num, status;
+    struct statfs *fs;
+
+    if ((status = sigar_fsstat(&fs, &num)) != SIGAR_OK) {
+        return status;
+    }
+
     sigar_file_system_list_create(fslist);
+
+    for (i=0; i<num; i++) {
+        sigar_file_system_t *fsp;
+
+        SIGAR_FILE_SYSTEM_LIST_GROW(fslist);
+
+        fsp = &fslist->data[fslist->number++];
+
+        SIGAR_SSTRCPY(fsp->dir_name, fs[i].f_mntonname);
+        SIGAR_SSTRCPY(fsp->dev_name, fs[i].f_mntfromname);
+        SIGAR_SSTRCPY(fsp->sys_type_name, mnt_names[fs[i].f_type]);
+        sigar_fs_type_init(fsp);
+    }
+
+    free(fs);
 
     return SIGAR_OK;
 }
