@@ -3,6 +3,10 @@
         * added sigar_mem_t.actual_{used,free} fields.
         on linux for example adjusts -/+ buffers/cache
 
+2004-11-17  Doug MacEachern  <dougm@hyperic.net>
+
+        * added sigar_thread_cpu_t, per-thread cpu metrics
+        
 2004-11-16  Doug MacEachern  <dougm@hyperic.net>
 
         * 1.1.10 released
