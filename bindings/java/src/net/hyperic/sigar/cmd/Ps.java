@@ -151,7 +151,9 @@ public class Ps extends SigarCommandBase {
         else {
             try {
                 String[] args = sigar.getProcArgs(pid);
-                name = args[0];
+                if (args.length != 0) {
+                    name = args[0];
+                }
             } catch (SigarException e) {}
         }
 
