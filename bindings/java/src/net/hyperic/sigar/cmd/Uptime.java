@@ -3,11 +3,17 @@ package net.hyperic.sigar.cmd;
 import net.hyperic.sigar.SigarProxy;
 import net.hyperic.sigar.SigarException;
 import net.hyperic.sigar.SigarNotImplementedException;
+import net.hyperic.sigar.util.PrintfFormat;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
 public class Uptime extends SigarCommandBase {
+
+    private static Object[] loadAvg = new Object[3];
+
+    private static PrintfFormat formatter =
+        new PrintfFormat("%.2f, %.2f, %.2f");
 
     public Uptime(Shell shell) {
         super(shell);
@@ -32,8 +38,13 @@ public class Uptime extends SigarCommandBase {
 
         try {
             double[] avg = sigar.getLoadAverage();
+            loadAvg[0] = new Double(avg[0]);
+            loadAvg[1] = new Double(avg[1]);
+            loadAvg[2] = new Double(avg[2]);
+
             loadAverage = "load average: " +
-                          avg[0] + ", " + avg[1] + ", " + avg[2];
+                formatter.sprintf(loadAvg);
+
         } catch (SigarNotImplementedException e) {
             loadAverage = "(load average unknown)";
         }
