@@ -1,5 +1,7 @@
 package net.hyperic.sigar.test;
 
+import java.util.Date;
+
 import net.hyperic.sigar.Sigar;
 import net.hyperic.sigar.SigarException;
 import net.hyperic.sigar.ProcTime;
@@ -21,6 +23,7 @@ public class TestProcTime extends SigarTestCase {
         ProcTime procTime = sigar.getProcTime(sigar.getPid());
 
         assertGtEqZeroTrace("StartTime", procTime.getStartTime());
+        traceln("StartDate=" + new Date(procTime.getStartTime()));
         //XXX
         //assertTrue(procTime.getStartTime() < System.currentTimeMillis());
 
