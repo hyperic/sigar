@@ -46,6 +46,7 @@
   <path id="javadoc.path">
     <pathelement path="src"/>
     <pathelement path="${build}/src"/>
+    <pathelement path="${jni.src.java}"/>
   </path>
 
   <target name="javadoc" depends="javadoc_check">
