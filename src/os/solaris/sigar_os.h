@@ -162,11 +162,14 @@ enum {
 
 typedef struct ps_prochandle * (*proc_grab_func_t)(pid_t, int, int *);
 
-typedef void (*proc_free_func_t)(void *);
+typedef void (*proc_free_func_t)(struct ps_prochandle *);
 
-typedef void (*proc_objname_func_t)(void *, uintptr_t, const char *, size_t);
+typedef void (*proc_objname_func_t)(struct ps_prochandle *,
+                                    uintptr_t, const char *, size_t);
 
 typedef char * (*proc_dirname_func_t)(const char *, char *, size_t);
+
+typedef char * (*proc_exename_func_t)(struct ps_prochandle *, char *, size_t);
 
 struct sigar_t {
     SIGAR_T_BASE;
@@ -216,6 +219,7 @@ struct sigar_t {
     proc_free_func_t pfree;
     proc_objname_func_t pobjname;
     proc_dirname_func_t pdirname;
+    proc_exename_func_t pexename;
 };
 
 #define kSTAT_uint(v, type) \

@@ -431,6 +431,7 @@ static int sigar_init_libproc(sigar_t *sigar)
     sigar->pgrab    = (proc_grab_func_t)dlsym(sigar->plib, "Pgrab");
     sigar->pfree    = (proc_free_func_t)dlsym(sigar->plib, "Pfree");
     sigar->pobjname = (proc_objname_func_t)dlsym(sigar->plib, "Pobjname");
+    sigar->pexename = (proc_exename_func_t)dlsym(sigar->plib, "Pexecname");
     sigar->pdirname = (proc_dirname_func_t)dlsym(sigar->plib, "proc_dirname");
 
     CHECK_PSYM(pgrab);
@@ -742,13 +743,30 @@ int sigar_proc_exe_get(sigar_t *sigar, sigar_pid_t pid,
 {
     int status;
     char buffer[BUFSIZ];
+    struct ps_prochandle *phandle;
 
     if ((status = sigar_init_libproc(sigar)) != SIGAR_OK) {
         return status;
     }
 
-    procexe->name[0] = '\0'; /*XXX*/
+    procexe->name[0] = '\0';
 
+    if (pid == sigar_pid_get(sigar)) {
+        /*XXX*/
+    }
+    else {
+        status = sigar_pgrab(sigar, pid, SIGAR_FUNC, &phandle);
+
+        if (status == SIGAR_OK) {
+            sigar->pexename(phandle, procexe->name, sizeof(procexe->name));
+            sigar->pfree(phandle);
+        }
+    }
+
+    if (procexe->name[0] == '\0') {
+        /*XXX*/
+    }
+    
     (void)SIGAR_PROC_FILENAME(buffer, pid, "/cwd");
 
     if (!sigar->pdirname(buffer, procexe->cwd, sizeof(procexe->cwd))) {
