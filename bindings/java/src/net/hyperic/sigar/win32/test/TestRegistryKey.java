@@ -16,6 +16,7 @@ public class TestRegistryKey extends TestCase {
             RegistryKey.LocalMachine.openSubKey("SOFTWARE");
         String[] keys = software.getSubKeyNames();
         assertTrue(keys.length > 0);
+        software.close();
     }
 
     //dont want to be writing to the registry

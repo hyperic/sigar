@@ -43,7 +43,10 @@ public class RegistryKey extends Win32Bindings
     
     public void close()
     {
-        RegCloseKey(this.m_hkey);
+        if (this.m_hkey != 0) {
+            RegCloseKey(this.m_hkey);
+            this.m_hkey = 0;
+        }
     }
     
     public RegistryKey createSubKey(String subkey)
@@ -223,8 +226,7 @@ public class RegistryKey extends Win32Bindings
     
     protected void finalize()
     {
-        if(this.m_hkey != 0)
-            this.close();
+        close();
     }
 
     private static final native int    RegCloseKey(long hkey);
