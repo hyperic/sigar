@@ -79,4 +79,5 @@ void sigar_cache_destroy(sigar_cache_t *table)
     }
 
     free(table->entries);
+    free(table);
 }
