@@ -355,6 +355,56 @@ JNIEXPORT jboolean SIGAR_JNI(win32_Service_StopService)
     return ControlService((SC_HANDLE)handle, SERVICE_CONTROL_STOP, &status);
 }
 
+JNIEXPORT jobject SIGAR_JNI(win32_Service_getServiceNames)
+(JNIEnv *env, jclass)
+{
+    SC_HANDLE handle =
+        OpenSCManager(NULL, NULL, SC_MANAGER_ENUMERATE_SERVICE);
+    ENUM_SERVICE_STATUS status, *services;
+    BOOL retval;
+    DWORD bytes, count, resume=0;
+    DWORD type = SERVICE_WIN32, state = SERVICE_STATE_ALL;
+    jobject listobj;
+    jclass listclass =
+        env->FindClass("java/util/ArrayList");
+    jmethodID listid =
+        env->GetMethodID(listclass, "<init>", "()V");
+    jmethodID addid =
+        env->GetMethodID(listclass, "add",
+                         "(Ljava/lang/Object;)"
+                         "Z");
+
+    if (handle == NULL) {
+        return NULL;
+    }
+
+    retval = EnumServicesStatus(handle, type, state,
+                                &status, sizeof(status),
+                                &bytes, &count, &resume);
+
+    DWORD err = GetLastError();
+
+    if ((retval == FALSE) || err == ERROR_MORE_DATA) {
+        DWORD size = bytes + sizeof(ENUM_SERVICE_STATUS);
+        services = new ENUM_SERVICE_STATUS[size];
+        EnumServicesStatus(handle, type, state, services,
+                           size, &bytes, &count, &resume);
+    }
+
+    listobj = env->NewObject(listclass, listid);
+    for (int i=0; i<count; i++) {
+        jstring name = 
+            env->NewString((const jchar *)services[i].lpServiceName,
+                           lstrlen(services[i].lpServiceName));
+        env->CallBooleanMethod(listobj, addid, name);
+    }
+
+    CloseServiceHandle(handle);
+    delete services;
+
+    return listobj;
+}
+
 #ifdef __cplusplus
 }
 #endif

@@ -1,5 +1,7 @@
 package net.hyperic.sigar.win32;
 
+import java.util.List;
+
 public class Service extends Win32Bindings implements java.io.Serializable
 {
     // Service State
@@ -104,7 +106,9 @@ public class Service extends Win32Bindings implements java.io.Serializable
         if(this.m_hMgr == 0)
             Service.throwLastErrorException();
     }
-    
+
+    public static native List getServiceNames() throws Win32Exception;
+
     public Service(String serviceName) throws Win32Exception
     {
         this();
@@ -340,4 +344,11 @@ public class Service extends Win32Bindings implements java.io.Serializable
     private static final native int     QueryServiceStartType(long handle);
     private static final native boolean StartService(long handle);
     private static final native boolean StopService(long handle);
+
+    public static void main(String[] args) throws Exception {
+        List services = getServiceNames();
+        for (int i=0; i<services.size(); i++) {
+            System.out.println("'" + services.get(i) + "'");
+        }
+    }
 }
