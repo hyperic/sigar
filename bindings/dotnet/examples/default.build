@@ -28,7 +28,7 @@
   <target name="build" description="Build C# Sigar examples">
     <mkdir dir="${build.dir}"/>
 
-    <foreach item="String" in="Free,CpuInfo,Df"
+    <foreach item="String" in="Free,CpuInfo,Df,Ifconfig"
              delim="," property="name">
       <call target="build-exe"/>
     </foreach>
