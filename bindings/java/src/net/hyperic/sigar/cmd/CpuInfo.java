@@ -23,19 +23,19 @@ public class CpuInfo extends SigarCommandBase {
 
         CpuPerc[] cpus = this.sigar.getCpuPercList();
 
-        this.out.println(infos.length + " total CPUs..");
+        println(infos.length + " total CPUs..");
 
         for (int i=0; i<infos.length; i++) {
             net.hyperic.sigar.CpuInfo info = infos[i];
             CpuPerc cpu = cpus[i];
-            this.out.println("Vendor........" + info.getVendor());
-            this.out.println("Model........." + info.getModel());
-            this.out.println("Mhz..........." + info.getMhz());
-            this.out.println("Cache size...." + info.getCacheSize());
-            this.out.println("User Time....." + CpuPerc.format(cpu.getUser()));
-            this.out.println("Sys Time......" + CpuPerc.format(cpu.getSys()));
-            this.out.println("Idle Time....." + CpuPerc.format(cpu.getIdle()));
-            this.out.println();
+            println("Vendor........" + info.getVendor());
+            println("Model........." + info.getModel());
+            println("Mhz..........." + info.getMhz());
+            println("Cache size...." + info.getCacheSize());
+            println("User Time....." + CpuPerc.format(cpu.getUser()));
+            println("Sys Time......" + CpuPerc.format(cpu.getSys()));
+            println("Idle Time....." + CpuPerc.format(cpu.getIdle()));
+            println("");
         }
     }
 
