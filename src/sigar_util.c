@@ -435,7 +435,7 @@ int sigar_nfsping(char *host)
 {
     CLIENT *client;
     struct sockaddr_in addr;
-    int sock;
+    int sock, retval=1;
     struct timeval timeout, interval;
     unsigned short port = 0;
     char buffer[1024];
@@ -463,11 +463,11 @@ int sigar_nfsping(char *host)
 
     if (rpc_stat != RPC_SUCCESS) {
         clnt_perror(client, buffer);
-        clnt_destroy(client);
-        return 0;
+        retval = 0;
     }
+    clnt_destroy(client);
 
-    return 1;
+    return retval;
 }
 #endif
 
