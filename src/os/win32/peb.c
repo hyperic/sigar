@@ -34,12 +34,12 @@ static int sigar_peb_get(sigar_t *sigar, HANDLE proc, DWORD *base)
     return SIGAR_OK;
 }
 
-//point scratch to PATH env var
-#define PEB_PATH(scratch, base) \
+//point scratch to env block
+#define PEB_FIRST(scratch, base) \
     scratch = sigar->peb + ((DWORD)START_ADDRESS - base)
 
-//point scratch to EXE (assumes PEB_PATH)
-#define PEB_EXE(scratch) \
+//point scratch to next string (assumes PEB_FIRST)
+#define PEB_NEXT(scratch) \
     scratch = scratch + (wcslen((LPWSTR)scratch) + 1) * sizeof(WCHAR)
 
 int sigar_proc_exe_name_get(sigar_t *sigar, HANDLE proc, char *name)
@@ -54,9 +54,9 @@ int sigar_proc_exe_name_get(sigar_t *sigar, HANDLE proc, char *name)
     }
 
     //skip env PATH
-    PEB_PATH(scratch, base);
+    PEB_FIRST(scratch, base);
 
-    PEB_EXE(scratch);
+    PEB_NEXT(scratch);
 
     //seems common, reason unknown.
     if (*scratch == '\0') {
@@ -67,6 +67,39 @@ int sigar_proc_exe_name_get(sigar_t *sigar, HANDLE proc, char *name)
     buf[MAX_PATH-1] = L'\0';
 
     SIGAR_W2A(buf, name, MAX_PATH);
+
+    return SIGAR_OK;
+}
+
+int sigar_proc_cmdline_get(sigar_t *sigar, HANDLE proc, char *cmdline)
+{
+    int status;
+    LPBYTE scratch;
+    DWORD base;
+    WCHAR buf[MAX_PATH];
+
+    if ((status = sigar_peb_get(sigar, proc, &base)) != SIGAR_OK) {
+        return status;
+    }
+
+    //skip env block
+    PEB_FIRST(scratch, base);
+
+    PEB_NEXT(scratch);
+    //seems common, reason unknown.
+    if (*scratch == '\0') {
+        scratch += sizeof(WCHAR);
+    }
+
+    PEB_NEXT(scratch);
+    if (*scratch == '\0') {
+        scratch += sizeof(WCHAR);
+    }
+
+    wcsncpy(buf, (LPWSTR)scratch, MAX_PATH);
+    buf[MAX_PATH-1] = L'\0';
+
+    SIGAR_W2A(buf, cmdline, MAX_PATH);
 
     return SIGAR_OK;
 }

@@ -804,6 +804,10 @@ static char *getarg(char **line)
     return res;
 }
 
+#if 0
+/* this was the first shot, works but injects a remote thread
+ * in the process.  probably best to avoid that.
+ */
 /*
  * this is ugly, but there is no alternative.
  * we spawn a remote thread within the process
@@ -901,6 +905,40 @@ static int sigar_remote_proc_args_get(sigar_t *sigar, sigar_pid_t pid,
     CloseHandle(proc);
     return SIGAR_OK;
 }
+#else
+/* second shot, using the PEB.
+ * read-only, minimum access privs and in general seems to work
+ * better than the method above.  lets roll...
+ */
+static int sigar_remote_proc_args_get(sigar_t *sigar, sigar_pid_t pid,
+                                      sigar_proc_args_t *procargs)
+{
+    int status;
+    char cmdline[MAX_PATH], *ptr = cmdline, *arg;
+    HANDLE proc = open_process(pid);
+
+    if (!proc) {
+        return GetLastError();
+    }
+    
+    status = sigar_proc_cmdline_get(sigar, proc, cmdline);
+
+    CloseHandle(proc);
+
+    if (status != SIGAR_OK) {
+        return status;
+    }
+
+    sigar_proc_args_create(procargs);
+
+    while (*ptr && (arg = getarg(&ptr))) {
+        SIGAR_PROC_ARGS_GROW(procargs);
+        procargs->data[procargs->number++] = strdup(arg);
+    }
+
+    return SIGAR_OK;
+}
+#endif
 
 static int sigar_local_proc_args_get(sigar_t *sigar, sigar_pid_t pid,
                                      sigar_proc_args_t *procargs)
