@@ -205,10 +205,34 @@ static int get_ram(sigar_t *sigar, sigar_mem_t *mem)
     return SIGAR_OK;
 }
 
+#define MEMINFO_PARAM(a) a ":", SSTRLEN(a ":")
+
+static SIGAR_INLINE sigar_uint64_t sigar_meminfo(char *buffer,
+                                                 char *attr, int len)
+{
+    sigar_uint64_t val = 0;
+    char *ptr, *tok;
+
+    if ((ptr = strstr(buffer, attr))) {
+        ptr += len;
+        val = strtoull(ptr, &tok, 0);
+        while (*tok == ' ') {
+            ++tok;
+        }
+        if (*tok == 'k') {
+            val *= 1024;
+        }
+        else if (*tok == 'M') {
+            val *= (1024 * 1024);
+        }
+    }
+
+    return val;
+}
+
 int sigar_mem_get(sigar_t *sigar, sigar_mem_t *mem)
 {
     char buffer[BUFSIZ];
-    char *ptr;
 
     int status = sigar_file2str(PROC_MEMINFO,
                                 buffer, sizeof(buffer));
@@ -217,15 +241,12 @@ int sigar_mem_get(sigar_t *sigar, sigar_mem_t *mem)
         return status;
     }
 
-    ptr = sigar_skip_line(buffer, sizeof(buffer));
-    ptr = sigar_skip_token(ptr); /* "Mem:" */
-
-    mem->total  = sigar_strtoul(ptr);
-    mem->used   = sigar_strtoul(ptr);
-    mem->free   = sigar_strtoul(ptr);
-    mem->shared = sigar_strtoul(ptr);
-    mem->buffer = sigar_strtoul(ptr);
-    mem->cached = sigar_strtoul(ptr);
+    mem->total  = sigar_meminfo(buffer, MEMINFO_PARAM("MemTotal"));
+    mem->free   = sigar_meminfo(buffer, MEMINFO_PARAM("MemFree"));
+    mem->buffer = sigar_meminfo(buffer, MEMINFO_PARAM("Buffers"));
+    mem->cached = sigar_meminfo(buffer, MEMINFO_PARAM("Cached"));
+    mem->used   = mem->total - mem->free;
+    mem->shared = 0; /* XXX where did this go in 2.6?? */
 
     if (get_ram(sigar, mem) != SIGAR_OK) {
         /* XXX other options on failure? */
