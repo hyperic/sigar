@@ -1,5 +1,8 @@
 package net.hyperic.sigar.cmd;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+
 import net.hyperic.sigar.SigarException;
 import net.hyperic.sigar.NetConnection;
 import net.hyperic.sigar.NetFlags;
@@ -8,6 +11,8 @@ import net.hyperic.sigar.NetFlags;
  * Display network connections.
  */
 public class Netstat extends SigarCommandBase {
+
+    private static boolean isNumeric;
 
     public Netstat(Shell shell) {
         super(shell);
@@ -28,6 +33,7 @@ public class Netstat extends SigarCommandBase {
     //poor mans getopt.
     public static int getFlags(String[] args, int flags) {
         int proto_flags = 0;
+        isNumeric = false;
 
         for (int i=0; i<args.length; i++) {
             String arg = args[i];
@@ -43,6 +49,9 @@ public class Netstat extends SigarCommandBase {
                     break;
                   case 'a':
                     flags |= NetFlags.CONN_SERVER | NetFlags.CONN_CLIENT;
+                    break;
+                  case 'n':
+                    isNumeric = true;
                     break;
                   case 't':
                     proto_flags |= NetFlags.CONN_TCP;
@@ -70,6 +79,30 @@ public class Netstat extends SigarCommandBase {
         return flags;
     }
 
+    private String formatPort(long port) {
+        if (port == 0) {
+            return "*";
+        }
+        return String.valueOf(port);
+    }
+
+    private String formatAddress(String address) {
+        if (isNumeric) {
+            return address;
+        }
+        if (address.equals("0.0.0.0")) {
+            return "*";
+        }
+
+        //advantage of InetAddress' lookup cache.
+        try {
+            InetAddress addr = InetAddress.getByName(address);
+            return addr.getHostName();
+        } catch (UnknownHostException e) {
+            return address;
+        }
+    }
+
     //XXX currently weak sauce.  should end up like netstat command.
     public void output(String[] args) throws SigarException {
         //default
@@ -87,11 +120,11 @@ public class Netstat extends SigarCommandBase {
 
             println(conn.getTypeString() +
                     "\t" +
-                    conn.getLocalAddress() + ":" +
-                    conn.getLocalPort() +
+                    formatAddress(conn.getLocalAddress()) + ":" +
+                    formatPort(conn.getLocalPort()) +
                     "\t" +
-                    conn.getRemoteAddress() + ":" +
-                    conn.getRemotePort());
+                    formatAddress(conn.getRemoteAddress()) + ":" +
+                    formatPort(conn.getRemotePort()));
         }
     }
 
