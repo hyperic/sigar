@@ -2028,7 +2028,8 @@ int sigar_net_connection_list_get(sigar_t *sigar,
 }
 
 /* derived from pidentd's k_aix432.c */
-int sigar_proc_port_get(sigar_t *sigar, unsigned long port, sigar_pid_t *pidp)
+int sigar_proc_port_get(sigar_t *sigar, int protocol,
+                        unsigned long port, sigar_pid_t *pidp)
 {
     struct procsinfo pinfo;
     struct fdsinfo finfo;

@@ -870,8 +870,9 @@ JNIEXPORT jlong SIGAR_JNI(Sigar_getProcPort)
 
 #if defined(__linux__) || defined(WIN32)
     /* just thinking about implementing this on other platforms hurts */
-
-    if ((status = sigar_proc_port_get(sigar, (unsigned long)port, &pid)) != SIGAR_OK) {
+    status = sigar_proc_port_get(sigar, SIGAR_NETCONN_TCP,
+                                 (unsigned long)port, &pid);
+    if (status != SIGAR_OK) {
         sigar_throw_error(env, jsigar, status);
     }
 #else

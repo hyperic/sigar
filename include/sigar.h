@@ -534,7 +534,8 @@ SIGAR_DECLARE(int) sigar_who_list_get(sigar_t *sigar,
 SIGAR_DECLARE(int) sigar_who_list_destroy(sigar_t *sigar,
                                           sigar_who_list_t *wholist);
 
-SIGAR_DECLARE(int) sigar_proc_port_get(sigar_t *sigar, unsigned long port,
+SIGAR_DECLARE(int) sigar_proc_port_get(sigar_t *sigar, 
+                                       int protocol, unsigned long port,
                                        sigar_pid_t *pid);
 
 #define SIGAR_INET_ADDR_LEN (3 * 4 + 3 + 1)

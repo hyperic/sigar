@@ -1731,7 +1731,8 @@ static int sigar_net_connection_get(sigar_t *sigar,
     return status;
 }
 
-int sigar_proc_port_get(sigar_t *sigar, unsigned long port, sigar_pid_t *pid)
+int sigar_proc_port_get(sigar_t *sigar, int protocol,
+                        unsigned long port, sigar_pid_t *pid)
 {
     int status;
     sigar_net_connection_t netconn;
