@@ -722,7 +722,7 @@ int sigar_who_list_get(sigar_t *sigar,
     FILE *fp;
     struct utmp ut;
 
-    if (!(fp = fopen(_PATH_UTMP, "r"))) {
+    if (!(fp = fopen(UTMP_FILE, "r"))) {
         return errno;
     }
 
