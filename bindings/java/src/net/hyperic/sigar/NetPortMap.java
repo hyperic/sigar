@@ -20,12 +20,17 @@ public class NetPortMap {
     private static Map tcpServices = null;
 
     static {
+        String defaultFile;
+
         if (SigarLoader.IS_WIN32) {
-            SERVICE_FILE = "C:\\windows\\system32\\drivers\\etc\\services";
+            defaultFile = "C:\\windows\\system32\\drivers\\etc\\services";
         }
         else {
-            SERVICE_FILE = "/etc/services";
+            defaultFile = "/etc/services";
         }
+
+        SERVICE_FILE =
+            System.getProperty("sigar.net.services.file", defaultFile);
     }
 
     public static class IpEntry {
