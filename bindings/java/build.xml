@@ -184,6 +184,7 @@
  <target name="test" depends="build,xtest"/>
 
  <target name="dist" depends="javadoc">
+   <!-- docs -->
    <mkdir dir="${dist}/docs"/>
    <copy toDir="${dist}/docs" overwrite="true">
      <fileset dir="${build}">
@@ -191,6 +192,30 @@
      </fileset>
    </copy>
 
+   <!-- examples -->
+   <mkdir dir="${dist}/examples/java"/>
+   <mkdir dir="${dist}/examples/perl"/>
+   <mkdir dir="${dist}/examples/csharp"/>
+
+   <copy toDir="${dist}/examples/java" overwrite="true">
+     <fileset dir="src/net/hyperic/sigar/cmd">
+       <include name="*.java"/>
+     </fileset>
+   </copy>
+
+   <copy toDir="${dist}/examples/perl" overwrite="true">
+     <fileset dir="../perl/examples">
+       <include name="*.pl"/>
+     </fileset>
+   </copy>
+
+   <copy toDir="${dist}/examples/csharp" overwrite="true">
+     <fileset dir="../dotnet/examples">
+       <include name="*.cs"/>
+     </fileset>
+   </copy>
+
+   <!-- binaries and header files -->
    <mkdir dir="${dist}/sigar-bin"/>
    <copy toDir="${dist}/sigar-bin" overwrite="true">
      <fileset dir="${sigar-bin}">
