@@ -311,6 +311,12 @@ int sigar_swap_get(sigar_t *sigar, sigar_swap_t *swap)
         return status;
     }
 
+    if (SIGAR_LOG_IS_DEBUG(sigar)) {
+        sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
+                         "[swap] pagesize=%d, shift=%d",
+                         getpagesize(), sigar->pagesize);
+    }
+
     swap->total = swap->free = 0;
 
     for (i=0; i<sigar->swaps.num; i++) {
@@ -320,6 +326,14 @@ int sigar_swap_get(sigar_t *sigar, sigar_swap_t *swap)
 
         if (status != 0) {
             return errno;
+        }
+
+        if (SIGAR_LOG_IS_DEBUG(sigar)) {
+            sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
+                             "[swap] %s total=%d/%d, free=%d/%d",
+                             sigar->swaps.devs[i],
+                             info.size, PAGESHIFT(info.size),
+                             info.free, PAGESHIFT(info.free));
         }
 
         swap->total += PAGESHIFT(info.size); /* lsps -a */
