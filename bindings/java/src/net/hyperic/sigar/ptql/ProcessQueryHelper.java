@@ -122,7 +122,7 @@ public class ProcessQueryHelper {
             (StringMatcher)stringMatchers.get(op);
 
         for (int i=0; i<args.length; i++) {
-            if (matcher.match(value, args[i])) {
+            if (matcher.match(args[i], value)) {
                 return true;
             }
         }
