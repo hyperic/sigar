@@ -1584,7 +1584,10 @@ static int proc_net_read(net_conn_getter_t *getter,
             return status;
         }
 
-        /* XXX state, rx/tx queue info would be useful */
+        /* SIGAR_TCP_* currently matches TCP_* in linux/tcp.h */
+        sscanf(ptr, "%2x", &conn.state);
+
+        /* XXX rx/tx queue info would be useful */
         ptr = sigar_skip_multiple_token(ptr, 4);
         conn.uid = sigar_strtoul(ptr);
 
