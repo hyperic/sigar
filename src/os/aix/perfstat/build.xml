@@ -1,0 +1,40 @@
+<project name="sigar-perflib" default="build" basedir=".">
+  <property name="build" location="build"/>
+
+  <property name="cpptasks.jar"
+            location="../../../../bindings/java/hyperic_jni/lib/cpptasks.jar"/>
+
+  <taskdef name="cc" classname="net.sf.antcontrib.cpptasks.CCTask">
+    <classpath location="${cpptasks.jar}"/>
+  </taskdef>
+
+  <target name="build">
+    <mkdir dir="${build}"/>
+
+    <cc outtype="shared"
+	outfile="${build}/sigar_aixperfstat.so"
+	objdir="${build}"
+	link="shared"
+	relentless="false">
+
+      <compiler name="xlc_r">
+        <defineset>
+        </defineset>
+      </compiler>
+
+      <linker name="xlc_r">
+        <libset dir="." libs="perfstat"/>
+      </linker>
+
+      <includepath location="../"/>
+
+      <fileset dir=".">
+         <include name="sigar_perfstat.c"/>
+      </fileset>
+    </cc>
+  </target>
+
+  <target name="clean">
+    <delete dir="${build}"/>
+  </target>
+</project>

@@ -132,6 +132,15 @@
           depends="jni-init,prepare-src,jni-compile,jni-lib-copy,copy-includes"
           if="jni.libarch"/>
 
+  <target name="build-perfstat" depends="jni-init" if="aix">
+    <ant dir="../../src/os/aix/perfstat"/>
+    <copy toDir="${sigar-bin}/lib" overwrite="true">
+      <fileset dir="${build}">
+        <include name="libsigar_aixperfstat.so"/>
+      </fileset>
+    </copy>
+  </target>
+
   <target name="pack-jar">
     <jar jarfile="${sigar-bin}/lib/sigar.jar"
          basedir="${build}/classes">
@@ -143,7 +152,7 @@
     </jar>
   </target>
 
-  <target name="build" depends="build-jni,compile,pack-jar"/>
+  <target name="build" depends="build-jni,build-perfstat,compile,pack-jar"/>
 
   <target name="clean">
     <delete dir="${build}"/>
