@@ -551,8 +551,8 @@ static int jni_proc_module_get(void *data,
     jni_proc_module_t *module = (jni_proc_module_t *)data;
     JNIEnv *env = module->env;
 
-    JENV->CallObjectMethod(env, module->listobj, module->id,  
-                           JENV->NewStringUTF(env, name));
+    JENV->CallBooleanMethod(env, module->listobj, module->id,  
+                            JENV->NewStringUTF(env, name));
 
     return SIGAR_OK;
 }
