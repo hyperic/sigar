@@ -733,6 +733,11 @@ SIGAR_DECLARE(int) sigar_who_list_get(sigar_t *sigar,
 #  define ut_user ut_name
 #endif
 
+#define WHOCPY(dest, src) \
+    SIGAR_SSTRCPY(dest, src); \
+    if (sizeof(src) < sizeof(dest)) \
+        dest[sizeof(src)] = '\0'
+
 int sigar_who_list_get(sigar_t *sigar,
                        sigar_who_list_t *wholist)
 {
@@ -764,9 +769,10 @@ int sigar_who_list_get(sigar_t *sigar,
         SIGAR_WHO_LIST_GROW(wholist);
         who = &wholist->data[wholist->number++];
 
-        SIGAR_SSTRCPY(who->user, ut.ut_user);
-        SIGAR_SSTRCPY(who->device, ut.ut_line);
-        SIGAR_SSTRCPY(who->host, ut.ut_host);
+        WHOCPY(who->user, ut.ut_user);
+        WHOCPY(who->device, ut.ut_line);
+        WHOCPY(who->host, ut.ut_host);
+
         who->time = ut.ut_time;
     }
 
