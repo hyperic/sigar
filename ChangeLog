@@ -1,3 +1,10 @@
+2005-03-15  Doug MacEachern  <dougm@hyperic.net>
+
+        * Change Sigar.getMountedFileSystemUsage to throw
+        NfsUnreachableException if FileSystem is Nfs and nfs ping fails
+
+        * Implement sigar_net_connection for FreeBSD
+        
 2005-03-11  Doug MacEachern  <dougm@hyperic.net>
 
         * Add NetPortMap class
