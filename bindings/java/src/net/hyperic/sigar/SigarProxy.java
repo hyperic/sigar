@@ -13,7 +13,7 @@ public interface SigarProxy {
 
     public long getPid();
 
-    public long getServicePid(String name);
+    public long getServicePid(String name) throws SigarException;
 
     public Mem getMem() throws SigarException;
 

@@ -24,6 +24,7 @@ public class SynchronizedSigar implements SigarProxy {
     }
 
     public synchronized long getServicePid(String name)
+        throws SigarException
     {
         return this.sigar.getServicePid(name);
     }

@@ -131,7 +131,7 @@ public class Sigar implements SigarProxy {
      * This method is implemented on Windows only as a helper
      * for PTQL.
      */
-    public native long getServicePid(String name);
+    public native long getServicePid(String name) throws SigarException;
 
     /**
      * Send a signal to a process.
