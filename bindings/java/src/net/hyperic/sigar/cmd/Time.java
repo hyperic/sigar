@@ -2,7 +2,7 @@ package net.hyperic.sigar.cmd;
 
 import net.hyperic.sigar.Sigar;
 import net.hyperic.sigar.SigarException;
-import net.hyperic.sigar.ThreadCpu;
+import net.hyperic.sigar.CpuTimer;
 
 public class Time extends SigarCommandBase {
 
@@ -27,14 +27,11 @@ public class Time extends SigarCommandBase {
     }
 
     public void output(String[] args) throws SigarException {
-        ThreadCpu cpu = new ThreadCpu();
-        cpu.gather(this.sigar, 0);
-        long user = cpu.getUser();
-        long sys = cpu.getSys();
-        long start = System.currentTimeMillis();
         boolean isInteractive = this.shell.isInteractive();
         //turn off paging.
         this.shell.setInteractive(false);
+        CpuTimer cpu = new CpuTimer(this.sigar);
+        cpu.start();
 
         try {
             this.shell.handleCommand("time " + args[0], args);
@@ -42,30 +39,8 @@ public class Time extends SigarCommandBase {
             this.shell.setInteractive(isInteractive);
         }
 
-        cpu.gather(this.sigar, 0);
-        println("real....." +
-                format((System.currentTimeMillis() - start)));
-        println("user....." + format(toMillis(cpu.getUser() - user)));
-        println("sys......" + format(toMillis(cpu.getSys() - sys)));
-    }
-
-    private static long toMillis(long nano) {
-        return nano / 1000000;
-    }
-
-    private static String format(long elap) {
-        String fraction = (elap % 1000) + "";
-        int pad = 3 - fraction.length();
-
-        StringBuffer buf = new StringBuffer()
-            .append(elap / 1000).append('.');
-
-        //for example, 15 millseconds formatted as ".015" rather than ".15"
-        while (pad-- > 0) {
-            buf.append("0");
-        }
-        buf.append(fraction).append(" seconds");
-        return buf.toString();
+        cpu.stop();
+        cpu.list(this.out);
     }
 
     public static void main(String[] args) throws Exception {
