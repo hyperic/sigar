@@ -14,11 +14,22 @@ import java.util.StringTokenizer;
 
 public class NetPortMap {
 
+    private static final String SERVICE_FILE;
+
     private static Map udpServices = null;
     private static Map tcpServices = null;
 
+    static {
+        if (SigarLoader.IS_WIN32) {
+            SERVICE_FILE = "C:\\windows\\system32\\drivers\\etc\\services";
+        }
+        else {
+            SERVICE_FILE = "/etc/services";
+        }
+    }
+
     private static void parseServices(String type, Map services) {
-        File file = new File("/etc/services");
+        File file = new File(SERVICE_FILE);
         if (!file.exists()) {
             return;
         }
