@@ -1483,7 +1483,7 @@ static int get_disk_metrics(sigar_t *sigar,
 {
     DWORD i, err;
     PERF_OBJECT_TYPE *object =
-        get_perf_object(sigar, PERF_TITLE_CPU_KEY, &err);
+        get_perf_object(sigar, PERF_TITLE_DISK_KEY, &err);
     PERF_INSTANCE_DEFINITION *inst;
     PERF_COUNTER_DEFINITION *counter;
     DWORD perf_offsets[PERF_IX_DISK_MAX];
