@@ -880,7 +880,7 @@ int sigar_proc_exe_get(sigar_t *sigar, sigar_pid_t pid,
     if ((len = readlink(name, procexe->name,
                         sizeof(procexe->name)-1)) < 0)
     {
-        return errno;
+        return PROCFS_STATUS(errno);
     }
 
     procexe->name[len] = '\0';
