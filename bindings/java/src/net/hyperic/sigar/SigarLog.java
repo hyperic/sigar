@@ -18,9 +18,16 @@ public class SigarLog {
 
     public static native void setLevel(Sigar sigar, int level);
 
+    private static boolean isLogConfigured() {
+        //funny, log4j has no api to determine if logging has been
+        //configured? .. yet bitches at you like a mo-fo when logging
+        //has not been configured.
+        return Logger.getRootLogger().getAllAppenders().hasMoreElements();
+    }
+
     private static Logger getLogger() {
         Logger log = Logger.getLogger("Sigar");
-        if (log.getLevel() == null) {
+        if (!isLogConfigured()) {
             BasicConfigurator.configure();
         }
         return log;
