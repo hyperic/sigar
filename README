@@ -1,50 +1,39 @@
 sigar - System Info Gather And Reporter
 
-goal of this api is provide a portable interface for gathering system
+The Sigar api provides a portable interface for gathering system
 information such as:
 
-- system memory (total, used, etc.)
+- system memory, swap, cpu, load average, uptime
 
-- system cpu (total, sys, idle, etc.)
+- per-process memory, cpu, credential info, state, arguments, environment,
+  open files
 
-- system swap (total, free, etc.)
+- file system detection and metrics
 
-- process memory usage (size, vsize, etc.)
+- network interface configuration info and metrics
 
-- process cpu usage (user, sys, etc.)
+The core API is implemented in pure C with bindings currently
+implemented for Java, Perl and C#.
 
-- process credentials (uid, gid, ppid, etc.)
+The following platforms are currently supported:
 
-- process times (start time, user cpu, system cpu, etc.)
+- Linux (2.2 kernel)
 
-- process state (name, state, etc.)
+- Win32 (NT 4.0 sp6, 2000 Pro/Server, 2003 Server, XP)
 
-- process list (list of active process pids)
+- Solaris (2.6, 7, 8, 9)
 
-- process arguments
+- Solaris x86 (8, 9)
 
-- process environment
+- HP/UX (11)
 
-- filesystem list (list of mounted filesystems: fs type, fs name, etc.)
+- AIX (4.3, 5.1, 5.3)
 
-- filesystem usage (total blocks, blocks free, files, etc.)
+To test drive run the following command:
 
-- load average
+% java -jar sigar-bin/lib/sigar.jar
+sigar > help
 
-- uptime
+The shell and commands are implemented in Java, the source code is
+located in examples/java.
 
-- netload (packets in, packets out, bytes in, bytes out, etc.)
-
-the api used by applications will be the same for all platforms,
-underneath the platform vendor api(s) are used to fill in the portable
-sigar structures:
-
-- linux   => /proc filesystem, native system calls
-
-- solaris => kstat api + /proc filesystem
-
-- hpux    => pstat api
-
-- win32   => registry performance "api", sdk calls
-
-- aix     => /dev/kmem, native system calls
