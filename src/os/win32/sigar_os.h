@@ -19,6 +19,8 @@
 /* see apr/include/arch/win32/atime.h */
 #define EPOCH_DELTA INT64_C(11644473600000000)
 
+#define SIGAR_CMDLINE_MAX (MAX_PATH * 3)
+
 static __inline sigar_uint64_t FileTimeToTime(FILETIME *ft)
 {
     sigar_uint64_t time;

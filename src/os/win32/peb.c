@@ -84,7 +84,7 @@ int sigar_proc_cmdline_get(sigar_t *sigar, HANDLE proc, char *cmdline)
     int status;
     LPBYTE scratch;
     DWORD base;
-    WCHAR buf[MAX_PATH];
+    WCHAR buf[SIGAR_CMDLINE_MAX];
 
     if ((status = sigar_peb_get(sigar, proc, &base)) != SIGAR_OK) {
         return status;
@@ -96,10 +96,10 @@ int sigar_proc_cmdline_get(sigar_t *sigar, HANDLE proc, char *cmdline)
 
     PEB_NEXT(scratch); //skip exe name
 
-    wcsncpy(buf, (LPWSTR)scratch, MAX_PATH);
-    buf[MAX_PATH-1] = L'\0';
+    wcsncpy(buf, (LPWSTR)scratch, SIGAR_CMDLINE_MAX);
+    buf[SIGAR_CMDLINE_MAX-1] = L'\0';
 
-    SIGAR_W2A(buf, cmdline, MAX_PATH);
+    SIGAR_W2A(buf, cmdline, SIGAR_CMDLINE_MAX);
 
     return SIGAR_OK;
 }
