@@ -1546,3 +1546,9 @@ int sigar_net_connection_list_get(sigar_t *sigar,
 }
 
 #endif
+
+int sigar_proc_port_get(sigar_t *sigar, int protocol,
+                        unsigned long port, sigar_pid_t *pid)
+{
+    return SIGAR_ENOTIMPL;
+}

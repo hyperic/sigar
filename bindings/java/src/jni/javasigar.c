@@ -868,18 +868,12 @@ JNIEXPORT jlong SIGAR_JNI(Sigar_getProcPort)
     sigar_pid_t pid;
     dSIGAR(0);
 
-#if defined(__linux__) || defined(WIN32)
-    /* just thinking about implementing this on other platforms hurts */
-    status = sigar_proc_port_get(sigar, SIGAR_NETCONN_TCP,
+    status = sigar_proc_port_get(sigar, SIGAR_NETCONN_TCP, /*XXX UDP*/
                                  (unsigned long)port, &pid);
     if (status != SIGAR_OK) {
         sigar_throw_error(env, jsigar, status);
+        return -1;
     }
-#else
-    status = SIGAR_ENOTIMPL;
-    pid = -1;
-    sigar_throw_error(env, jsigar, status);
-#endif
 
     return pid;
 }
