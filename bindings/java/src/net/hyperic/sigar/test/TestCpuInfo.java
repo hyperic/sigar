@@ -23,5 +23,9 @@ public class TestCpuInfo extends SigarTestCase {
             traceln("mhz=" + info.getMhz());
             traceln("cache size=" + info.getCacheSize());
         }
+
+        int mhz = infos[0].getMhz();
+        int current = sigar.getCpuInfoList()[0].getMhz();
+        assertEquals("Mhz=" + current + "/" + mhz, current, mhz);
     }
 }
