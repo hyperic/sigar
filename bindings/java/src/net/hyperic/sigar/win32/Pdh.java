@@ -6,7 +6,7 @@ import java.util.List;
 public class Pdh extends Win32Bindings {
 
     private long   h_query;         // Handle to the query
-    private String hostname;        // Not yet supported
+    private String hostname = null;
 
     private   String counterPath;
     private   long   h_counter = -1l; // Handle to the counter
@@ -41,6 +41,9 @@ public class Pdh extends Win32Bindings {
     }
     
     public double getSingleValue(String cp) throws Win32Exception {
+        if (this.hostname != null) {
+            pdhConnectMachine(this.hostname);
+        }
         setCounterPath(cp);
         return getSingleValue();
     }
@@ -76,6 +79,8 @@ public class Pdh extends Win32Bindings {
         this.counterPath = cp;
     }
     
+    private static final native void pdhConnectMachine(String host)
+        throws Win32Exception;
     private static final native long pdhOpenQuery() throws Win32Exception;
     private static final native void pdhCloseQuery(long query)
         throws Win32Exception;

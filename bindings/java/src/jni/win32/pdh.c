@@ -9,6 +9,10 @@
 extern "C" {
 #endif
 
+#ifndef PDH_ACCESS_DENIED
+#define PDH_ACCESS_DENIED ((DWORD)0xC0000BDBL)
+#endif
+
 /**
  * Hack around not being able to format error codes using
  * FORMAT_MESSAGE_FROM_HMODULE.  We only define the error
@@ -38,8 +42,24 @@ static char *get_error_message(PDH_STATUS status) {
     case PDH_FUNCTION_NOT_FOUND:
         return "The calculation function for this counter could not "
             "be determined";
+    case PDH_ACCESS_DENIED:
+        return "Access denied";
     default:
         return "Unknown error";
+    }
+}
+
+JNIEXPORT void SIGAR_JNI(win32_Pdh_pdhConnectMachine)
+(JNIEnv *env, jobject cur, jstring jhost)
+{
+    PDH_STATUS status;
+    LPCTSTR host = JENV->GetStringUTFChars(env, jhost, NULL);
+
+    status = PdhConnectMachine(host);
+    JENV->ReleaseStringUTFChars(env, jhost, host);
+
+    if (status != ERROR_SUCCESS) {
+        win32_throw_exception(env, get_error_message(status));
     }
 }
 
