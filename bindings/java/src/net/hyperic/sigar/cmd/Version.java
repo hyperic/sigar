@@ -29,7 +29,8 @@ public class Version extends SigarCommandBase {
     }
 
     public static void printInfo(PrintStream os) {
-        os.println("Sigar version=" + Sigar.VERSION);
+        os.println("Sigar version=" + Sigar.VERSION_STRING);
+        os.println("Sigar build date=" + Sigar.BUILD_DATE);
         os.println("");
 
         for (int i=0; i<SYS_PROPS.length; i++) {
