@@ -104,14 +104,14 @@ get_mib2(solaris_mib2_t *mib2,
          int *datalen,
          char **errmsg)
 {
-    static struct T_optmgmt_ack *a;	/* message ACK pointer */
-    static struct strbuf c;		/* streams control buffer */
+    struct T_optmgmt_ack *a;	/* message ACK pointer */
+    struct strbuf c;		/* streams control buffer */
     struct strbuf d;		/* streams data buffer */
-    static struct T_error_ack *e;	/* message error pointer */
+    struct T_error_ack *e;	/* message error pointer */
     int err;			/* error code */
     int f;				/* flags */
-    static struct opthdr *o;	/* message option pointer */
-    static struct T_optmgmt_req *r;	/* message request pointer */
+    struct opthdr *o;	/* message option pointer */
+    struct T_optmgmt_req *r;	/* message request pointer */
     int rc;				/* reply code */
 
     *errmsg = mib2->errmsg;
