@@ -51,6 +51,7 @@
 #define KI_DSZ  ki_dsize
 #define KI_SSZ  ki_ssize
 #define KI_FLAG ki_flag
+#define KI_START ki_start
 #else
 
 #define KI_PID  kp_proc.p_pid
@@ -69,6 +70,7 @@
 #define KI_DSZ  kp_eproc.e_vm.vm_dsize
 #define KI_SSZ  kp_eproc.e_vm.vm_ssize
 #define KI_FLAG kp_eproc.e_flag
+#define KI_START kp_proc.p_starttime
 #endif
 
 #ifndef DARWIN
@@ -713,16 +715,12 @@ static int get_proc_times(sigar_pid_t pid, sigar_proc_time_t *time)
 }
 #endif
 
-#define READ_PROC_TIME(ptr, value) \
-    SIGAR_SKIP_SPACE(ptr); \
-    value = sigar_strtoul(ptr); \
-    ++ptr; \
-    value += (sigar_strtoul(ptr) / 1000000)
+#define tv2sec(tv) \
+   ((sigar_uint64_t)tv.tv_sec + (((sigar_uint64_t)tv.tv_usec) / 1000000))
 
 int sigar_proc_time_get(sigar_t *sigar, sigar_pid_t pid,
                         sigar_proc_time_t *proctime)
 {
-#ifdef DARWIN
     int status = sigar_get_pinfo(sigar, pid);
     struct kinfo_proc *pinfo = sigar->pinfo;
     
@@ -730,26 +728,17 @@ int sigar_proc_time_get(sigar_t *sigar, sigar_pid_t pid,
         return status;
     }
 
+#ifdef DARWIN
     if ((status = get_proc_times(pid, proctime)) != SIGAR_OK) {
         return status;
     }
-
-    proctime->start_time = pinfo->kp_proc.p_starttime.tv_sec;
 #else
-    char buffer[1024], *ptr=buffer;
-    int status = SIGAR_PROC_FILE2STR(buffer, pid, "/status");
-
-    if (status != SIGAR_OK) {
-        return PROCFS_STATUS(status);
-    }
-
-    ptr = sigar_skip_multiple_token(ptr, 7);
-    READ_PROC_TIME(ptr, proctime->start_time);
-    proctime->start_time *= 1000; /* convert to millis */
-    READ_PROC_TIME(ptr, proctime->user);
-    READ_PROC_TIME(ptr, proctime->sys);
+    proctime->user  = tv2sec(pinfo->ki_rusage.ru_utime);
+    proctime->sys   = tv2sec(pinfo->ki_rusage.ru_stime);
     proctime->total = proctime->user + proctime->sys;
 #endif
+
+    proctime->start_time = tv2sec(pinfo->KI_START);
 
     return SIGAR_OK;
 }
