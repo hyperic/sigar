@@ -120,7 +120,7 @@ public class Netstat extends SigarCommandBase {
         }
 
         NetConnection[] connections = this.sigar.getNetConnectionList(flags);
-        println("Proto\tLocal Address\tForeign Address");
+        println("Proto\tLocal Address\tForeign Address\tState");
 
         for (int i=0; i<connections.length; i++) {
             NetConnection conn = connections[i];
@@ -131,7 +131,8 @@ public class Netstat extends SigarCommandBase {
                     formatPort(proto, conn.getLocalPort()) +
                     "\t" +
                     formatAddress(conn.getRemoteAddress()) + ":" +
-                    formatPort(proto, conn.getRemotePort()));
+                    formatPort(proto, conn.getRemotePort()) + "\t" +
+                    conn.getStateString());
         }
     }
 
