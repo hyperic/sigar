@@ -32,8 +32,19 @@ The following platforms are currently supported:
 To test drive run the following command:
 
 % java -jar sigar-bin/lib/sigar.jar
-sigar > help
+sigar> help
 
 The shell and commands are implemented in Java, the source code is
 located in examples/java.
+
+Javadocs are located in docs/javadoc.
+
+Note that this is a BETA release of Sigar.  Hyperic HQ uses Sigar in
+production, however not all of the Sigar functionality is currently
+used by HQ.
+
+Support questions should be posted to the support forum:
+http://www.hyperic.net/forums/index.jsp
+
+or mailed to support@hyperic.net
 
