@@ -3,6 +3,10 @@ using Hyperic.Sigar;
 
 public class Df {
 
+    private static String FormatSize(ulong value) {
+        return Sigar.FormatSize(value * 1024);
+    }
+
     public static void Main() {
         Sigar sigar = new Sigar();
 
@@ -31,9 +35,9 @@ public class Df {
             }
 
             System.Console.WriteLine(fs.DevName + "\t" +
-                                     total + "\t" +
-                                     used + "\t" + 
-                                     avail + "\t" + 
+                                     FormatSize(total) + "\t" +
+                                     FormatSize(used) + "\t" + 
+                                     FormatSize(avail) + "\t" + 
                                      usePct + "\t" +
                                      fs.DirName + "\t" + 
                                      fs.SysTypeName + "/" + fs.TypeName);
