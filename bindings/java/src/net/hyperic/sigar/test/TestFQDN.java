@@ -15,6 +15,7 @@ public class TestFQDN extends SigarTestCase {
         traceln("fqdn=" + fqdn);
 
         boolean validFQDN = fqdn.indexOf(".") > 0;
+        /*
         if (!validFQDN) {
             //wont get a valid fqdn on laptop at home
             //allow to fake with ant -Dsigar.fqdn=foo.bar
@@ -29,6 +30,7 @@ public class TestFQDN extends SigarTestCase {
                 validFQDN = fake.indexOf(".") > 0;
             }
         }
+        */
         assertTrue(validFQDN);
     }
 }
