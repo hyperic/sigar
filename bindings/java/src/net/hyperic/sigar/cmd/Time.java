@@ -28,6 +28,9 @@ public class Time extends SigarCommandBase {
 
     public void output(String[] args) throws SigarException {
         ThreadCpu cpu = new ThreadCpu();
+        cpu.gather(this.sigar, 0);
+        long user = cpu.getUser();
+        long sys = cpu.getSys();
         long start = System.currentTimeMillis();
 
         this.shell.handleCommand("time " + args[0], args);
@@ -35,8 +38,8 @@ public class Time extends SigarCommandBase {
         cpu.gather(this.sigar, 0);
         println("real....." +
                 format((System.currentTimeMillis() - start)));
-        println("user....." + format(toMillis(cpu.getUser())));
-        println("sys......" + format(toMillis(cpu.getSys())));
+        println("user....." + format(toMillis(cpu.getUser() - user)));
+        println("sys......" + format(toMillis(cpu.getSys() - sys)));
     }
 
     private static long toMillis(long nano) {
