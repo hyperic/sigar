@@ -57,6 +57,10 @@ namespace Hyperic.Sigar {
             return Hyperic.Sigar.NetInterfaceConfig.NativeGet(this, name);
         }
 
+        public NetInterfaceStat NetInterfaceStat(string name) {
+            return Hyperic.Sigar.NetInterfaceStat.NativeGet(this, name);
+        }
+
         ~Sigar() {
             sigar_close(this.sigar.Handle);
         }
@@ -430,6 +434,49 @@ namespace Hyperic.Sigar {
             get {
                 return inet_ntoa(this.netmask);
             }
+        }
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct NetInterfaceStat {
+        public readonly ulong RxPackets;
+        public readonly ulong RxBytes;
+        public readonly ulong RxErrors;
+        public readonly ulong RxDropped;
+        public readonly ulong RxOverruns;
+        public readonly ulong RxFrame;
+        public readonly ulong TxPackets;
+        public readonly ulong TxBytes;
+        public readonly ulong TxErrors;
+        public readonly ulong TxDropped;
+        public readonly ulong TxOverruns;
+        public readonly ulong TxCollisions;
+        public readonly ulong TxCarrier;
+
+        [DllImport(Sigar.LIBSIGAR)]
+        private static extern int
+        sigar_net_interface_stat_get(IntPtr sigar, string name,
+                                     IntPtr ifstat);
+
+        internal static NetInterfaceStat NativeGet(Sigar sigar,
+                                                   string name) {
+            Type type = typeof(NetInterfaceStat);
+            IntPtr ptr = Marshal.AllocHGlobal(Marshal.SizeOf(type));
+
+            int status = sigar_net_interface_stat_get(sigar.sigar.Handle,
+                                                      name, ptr);
+
+            if (status != Sigar.OK) {
+                Marshal.FreeHGlobal(ptr);
+                throw new ApplicationException("net_interface_stat_get");
+            }
+
+            NetInterfaceStat ifstat =
+                (NetInterfaceStat)Marshal.PtrToStructure(ptr, type);
+
+            Marshal.FreeHGlobal(ptr);
+
+            return ifstat;
         }
     }
 }
