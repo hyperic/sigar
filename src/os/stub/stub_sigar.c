@@ -121,6 +121,7 @@ int sigar_proc_time_get(sigar_t *sigar, sigar_pid_t pid,
     proctime->start_time = -1;
     proctime->user = -1;
     proctime->sys  = -1;
+    proctime->total = proctime->user + proctime->sys;
 
     return SIGAR_OK;
 }

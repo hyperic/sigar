@@ -584,6 +584,7 @@ int sigar_proc_time_get(sigar_t *sigar, sigar_pid_t pid,
     
     proctime->user = PRTIME_2SIGAR(usage.pr_utime);
     proctime->sys  = PRTIME_2SIGAR(usage.pr_stime);
+    proctime->total = proctime->user + proctime->sys;
 
     return SIGAR_OK;
 }

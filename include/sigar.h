@@ -210,7 +210,8 @@ typedef struct {
     sigar_uint64_t
         start_time,
         user,
-        sys;
+        sys,
+        total;
 } sigar_proc_time_t;
 
 SIGAR_DECLARE(int) sigar_proc_time_get(sigar_t *sigar, sigar_pid_t pid,

@@ -647,6 +647,7 @@ SIGAR_DECLARE(int) sigar_proc_time_get(sigar_t *sigar, sigar_pid_t pid,
 
     proctime->user = FILETIME2SEC(user_time);
     proctime->sys  = FILETIME2SEC(system_time);
+    proctime->total = proctime->user + proctime->sys;
 
     return SIGAR_OK;
 }

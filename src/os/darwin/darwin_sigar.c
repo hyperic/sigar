@@ -422,6 +422,7 @@ static int get_proc_times(sigar_pid_t pid, sigar_proc_time_t *time)
 
     time->user = utime.seconds;
     time->sys  = stime.seconds;
+    proctime->total = proctime->user + proctime->sys;
 
     return SIGAR_OK;
 }

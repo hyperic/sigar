@@ -639,6 +639,7 @@ int sigar_proc_time_get(sigar_t *sigar, sigar_pid_t pid,
 
     proctime->user = pstat->utime;
     proctime->sys  = pstat->stime;
+    proctime->total = proctime->user + proctime->sys;
     proctime->start_time = pstat->start_time;
 
     return SIGAR_OK;

@@ -278,6 +278,11 @@ my %classes = (
          desc => 'Process cpu kernel time',
          plat => 'ADHLSW'
       },
+      {
+         name => 'total', type => 'Long',
+         desc => 'Process cpu time (sum of User and Sys)',
+         plat => 'ADHLSW'
+      },
     ],
     ProcState => [
       {

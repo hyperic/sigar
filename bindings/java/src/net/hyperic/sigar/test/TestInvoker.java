@@ -26,6 +26,7 @@ public class TestInvoker extends SigarTestCase {
         { "sigar:Type=ProcMem,Arg=$$", "Vsize" },
         { "sigar:Type=ProcTime,Arg=$$", "Sys" },
         { "sigar:Type=ProcTime,Arg=$$", "User" },
+        { "sigar:Type=ProcTime,Arg=$$", "Total" },
         //test Utime/Stime backcompat.
         { "sigar:Type=ProcTime,Arg=$$", "Stime" },
         { "sigar:Type=ProcTime,Arg=$$", "Utime" },
