@@ -1,3 +1,7 @@
+2005-02-23  Doug MacEachern  <dougm@hyperic.net>
+
+        * Add function to get data seen in the 'who' command
+
 2005-02-20  Doug MacEachern  <dougm@hyperic.net>
 
         * Add NfsFileSystem class w/ ping method
