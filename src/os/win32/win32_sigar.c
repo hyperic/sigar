@@ -411,7 +411,7 @@ static int get_idle_cpu(sigar_t *sigar, sigar_cpu_t *cpu,
     return SIGAR_OK;
 }
 
-SIGAR_DECLARE(int) sigar_cpu_get(sigar_t *sigar, sigar_cpu_t *cpu)
+static int sigar_cpu_perflib_get(sigar_t *sigar, sigar_cpu_t *cpu)
 {
     int status;
     PERF_INSTANCE_DEFINITION *inst;
@@ -444,6 +444,41 @@ SIGAR_DECLARE(int) sigar_cpu_get(sigar_t *sigar, sigar_cpu_t *cpu)
     }
 
     return SIGAR_OK;
+}
+
+static int sigar_cpu_ntsys_get(sigar_t *sigar, sigar_cpu_t *cpu)
+{
+    DWORD retval, num;
+    int i;
+    /* XXX unhardcode 16 */
+    SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION info[16];
+    /* into the lungs of hell */
+    sigar->get_ntsys_info(SystemProcessorPerformanceInformation,
+                          &info, sizeof(info), &retval);
+
+    if (!retval) {
+        return GetLastError();
+    }
+    num = retval/sizeof(info[0]);
+    SIGAR_ZERO(cpu);
+
+    for (i=0; i<num; i++) {
+        cpu->idle += info[i].IdleTime.QuadPart;
+        cpu->user += info[i].UserTime.QuadPart;
+        cpu->sys  += info[i].KernelTime.QuadPart - info[i].IdleTime.QuadPart;
+    }
+
+    return SIGAR_OK;
+}
+
+SIGAR_DECLARE(int) sigar_cpu_get(sigar_t *sigar, sigar_cpu_t *cpu)
+{
+    if (sigar->get_ntsys_info) {
+        return sigar_cpu_ntsys_get(sigar, cpu);
+    }
+    else {
+        return sigar_cpu_perflib_get(sigar, cpu);
+    }
 }
 
 SIGAR_DECLARE(int) sigar_cpu_list_get(sigar_t *sigar, sigar_cpu_list_t *cpulist)
