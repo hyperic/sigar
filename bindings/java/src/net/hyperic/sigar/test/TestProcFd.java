@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 
 import net.hyperic.sigar.Sigar;
+import net.hyperic.sigar.SigarLoader;
 import net.hyperic.sigar.SigarNotImplementedException;
 
 public class TestProcFd extends SigarTestCase {
@@ -21,11 +22,13 @@ public class TestProcFd extends SigarTestCase {
             long pid = sigar.getPid();
 
             long total = sigar.getProcFd(pid).getTotal(); 
+            String sigarJar =
+                new SigarLoader(Sigar.class).findJarPath("sigar.jar");
 
-            File file = new File("bin", "run_tests.sh");
-            if (!file.exists()) {
-                file = new File("build.xml");
-            }
+            File file = new File(sigarJar + File.separator + "sigar.jar");
+
+            traceln("Opening " + file);
+
             FileInputStream is = new FileInputStream(file);
 
             assertEqualsTrace("Total", total + 1,
