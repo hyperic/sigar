@@ -4,7 +4,7 @@ use Config;
 use lib qw(lib);
 use Sigar::ArchName ();
 
-my $installdir = "../java/sigar-bin";
+my $installdir = $ARGV[0] || "../../sigar-bin";
 my $archname = Sigar::ArchName->get_name();
 
 my $ccname = $Config{ccname};
