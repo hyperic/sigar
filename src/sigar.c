@@ -3,8 +3,8 @@
 
 #include "sigar.h"
 #include "sigar_private.h"
-#include "sigar_os.h"
 #include "sigar_util.h"
+#include "sigar_os.h"
 
 #ifndef WIN32
 #include <signal.h>
