@@ -22,6 +22,8 @@ import net.hyperic.sigar.test.SigarTestRunner;
 
 public class Shell extends ShellBase {
 
+    public static final String RCFILE_NAME = ".sigar_shellrc";
+
     private Sigar sigar = new Sigar();
     private SigarProxy proxy = SigarProxyCache.newInstance(this.sigar);
     private ProcessFinder finder = new ProcessFinder(this.proxy);
@@ -123,6 +125,13 @@ public class Shell extends ShellBase {
         return this.foundPids;
     }
 
+    public void readCommandFile(File rc) {
+        try {
+            readRCFile(rc, false);
+            this.out.println("Loaded rc file: " + rc);
+        } catch (IOException e) { }
+    }
+
     public static void main(String[] args) {
         Shell shell = new Shell();
 
@@ -130,9 +139,9 @@ public class Shell extends ShellBase {
             shell.init("sigar", System.out, System.err);
             shell.registerCommands();
             String home = System.getProperty("user.home");
-            try {
-                shell.readRCFile(new File(home, ".sigar"), false);
-            } catch (IOException e) { }
+
+            shell.readCommandFile(new File(home, RCFILE_NAME));
+            shell.readCommandFile(new File(RCFILE_NAME));
 
             if (args.length == 0) {
                 shell.isInteractive = true;
