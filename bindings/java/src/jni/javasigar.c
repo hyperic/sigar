@@ -276,7 +276,7 @@ JNIEXPORT jobjectArray SIGAR_JNI(Sigar_getFileSystemList)
     sigar_file_system_list_t fslist;
     jobjectArray fsarray;
     jfieldID ids[FS_FIELD_MAX];
-    jclass cls = SIGAR_FIND_CLASS("FileSystem");
+    jclass nfs_cls=NULL, cls = SIGAR_FIND_CLASS("FileSystem");
     dSIGAR(NULL);
 
     if ((status = sigar_file_system_list_get(sigar, &fslist)) != SIGAR_OK) {
@@ -303,7 +303,22 @@ JNIEXPORT jobjectArray SIGAR_JNI(Sigar_getFileSystemList)
 
     for (i=0; i<fslist.number; i++) {
         sigar_file_system_t *fs = &(fslist.data)[i];
-        jobject fsobj = JENV->AllocObject(env, cls);
+        jobject fsobj;
+        jclass obj_cls;
+
+        if ((fs->type == SIGAR_FSTYPE_NETWORK) &&
+            (strcmp(fs->sys_type_name, "nfs") == 0))
+        {
+            if (!nfs_cls) {
+                nfs_cls = SIGAR_FIND_CLASS("NfsFileSystem");
+            }
+            obj_cls = nfs_cls;
+        }
+        else {
+            obj_cls = cls;
+        }
+
+        fsobj = JENV->AllocObject(env, obj_cls);
 
         JENV->SetStringField(env, fsobj,
                              ids[FS_FIELD_DIRNAME],
