@@ -220,7 +220,7 @@ int sigar_cpu_get(sigar_t *sigar, sigar_cpu_t *cpu)
     cpu->sys  = cpuload.cpu_ticks[CPU_STATE_SYSTEM];
     cpu->idle = cpuload.cpu_ticks[CPU_STATE_IDLE];
     cpu->nice = cpuload.cpu_ticks[CPU_STATE_NICE];
-
+    cpu->wait = 0; /*N/A*/
     cpu->total = cpu->user + cpu->nice + cpu->sys + cpu->idle;
 
 #else
@@ -229,7 +229,7 @@ int sigar_cpu_get(sigar_t *sigar, sigar_cpu_t *cpu)
     cpu->nice = 0;
     cpu->sys  = 0;
     cpu->idle = 0;
-
+    cpu->wait = 0; /*N/A*/
     cpu->total = cpu->user + cpu->nice + cpu->sys + cpu->idle;
 #endif
 

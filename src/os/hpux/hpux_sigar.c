@@ -98,6 +98,7 @@ int sigar_cpu_get(sigar_t *sigar, sigar_cpu_t *cpu)
     cpu->sys  = stats.psd_cpu_time[CP_SYS] + stats.psd_cpu_time[CP_SSYS];
     cpu->nice = stats.psd_cpu_time[CP_NICE];
     cpu->idle = stats.psd_cpu_time[CP_IDLE];
+    cpu->wait = stats.psd_cpu_time[CP_WAIT];
     
     cpu->total = 0;
     
@@ -136,6 +137,7 @@ int sigar_cpu_list_get(sigar_t *sigar, sigar_cpu_list_t *cpulist)
         cpu->sys  = proc.psp_cpu_time[CP_SYS] + proc.psp_cpu_time[CP_SSYS];
         cpu->nice = proc.psp_cpu_time[CP_NICE];
         cpu->idle = proc.psp_cpu_time[CP_IDLE];
+        cpu->wait = proc.psp_cpu_time[CP_WAIT];
 
         cpu->total = 0;
 

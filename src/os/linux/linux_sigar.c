@@ -292,8 +292,8 @@ static void get_cpu_metrics(sigar_cpu_t *cpu, char *line)
     cpu->nice += sigar_strtoul(ptr);
     cpu->sys  += sigar_strtoul(ptr);
     cpu->idle += sigar_strtoul(ptr);
-
-    cpu->total += cpu->user + cpu->nice + cpu->sys + cpu->idle;
+    cpu->wait = 0; /*XXX*/
+    cpu->total += cpu->user + cpu->nice + cpu->sys + cpu->idle + cpu->wait;
 }
 
 int sigar_cpu_get(sigar_t *sigar, sigar_cpu_t *cpu)

@@ -579,7 +579,8 @@ int sigar_cpu_get(sigar_t *sigar, sigar_cpu_t *cpu)
             cpu->nice  = -1; /* N/A */
             cpu->sys   = cpu_data.sys;
             cpu->idle  = cpu_data.idle;
-            cpu->total = cpu->user + cpu->sys + cpu->idle + cpu_data.wait;
+            cpu->wait  = cpu_data.wait;
+            cpu->total = cpu->user + cpu->sys + cpu->idle + cpu->wait;
             return SIGAR_OK;
         }
     }
@@ -702,7 +703,8 @@ static int sigar_cpu_list_get_pstat(sigar_t *sigar, sigar_cpu_list_t *cpulist)
             cpu->nice  = -1; /* N/A */
             cpu->sys   = data.sys;
             cpu->idle  = data.idle;
-            cpu->total = cpu->user + cpu->sys + cpu->idle + data.wait;
+            cpu->wait  = data.wait;
+            cpu->total = cpu->user + cpu->sys + cpu->idle + cpu->wait;
         }
         else {
             sigar_log_printf(sigar, SIGAR_LOG_ERROR,

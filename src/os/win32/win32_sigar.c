@@ -413,8 +413,8 @@ SIGAR_DECLARE(int) sigar_cpu_get(sigar_t *sigar, sigar_cpu_t *cpu)
     cpu->user = PERF_VAL(PERF_IX_CPU_USER);
     status = get_idle_cpu(sigar, cpu, -1, counter_block, perf_offsets);
     cpu->nice = 0; /* no nice here */
-
-    cpu->total = cpu->sys + cpu->user + cpu->idle;
+    cpu->wait = 0; /*N/A?*/
+    cpu->total = cpu->sys + cpu->user + cpu->idle + cpu->wait;
 
     if (status != SIGAR_OK) {
         sigar_log_printf(sigar, SIGAR_LOG_WARN,

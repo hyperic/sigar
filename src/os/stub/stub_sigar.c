@@ -48,6 +48,7 @@ int sigar_cpu_get(sigar_t *sigar, sigar_cpu_t *cpu)
     cpu->nice = -1;
     cpu->sys  = -1;
     cpu->idle = -1;
+    cpu->wait = -1;
 
     cpu->total = cpu->user + cpu->nice + cpu->sys + cpu->idle;
 

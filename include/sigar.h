@@ -96,6 +96,7 @@ typedef struct {
         sys,
         nice,
         idle,
+        wait,
         total;
 } sigar_cpu_t;
 

@@ -203,6 +203,7 @@ namespace Hyperic.Sigar {
         public readonly ulong Sys;
         private readonly ulong NA_Nice;
         public readonly ulong Idle;
+        private readonly ulong NA_Wait;
         public readonly ulong Total;
 
         [DllImport(Sigar.LIBSIGAR)]

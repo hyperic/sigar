@@ -85,8 +85,8 @@ int sigar_cpu_get(sigar_t *sigar, sigar_cpu_t *cpu)
     cpu->nice = sysinfo.si_nice;
     cpu->sys  = sysinfo.si_sys;
     cpu->idle = sysinfo.si_idle;
-
-    cpu->total = cpu->user + cpu->nice + cpu->sys + cpu->idle;
+    cpu->wait = 0; /*N/A?*/
+    cpu->total = cpu->user + cpu->nice + cpu->sys + cpu->idle + cpu->wait;
 
     return SIGAR_OK;
 }

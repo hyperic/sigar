@@ -195,6 +195,11 @@ my %classes = (
          plat => '*'
       },
       {
+         name => 'wait', type => 'Long',
+         desc => 'Total system cpu io wait time',
+         plat => 'ALHS'
+      },
+      {
          name => 'total', type => 'Long',
          desc => 'Total system cpu time',
          plat => '*'
