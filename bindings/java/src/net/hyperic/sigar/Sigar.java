@@ -59,7 +59,6 @@ public class Sigar implements SigarProxy {
 
     private static void load() throws SigarException {
         try {
-            loader.load();
             if (SigarLoader.IS_WIN32 &&
                 System.getProperty("os.version").equals("4.0"))
             {
@@ -68,6 +67,7 @@ public class Sigar implements SigarProxy {
                     File.separator + "pdh.dll";
                 loader.systemLoad(lib);
             }
+            loader.load();
         } catch (ArchNotSupportedException e) {
             throw new SigarException(e.getMessage());
         } catch (ArchLoaderException e) {
