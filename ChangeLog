@@ -1,5 +1,11 @@
+2004-11-22  Doug MacEachern  <dougm@hyperic.net>
+
+        * fix bug in RegistryKey.openSubKey under WebSphere 4.0 jdk
+
 2004-11-21  Doug MacEachern  <dougm@hyperic.net>
 
+        * 1.1.11 released
+        
         * merged hyperic win32bindings package into sigar.win32
 
         * added sigar_cpu_t.wait metric
