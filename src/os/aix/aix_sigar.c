@@ -534,8 +534,14 @@ static int sigar_swap_get_perfstat(sigar_t *sigar, sigar_swap_t *swap)
         }
         if (SIGAR_LOG_IS_DEBUG(sigar)) {
             sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
-                             "[swap] dev=%s: total=%lluMb, used=%lluMb",
-                             SWAP_DEV(ps), ps.mb_size, ps.mb_used);
+                             "[swap] dev=%s: active=%s, "
+                             "total=%lluMb, used=%lluMb",
+                             SWAP_DEV(ps),
+                             ((ps.active == 1) ? "yes" : "no"),
+                             ps.mb_size, ps.mb_used);
+        }
+        if (ps.active != 1) {
+            continue;
         }
         /* convert MB sizes to bytes */
         swap->total += SWAP_MB_TO_BYTES(ps.mb_size);
