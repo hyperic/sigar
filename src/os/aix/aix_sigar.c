@@ -325,7 +325,13 @@ int sigar_swap_get(sigar_t *sigar, sigar_swap_t *swap)
         status = swapqry(sigar->swaps.devs[i], &info);
 
         if (status != 0) {
-            return errno;
+            if (SIGAR_LOG_IS_DEBUG(sigar)) {
+                sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
+                                 "[swap] swapqry(%s) failed: %s",
+                                 sigar->swaps.devs[i],
+                                 sigar_strerror(sigar, errno));
+            }
+            continue;
         }
 
         if (SIGAR_LOG_IS_DEBUG(sigar)) {
