@@ -809,112 +809,6 @@ static char *getarg(char **line)
     return res;
 }
 
-#if 0
-/* this was the first shot, works but injects a remote thread
- * in the process.  probably best to avoid that.
- */
-/*
- * this is ugly, but there is no alternative.
- * we spawn a remote thread within the process
- * to call GetCommandLine() and parse it ourselves.
- */
-static int sigar_remote_proc_args_get(sigar_t *sigar, sigar_pid_t pid,
-                                      sigar_proc_args_t *procargs)
-{
-    FARPROC rcmdline, fstrlen;
-    HANDLE proc, thread, kdll;
-    PVOID data=NULL;
-    char *cmdline;
-    DWORD rv, thrid, bytes, datalen=0;
-
-    if (!(kdll = GetModuleHandle("kernel32.dll"))) {
-        return GetLastError();
-    }
-
-    if (!(rcmdline = GetProcAddress(kdll, "GetCommandLineA"))) {
-        return GetLastError();
-    }
-
-    if (!(fstrlen = GetProcAddress(kdll, "lstrlenA"))) {
-        return GetLastError();
-    }
-
-    if (!(proc = OpenProcess(MAXIMUM_ALLOWED, 0, (DWORD)pid))) {
-        return GetLastError();
-    }
-
-    thread = CreateRemoteThread(proc, NULL, 0,
-                                (LPTHREAD_START_ROUTINE)rcmdline,
-                                0, 0, &thrid);
-    if (!thread) {
-        CloseHandle(proc);
-        return GetLastError(); 
-    }
-
-    WaitForSingleObject(thread, INFINITE);
-    GetExitCodeThread(thread, (LPDWORD)(&data));
-    CloseHandle(thread);
-
-    if (!data) {
-        CloseHandle(proc);
-        return GetLastError(); 
-    }
-
-    thread = CreateRemoteThread(proc, NULL, 0,
-                                (LPTHREAD_START_ROUTINE)fstrlen,
-                                data, 0, &thrid);
-    if (!thread) {
-        CloseHandle(proc);
-        return GetLastError();
-    }
-
-    WaitForSingleObject(thread, INFINITE);
-    GetExitCodeThread(thread, &datalen);
-    CloseHandle(thread);
-
-    if (!datalen) {
-        CloseHandle(proc);
-        return GetLastError();
-    }
-
-    datalen++; /* we want the \0 terminator too */
-
-    cmdline = HeapAlloc(GetProcessHeap(),
-                        HEAP_ZERO_MEMORY,
-                        datalen);
-
-    if (!cmdline) {
-        CloseHandle(proc);
-        return GetLastError();
-    }
-
-    if (ReadProcessMemory(proc, data, cmdline,
-                          datalen, &bytes))
-    {
-        char *arg, *ptr = cmdline;
-
-        sigar_proc_args_create(procargs);
-
-        while (*ptr && (arg = getarg(&ptr))) {
-            SIGAR_PROC_ARGS_GROW(procargs);
-            procargs->data[procargs->number++] = arg;
-        }
-
-        HeapFree(GetProcessHeap(), 0, cmdline);
-    }
-    else {
-        CloseHandle(proc);
-        return GetLastError();
-    }
-
-    CloseHandle(proc);
-    return SIGAR_OK;
-}
-#else
-/* second shot, using the PEB.
- * read-only, minimum access privs and in general seems to work
- * better than the method above.  lets roll...
- */
 static int sigar_remote_proc_args_get(sigar_t *sigar, sigar_pid_t pid,
                                       sigar_proc_args_t *procargs)
 {
@@ -943,7 +837,6 @@ static int sigar_remote_proc_args_get(sigar_t *sigar, sigar_pid_t pid,
 
     return SIGAR_OK;
 }
-#endif
 
 static int sigar_local_proc_args_get(sigar_t *sigar, sigar_pid_t pid,
                                      sigar_proc_args_t *procargs)
