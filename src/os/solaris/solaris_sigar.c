@@ -441,6 +441,47 @@ static int sigar_init_libproc(sigar_t *sigar)
     return SIGAR_OK;
 }
 
+/* from libproc.h, not included w/ solaris distro */
+/* Error codes from Pgrab(), Pfgrab_core(), and Pgrab_core() */
+#define	G_STRANGE	-1	/* Unanticipated error, errno is meaningful */
+#define	G_NOPROC	1	/* No such process */
+#define	G_NOCORE	2	/* No such core file */
+#define	G_NOPROCORCORE	3	/* No such proc or core (for proc_arg_grab) */
+#define	G_NOEXEC	4	/* Cannot locate executable file */
+#define	G_ZOMB		5	/* Zombie process */
+#define	G_PERM		6	/* No permission */
+#define	G_BUSY		7	/* Another process has control */
+#define	G_SYS		8	/* System process */
+#define	G_SELF		9	/* Process is self */
+#define	G_INTR		10	/* Interrupt received while grabbing */
+#define	G_LP64		11	/* Process is _LP64, self is ILP32 */
+#define	G_FORMAT	12	/* File is not an ELF format core file */
+#define	G_ELF		13	/* Libelf error, elf_errno() is meaningful */
+#define	G_NOTE		14	/* Required PT_NOTE Phdr not present in core */
+
+static int sigar_pgrab(sigar_t *sigar, sigar_pid_t pid,
+                       const char *func,
+                       struct ps_prochandle **phandle)
+{
+    int pstatus;
+
+    if (!(*phandle = sigar->pgrab(pid, 0x01, &pstatus))) {
+        switch (pstatus) {
+          case G_NOPROC:
+            return ESRCH;
+          case G_PERM:
+            return EACCES;
+          default:
+            sigar_log_printf(sigar, SIGAR_LOG_ERROR,
+                             "[%s] Pgrab error=%d",
+                             func, pstatus);
+            return ENOTSUP; /*XXX*/
+        }
+    }
+
+    return SIGAR_OK;
+}
+
 int sigar_proc_list_get(sigar_t *sigar,
                         sigar_proc_list_t *proclist)
 {
@@ -723,24 +764,6 @@ int sigar_proc_exe_get(sigar_t *sigar, sigar_pid_t pid,
     return SIGAR_OK;
 }
 
-/* from libproc.h, not included w/ solaris distro */
-/* Error codes from Pgrab(), Pfgrab_core(), and Pgrab_core() */
-#define	G_STRANGE	-1	/* Unanticipated error, errno is meaningful */
-#define	G_NOPROC	1	/* No such process */
-#define	G_NOCORE	2	/* No such core file */
-#define	G_NOPROCORCORE	3	/* No such proc or core (for proc_arg_grab) */
-#define	G_NOEXEC	4	/* Cannot locate executable file */
-#define	G_ZOMB		5	/* Zombie process */
-#define	G_PERM		6	/* No permission */
-#define	G_BUSY		7	/* Another process has control */
-#define	G_SYS		8	/* System process */
-#define	G_SELF		9	/* Process is self */
-#define	G_INTR		10	/* Interrupt received while grabbing */
-#define	G_LP64		11	/* Process is _LP64, self is ILP32 */
-#define	G_FORMAT	12	/* File is not an ELF format core file */
-#define	G_ELF		13	/* Libelf error, elf_errno() is meaningful */
-#define	G_NOTE		14	/* Required PT_NOTE Phdr not present in core */
-
 static int sigar_read_xmaps(sigar_t *sigar, 
                             prxmap_t *xmaps, int total,
                             unsigned long *last_inode,
@@ -813,18 +836,10 @@ static int sigar_pgrab_modules(sigar_t *sigar, sigar_pid_t pid,
         return pstatus;
     }
 
-    if (!(phandle = sigar->pgrab(pid, 0x01, &pstatus))) {
-        switch (pstatus) {
-          case G_NOPROC:
-            return ESRCH;
-          case G_PERM:
-            return EACCES;
-          default:
-            sigar_log_printf(sigar, SIGAR_LOG_ERROR,
-                             "[%s] Pgrab error=%d",
-                             SIGAR_FUNC, pstatus);
-            return ENOTSUP; /*XXX*/
-        }
+    pstatus = sigar_pgrab(sigar, pid, SIGAR_FUNC, &phandle);
+
+    if (pstatus != SIGAR_OK) {
+        return pstatus;
     }
 
     for (nread=0; nread<statbuf.st_size; ) {
