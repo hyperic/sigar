@@ -53,14 +53,12 @@ static char copyright[] =
  * return:
  *
  *	exit = GET_MIB2_OK if close succeeded
- *	       GET_MIB2_* is the error code for failure and:
- *			*errmsg = failure error message
+ *	       GET_MIB2_* is the error code.
  */
 
 int
-close_mib2(solaris_mib2_t *mib2, char **errmsg)
+close_mib2(solaris_mib2_t *mib2)
 {
-    *errmsg = mib2->errmsg;
     if (mib2->sd < 0) {
         (void) strcpy(mib2->errmsg, "close_mib2: socket not open");
         return(GET_MIB2_ERR_NOTOPEN);
@@ -93,16 +91,14 @@ close_mib2(solaris_mib2_t *mib2, char **errmsg)
  *			*opt = opthdr structure address
  *			*data = data buffer address
  *			*datalen = size of data buffer
- *	       GET_MIB2_* is the error code for failure and:
- *			*errmsg = failure error message
+ *	       GET_MIB2_* is the error code for failure.
  */
 
 int
 get_mib2(solaris_mib2_t *mib2,
          struct opthdr **opt,
          char **data,
-         int *datalen,
-         char **errmsg)
+         int *datalen)
 {
     struct T_optmgmt_ack *a;	/* message ACK pointer */
     struct strbuf c;		/* streams control buffer */
@@ -114,7 +110,6 @@ get_mib2(solaris_mib2_t *mib2,
     struct T_optmgmt_req *r;	/* message request pointer */
     int rc;				/* reply code */
 
-    *errmsg = mib2->errmsg;
     /*
      * If MIB2 access isn't open, open it and issue the preliminary stream
      * messages.
@@ -124,7 +119,7 @@ get_mib2(solaris_mib2_t *mib2,
 	/*
 	 * Open access.  Return on error.
 	 */
-        if ((err = open_mib2(mib2, errmsg))) {
+        if ((err = open_mib2(mib2))) {
             return(err);
         }
 	/*
@@ -184,7 +179,7 @@ get_mib2(solaris_mib2_t *mib2,
 	&&  a->MGMT_flags == T_SUCCESS
 	&&  o->len == 0)
     {
-        err = close_mib2(mib2, errmsg);
+        err = close_mib2(mib2);
         if (err) {
             return(err);
         }
@@ -267,14 +262,12 @@ get_mib2(solaris_mib2_t *mib2,
  * return:
  *
  *	exit = GET_MIB2_OK if open succeeded
- *	       GET_MIB2_* is the error code for failure and:
- *			*errmsg = failure error message
+ *	       GET_MIB2_* is the error code for failure.
  */
 
 int
-open_mib2(solaris_mib2_t *mib2, char **errmsg)
+open_mib2(solaris_mib2_t *mib2)
 {
-    *errmsg = mib2->errmsg;
     /*
      * It's an error if the stream device is already open.
      */

@@ -103,36 +103,18 @@ typedef struct {
  */
 
 int close_mib2(				/* close acccess to MIB2 information */
-        solaris_mib2_t *mib2, 
-	char **errmsg				/* error message buffer return
-						 * address (if return value
-						 * > GET_MIB2_OK.)  The error
-						 * message buffer address will
-						 * be NULL if no buffer has
-						 * been defined. */
+        solaris_mib2_t *mib2 
 	);
 int get_mib2(				/* get MIB2 information */
         solaris_mib2_t *mib2, 
 	struct opthdr **opt,			/* opthdr pointer return (see
 						 * <sys/socket.h> */
 	char **data,				/* data buffer return address */
-	int *datalen,				/* data buffer length return
+	int *datalen				/* data buffer length return
 						 * address */
-	char **errmsg				/* error message buffer return
-						 * address (if return value
-						 * > GET_MIB2_OK.)  The error
-						 * message buffer address will
-						 * be NULL if no buffer has
-						 * been defined. */
 	);
 int open_mib2(				/* open acccess to MIB2 information */
-        solaris_mib2_t *mib2, 
-	char **errmsg				/* error message buffer return
-						 * address (if return value
-						 * > GET_MIB2_OK.)  The error
-						 * message buffer address will
-						 * be NULL if no buffer has
-						 * been defined. */
+        solaris_mib2_t *mib2 
 	);
 
 #endif	/* !defined(GET_MIB2_H) */
