@@ -568,7 +568,7 @@ int sigar_cpu_get(sigar_t *sigar, sigar_cpu_t *cpu)
     if (sigar_perfstat_init(sigar) == SIGAR_OK) {
         sigar_log(sigar, SIGAR_LOG_DEBUG, "[cpu] using libperfstat");
 
-        if (sigar->perfstat.cpu_total(&cpu_data, sizeof(cpu_data))) {
+        if (sigar->perfstat.cpu_total(&cpu_data, sizeof(cpu_data)) == 1) {
             cpu->user  = cpu_data.user;
             cpu->nice  = -1; /* N/A */
             cpu->sys   = cpu_data.sys;
@@ -691,7 +691,7 @@ static int sigar_cpu_list_get_pstat(sigar_t *sigar, sigar_cpu_list_t *cpulist)
                              i, id.name);
         }
 
-        if (sigar->perfstat.cpu(&id, &data, sizeof(data), 1)) {
+        if (sigar->perfstat.cpu(&id, &data, sizeof(data), 1) == 1) {
             cpu->user  = data.user;
             cpu->nice  = -1; /* N/A */
             cpu->sys   = data.sys;
@@ -700,8 +700,8 @@ static int sigar_cpu_list_get_pstat(sigar_t *sigar, sigar_cpu_list_t *cpulist)
         }
         else {
             sigar_log_printf(sigar, SIGAR_LOG_ERROR,
-                             "cpu%d perfstat_cpu(%s) failed",
-                             i, id.name);
+                             "cpu%d perfstat_cpu(%s) failed: %s",
+                             i, id.name, sigar_strerror(sigar, errno));
             SIGAR_ZERO(cpu);
         }
     }
@@ -813,11 +813,16 @@ int sigar_loadavg_get(sigar_t *sigar,
         sigar_log(sigar, SIGAR_LOG_DEBUG,
                   "[loadavg] using libperfstat");
 
-        if (sigar->perfstat.cpu_total(&cpu_data, sizeof(cpu_data))) {
+        if (sigar->perfstat.cpu_total(&cpu_data, sizeof(cpu_data)) == 1) {
             for (i=0; i<3; i++) {
                 loadavg->loadavg[i] = FIXED_TO_DOUBLE(cpu_data.loadavg[i]);
             }
             return SIGAR_OK;
+        }
+        else {
+            sigar_log_printf(sigar, SIGAR_LOG_ERROR,
+                             "perfstat_cpu_total failed: %s",
+                             sigar_strerror(sigar, errno));
         }
     }
 
@@ -1404,9 +1409,14 @@ static int sigar_get_cpu_mhz_perfstat(sigar_t *sigar)
     perfstat_cpu_total_t data;
 
     if (sigar_perfstat_init(sigar) == SIGAR_OK) {
-        if (sigar->perfstat.cpu_total(&data, sizeof(data))) {
+        if (sigar->perfstat.cpu_total(&data, sizeof(data)) == 1) {
             sigar->cpu_mhz = data.processorHZ / 1000000;
             return SIGAR_OK;
+        }
+        else {
+            sigar_log_printf(sigar, SIGAR_LOG_ERROR,
+                             "perfstat_cpu_total failed: %s",
+                             sigar_strerror(sigar, errno));
         }
     }
 
