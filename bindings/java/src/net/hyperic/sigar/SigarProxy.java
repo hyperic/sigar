@@ -1,5 +1,6 @@
 package net.hyperic.sigar;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -71,6 +72,10 @@ public interface SigarProxy {
     public String getProcEnv(long pid, String key) throws SigarException;
 
     public String getProcEnv(String pid, String key) throws SigarException;
+
+    public List getProcModules(long pid) throws SigarException;
+
+    public List getProcModules(String pid) throws SigarException;
 
     public long getProcPort(long port) throws SigarException;
 

@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
+import java.util.List;
 import java.util.Map;
 
 import net.hyperic.jni.ArchLoaderException;
@@ -380,6 +381,22 @@ public class Sigar implements SigarProxy {
 
     public String getProcEnv(String pid, String key) throws SigarException {
         return getProcEnv(convertPid(pid), key);
+    }
+
+    /**
+     * Get process loaded modules.
+     * @param pid The process id.
+     * @return List of loaded modules.
+     * @exception SigarException on failure.
+     */
+    private native List getProcModulesNative(long pid) throws SigarException;
+
+    public List getProcModules(long pid) throws SigarException {
+        return getProcModulesNative(pid);
+    }
+
+    public List getProcModules(String pid) throws SigarException {
+        return getProcModules(convertPid(pid));
     }
 
     public native long getProcPort(long port) throws SigarException;

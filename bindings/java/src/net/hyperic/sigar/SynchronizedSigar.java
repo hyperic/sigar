@@ -1,5 +1,6 @@
 package net.hyperic.sigar;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -200,6 +201,18 @@ public class SynchronizedSigar implements SigarProxy {
         throws SigarException
     {
         return this.sigar.getProcEnv(pid, key);
+    }
+
+    public synchronized List getProcModules(long pid)
+        throws SigarException
+    {
+        return this.sigar.getProcModules(pid);
+    }
+
+    public synchronized List getProcModules(String pid)
+        throws SigarException
+    {
+        return this.sigar.getProcModules(pid);
     }
 
     public synchronized long getProcPort(long port)
