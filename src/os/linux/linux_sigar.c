@@ -259,7 +259,6 @@ int sigar_mem_get(sigar_t *sigar, sigar_mem_t *mem)
 int sigar_swap_get(sigar_t *sigar, sigar_swap_t *swap)
 {
     char buffer[BUFSIZ];
-    char *ptr;
 
     /* XXX: we open/parse the same file here as sigar_mem_get */
     int status = sigar_file2str(PROC_MEMINFO,
@@ -269,13 +268,10 @@ int sigar_swap_get(sigar_t *sigar, sigar_swap_t *swap)
         return status;
     }
 
-    ptr = sigar_skip_line(buffer, sizeof(buffer));
-    ptr = sigar_skip_line(ptr, 0);
-    ptr = sigar_skip_token(ptr); /* "Swap:" */
+    swap->total  = sigar_meminfo(buffer, MEMINFO_PARAM("SwapTotal"));
+    swap->free   = sigar_meminfo(buffer, MEMINFO_PARAM("SwapFree"));
+    swap->used   = swap->total - swap->free;
 
-    swap->total  = sigar_strtoul(ptr);
-    swap->used   = sigar_strtoul(ptr);
-    swap->free   = sigar_strtoul(ptr);
 
     return SIGAR_OK;
 }
