@@ -188,6 +188,10 @@
  <target name="xtest">
    <mkdir dir="testresults"/>
 
+   <condition property="win32.test" value="win32/test">
+      <os family="windows"/>
+   </condition>
+
    <junit printsummary="yes" fork="yes"
           haltonfailure="yes" showoutput="true">
      <jvmarg value="-Dsigar.fqdn=${sigar.fqdn}"/>
@@ -197,7 +201,9 @@
 
      <batchtest fork="yes" todir="testresults">
        <fileset dir="${src}">
-         <include name="**/Test*.java"/>
+         <include name="net/hyperic/sigar/test/Test*.java"/>
+         <include name="net/hyperic/sigar/${win32.test}/Test*.java"/>
+         <exclude name="**/.java"/>
          <!-- slow; run by hand with bin/run_tests.sh Threads -->
          <exclude name="**/TestThreads*.java"/>
        </fileset>
