@@ -1192,9 +1192,27 @@ SIGAR_DECLARE(int) sigar_proc_exe_get(sigar_t *sigar, sigar_pid_t pid,
         return GetLastError();
     }
 
-    procexe->root[0] = '\0';
-
     status = sigar_proc_exe_peb_get(sigar, proc, procexe);
+    if (procexe->cwd[0] != '\0') {
+        /* strip trailing '\' */
+        int len = strlen(procexe->cwd);
+        if (procexe->cwd[len-1] == '\\') {
+            procexe->cwd[len-1] = '\0';
+        }
+        /* uppercase driver letter */
+        procexe->cwd[0] = toupper(procexe->cwd[0]);
+        /* e.g. C:\ */
+        strncpy(procexe->root, procexe->cwd, 3);
+        procexe->root[3] = '\0';
+    }
+    else {
+        procexe->root[0] = '\0';
+    }
+
+    if (procexe->name[0] != '\0') {
+        /* uppercase driver letter */
+        procexe->name[0] = toupper(procexe->name[0]);
+    }
 
     return status;
 }
