@@ -5,8 +5,8 @@ import java.util.Vector;
 
 public class MetaBase extends Win32Bindings
 {
-    static private int IIS_MD_SERVER_BASE             = 1000;
-    static private int IIS_MD_HTTP_BASE               = 2000;
+    private static int IIS_MD_SERVER_BASE             = 1000;
+    private static int IIS_MD_HTTP_BASE               = 2000;
 
     /* NOTE:  This is only a partial list of the information that can 
      * get from the metabase.
@@ -35,8 +35,8 @@ public class MetaBase extends Win32Bindings
     //  These properties are specific to HTTP and belong to the website
     public static int MD_SECURE_BINDINGS             = IIS_MD_HTTP_BASE+21;
     
-    protected int m_handle;
-    protected long pIMeta;
+    private int m_handle;
+    private long pIMeta;
 
     public MetaBase()
     {
@@ -128,19 +128,16 @@ public class MetaBase extends Win32Bindings
         return (String[])coll.toArray(new String[coll.size()]);
     }
     
-    protected final native long      MetaBaseInit();
-    protected final native void      MetaBaseClose();
-    protected final native void      MetaBaseRelease();
-    protected final native String    MetaBaseEnumKey(int index);
-    protected final native void      MetaBaseOpenSubKey(String subkey);
-    protected final native void      MetaBaseOpenSubKeyAbs(String subkey);
-    protected final native int       MetaBaseGetIntValue(int datakey);
-    protected final native String    MetaBaseGetStringValue(int datakey);
-    protected final native String[]  MetaBaseGetMultiStringValue(int datakey);
+    private final native long      MetaBaseInit();
+    private final native void      MetaBaseClose();
+    private final native void      MetaBaseRelease();
+    private final native String    MetaBaseEnumKey(int index);
+    private final native void      MetaBaseOpenSubKey(String subkey);
+    private final native void      MetaBaseOpenSubKeyAbs(String subkey);
+    private final native int       MetaBaseGetIntValue(int datakey);
+    private final native String    MetaBaseGetStringValue(int datakey);
+    private final native String[]  MetaBaseGetMultiStringValue(int datakey);
 
-    /**
-     * Main method for dumping out IIS websites from the MetaBase
-     */
     public static void main(String args[]) {
 
         try {

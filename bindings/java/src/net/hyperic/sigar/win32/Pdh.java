@@ -5,8 +5,8 @@ import java.util.List;
 
 public class Pdh extends Win32Bindings {
 
-    protected long   h_query;         // Handle to the query
-    protected String hostname;        // Not yet supported
+    private long   h_query;         // Handle to the query
+    private String hostname;        // Not yet supported
 
     private   String counterPath;
     private   long   h_counter = -1l; // Handle to the counter
@@ -72,15 +72,15 @@ public class Pdh extends Win32Bindings {
         this.counterPath = cp;
     }
     
-    protected static final native long pdhOpenQuery();
-    protected static final native void pdhCloseQuery(long query);
-    protected static final native long pdhAddCounter(long query, String cp);
-    protected static final native void pdhRemoveCounter(long counter);
-    protected static final native double pdhGetSingleValue(long query, 
-                                                           long counter);
-    protected static final native String[] pdhGetInstances(String cp);
-    protected static final native String[] pdhGetKeys(String cp);
-    protected static final native String[] pdhGetObjects();
+    private static final native long pdhOpenQuery();
+    private static final native void pdhCloseQuery(long query);
+    private static final native long pdhAddCounter(long query, String cp);
+    private static final native void pdhRemoveCounter(long counter);
+    private static final native double pdhGetSingleValue(long query, 
+                                                         long counter);
+    private static final native String[] pdhGetInstances(String cp);
+    private static final native String[] pdhGetKeys(String cp);
+    private static final native String[] pdhGetObjects();
 
     /**
      * Main method for dumping the entire PDH
