@@ -34,6 +34,10 @@
 #define NMIB(mib) (sizeof(mib)/sizeof(mib[0]))
 
 #if defined (__FreeBSD__) && (__FreeBSD_version >= 500013)
+#define SIGAR_FREEBSD5
+#endif
+
+#ifdef SIGAR_FREEBSD5
 
 #define KI_PID  ki_pid
 #define KI_PPID ki_ppid
@@ -275,6 +279,7 @@ int sigar_mem_get(sigar_t *sigar, sigar_mem_t *mem)
 
 #define SWI_MAXMIB 3
 
+#ifdef SIGAR_FREEBSD5
 /* code in this function is based on FreeBSD 5.3 kvm_getswapinfo.c */
 static int getswapinfo_sysctl(struct kvm_swap *swap_ary,
                               int swap_max) 
@@ -340,6 +345,9 @@ static int getswapinfo_sysctl(struct kvm_swap *swap_ary,
 
     return SIGAR_OK;
 }
+#else
+#define getswapinfo_sysctl(swap_ary, swap_max) SIGAR_ENOTIMPL
+#endif
 
 int sigar_swap_get(sigar_t *sigar, sigar_swap_t *swap)
 {
@@ -730,19 +738,21 @@ int sigar_proc_time_get(sigar_t *sigar, sigar_pid_t pid,
         return status;
     }
 
-#ifdef DARWIN
+#if defined(DARWIN)
     if ((status = get_proc_times(pid, proctime)) != SIGAR_OK) {
         return status;
     }
-#else
+    proctime->start_time = tv2sec(pinfo->KI_START) * 1000;
+    return SIGAR_OK;
+#elif defined(SIGAR_FREEBSD5)
     proctime->user  = tv2sec(pinfo->ki_rusage.ru_utime);
     proctime->sys   = tv2sec(pinfo->ki_rusage.ru_stime);
     proctime->total = proctime->user + proctime->sys;
-#endif
-
     proctime->start_time = tv2sec(pinfo->KI_START) * 1000;
-
     return SIGAR_OK;
+#else
+    return SIGAR_ENOTIMPL;
+#endif
 }
 
 int sigar_proc_state_get(sigar_t *sigar, sigar_pid_t pid,
@@ -884,9 +894,7 @@ int sigar_proc_env_get(sigar_t *sigar, sigar_pid_t pid,
 int sigar_proc_fd_get(sigar_t *sigar, sigar_pid_t pid,
                       sigar_proc_fd_t *procfd)
 {
-#ifdef DARWIN
-    return SIGAR_ENOTIMPL;
-#else
+#if defined(SIGAR_FREEBSD5)
     int status;
     struct kinfo_proc *pinfo;
     struct filedesc filed;
@@ -933,6 +941,8 @@ int sigar_proc_fd_get(sigar_t *sigar, sigar_pid_t pid,
 #endif
 
     return SIGAR_OK;
+#else
+    return SIGAR_ENOTIMPL;
 #endif
 }
 
