@@ -12,7 +12,7 @@
 /* Include java jni headers */
 #include <jni.h>
 
-#define WIN32_PACKAGE "net/covalent/win32bindings/"
+#define WIN32_PACKAGE "net/hyperic/sigar/win32/"
 
 #define WIN32_FIND_CLASS(name) \
     JENV->FindClass(env, WIN32_PACKAGE name)
