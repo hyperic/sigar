@@ -31,8 +31,17 @@ public class TestFileSystem extends SigarTestCase {
             assertLengthTrace("TypeName", fs.getTypeName());
             assertLengthTrace("SysTypeName", fs.getSysTypeName());
 
-            FileSystemUsage usage =
-                sigar.getFileSystemUsage(fs.getDirName());
+            FileSystemUsage usage;
+
+            try {
+                usage = sigar.getFileSystemUsage(fs.getDirName());
+            } catch (SigarException e) {
+                if (fs.getType() == FileSystem.TYPE_LOCAL_DISK) {
+                    throw e;
+                }
+                //else ok, e.g. floppy drive on windows
+                continue;
+            }
 
             switch (fs.getType()) {
               case FileSystem.TYPE_LOCAL_DISK:
