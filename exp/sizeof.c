@@ -23,6 +23,8 @@ typedef struct {
 #include <sys/kstat.h>
 #include <sys/sysinfo.h>
 #include <procfs.h>
+#include <sys/proc.h>
+#include <sys/user.h>
 
 static sizeof_info_t sizeof_info[] = {
     /* kstat */
@@ -34,6 +36,8 @@ static sizeof_info_t sizeof_info[] = {
     SIZEOF_INFO(prusage_t),
     SIZEOF_INFO(prcred_t),
     SIZEOF_INFO(pstatus_t),
+    SIZEOF_INFO(struct proc),
+    SIZEOF_INFO(struct user),
     {NULL, 0}
 };
 
