@@ -182,11 +182,10 @@
   <target name="clean">
     <delete dir="${build}"/>
     <delete dir="${sigar-bin}"/>
-    <delete dir="testresults"/>
   </target>
 
  <target name="xtest">
-   <mkdir dir="testresults"/>
+   <mkdir dir="${build}/testresults"/>
 
    <condition property="win32.test" value="win32/test">
       <os family="windows"/>
@@ -199,7 +198,7 @@
      <classpath refid="alljars"/>
      <formatter type="plain"/>
 
-     <batchtest fork="yes" todir="testresults">
+     <batchtest fork="yes" todir="${build}/testresults">
        <fileset dir="${src}">
          <include name="net/hyperic/sigar/test/Test*.java"/>
          <include name="net/hyperic/sigar/${win32.test}/Test*.java"/>
