@@ -1,3 +1,11 @@
+2005-03-11  Doug MacEachern  <dougm@hyperic.net>
+
+        * Add NetPortMap class
+
+        * Add sigar_net_connection_t.state field
+
+        * Netstat enhancements
+        
 2005-03-09  Doug MacEachern  <dougm@hyperic.net>
 
         * Add CpuTimer class, helper around ThreadCpu class
