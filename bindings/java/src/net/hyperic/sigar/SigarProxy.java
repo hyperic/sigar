@@ -119,5 +119,7 @@ public interface SigarProxy {
 
     public String[] getNetInterfaceList() throws SigarException;
 
+    public Who[] getWhoList() throws SigarException;
+
     public String getFQDN() throws SigarException;
 }

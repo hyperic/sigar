@@ -598,6 +598,9 @@ public class Sigar implements SigarProxy {
     public native NetConnection[] getNetConnectionList(int flags)
         throws SigarException;
 
+    public native Who[] getWhoList()
+        throws SigarException;
+
     /**
      * Get network interface configuration info.
      * @exception SigarException on failure.
