@@ -200,27 +200,6 @@ int sigar_proc_fd_count(sigar_t *sigar, sigar_pid_t pid,
     return SIGAR_OK;
 }
 
-#endif /* WIN32 */
-
-/* os impls should use an optimized version of this */
-int sigar_proc_count(sigar_t *sigar, sigar_uint64_t *total)
-{
-    int status;
-    sigar_proc_list_t proclist;
-
-    *total = 0;
-
-    if ((status = sigar_proc_list_get(sigar, &proclist)) != SIGAR_OK) {
-        return status;
-    }
-
-    *total = proclist.number;
-
-    sigar_proc_list_destroy(sigar, &proclist);
-
-    return SIGAR_OK;
-}
-
 int sigar_procfs_args_get(sigar_t *sigar, sigar_pid_t pid,
                           sigar_proc_args_t *procargs)
 {
@@ -282,6 +261,27 @@ int sigar_procfs_args_get(sigar_t *sigar, sigar_pid_t pid,
     }
 
     free(buf);
+
+    return SIGAR_OK;
+}
+
+#endif /* WIN32 */
+
+/* os impls should use an optimized version of this */
+int sigar_proc_count(sigar_t *sigar, sigar_uint64_t *total)
+{
+    int status;
+    sigar_proc_list_t proclist;
+
+    *total = 0;
+
+    if ((status = sigar_proc_list_get(sigar, &proclist)) != SIGAR_OK) {
+        return status;
+    }
+
+    *total = proclist.number;
+
+    sigar_proc_list_destroy(sigar, &proclist);
 
     return SIGAR_OK;
 }
