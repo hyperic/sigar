@@ -1296,19 +1296,42 @@ static int create_fsdev_cache(sigar_t *sigar)
     return SIGAR_OK;
 }
 
+static int fs_kstat_read(sigar_t *sigar,
+                         sigar_file_system_usage_t *fsusage,
+                         kstat_t *ksp)
+{
+    kstat_io_t io;
+    kstat_read(sigar->kc, ksp, &io);
+    fsusage->disk_reads  = io.reads;
+    fsusage->disk_writes = io.writes;
+    return SIGAR_OK;
+}
+
 static int get_fs_kstat(sigar_t *sigar,
                         sigar_file_system_usage_t *fsusage,
                         fs_kstat_t *fsk)
 {
-    kstat_t *ksp;
+    kstat_t *ksp, *first;
     char *ptr;
 
     kstat_chain_update(sigar->kc);
-    ksp = kstat_lookup(sigar->kc, fsk->module, fsk->instance, NULL);
+    first = ksp =
+        kstat_lookup(sigar->kc, fsk->module, fsk->instance, NULL);
 
     if (!ksp) {
         return ENXIO;
     }
+
+    /* first entry is for the entire disk.
+     * if there are no partitions specified,
+     * report metrics for the entire disk.
+     */
+    if (!ksp->ks_next ||
+        !strEQ(ksp->ks_next->ks_module, fsk->module))
+    {
+        return fs_kstat_read(sigar, fsusage, first);
+    }
+    ksp = ksp->ks_next;
 
     while (ksp) {
         if (!strEQ(ksp->ks_module, fsk->module)) {
@@ -1316,12 +1339,7 @@ static int get_fs_kstat(sigar_t *sigar,
         }
         if ((ptr = strchr(ksp->ks_name, ','))) {
             if (*(ptr+1) == fsk->partition) {
-                kstat_io_t io;
-                kstat_read(sigar->kc, ksp, &io);
-                fsusage->disk_reads  = io.reads;
-                fsusage->disk_writes = io.writes;
-
-                return SIGAR_OK;
+                return fs_kstat_read(sigar, fsusage, ksp);
             }
         }
 
