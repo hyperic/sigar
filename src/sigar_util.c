@@ -239,7 +239,7 @@ int sigar_procfs_args_get(sigar_t *sigar, sigar_pid_t pid,
 
     sigar_proc_args_create(procargs);
 
-    //e.g. /proc/2/cmdline
+    /* e.g. /proc/2/cmdline */
     if (total == 0) {
         procargs->number = 0;
         return SIGAR_OK;
@@ -417,6 +417,9 @@ void sigar_cpu_model_adjust(sigar_t *sigar, sigar_cpu_info_t *info)
 #endif
 #ifdef __sun
 #include <rpc/clnt_soc.h>
+#endif
+#ifdef _AIX
+#include <sys/socket.h>
 #endif
 
 static int get_sockaddr(struct sockaddr_in *addr, char *host)
