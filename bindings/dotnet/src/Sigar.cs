@@ -107,7 +107,8 @@ namespace Hyperic.Sigar {
         private readonly ulong NA_cached;
 
         [DllImport(Sigar.LIBSIGAR)]
-        private static extern int sigar_mem_get(IntPtr sigar, IntPtr mem);
+        private static extern int
+        sigar_mem_get(IntPtr sigar, IntPtr mem);
 
         internal static Mem NativeGet(Sigar sigar) {
             Type type = typeof(Mem);
@@ -135,7 +136,8 @@ namespace Hyperic.Sigar {
         public readonly ulong Free;
 
         [DllImport(Sigar.LIBSIGAR)]
-        private static extern int sigar_swap_get(IntPtr sigar, IntPtr swap);
+        private static extern int
+        sigar_swap_get(IntPtr sigar, IntPtr swap);
 
         internal static Swap NativeGet(Sigar sigar) {
             Type type = typeof(Swap);
@@ -164,7 +166,8 @@ namespace Hyperic.Sigar {
         public readonly ulong Total;
 
         [DllImport(Sigar.LIBSIGAR)]
-        private static extern int sigar_cpu_get(IntPtr sigar, IntPtr cpu);
+        private static extern int
+        sigar_cpu_get(IntPtr sigar, IntPtr cpu);
 
         internal static Cpu NativeGet(Sigar sigar) {
             Type type = typeof(Cpu);
@@ -201,12 +204,12 @@ namespace Hyperic.Sigar {
         private readonly IntPtr data;
 
         [DllImport(Sigar.LIBSIGAR)]
-        private static extern int sigar_cpu_info_list_get(IntPtr sigar,
-                                                          IntPtr cpu_infos);
+        private static extern int
+        sigar_cpu_info_list_get(IntPtr sigar, IntPtr cpu_infos);
 
         [DllImport(Sigar.LIBSIGAR)]
-        private static extern int sigar_cpu_info_list_destroy(IntPtr sigar,
-                                                              IntPtr cpu_infos);
+        private static extern int
+        sigar_cpu_info_list_destroy(IntPtr sigar, IntPtr cpu_infos);
 
         internal static CpuInfo[] NativeGet(Sigar sigar) {
             Type type = typeof(CpuInfoList);
@@ -228,7 +231,8 @@ namespace Hyperic.Sigar {
             int size = Marshal.SizeOf(infos[0]);
 
             for (int i=0; i<infosPtr.Number; i++) {
-                infos[i] = (CpuInfo)Marshal.PtrToStructure(eptr, typeof(CpuInfo));
+                infos[i] =
+                    (CpuInfo)Marshal.PtrToStructure(eptr, typeof(CpuInfo));
 
                 //eptr += sizeof(sigar_cpu_info_t);
                 eptr = Sigar.incrementIntPtr(eptr, size);
@@ -263,12 +267,12 @@ namespace Hyperic.Sigar {
         private readonly IntPtr data;
 
         [DllImport(Sigar.LIBSIGAR)]
-        private static extern int sigar_file_system_list_get(IntPtr sigar,
-                                                             IntPtr fslist);
+        private static extern int
+        sigar_file_system_list_get(IntPtr sigar, IntPtr fslist);
 
         [DllImport(Sigar.LIBSIGAR)]
-        private static extern int sigar_file_system_list_destroy(IntPtr sigar,
-                                                                 IntPtr fslist);
+        private static extern int
+        sigar_file_system_list_destroy(IntPtr sigar, IntPtr fslist);
 
         internal static FileSystem[] NativeGet(Sigar sigar) {
             Type type = typeof(FileSystemList);
@@ -290,7 +294,9 @@ namespace Hyperic.Sigar {
             int size = Marshal.SizeOf(fs[0]);
 
             for (int i=0; i<fsPtr.Number; i++) {
-                fs[i] = (FileSystem)Marshal.PtrToStructure(fptr, typeof(FileSystem));
+                fs[i] =
+                    (FileSystem)Marshal.PtrToStructure(fptr,
+                                                       typeof(FileSystem));
 
                 //fptr += sizeof(sigar_fs_t);
                 fptr = Sigar.incrementIntPtr(fptr, size);
@@ -314,11 +320,12 @@ namespace Hyperic.Sigar {
         public readonly double UsePercent;
 
         [DllImport(Sigar.LIBSIGAR)]
-        private static extern int sigar_file_system_usage_get(IntPtr sigar,
-                                                              string dirname,
-                                                              IntPtr fsusage);
+        private static extern int
+        sigar_file_system_usage_get(IntPtr sigar, string dirname,
+                                    IntPtr fsusage);
 
-        internal static FileSystemUsage NativeGet(Sigar sigar, string dirname) {
+        internal static FileSystemUsage NativeGet(Sigar sigar,
+                                                  string dirname) {
             Type type = typeof(FileSystemUsage);
             IntPtr ptr = Marshal.AllocHGlobal(Marshal.SizeOf(type));
 
@@ -346,18 +353,19 @@ namespace Hyperic.Sigar {
         private readonly IntPtr data;
 
         [DllImport(Sigar.LIBSIGAR)]
-        private static extern int sigar_net_interface_list_get(IntPtr sigar,
-                                                               IntPtr iflist);
+        private static extern int
+        sigar_net_interface_list_get(IntPtr sigar, IntPtr iflist);
 
         [DllImport(Sigar.LIBSIGAR)]
-        private static extern int sigar_net_interface_list_destroy(IntPtr sigar,
-                                                                   IntPtr iflist);
+        private static extern int
+        sigar_net_interface_list_destroy(IntPtr sigar, IntPtr iflist);
 
         internal static String[] NativeGet(Sigar sigar) {
             Type type = typeof(NetInterfaceList);
             IntPtr ptr = Marshal.AllocHGlobal(Marshal.SizeOf(type));
 
-            int status = sigar_net_interface_list_get(sigar.sigar.Handle, ptr);
+            int status =
+                sigar_net_interface_list_get(sigar.sigar.Handle, ptr);
 
             if (status != Sigar.OK) {
                 Marshal.FreeHGlobal(ptr);
