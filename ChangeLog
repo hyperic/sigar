@@ -1,3 +1,8 @@
+2004-12-05  Doug MacEachern  <dougm@hyperic.net>
+
+        * added sigar_file_system_usage_t.disk_{reads,writes} fields.
+          implement only on linux and win32 for the moment.
+
 2004-11-29  Doug MacEachern  <dougm@hyperic.net>
 
         * fix possible segfault in sigar_group_name_get if gid == -1
