@@ -27,6 +27,14 @@ int sigar_perfstat_pagingspace(perfstat_id_t *id,
     return perfstat_pagingspace(id, pagingspace, size, num);
 }
 
+int sigar_perfstat_disk(perfstat_id_t *id,
+                        perfstat_disk_t *disk,
+                        size_t size,
+                        int num)
+{
+    return perfstat_disk(id, disk, size, num);
+}
+
 /*
  * not a perfstat function, but from libpthreads.a
  * requires the same tricks to link on 4.3 and run on 5.2
