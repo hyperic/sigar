@@ -86,6 +86,7 @@ static PERF_OBJECT_TYPE *get_perf_object(sigar_t *sigar, char *counter_key,
     DWORD retval, type, bytes;
     WCHAR wcounter_key[MAX_PATH+1];
     PERF_DATA_BLOCK *block;
+    PERF_OBJECT_TYPE *object;
 
     *err = SIGAR_OK;
 
@@ -113,8 +114,30 @@ static PERF_OBJECT_TYPE *get_perf_object(sigar_t *sigar, char *counter_key,
     }
 
     block = (PERF_DATA_BLOCK *)sigar->perfbuf;
+    object = PdhFirstObject(block);
 
-    return PdhFirstObject(block);
+    /* 
+     * only seen on windows 2003 server when pdh.dll
+     * functions are in use by the same process.
+     * confucius say what the fuck.
+     */
+    if (object->NumInstances == PERF_NO_INSTANCES) {
+        bytes =
+            (block->TotalByteLength -
+             block->HeaderLength -
+             object->TotalByteLength);
+
+        for (; bytes > 0; bytes -= object->TotalByteLength) {
+            if (object->NumInstances != PERF_NO_INSTANCES) {
+                return object;
+            }
+            object = PdhNextObject(object);
+        }
+        return NULL;
+    }
+    else {
+        return object;
+    }
 }
 
 static void get_sysinfo(sigar_t *sigar)
@@ -315,15 +338,6 @@ static PERF_INSTANCE_DEFINITION *get_cpu_instance(sigar_t *sigar,
     DWORD i;
 
     if (!object) {
-        return NULL;
-    }
-
-    /* XXX dont know why this happens, seen on
-     * 2003 server mail.hyperic.net
-     */
-
-    if (object->NumInstances < 1) {
-        *err = ENOENT;
         return NULL;
     }
 
@@ -557,13 +571,6 @@ SIGAR_DECLARE(int) sigar_proc_list_get(sigar_t *sigar,
         }
     }
 
-    /* XXX dont know why this happens, have only
-     * seen it using 2003 server within vmware.
-     */
-    if (object->NumInstances < 1) {
-        return ENOENT;
-    }
-
     sigar_proc_list_create(proclist);
 
     for (i=0, inst = PdhFirstInstance(object);
@@ -782,13 +789,6 @@ static int get_proc_info(sigar_t *sigar, sigar_pid_t pid)
 
     if (object == NULL) {
         return err;
-    }
-
-    /* XXX dont know why this happens, have only
-     * seen it using 2003 server within vmware.
-     */
-    if (object->NumInstances < 1) {
-        return ENOENT;
     }
 
     pinfo->pid = pid;
@@ -1350,11 +1350,6 @@ static PERF_INSTANCE_DEFINITION *get_disk_instance(sigar_t *sigar,
     DWORD i;
 
     if (!object) {
-        return NULL;
-    }
-
-    if (object->NumInstances < 1) {
-        *err = ENOENT;
         return NULL;
     }
 
