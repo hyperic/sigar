@@ -37,6 +37,8 @@ public class TestPTQL extends SigarTestCase {
         "Args.0.sw=sendmail: Queue runner@",
         "Args.1000.eq=foo",
         "Args.*.eq=org.apache.tools.ant.Main", //'*' == any arg
+        "Args.*.ct=java", //'*' == any arg
+        "Args.*.ew=sigar.jar", //'*' == any arg
         "Port.tcp.eq=80,Cred.Uid.eq=0", //root owned http port
         "Port.udp.eq=161,Cred.Uid.eq=0", //root owned snmp port
         "Port.tcp.eq=8080,Cred.Uid.eq=1003", //dougm owned jboss port
