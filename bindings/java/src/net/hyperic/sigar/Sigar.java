@@ -532,12 +532,12 @@ public class Sigar implements SigarProxy {
      * before attempting to get the file system stats to prevent application
      * hang when an NFS server is down.
      * @param name Name of the directory on which filesystem is mounted.
-     * @exception SigarException If given directory is not mounted
-     * or NFS server is unreachable.
+     * @exception SigarException If given directory is not mounted.
+     * @exception NfsUnreachableException If NFS server is unreachable.
      * @see net.hyperic.sigar.Sigar#getFileSystemUsage
      */
     public FileSystemUsage getMountedFileSystemUsage(String name)
-        throws SigarException {
+        throws SigarException, NfsUnreachableException {
 
         FileSystem fs = getFileSystemMap().getMountPoint(name);
 
@@ -548,8 +548,7 @@ public class Sigar implements SigarProxy {
         if (fs instanceof NfsFileSystem) {
             NfsFileSystem nfs = (NfsFileSystem)fs;
             if (!nfs.ping()) {
-                throw new SigarException(nfs.getHostname() + ":" + name +
-                                         " nfs server unreachable");
+                throw nfs.getUnreachableException();
             }
         }
 
