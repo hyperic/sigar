@@ -1192,10 +1192,9 @@ SIGAR_DECLARE(int) sigar_proc_exe_get(sigar_t *sigar, sigar_pid_t pid,
         return GetLastError();
     }
 
-    procexe->cwd[0] = '\0';
     procexe->root[0] = '\0';
 
-    status = sigar_proc_exe_name_get(sigar, proc, procexe->name);
+    status = sigar_proc_exe_peb_get(sigar, proc, procexe);
 
     return status;
 }

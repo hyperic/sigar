@@ -119,7 +119,8 @@ struct sigar_t {
 
 int sigar_wsa_init(sigar_t *sigar);
 
-int sigar_proc_exe_name_get(sigar_t *sigar, HANDLE proc, char *name);
+int sigar_proc_exe_peb_get(sigar_t *sigar, HANDLE proc,
+                           sigar_proc_exe_t *procexe);
 
 int sigar_proc_cmdline_get(sigar_t *sigar, HANDLE proc, char *cmdline);
 
