@@ -479,9 +479,9 @@ int sigar_proc_cred_get(sigar_t *sigar, sigar_pid_t pid,
     return SIGAR_OK;
 }
 
+#ifdef DARWIN
 static int get_proc_times(sigar_pid_t pid, sigar_proc_time_t *time)
 {
-#ifdef DARWIN
     unsigned int count;
     time_value_t utime = {0, 0}, stime = {0, 0};
     task_basic_info_data_t ti;
@@ -524,14 +524,19 @@ static int get_proc_times(sigar_pid_t pid, sigar_proc_time_t *time)
     time->total = time->user + time->sys;
 
     return SIGAR_OK;
-#else
-    return SIGAR_ENOTIMPL;
-#endif
 }
+#endif
+
+#define READ_PROC_TIME(ptr, value) \
+    SIGAR_SKIP_SPACE(ptr); \
+    value = sigar_strtoul(ptr); \
+    ++ptr; \
+    value += (sigar_strtoul(ptr) / 1000000)
 
 int sigar_proc_time_get(sigar_t *sigar, sigar_pid_t pid,
                         sigar_proc_time_t *proctime)
 {
+#ifdef DARWIN
     int status = sigar_get_pinfo(sigar, pid);
     struct kinfo_proc *pinfo = sigar->pinfo;
     
@@ -543,10 +548,21 @@ int sigar_proc_time_get(sigar_t *sigar, sigar_pid_t pid,
         return status;
     }
 
-#ifdef DARWIN
     proctime->start_time = pinfo->kp_proc.p_starttime.tv_sec;
 #else
-    proctime->start_time = 1;/*XXX*/
+    char buffer[1024], *ptr=buffer;
+    int status = SIGAR_PROC_FILE2STR(buffer, pid, "/status");
+
+    if (status != SIGAR_OK) {
+        return status;
+    }
+
+    ptr = sigar_skip_multiple_token(ptr, 7);
+    READ_PROC_TIME(ptr, proctime->start_time);
+    proctime->start_time *= 1000; /* convert to millis */
+    READ_PROC_TIME(ptr, proctime->user);
+    READ_PROC_TIME(ptr, proctime->sys);
+    proctime->total = proctime->user + proctime->sys;
 #endif
 
     return SIGAR_OK;
