@@ -32,8 +32,15 @@ public class Time extends SigarCommandBase {
         long user = cpu.getUser();
         long sys = cpu.getSys();
         long start = System.currentTimeMillis();
+        boolean isInteractive = this.shell.isInteractive();
+        //turn off paging.
+        this.shell.setInteractive(false);
 
-        this.shell.handleCommand("time " + args[0], args);
+        try {
+            this.shell.handleCommand("time " + args[0], args);
+        } finally {
+            this.shell.setInteractive(isInteractive);
+        }
 
         cpu.gather(this.sigar, 0);
         println("real....." +
