@@ -51,7 +51,6 @@ public class Shell extends ShellBase {
         registerCommandHandler("penv", new ShowEnv(this));
         registerCommandHandler("pfile", new ProcFileInfo(this));
         registerCommandHandler("pmodules", new ProcModuleInfo(this));
-        registerCommandHandler("ptql", new PTQL(this));
         registerCommandHandler("cpuinfo", new CpuInfo(this));
         registerCommandHandler("ifconfig", new Ifconfig(this));
         registerCommandHandler("uptime", new Uptime(this));
@@ -59,7 +58,12 @@ public class Shell extends ShellBase {
         registerCommandHandler("kill", new Kill(this));
         registerCommandHandler("netstat", new Netstat(this));
         registerCommandHandler("version", new Version(this));
-        registerCommandHandler("test", new SigarTestRunner(this));
+        try {
+            //requires junit.jar
+            registerCommandHandler("test", new SigarTestRunner(this));
+            //requires bcel-5.1.jar
+            registerCommandHandler("ptql", new PTQL(this));
+        } catch (NoClassDefFoundError e) { }
     }
 
     public void processCommand(ShellCommandHandler handler, String args[])
