@@ -152,7 +152,8 @@ public class Runner {
         Class cmd = null;
         String[] packages = {
             "net.hyperic.sigar.cmd.",
-            "net.hyperic.sigar.test."
+            "net.hyperic.sigar.test.",
+            "net.hyperic.sigar."
         };
 
         for (int i=0; i<packages.length; i++) {
