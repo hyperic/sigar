@@ -81,6 +81,8 @@
 
 #define SIGAR_NET_CONNLIST_MAX 20
 
+#define SIGAR_WHO_LIST_MAX 12
+
 int sigar_os_open(sigar_t **sigar);
 
 int sigar_os_close(sigar_t *sigar);
@@ -166,6 +168,15 @@ int sigar_net_connection_list_grow(sigar_net_connection_list_t *connlist);
 #define SIGAR_NET_CONNLIST_GROW(connlist) \
     if (connlist->number >= connlist->size) { \
         sigar_net_connection_list_grow(connlist); \
+    }
+
+int sigar_who_list_create(sigar_who_list_t *wholist);
+
+int sigar_who_list_grow(sigar_who_list_t *wholist);
+
+#define SIGAR_WHO_LIST_GROW(wholist) \
+    if (wholist->number >= wholist->size) { \
+        sigar_who_list_grow(wholist); \
     }
 
 void sigar_hwaddr_format(char *buff, unsigned char *ptr);

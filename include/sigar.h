@@ -493,6 +493,25 @@ sigar_net_connection_list_destroy(sigar_t *sigar,
 
 SIGAR_DECLARE(const char *)sigar_net_connection_type_get(int type);
 
+typedef struct {
+    char user[32];
+    char device[32];
+    char host[256];
+    sigar_uint64_t time;
+} sigar_who_t;
+
+typedef struct {
+    unsigned long number;
+    unsigned long size;
+    sigar_who_t *data;
+} sigar_who_list_t;
+
+SIGAR_DECLARE(int) sigar_who_list_get(sigar_t *sigar,
+                                      sigar_who_list_t *wholist);
+
+SIGAR_DECLARE(int) sigar_who_list_destroy(sigar_t *sigar,
+                                          sigar_who_list_t *wholist);
+
 SIGAR_DECLARE(int) sigar_proc_port_get(sigar_t *sigar, unsigned long port,
                                        sigar_pid_t *pid);
 
