@@ -1194,7 +1194,7 @@ int sigar_cpu_infos_get(sigar_t *sigar,
 
     for (i=0; i<ncpu; i++) {
         sigar_cpu_info_t *info;
-        char *arch, *model;
+        char *arch, *model=NULL;
 
         SIGAR_CPU_INFOS_GROW(cpu_infos);
 
@@ -1209,13 +1209,13 @@ int sigar_cpu_infos_get(sigar_t *sigar,
             arch = "Power Classic";
             break;
           case POWER_PC:
-            arch = "Power PC";
+            arch = "PowerPC";
             break;
           case IA64:
             arch = "IA64";
             break;
           default:
-            arch = "unknown";
+            arch = "PowerPC"; /* what else could it be */
             break;
         }
 
@@ -1266,7 +1266,6 @@ int sigar_cpu_infos_get(sigar_t *sigar,
                 model = "POWER5";
                 break;
               default:
-                model = "unknown";
                 break;
             }
         }
@@ -1281,18 +1280,21 @@ int sigar_cpu_infos_get(sigar_t *sigar,
                 model = "M2";
                 break;
               default:
-                model = "unknown";
                 break;
             }
         }
         else {
-            SIGAR_SSTRCPY(info->vendor, "Unknown");
-            model = "unknown";
+            SIGAR_SSTRCPY(info->vendor, "IBM");
             break;
         }
 
-        snprintf(info->model, sizeof(info->model),
-                 "%s %s", arch, model);
+        if (model) {
+            snprintf(info->model, sizeof(info->model),
+                     "%s %s", arch, model);
+        }
+        else {
+            SIGAR_SSTRCPY(info->model, arch);
+        }
     }
 
     return SIGAR_OK;
