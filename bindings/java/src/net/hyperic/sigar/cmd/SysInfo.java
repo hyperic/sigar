@@ -1,12 +1,7 @@
 package net.hyperic.sigar.cmd;
 
+import net.hyperic.sigar.OperatingSystem;
 import net.hyperic.sigar.SigarException;
-
-import java.io.File;
-import java.io.FilenameFilter;
-import java.io.FileReader;
-import java.io.BufferedReader;
-import java.io.IOException;
 
 /**
  * Display System Information
@@ -37,51 +32,14 @@ public class SysInfo extends SigarCommandBase {
         /**
          * OS info
          */
-        this.out.println(osName + " " +
-            System.getProperty("os.version") + " " +
-            System.getProperty("os.arch"));
+        OperatingSystem os = OperatingSystem.getInstance();
 
-        /**
-         * craziness to try to determine the linux distro
-         */
+        this.out.println(os.getName() + " " +
+                         os.getVersion() + " " +
+                         os.getArch());
+
         if (osName.equals("Linux")) {
-            File etc = new File("/etc");
-            File[] release = etc.listFiles(new FilenameFilter()
-            {
-                public boolean accept(File dir, String name)
-                {
-                    boolean distroFile = contains(name, "elease");
-
-                    if (!distroFile) {
-                        distroFile = contains(name, "ersion");
-                    }
-                    return distroFile;
-                }
-            });
-
-            if (release.length != 1) {
-                this.out.println("Cannot determine Linux distribution!");
-                if (release.length > 1) {
-                    this.out.println("Possible version files:");
-                    for (int i = 0 ; i < release.length ; i++) {
-                        this.out.println("  " + release[i]);
-                    }
-                }
-            }
-            else {
-                try {
-                    //this.out.println(release[0].getAbsoluteFile() + ":");
-                    BufferedReader rel = new BufferedReader(
-                        new FileReader(release[0]));
-                    String line;
-                    while ((line = rel.readLine()) != null) {
-                        this.out.println(line);
-                    }
-                }
-                catch (IOException e) {
-                    this.out.println("Cannot determine Linux distribution!");
-                }
-            }
+            println(os.getVendor() + " " + os.getVendorVersion());
         }
 
         /**
