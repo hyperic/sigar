@@ -53,6 +53,10 @@ public class Shell extends ShellBase {
         return this.isInteractive;
     }
 
+    public void setInteractive(boolean value) {
+        this.isInteractive = value;
+    }
+
     public void registerCommands() throws ShellCommandInitException {
         registerCommandHandler("df", new Df(this));
         registerCommandHandler("iostat", new Iostat(this));
