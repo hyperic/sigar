@@ -18,6 +18,7 @@
 #include <sys/user.h>
 #include <sys/utsname.h>
 #include <sys/vmount.h>
+#include <sys/proc.h>
 
 #include <sys/socket.h>
 #include <arpa/inet.h>
@@ -33,7 +34,17 @@
 
 #include <sys/ldr.h>
 
-#define FIXED_TO_DOUBLE(x) (((double)x) / 65536.0)
+/* not defined in aix 4.3 */
+#ifndef SBITS
+#define SBITS 16
+#endif
+
+/*
+ * from libperfstat.h:
+ * "To calculate the load average, divide the numbers by (1<<SBITS).
+ *  SBITS is defined in <sys/proc.h>."
+ */
+#define FIXED_TO_DOUBLE(x) (((double)x) / (1<<SBITS))
 
 /* these offsets wont change so just lookup them up during open */
 static int get_koffsets(sigar_t *sigar)
