@@ -24,6 +24,9 @@
 #define SIGAR_FIND_CLASS(name) \
     JENV->FindClass(env, SIGAR_PACKAGE name)
 
+#define SIGAR_CLASS_SIG(name) \
+    "L" SIGAR_PACKAGE name ";"
+
 typedef struct {
     jclass classref;
     jfieldID *ids;
@@ -35,6 +38,7 @@ typedef struct {
     sigar_t *sigar;
     jsigar_field_cache_t *fields[JSIGAR_FIELDS_MAX];
     int open_status;
+    jthrowable not_impl;
 } jni_sigar_t;
 
 #define dSIGAR_GET \
@@ -58,9 +62,11 @@ static void sigar_throw_exception(JNIEnv *env, char *msg)
     JENV->ThrowNew(env, errorClass, msg);
 }
 
+#define SIGAR_NOTIMPL_EX "SigarNotImplementedException"
+
 static void sigar_throw_notimpl(JNIEnv *env, char *msg)
 {
-    jclass errorClass = SIGAR_FIND_CLASS("SigarNotImplementedException");
+    jclass errorClass = SIGAR_FIND_CLASS(SIGAR_NOTIMPL_EX);
 
     JENV->ThrowNew(env, errorClass, msg);
 }
@@ -78,8 +84,23 @@ static void sigar_throw_error(JNIEnv *env, jni_sigar_t *jsigar, int err)
       /*XXX*/
 #endif
       case SIGAR_ENOTIMPL:
-        errorClass = SIGAR_FIND_CLASS("SigarNotImplementedException");
-        break;
+        if (jsigar->not_impl == NULL) {
+            jfieldID id;
+            jthrowable not_impl;
+
+            errorClass = SIGAR_FIND_CLASS(SIGAR_NOTIMPL_EX);
+
+            id = JENV->GetStaticFieldID(env, errorClass,
+                                        "INSTANCE",
+                                        SIGAR_CLASS_SIG(SIGAR_NOTIMPL_EX));
+
+            not_impl = JENV->GetStaticObjectField(env, errorClass, id);
+
+            jsigar->not_impl = JENV->NewGlobalRef(env, not_impl);
+        }
+
+        JENV->Throw(env, jsigar->not_impl);
+        return;
       default:
         errorClass = SIGAR_FIND_CLASS("SigarException");
         break;
@@ -170,6 +191,10 @@ JNIEXPORT jint SIGAR_JNI(Sigar_nativeClose)
         JENV->DeleteGlobalRef(env, jsigar->logger);
     }
 
+    if (jsigar->not_impl != NULL) {
+        JENV->DeleteGlobalRef(env, jsigar->not_impl);
+    }
+
     for (i=0; i<JSIGAR_FIELDS_MAX; i++) {
         if (jsigar->fields[i]) {
             JENV->DeleteGlobalRef(env,
@@ -217,9 +242,6 @@ static jstring jinet_ntoa(JNIEnv *env, sigar_t *sigar, sigar_uint64_t val) {
     SetObjectField(env, obj, fieldID, jinet_ntoa(env, sigar, val))
 
 #include "javasigar_generated.c"
-
-#define SIGAR_CLASS_SIG(name) \
-    "L" SIGAR_PACKAGE name ";"
 
 #define SIGAR_ALLOC_OBJECT(name) \
     JENV->AllocObject(env, SIGAR_FIND_CLASS(name))
@@ -1124,6 +1146,8 @@ JNIEXPORT jlong SIGAR_JNI(Sigar_getServicePid)
 
     return pid;
 #else
+    dSIGAR(0);
     sigar_throw_error(env, jsigar, SIGAR_ENOTIMPL);
+    return 0;
 #endif
 }
