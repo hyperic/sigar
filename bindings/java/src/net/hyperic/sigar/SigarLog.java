@@ -1,5 +1,6 @@
 package net.hyperic.sigar;
 
+import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
@@ -17,10 +18,22 @@ public class SigarLog {
 
     public static native void setLevel(Sigar sigar, int level);
 
+    private static Logger getLogger() {
+        Logger log = Logger.getLogger("Sigar");
+        if (log.getLevel() == null) {
+            BasicConfigurator.configure();
+        }
+        return log;
+    }
+
+    static void error(String msg, Throwable exc) {
+        getLogger().error(msg, exc);
+    }
+
     //XXX want to make this automatic, but also dont always
     //want to turn on logging, since most sigar logging will be DEBUG
     public static void enable(Sigar sigar) {
-        Logger log = Logger.getLogger("Sigar");
+        Logger log = getLogger();
 
         Level level = log.getLevel();
         if (level == null) {
