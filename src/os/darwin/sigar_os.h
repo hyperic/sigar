@@ -24,7 +24,7 @@ struct sigar_t {
 #ifdef DARWIN
     mach_port_t mach_port;
 #else
-    kvm_t *kp;
+    kvm_t *kmem;
     /* offsets for seeking on kmem */
     unsigned long koffsets[KOFFSET_MAX];
 #endif

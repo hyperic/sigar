@@ -41,7 +41,7 @@ static int get_koffsets(sigar_t *sigar)
         { NULL }
     };
 
-    kvm_nlist(sigar->kp, klist);
+    kvm_nlist(sigar->kmem, klist);
     if (klist[0].n_type == 0) {
         return errno;
     }
@@ -61,7 +61,7 @@ static int kread(sigar_t *sigar, void *data, int size, long offset)
     }
 #endif
 
-    if (kvm_read(sigar->kp, offset, data, size) != size) {
+    if (kvm_read(sigar->kmem, offset, data, size) != size) {
         return errno;
     }
 
@@ -95,7 +95,7 @@ int sigar_os_open(sigar_t **sigar)
 #ifdef DARWIN
     (*sigar)->mach_port = mach_host_self();
 #else
-    (*sigar)->kp = kvm_open(NULL, NULL, NULL, O_RDONLY, "kvm_open");
+    (*sigar)->kmem = kvm_open(NULL, NULL, NULL, O_RDONLY, "kvm_open");
 #endif
 
     get_koffsets(*sigar);
@@ -238,7 +238,7 @@ int sigar_swap_get(sigar_t *sigar, sigar_swap_t *swap)
 #else
     struct kvm_swap kswap[1];
 
-    if (kvm_getswapinfo(sigar->kp, kswap, 1, 0) < 0) {
+    if (kvm_getswapinfo(sigar->kmem, kswap, 1, 0) < 0) {
         return errno;
     }
 
