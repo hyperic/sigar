@@ -68,6 +68,10 @@ public class CpuPerc {
         this.idle = idle;
     }
 
+    public double getCombined() {
+        return this.user + this.sys;
+    }
+
     public static String format(double val) {
         String p = String.valueOf(val * 100.0);
         //cant wait for sprintf.
