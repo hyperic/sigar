@@ -77,6 +77,12 @@ static void sigar_throw_notimpl(JNIEnv *env, char *msg)
 #  define SIGAR_ENOENT ENOENT
 #endif
 
+#ifdef WIN32
+#  define SIGAR_EACCES ERROR_ACCESS_DENIED
+#else
+#  define SIGAR_EACCES EACCES
+#endif
+
 static void sigar_throw_error(JNIEnv *env, jni_sigar_t *jsigar, int err)
 {
     jclass errorClass;
@@ -84,6 +90,10 @@ static void sigar_throw_error(JNIEnv *env, jni_sigar_t *jsigar, int err)
     switch (err) {
       case SIGAR_ENOENT:
         errorClass = SIGAR_FIND_CLASS("SigarFileNotFoundException");
+        break;
+
+      case SIGAR_EACCES:
+        errorClass = SIGAR_FIND_CLASS("SigarPermissionDeniedException");
         break;
 
       case SIGAR_ENOTIMPL:
