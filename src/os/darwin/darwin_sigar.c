@@ -1595,12 +1595,15 @@ int sigar_proc_port_get(sigar_t *sigar, int protocol,
         return ENOENT;
     }
 
-    pinfo = kvm_getprocs(sigar->kmem, KERN_PROC_ALL, 0, &nentries);
+    pinfo = kvm_getprocs(sigar->kmem, KERN_PROC_PROC, 0, &nentries);
     if (!pinfo) {
         return errno;
     }
 
     for (i=0; i<nentries; i++) {
+        if (pinfo[i].KI_FLAG & P_SYSTEM) {
+            continue;
+        }
         if (pinfo[i].ki_fd) {
             struct filedesc pfd;
             struct file **ofiles, ofile;
