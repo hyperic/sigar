@@ -1,10 +1,13 @@
 package net.hyperic.sigar;
 
 import net.hyperic.jni.ArchLoader;
+import net.hyperic.jni.ArchLoaderException;
 import net.hyperic.jni.ArchName;
 import net.hyperic.jni.ArchNotSupportedException;
 
 public class SigarLoader extends ArchLoader {
+
+    private static String location = null;
 
     public SigarLoader(Class loaderClass) {
         super(loaderClass);
@@ -33,5 +36,20 @@ public class SigarLoader extends ArchLoader {
 
     protected void systemLoad(String name) {
         System.load(name);
+    }
+
+    /**
+     * Returns the path where sigar.jar is located.
+     */
+    public synchronized static String getLocation() {
+        if (location == null) {
+            SigarLoader loader = new SigarLoader(Sigar.class);
+            try {
+                location = loader.findJarPath("sigar.jar");
+            } catch (ArchLoaderException e) {
+                location = ".";
+            }
+        }
+        return location;
     }
 }
