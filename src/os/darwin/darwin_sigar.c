@@ -254,6 +254,79 @@ int sigar_mem_get(sigar_t *sigar, sigar_mem_t *mem)
 #define VM_DIR "/private/var/vm"
 #define SWAPFILE "swapfile"
 
+#define NL_SWAPBLIST 0
+#define NL_SWDEVT 1
+#define NL_NSWDEV 2
+#define NL_DMMAX 3
+
+#define SWI_MAXMIB 3
+
+/* code in this function is based on FreeBSD 5.3 kvm_getswapinfo.c */
+static int getswapinfo_sysctl(struct kvm_swap *swap_ary,
+                              int swap_max) 
+{
+    int ti, ttl;
+    size_t mibi, len, size;
+    int soid[SWI_MAXMIB];
+    struct xswdev xsd;
+    struct kvm_swap tot;
+    int unswdev, dmmax;
+
+    /* XXX this can be optimized by using os_open */
+    size = sizeof(dmmax);
+    if (sysctlbyname("vm.dmmax", &dmmax, &size, NULL, 0) == -1) {
+        return errno;
+    }
+
+    mibi = SWI_MAXMIB - 1;
+    if (sysctlnametomib("vm.swap_info", soid, &mibi) == -1) {
+        return errno;
+    }
+
+    bzero(&tot, sizeof(tot));
+    for (unswdev = 0;; unswdev++) {
+        soid[mibi] = unswdev;
+        len = sizeof(xsd);
+        if (sysctl(soid, mibi + 1, &xsd, &len, NULL, 0) == -1) {
+            if (errno == ENOENT) {
+                break;
+            }
+            return errno;
+        }
+#if 0
+        if (len != sizeof(xsd)) {
+            _kvm_err(kd, kd->program, "struct xswdev has unexpected "
+                     "size;  kernel and libkvm out of sync?");
+            return -1;
+        }
+        if (xsd.xsw_version != XSWDEV_VERSION) {
+            _kvm_err(kd, kd->program, "struct xswdev version "
+                     "mismatch; kernel and libkvm out of sync?");
+            return -1;
+        }
+#endif
+        ttl = xsd.xsw_nblks - dmmax;
+        if (unswdev < swap_max - 1) {
+            bzero(&swap_ary[unswdev], sizeof(swap_ary[unswdev]));
+            swap_ary[unswdev].ksw_total = ttl;
+            swap_ary[unswdev].ksw_used = xsd.xsw_used;
+            swap_ary[unswdev].ksw_flags = xsd.xsw_flags;
+        }
+        tot.ksw_total += ttl;
+        tot.ksw_used += xsd.xsw_used;
+    }
+
+    ti = unswdev;
+    if (ti >= swap_max) {
+        ti = swap_max - 1;
+    }
+    if (ti >= 0) {
+        swap_ary[ti] = tot;
+    }
+
+    return SIGAR_OK;
+}
+
 int sigar_swap_get(sigar_t *sigar, sigar_swap_t *swap)
 {
 #ifdef DARWIN
@@ -312,12 +385,14 @@ int sigar_swap_get(sigar_t *sigar, sigar_swap_t *swap)
 #else
     struct kvm_swap kswap[1];
 
-    if (!sigar->kmem) {
-        return SIGAR_EPERM_KMEM;
-    }
+    if (getswapinfo_sysctl(kswap, 1) != SIGAR_OK) {
+        if (!sigar->kmem) {
+            return SIGAR_EPERM_KMEM;
+        }
 
-    if (kvm_getswapinfo(sigar->kmem, kswap, 1, 0) < 0) {
-        return errno;
+        if (kvm_getswapinfo(sigar->kmem, kswap, 1, 0) < 0) {
+            return errno;
+        }
     }
 
     if (kswap[0].ksw_total == 0) {
