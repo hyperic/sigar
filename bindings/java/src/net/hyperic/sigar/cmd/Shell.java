@@ -21,6 +21,7 @@ import net.hyperic.sigar.shell.ShellCommandInitException;
 import net.hyperic.sigar.shell.ShellCommandUsageException;
 
 import net.hyperic.sigar.test.SigarTestRunner;
+import net.hyperic.sigar.util.Getline;
 
 /**
  * The Sigar Shell provides a command shell for running the example
@@ -163,7 +164,7 @@ public class Shell extends ShellBase {
             if (args.length == 0) {
                 shell.isInteractive = true;
                 shell.initHistory();
-                shell.gl.setCompleter(shell);
+                Getline.setCompleter(shell);
                 shell.run();
             }
             else {

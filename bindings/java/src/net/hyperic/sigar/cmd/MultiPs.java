@@ -1,7 +1,6 @@
 package net.hyperic.sigar.cmd;
 
 import net.hyperic.sigar.Sigar;
-import net.hyperic.sigar.SigarProxy;
 import net.hyperic.sigar.SigarException;
 import net.hyperic.sigar.CpuPerc;
 import net.hyperic.sigar.MultiProcCpu;

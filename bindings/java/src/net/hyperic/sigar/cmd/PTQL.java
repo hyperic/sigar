@@ -2,7 +2,6 @@ package net.hyperic.sigar.cmd;
 
 import java.io.PrintStream;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.Map;
 import java.lang.reflect.Method;
 

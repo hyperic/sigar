@@ -2,10 +2,8 @@ package net.hyperic.sigar.ptql;
 
 import net.hyperic.sigar.ProcCred;
 import net.hyperic.sigar.ProcState;
-import net.hyperic.sigar.Sigar;
 import net.hyperic.sigar.SigarException;
 import net.hyperic.sigar.SigarProxy;
-import net.hyperic.sigar.SigarProxyCache;
 
 public class ProcessQueryGenerator {
 

@@ -1,6 +1,5 @@
 package net.hyperic.sigar.cmd;
 
-import net.hyperic.sigar.Sigar;
 import net.hyperic.sigar.SigarException;
 import net.hyperic.sigar.SigarPermissionDeniedException;
 import net.hyperic.sigar.ProcFd;

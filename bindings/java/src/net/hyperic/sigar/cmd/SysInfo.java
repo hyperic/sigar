@@ -1,7 +1,5 @@
 package net.hyperic.sigar.cmd;
 
-import net.hyperic.sigar.Mem;
-import net.hyperic.sigar.Swap;
 import net.hyperic.sigar.SigarException;
 
 import java.io.File;

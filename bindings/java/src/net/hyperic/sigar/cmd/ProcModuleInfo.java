@@ -2,7 +2,6 @@ package net.hyperic.sigar.cmd;
 
 import java.util.List;
 
-import net.hyperic.sigar.Sigar;
 import net.hyperic.sigar.SigarException;
 import net.hyperic.sigar.SigarNotImplementedException;
 

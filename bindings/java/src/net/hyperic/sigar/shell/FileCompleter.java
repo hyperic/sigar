@@ -3,7 +3,6 @@ package net.hyperic.sigar.shell;
 import java.io.File;
 import java.io.FilenameFilter;
 
-import java.util.List;
 import java.util.Iterator;
 
 import net.hyperic.sigar.SigarLoader;

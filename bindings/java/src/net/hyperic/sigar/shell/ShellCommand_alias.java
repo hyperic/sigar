@@ -26,7 +26,7 @@ public class ShellCommand_alias extends ShellCommandBase {
         String[] aliasArgs = new String[ aliasArgsLen ];
         System.arraycopy(args, 1, aliasArgs, 0, aliasArgsLen);
 
-        this.aliases.put(args[0], aliasArgs);
+        aliases.put(args[0], aliasArgs);
     }
 
     public String getSyntaxArgs() {

@@ -5,7 +5,6 @@ import java.util.Comparator;
 import java.util.Map;
 import java.util.StringTokenizer;
 
-import net.hyperic.sigar.SigarException;
 import net.hyperic.sigar.SigarProxy;
 import net.hyperic.sigar.util.ReferenceMap;
 
