@@ -8,6 +8,20 @@ namespace Hyperic.Sigar {
     public class Sigar {
         public const int OK = 0;
 
+        public const String NULL_HWADDR = "00:00:00:00:00:00";
+
+        public const int IFF_UP = 0x1;
+        public const int IFF_BROADCAST = 0x2;
+        public const int IFF_DEBUG = 0x4;
+        public const int IFF_LOOPBACK = 0x8;
+        public const int IFF_POINTOPOINT = 0x10;
+        public const int IFF_NOTRAILERS = 0x20;
+        public const int IFF_RUNNING = 0x40;
+        public const int IFF_NOARP = 0x80;
+        public const int IFF_PROMISC = 0x100;
+        public const int IFF_ALLMULTI = 0x200;
+        public const int IFF_MULTICAST = 0x800;
+
         internal const int FS_NAME_LEN = 64;
 
         internal const string LIBSIGAR = "sigar-x86-winnt.dll";
