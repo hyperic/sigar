@@ -56,8 +56,8 @@ public class TestProcArgs extends SigarTestCase {
 
 	for (int i=0; i<pids.length; i++) {
             try {
-                String[] args = sigar.getProcArgs(pids[i]);
                 traceln("pid=" + pids[i]);
+                String[] args = sigar.getProcArgs(pids[i]);
                 for (int j=0; j<args.length; j++) {
                     traceln("   " + j + "=>" + args[j] + "<==");
                 }
