@@ -1,0 +1,123 @@
+/*
+ * get_mib2.h -- definitions for the get_mib2() function
+ *
+ * V. Abell <abe@cc.purdue.edu>
+ * Purdue University Computing Center
+ */
+
+
+/*
+ * Copyright 1995 Purdue Research Foundation, West Lafayette, Indiana
+ * 47907.  All rights reserved.
+ *
+ * Written by Victor A. Abell <abe@cc.purdue.edu>
+ *
+ * This software is not subject to any license of the American Telephone
+ * and Telegraph Company or the Regents of the University of California.
+ *
+ * Permission is granted to anyone to use this software for any purpose on
+ * any computer system, and to alter it and redistribute it freely, subject
+ * to the following restrictions:
+ *
+ * 1. Neither Victor A  Abell nor Purdue University are responsible for
+ *    any consequences of the use of this software.
+ *
+ * 2. The origin of this software must not be misrepresented, either by
+ *    explicit claim or by omission.  Credit to Victor A. Abell and Purdue
+ *    University must appear in documentation and sources.
+ *
+ * 3. Altered versions must be plainly marked as such, and must not be
+ *    misrepresented as being the original software.
+ *
+ * 4. This notice may not be removed or altered.
+ */
+
+
+#if	!defined(GET_MIB2_H)
+#define	GET_MIB2_H
+
+
+/*
+ * Required header files
+ */
+
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <sys/stream.h> 
+#include <sys/tihdr.h>
+#include <sys/tiuser.h>
+#include <inet/mib2.h>
+#include <inet/led.h>
+
+
+/*
+ * Miscellaneous definitions
+ */
+
+#define	GET_MIB2_ARPDEV		"/dev/arp"	/* ARP stream devi9ce */
+#define	GET_MIB2_ERRMSGL	1024		/* ErrMsg buffer length */
+#define	GET_MIB2_TCPSTREAM	"tcp"		/* TCP stream name */
+#define	GET_MIB2_UDPSTREAM	"udp"		/* UDP stream name */
+
+
+/*
+ * get_mib2() response codes
+ *
+ * 	-1		End of MIB2 information
+ *	 0		Next MIB2 structure returned
+ *	>0		Error code
+ */
+
+#define	GET_MIB2_EOD		-1	/* end of data */
+#define	GET_MIB2_OK		0	/* function succeeded */
+#define	GET_MIB2_ERR_ACK	1	/* getmsg() ACK error received */
+#define	GET_MIB2_ERR_ARPOPEN	2	/* error opening ARPDEV */
+#define	GET_MIB2_ERR_CLOSE	3	/* MIB2 access close error */
+#define	GET_MIB2_ERR_GETMSGD	4	/* error getting message data */
+#define	GET_MIB2_ERR_GETMSGR	5	/* error getting message reply */
+#define	GET_MIB2_ERR_NODATA	6	/* data expected; not received */
+#define	GET_MIB2_ERR_NOSPC	7	/* no malloc() space */
+#define	GET_MIB2_ERR_NOTOPEN	8	/* MIB2 access not open */
+#define	GET_MIB2_ERR_OPEN	9	/* MIB2 access open error */
+#define	GET_MIB2_ERR_PUTMSG	10	/* error putting request message */
+#define	GET_MIB2_ERR_TCPPUSH	11	/* error pushing TCPSTREAM */
+#define	GET_MIB2_ERR_UDPPUSH	12	/* error pushing UDPSTREAM */
+
+#define	GET_MIB2_ERR_MAX	13	/* maximum error number + 1 */
+
+
+/*
+ * Function prototypes
+ */
+
+int close_mib2(				/* close acccess to MIB2 information */
+	char **errmsg				/* error message buffer return
+						 * address (if return value
+						 * > GET_MIB2_OK.)  The error
+						 * message buffer address will
+						 * be NULL if no buffer has
+						 * been defined. */
+	);
+int get_mib2(				/* get MIB2 information */
+	struct opthdr **opt,			/* opthdr pointer return (see
+						 * <sys/socket.h> */
+	char **data,				/* data buffer return address */
+	int *datalen,				/* data buffer length return
+						 * address */
+	char **errmsg				/* error message buffer return
+						 * address (if return value
+						 * > GET_MIB2_OK.)  The error
+						 * message buffer address will
+						 * be NULL if no buffer has
+						 * been defined. */
+	);
+int open_mib2(				/* open acccess to MIB2 information */
+	char **errmsg				/* error message buffer return
+						 * address (if return value
+						 * > GET_MIB2_OK.)  The error
+						 * message buffer address will
+						 * be NULL if no buffer has
+						 * been defined. */
+	);
+
+#endif	/* !defined(GET_MIB2_H) */
