@@ -258,6 +258,23 @@ double sigar_file_system_usage_calc_used(sigar_t *sigar,
     return 0;
 }
 
+/* common to win32 and linux */
+void sigar_cpu_model_adjust(sigar_t *sigar, sigar_cpu_info_t *info)
+{
+    int len;
+    char model[128], *ptr=model, *end;
+
+    memcpy(model, info->model, sizeof(model));
+
+    /* trim leading and trailing spaces */
+    len = strlen(model);
+    end = &model[len-1];
+    while (*ptr == ' ') ++ptr;
+    while (*end == ' ') *--end = '\0';
+
+    strcpy(info->model, ptr);
+}
+
 #ifdef WIN32
 #define vsnprintf _vsnprintf
 #endif

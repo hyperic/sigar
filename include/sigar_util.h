@@ -67,4 +67,6 @@ int sigar_mem_calc_ram(sigar_t *sigar, sigar_mem_t *mem);
 double sigar_file_system_usage_calc_used(sigar_t *sigar,
                                          sigar_file_system_usage_t *fs);
 
+void sigar_cpu_model_adjust(sigar_t *sigar, sigar_cpu_info_t *info);
+
 #endif /* SIGAR_UTIL_H */
