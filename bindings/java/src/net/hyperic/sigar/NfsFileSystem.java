@@ -33,6 +33,14 @@ public class NfsFileSystem extends FileSystem {
         return ping(getHostname());
     }
 
+    public String getUnreachableMessage() {
+        return getDevName() + " nfs server unreachable";
+    }
+
+    public NfsUnreachableException getUnreachableException() {
+        return new NfsUnreachableException(getUnreachableMessage());
+    }
+
     public static void main(String[] args) throws Exception {
         Sigar.load();
         System.out.println(NfsFileSystem.ping(args[0]));
