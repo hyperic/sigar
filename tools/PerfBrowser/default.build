@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+
+<!-- NAnt build file: http://sourceforge.net/projects/nant/ -->
+
+<project name="PerfBrowser" default="build">
+    <property name="debug" value="true"/>
+
+    <target name="clean" description="clean build files">
+        <delete file="PerfBrowser.exe" failonerror="false"/>
+        <delete file="PerfBrowser.pdb" failonerror="false"/>
+    </target>
+
+    <target name="build" description="Build PerfBrowser.exe">
+        <csc target="winexe" output="PerfBrowser.exe" debug="${debug}">
+            <sources>
+                <includes name="MainForm.cs"/>
+            </sources>
+        </csc>
+    </target>
+</project>

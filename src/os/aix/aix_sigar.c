@@ -1,0 +1,1161 @@
+#include "sigar.h"
+#include "sigar_private.h"
+#include "sigar_os.h"
+#include "sigar_util.h"
+
+#include <nlist.h>
+#include <stdio.h>
+#include <utmp.h>
+
+#include <sys/statfs.h>
+#include <sys/systemcfg.h>
+#include <sys/sysinfo.h>
+#include <sys/var.h>
+#include <sys/vminfo.h>
+#include <sys/mntctl.h>
+#include <sys/stat.h>
+#include <sys/user.h>
+#include <sys/vmount.h>
+
+#include <sys/socket.h>
+#include <arpa/inet.h>
+#include <net/if.h>
+
+#include "user_v5.h"
+#include "utmp_v5.h"
+
+#define FIXED_TO_DOUBLE(x) (((double)x) / 65536.0)
+
+/* these offsets wont change so just lookup them up during open */
+static int get_koffsets(sigar_t *sigar)
+{
+    int i;
+    /* see man knlist and nlist.h */
+    struct nlist klist[] = {
+        {"avenrun", 0, 0, 0, 0, 0}, /* KOFFSET_LOADAVG */
+        {"v", 0, 0, 0, 0, 0}, /* KOFFSET_VAR */
+        {"sysinfo", 0, 0, 0, 0, 0}, /* KOFFSET_SYSINFO */
+        {"ifnet", 0, 0, 0, 0, 0}, /* KOFFSET_IFNET */
+        {"vmminfo", 0, 0, 0, 0, 0}, /* KOFFSET_VMINFO */
+        {"cpuinfo", 0, 0, 0, 0, 0}, /* KOFFSET_CPUINFO */
+        {NULL, 0, 0, 0, 0, 0}
+    };
+
+    if (knlist(klist,
+               sizeof(klist) / sizeof(klist[0]),
+               sizeof(klist[0])) != 0)
+    {
+        return errno;
+    }
+
+    for (i=0; i<KOFFSET_MAX; i++) {
+        sigar->koffsets[i] = klist[i].n_value;
+    }
+    
+    return SIGAR_OK;
+}
+
+static int kread(sigar_t *sigar, void *data, int size, long offset)
+{
+    if (sigar->kmem < 0) {
+        return SIGAR_EPERM_KMEM;
+    }
+
+    if (lseek(sigar->kmem, offset, SEEK_SET) != offset) {
+        return errno;
+    }
+
+    if (read(sigar->kmem, data, size) != size) {
+        return errno;
+    }
+
+    return SIGAR_OK;
+}
+
+int sigar_os_open(sigar_t **sigar)
+{
+    int status, i;
+    void *dlhandle;
+    int kmem = -1;
+    vminfo_func_t vminfo = NULL;
+
+    if ((dlhandle = dlopen("/unix", RTLD_NOW))) {
+        vminfo = (vminfo_func_t)dlsym(dlhandle, "vmgetinfo");
+
+        dlclose(dlhandle);
+    }
+
+    kmem = open("/dev/kmem", O_RDONLY);
+
+    *sigar = malloc(sizeof(**sigar));
+
+    (*sigar)->getvminfo = vminfo;
+    (*sigar)->getprocfd = NULL; /*XXX*/
+    (*sigar)->kmem = kmem;
+    (*sigar)->pagesize = 0;
+    (*sigar)->boot_time = 0;
+    (*sigar)->last_pid = -1;
+    (*sigar)->pinfo = NULL;
+    (*sigar)->cpuinfo = NULL;
+    (*sigar)->cpuinfo_size = 0;
+    SIGAR_ZERO(&(*sigar)->swaps);
+
+    i = getpagesize();
+    while ((i >>= 1) > 0) {
+        (*sigar)->pagesize++;
+    }
+
+    if (kmem > 0) {
+        if ((status = get_koffsets(*sigar)) != SIGAR_OK) {
+            free(*sigar);
+            return status;
+        }
+    }
+
+    return SIGAR_OK;
+}
+
+static void swaps_free(swaps_t *swaps);
+
+int sigar_os_close(sigar_t *sigar)
+{
+    swaps_free(&sigar->swaps);
+    if (sigar->kmem > 0) {
+        close(sigar->kmem);
+    }
+    if (sigar->pinfo) {
+        free(sigar->pinfo);
+    }
+    if (sigar->cpuinfo) {
+        free(sigar->cpuinfo);
+    }
+    free(sigar);
+    return SIGAR_OK;
+}
+
+char *sigar_os_error_string(int err)
+{
+    switch (err) {
+      case SIGAR_EPERM_KMEM:
+        return "Failed to open /dev/kmem for reading";
+      default:
+        return NULL;
+    }
+}
+
+#define PAGESHIFT(v) \
+    ((v) << sigar->pagesize)
+
+int sigar_mem_get(sigar_t *sigar, sigar_mem_t *mem)
+{
+    struct vminfo vm;
+
+#if 0
+    /* XXX: wtf, this is supposed to be a modern way
+     * to get the same values below.  yet it works on 4.3.3
+     * but not 5.1
+     */
+    if (!sigar->getvminfo) {
+        return EPERM;
+    }
+
+    if (sigar->getvminfo(&vm, VMINFO, sizeof(vm)) != 0) {
+        return errno;
+    }
+
+#else
+    int status;
+
+    status = kread(sigar, &vm, sizeof(vm),
+                   sigar->koffsets[KOFFSET_VMINFO]);
+
+    if (status != SIGAR_OK) {
+        return status;
+    }
+#endif
+
+    mem->total  = PAGESHIFT(vm.memsizepgs); /* lsattr -El sys0 -a realmem */
+    mem->free   = PAGESHIFT(vm.numfrb);
+    mem->used   = mem->total - mem->free;
+
+    mem->shared = -1;
+    mem->buffer = -1;
+    mem->cached = -1;
+    
+    sigar_mem_calc_ram(sigar, mem);
+
+    return SIGAR_OK;
+}
+
+static void swaps_free(swaps_t *swaps)
+{
+    if (swaps->num) {
+        int i;
+
+        for (i=0; i<swaps->num; i++) {
+            free(swaps->devs[i]);
+        }
+
+        free(swaps->devs);
+
+        swaps->num = 0;
+    }
+}
+
+/*
+ * there is no public api for parsing this file.
+ * well, there is something, but its super ugly and requires
+ * linking 2 static libraries (libodm and something else)
+ * maybe will switch to that if it can add value elsewhere too.
+ */
+#define SWAPSPACES "/etc/swapspaces"
+
+static int swaps_get(swaps_t *swaps)
+{
+    FILE *fp;
+    char buf[512];
+    char *ptr;
+    struct stat statbuf;
+
+    if (stat(SWAPSPACES, &statbuf) < 0) {
+        return errno;
+    }
+
+    /* only re-parse if file has changed */
+    if (swaps->mtime == statbuf.st_mtime) {
+        return 0;
+    }
+
+    swaps->mtime = statbuf.st_mtime;
+
+    /* easier to just start from scratch */
+    swaps_free(swaps);
+
+    if (!(fp = fopen(SWAPSPACES, "r"))) {
+        return errno;
+    }
+
+    while ((ptr = fgets(buf, sizeof(buf), fp))) {
+        if (!isalpha(*ptr)) {
+            continue;
+        }
+
+        if (strchr(ptr, ':')) {
+            int len;
+
+            ptr = fgets(buf, sizeof(buf), fp);
+
+            while (isspace(*ptr)) {
+                ++ptr;
+            }
+
+            if (strncmp(ptr, "dev", 3)) {
+                continue;
+            }
+            ptr += 3;
+            while (isspace(*ptr) || (*ptr == '=')) {
+                ++ptr;
+            }
+
+            len = strlen(ptr);
+            ptr[len-1] = '\0'; /* -1 == chomp \n */
+
+            swaps->devs = realloc(swaps->devs, swaps->num+1 * sizeof(char *));
+            swaps->devs[swaps->num] = malloc(len);
+            memcpy(swaps->devs[swaps->num], ptr, len);
+
+            swaps->num++;
+        }
+    }
+
+    fclose(fp);
+
+    return 0;
+}
+
+/* 
+ * documented in aix tech ref,
+ * but this prototype is not in any friggin header file.
+ * struct pginfo is in sys/vminfo.h
+ */
+
+int swapqry(char *path, struct pginfo *info);
+
+int sigar_swap_get(sigar_t *sigar, sigar_swap_t *swap)
+{
+    int status, i;
+
+    if ((status = swaps_get(&sigar->swaps)) != SIGAR_OK) {
+        return status;
+    }
+
+    swap->total = swap->free = 0;
+
+    for (i=0; i<sigar->swaps.num; i++) {
+        struct pginfo info;
+
+        status = swapqry(sigar->swaps.devs[i], &info);
+
+        if (status != 0) {
+            return errno;
+        }
+
+        swap->total += PAGESHIFT(info.size); /* lsps -a */
+        swap->free  += PAGESHIFT(info.free);
+    }
+
+    swap->used = swap->total - swap->free;
+
+    return SIGAR_OK;
+}
+
+int sigar_cpu_get(sigar_t *sigar, sigar_cpu_t *cpu)
+{
+    int i, status;
+    struct sysinfo data;
+
+    status = kread(sigar, &data, sizeof(data),
+                   sigar->koffsets[KOFFSET_SYSINFO]);
+
+    if (status != SIGAR_OK) {
+        return status;
+    }
+
+    cpu->user = data.cpu[CPU_USER];
+    cpu->nice = -1; /* N/A */
+    cpu->sys  = data.cpu[CPU_KERNEL];
+    cpu->idle = data.cpu[CPU_IDLE];
+    cpu->total = 0;
+
+    for (i=0; i<CPU_NTIMES; i++) {
+        cpu->total += data.cpu[i];
+    }
+
+    return SIGAR_OK;
+}
+
+/*
+ * other possible metrics we could add:
+ * struct cpuinfo {
+ *       long    cpu[CPU_NTIMES];
+ *       long    pswitch;
+ *       long    syscall;
+ *       long    sysread;
+ *       long    syswrite;
+ *       long    sysfork;
+ *       long    sysexec;
+ *       long    readch;
+ *       long    writech;
+ *       long    iget;
+ *       long    namei;
+ *       long    dirblk;
+ *       long    msg;
+ *       long    sema;
+ *       long    bread;
+ *       long    bwrite;
+ *       long    lread;
+ *       long    lwrite;
+ *       long    phread;
+ *       long    phwrite;
+ * };
+ */
+
+int sigar_cpu_list_get(sigar_t *sigar, sigar_cpu_list_t *cpulist)
+{
+    int status, i, j;
+    int ncpu = _system_configuration.ncpus; /* this can change */
+    int size = ncpu * sizeof(struct cpuinfo);
+
+    if (sigar->cpuinfo_size < size) {
+        sigar->cpuinfo = realloc(sigar->cpuinfo, size);
+    }
+
+    status = kread(sigar, sigar->cpuinfo, size,
+                   sigar->koffsets[KOFFSET_CPUINFO]);
+
+    if (status != SIGAR_OK) {
+        return status;
+    }
+
+    sigar_cpu_list_create(cpulist);
+
+    for (i=0; i<ncpu; i++) {
+        sigar_cpu_t *cpu;
+        struct cpuinfo *info;
+
+        SIGAR_CPU_LIST_GROW(cpulist);
+
+        cpu = &cpulist->data[cpulist->number++];
+
+        info = &sigar->cpuinfo[i];
+        cpu->user = info->cpu[CPU_USER];
+        cpu->nice = 0; /* N/A */
+        cpu->sys  = info->cpu[CPU_KERNEL];
+        cpu->idle = info->cpu[CPU_IDLE];
+        cpu->total = 0;
+
+        for (j=0; j<CPU_NTIMES; j++) {
+            cpu->total += info->cpu[j];
+        }
+    }
+
+    return SIGAR_OK;
+}
+
+static int boot_time_v4(int fd, time_t *time)
+{
+    struct utmp data;
+
+    do {
+        if (read(fd, &data, sizeof(data)) != sizeof(data)) {
+            return errno;
+        }
+    } while (data.ut_type != BOOT_TIME);
+
+    *time = data.ut_time;
+
+    return SIGAR_OK;
+}
+
+static int boot_time_v5(int fd, time_t *time)
+{
+    struct utmp_v5 data;
+
+    do {
+        if (read(fd, &data, sizeof(data)) != sizeof(data)) {
+            return errno;
+        }
+    } while (data.ut_type != BOOT_TIME);
+
+    *time = data.ut_time;
+
+    return SIGAR_OK;
+}
+
+static int boot_time(time_t *time)
+{
+    struct utmp_v5 data_v5;
+    int utmp, status;
+
+    if ((utmp = open(UTMP_FILE, O_RDONLY)) < 0) {
+        return errno;
+    }
+
+    if ((status = boot_time_v4(utmp, time)) != SIGAR_OK) {
+        lseek(utmp, 0, SEEK_SET);
+        status = boot_time_v5(utmp, time);
+    }
+
+    close(utmp);
+
+    return status;
+}
+
+int sigar_uptime_get(sigar_t *sigar,
+                     sigar_uptime_t *uptime)
+{
+    if (sigar->boot_time == 0) {
+        int status;
+        time_t time;
+
+        if ((status = boot_time(&time)) != SIGAR_OK) {
+            return status;
+        }
+
+        sigar->boot_time = time;
+    }
+
+    uptime->uptime = time(NULL) - sigar->boot_time;
+    uptime->idletime = -1;
+
+    return SIGAR_OK;
+}
+
+int sigar_loadavg_get(sigar_t *sigar,
+                      sigar_loadavg_t *loadavg)
+{
+    int status, i;
+    int data[3];
+
+    status = kread(sigar, &data, sizeof(data),
+                   sigar->koffsets[KOFFSET_LOADAVG]);
+
+    if (status != SIGAR_OK) {
+        return status;
+    }
+
+    for (i=0; i<3; i++) {
+        loadavg->loadavg[i] = FIXED_TO_DOUBLE(data[i]);
+    }
+
+    return SIGAR_OK;
+}
+
+int sigar_proc_list_get(sigar_t *sigar,
+                        sigar_proc_list_t *proclist)
+{
+    pid_t pid = 0;
+    struct procsinfo info;
+
+    sigar_proc_list_create(proclist);
+
+    for (;;) {
+        int num = getprocs(&info, sizeof(info),
+                           NULL, 0, &pid, 1);
+
+        if (num == 0) {
+            break;
+        }
+
+        SIGAR_PROC_LIST_GROW(proclist);
+
+        proclist->data[proclist->number++] = info.pi_pid;
+    }
+
+    return SIGAR_OK;
+}
+
+int sigar_proc_stat_get(sigar_t *sigar,
+                        sigar_proc_stat_t *procstat)
+{
+    int status = /* XXX optimize */
+        sigar_proc_count(sigar, &procstat->total);
+
+    return status;
+}
+
+static int sigar_getprocs(sigar_t *sigar, sigar_pid_t pid)
+{
+    int status, num;
+    time_t timenow = time(NULL);
+
+    if (sigar->pinfo == NULL) {
+        sigar->pinfo = malloc(sizeof(*sigar->pinfo));
+    }
+
+    if (sigar->last_pid == pid) {
+        if ((timenow - sigar->last_getprocs) < SIGAR_LAST_PROC_EXPIRE) {
+            return SIGAR_OK;
+        }
+    }
+
+    sigar->last_pid = pid;
+    sigar->last_getprocs = timenow;
+
+    num = getprocs(sigar->pinfo, sizeof(*sigar->pinfo),
+                   NULL, 0, &pid, 1);
+
+    if (num != 1) {
+        return ESRCH;
+    }
+
+    return SIGAR_OK;
+}
+
+int sigar_proc_mem_get(sigar_t *sigar, sigar_pid_t pid,
+                       sigar_proc_mem_t *procmem)
+{
+    int status = sigar_getprocs(sigar, pid);
+    struct procsinfo *pinfo = sigar->pinfo;
+
+    if (status != SIGAR_OK) {
+        return status;
+    }
+
+    procmem->size  = PAGESHIFT(pinfo->pi_size);
+    procmem->vsize = PAGESHIFT(pinfo->pi_dvm);
+    procmem->share = PAGESHIFT(pinfo->pi_sdsize);
+    procmem->rss   = PAGESHIFT(pinfo->pi_drss + pinfo->pi_trss);
+    procmem->resident = -1; /* N/A */
+
+    return SIGAR_OK;
+}
+
+int sigar_proc_cred_get(sigar_t *sigar, sigar_pid_t pid,
+                        sigar_proc_cred_t *proccred)
+{
+    int status = sigar_getprocs(sigar, pid);
+    struct procsinfo *pinfo = sigar->pinfo;
+
+    if (status != SIGAR_OK) {
+        return status;
+    }
+
+    proccred->uid  = pinfo->pi_cred.cr_ruid;
+    proccred->euid = pinfo->pi_cred.cr_uid;
+    if (proccred->uid == -1) {
+        /* 
+         * aix 5.2 has a process named 'jfsz'
+         * where uid is '-1', getpwuid returns EPERM
+         */
+        proccred->uid = proccred->euid = 0;
+    }
+    proccred->gid  = pinfo->pi_cred.cr_rgid;
+    proccred->egid = pinfo->pi_cred.cr_gid;
+
+    return SIGAR_OK;
+}
+
+int sigar_proc_time_get(sigar_t *sigar, sigar_pid_t pid,
+                        sigar_proc_time_t *proctime)
+{
+    int status = sigar_getprocs(sigar, pid);
+    struct procsinfo *pinfo = sigar->pinfo;
+
+    if (status != SIGAR_OK) {
+        return status;
+    }
+
+    proctime->start_time = pinfo->pi_start;
+    proctime->start_time *= 1000; /* convert to ms */
+    proctime->utime = pinfo->pi_utime;
+    proctime->stime = pinfo->pi_stime;
+
+    return SIGAR_OK;
+}
+
+int sigar_proc_state_get(sigar_t *sigar, sigar_pid_t pid,
+                         sigar_proc_state_t *procstate)
+{
+    int status = sigar_getprocs(sigar, pid);
+    struct procsinfo *pinfo = sigar->pinfo;
+
+    if (status != SIGAR_OK) {
+        return status;
+    }
+
+    SIGAR_SSTRCPY(procstate->name, pinfo->pi_comm);
+    procstate->ppid = pinfo->pi_ppid;
+    procstate->nice = pinfo->pi_nice;
+    procstate->tty  = pinfo->pi_ttyd;
+    procstate->priority = -1; /* XXX getthrds() */
+                
+    switch (pinfo->pi_state) {
+      case SACTIVE:
+        procstate->state = 'R';
+        break;
+      case SIDL:
+        procstate->state = 'D';
+        break;
+      case SSTOP:
+        procstate->state = 'S';
+        break;
+      case SZOMB:
+        procstate->state = 'Z';
+        break;
+      case SSWAP:
+        procstate->state = 'S';
+        break;
+    }
+
+    return SIGAR_OK;
+}
+
+int sigar_proc_args_get(sigar_t *sigar, sigar_pid_t pid,
+                        sigar_proc_args_t *procargs)
+{
+    /* XXX if buffer is not large enough args are truncated */
+    char buffer[8192], *ptr;
+    struct procinfo pinfo;
+
+    pinfo.pi_pid = pid;
+
+    if (getargs(&pinfo, sizeof(pinfo),
+                buffer, sizeof(buffer)) != 0)
+    {
+        return errno;
+    }
+
+    sigar_proc_args_create(procargs);
+
+    ptr = buffer;
+
+    while (*ptr) {
+        int alen = strlen(ptr)+1;
+        char *arg = malloc(alen);
+
+        SIGAR_PROC_ARGS_GROW(procargs);
+        memcpy(arg, ptr, alen);
+
+        procargs->data[procargs->number++] = arg;
+            
+        ptr += alen;
+    }
+
+    return SIGAR_OK;
+}
+
+int sigar_proc_env_get(sigar_t *sigar, sigar_pid_t pid,
+                       sigar_proc_env_t *procenv)
+{
+    /* XXX if buffer is not large enough args are truncated */
+    char buffer[8192], *ptr;
+    struct procinfo pinfo;
+
+    pinfo.pi_pid = pid;
+
+    if (getevars(&pinfo, sizeof(pinfo),
+                 buffer, sizeof(buffer)) != 0)
+    {
+        return errno;
+    }
+
+    ptr = buffer;
+
+    while (*ptr) {
+        char *val = strchr(ptr, '=');
+        int klen, vlen, status;
+        char key[128]; /* XXX is there a max key size? */
+
+        if (val == NULL) {
+            /* not key=val format */
+            procenv->env_getter(procenv->data, ptr, strlen(ptr), NULL, 0);
+            break;
+        }
+
+        klen = val - ptr;
+        SIGAR_SSTRCPY(key, ptr);
+        key[klen] = '\0';
+        ++val;
+
+        vlen = strlen(val);
+        status = procenv->env_getter(procenv->data,
+                                     key, klen, val, vlen);
+
+        if (status != SIGAR_OK) {
+            /* not an error; just stop iterating */
+            break;
+        }
+
+        ptr += (klen + 1 + vlen + 1);
+    }
+
+    return SIGAR_OK;
+}
+
+/*
+ * V[45]_sigar_proc_fd_get routines are exactly
+ * the same except for sizeof(uinfo).
+ */
+static int V5_sigar_proc_fd_get(sigar_t *sigar, sigar_pid_t pid,
+                                sigar_proc_fd_t *procfd)
+{
+    int i;
+    struct procinfo pinfo;
+    struct user_v5 uinfo; /* V5 */
+
+    procfd->total = 0;
+    pinfo.pi_pid = pid;
+
+    if (getuser(&pinfo, sizeof(pinfo),
+                &uinfo, sizeof(uinfo)) != 0) {
+        if (errno == EINVAL) {
+            return SIGAR_ENOTIMPL;
+        }
+        return errno;
+    }
+
+    /* see sys/user.h */
+    for (i=0; i<uinfo.U_maxofile; i++) {
+        if (uinfo.U_ufd[i].fp) {
+            procfd->total++;
+        }
+    }
+
+    return SIGAR_OK;
+}
+
+static int V4_sigar_proc_fd_get(sigar_t *sigar, sigar_pid_t pid,
+                                sigar_proc_fd_t *procfd)
+{
+    int i;
+    struct procinfo pinfo;
+    struct user uinfo; /* V4 */
+
+    procfd->total = 0;
+    pinfo.pi_pid = pid;
+
+    if (getuser(&pinfo, sizeof(pinfo),
+                &uinfo, sizeof(uinfo)) != 0) {
+        if (errno == EINVAL) {
+            return errno;
+        }
+    }
+
+    /* see sys/user.h */
+    for (i=0; i<uinfo.U_maxofile; i++) {
+        if (uinfo.U_ufd[i].fp) {
+            procfd->total++;
+        }
+    }
+
+    return SIGAR_OK;
+}
+
+int sigar_proc_fd_get(sigar_t *sigar, sigar_pid_t pid,
+                      sigar_proc_fd_t *procfd)
+{
+    if (sigar->getprocfd == NULL) {
+        /*
+         * XXX should determine aix version in sigar_os_open
+         * and set function pointer there.  for now try v4
+         * first, if that fails try v5.  only costs 1 extra
+         * call to getuser on v5 for the lifetime of the
+         * sigar.
+         */
+        int status = V4_sigar_proc_fd_get(sigar, pid, procfd);
+
+        if (status == SIGAR_OK) {
+            sigar->getprocfd = V4_sigar_proc_fd_get;
+            return SIGAR_OK;
+        }
+
+        sigar->getprocfd = V5_sigar_proc_fd_get;
+    }
+
+    return sigar->getprocfd(sigar, pid, procfd);
+}
+
+int sigar_proc_exe_get(sigar_t *sigar, sigar_pid_t pid,
+                       sigar_proc_exe_t *procexe)
+{
+    return SIGAR_ENOTIMPL;
+}
+
+int sigar_os_fs_type_get(sigar_file_system_t *fsp)
+{
+    return fsp->type;
+}
+
+/* another one documented in aix tech ref
+ * with no friggin prototype in any header file.
+ */
+int mntctl(int command, int size, char *buffer);
+
+int sigar_file_system_list_get(sigar_t *sigar,
+                               sigar_file_system_list_t *fslist)
+{
+    int i, size, num;
+    char *buf, *mntlist;
+
+    /* get required size */
+    if (mntctl(MCTL_QUERY, sizeof(size), (char *)&size) < 0) {
+        return errno;
+    }
+
+    mntlist = buf = malloc(size);
+
+    if ((num = mntctl(MCTL_QUERY, size, buf)) < 0) {
+        free(buf);
+        return errno;
+    }
+
+    sigar_file_system_list_create(fslist);
+
+    for (i=0; i<num; i++) {
+        char *devname;
+        const char *typename = NULL;
+        sigar_file_system_t *fsp;
+        struct vmount *ent = (struct vmount *)mntlist;
+
+        mntlist += ent->vmt_length;
+
+        SIGAR_FILE_SYSTEM_LIST_GROW(fslist);
+
+        fsp = &fslist->data[fslist->number++];
+
+        switch (ent->vmt_gfstype) {
+          case MNT_AIX:
+            typename = "aix";
+            fsp->type = SIGAR_FSTYPE_LOCAL_DISK;
+            break;
+          case MNT_JFS:
+            typename = "jfs";
+            fsp->type = SIGAR_FSTYPE_LOCAL_DISK;
+            break;
+          case MNT_NFS:
+          case MNT_NFS3:
+            typename = "nfs";
+            fsp->type = SIGAR_FSTYPE_NETWORK;
+            break;
+          case MNT_CDROM:
+            fsp->type = SIGAR_FSTYPE_CDROM;
+            break;
+          case MNT_SFS:
+          case MNT_CACHEFS:
+          case MNT_AUTOFS:
+          default:
+            if (ent->vmt_flags & MNT_REMOTE) {
+                fsp->type = SIGAR_FSTYPE_NETWORK;
+            }
+            else {
+                fsp->type = SIGAR_FSTYPE_NONE;
+            }
+        }
+
+        SIGAR_SSTRCPY(fsp->dir_name, vmt2dataptr(ent, VMT_STUB));
+
+        devname = vmt2dataptr(ent, VMT_OBJECT);
+
+        if (fsp->type == SIGAR_FSTYPE_NETWORK) {
+            char *hostname   = vmt2dataptr(ent, VMT_HOSTNAME);
+#if 0
+            /* XXX: these do not seem reliable */
+            int hostname_len = vmt2datasize(ent, VMT_HOSTNAME)-1; /* -1 == skip '\0' */
+            int devname_len  = vmt2datasize(ent, VMT_OBJECT);     /* includes '\0' */
+#else
+            int hostname_len = strlen(hostname);
+            int devname_len = strlen(devname) + 1;
+#endif
+            int total_len    = hostname_len + devname_len + 1;    /* 1 == strlen(":") */
+
+            if (total_len > sizeof(fsp->dev_name)) {
+                /* justincase - prevent overflow.  chances: slim..none */
+                SIGAR_SSTRCPY(fsp->dev_name, devname);
+            }
+            else {
+                /* sprintf(fsp->devname, "%s:%s", hostname, devname) */
+                char *ptr = fsp->dev_name;
+
+                memcpy(ptr, hostname, hostname_len);
+                ptr += hostname_len;
+
+                *ptr++ = ':';
+
+                memcpy(ptr, devname, devname_len);
+            }
+        }
+        else {
+            SIGAR_SSTRCPY(fsp->dev_name, devname);
+        }
+
+        /* we set fsp->type, just looking up sigar.c:fstype_names[type] */
+        sigar_fs_type_get(fsp);
+
+        if (typename == NULL) {
+            typename = fsp->type_name;
+        }
+
+        SIGAR_SSTRCPY(fsp->sys_type_name, typename);
+    }
+
+    free(buf);
+
+    return SIGAR_OK;
+}
+
+/* XXX this is exactly the same as linux and hpux, solaris is darn close */
+
+#define SIGAR_FS_BLOCKS_TO_BYTES(buf, f) \
+    ((buf.f * (buf.f_bsize / 512)) >> 1)
+
+int sigar_file_system_usage_get(sigar_t *sigar,
+                                const char *dirname,
+                                sigar_file_system_usage_t *fsusage)
+{
+    struct statfs buf;
+
+    if (statfs((char *)dirname, &buf) != 0) {
+        return errno;
+    }
+
+    fsusage->total = SIGAR_FS_BLOCKS_TO_BYTES(buf, f_blocks);
+    fsusage->free  = SIGAR_FS_BLOCKS_TO_BYTES(buf, f_bfree);
+    fsusage->avail = SIGAR_FS_BLOCKS_TO_BYTES(buf, f_bavail);
+    fsusage->files = buf.f_files;
+    fsusage->free_files = buf.f_ffree;
+    fsusage->use_percent = sigar_file_system_usage_calc_used(sigar, fsusage);
+
+    return SIGAR_OK;
+}
+
+int sigar_cpu_infos_get(sigar_t *sigar,
+                        sigar_cpu_infos_t *cpu_infos)
+{
+    int i;
+    int ncpu = _system_configuration.ncpus; /* this can change */
+
+    /*XXX should only do this once*/
+    sigar_cpu_infos_create(cpu_infos);
+
+    for (i=0; i<ncpu; i++) {
+        sigar_cpu_info_t *info;
+        char *arch, *model;
+
+        SIGAR_CPU_INFOS_GROW(cpu_infos);
+
+        info = &cpu_infos->data[cpu_infos->number++];        
+
+        info->cache_size = _system_configuration.L2_cache_size / 1024;
+
+        switch (info->cache_size) {
+          case 1024:
+            info->mhz = 333;
+            break;
+          case 4096:
+            info->mhz = 400;
+            break;
+          case 8192:
+            info->mhz = 450;
+            break;
+          default:
+            info->mhz = -1;
+            break;
+        }
+
+        switch (_system_configuration.architecture) {
+          case POWER_RS:
+            arch = "Power Classic";
+            break;
+          case POWER_PC:
+            arch = "Power PC";
+            break;
+          case IA64:
+            arch = "IA64";
+            break;
+          default:
+            arch = "unknown";
+            break;
+        }
+
+        if (*arch == 'P') {
+            SIGAR_SSTRCPY(info->vendor, "IBM");
+
+            switch (_system_configuration.implementation) {
+              case POWER_RS1:
+                model = "RS1";
+                break;
+              case POWER_RSC:
+                model = "RSC";
+                break;
+              case POWER_RS2:
+                model = "RS2";
+                break;
+              case POWER_601:
+                model = "601";
+                break;
+              case POWER_603:
+                model = "603";
+                break;
+              case POWER_604:
+                model = "604";
+                break;
+              case POWER_620:
+                model = "620";
+                break;
+              case POWER_630:
+                model = "630";
+                break;
+              case POWER_A35:
+                model = "A35";
+                break;
+              case POWER_RS64II:
+                model = "RS64II";
+                break;
+              case POWER_RS64III:
+                model = "RS64III";
+                break;
+              default:
+                model = "unknown";
+                break;
+            }
+        }
+        else if (*arch == 'I') {
+            SIGAR_SSTRCPY(info->vendor, "Intel");
+
+            switch (_system_configuration.implementation) {
+              case IA64_M1:
+                model = "M1";
+                break;
+              case IA64_M2:
+                model = "M2";
+                break;
+              default:
+                model = "unknown";
+                break;
+            }
+        }
+        else {
+            SIGAR_SSTRCPY(info->vendor, "Unknown");
+            model = "unknown";
+            break;
+        }
+
+        snprintf(info->model, sizeof(info->model),
+                 "%s %s", arch, model);
+    }
+
+    return SIGAR_OK;
+}
+
+int sigar_net_route_list_get(sigar_t *sigar,
+                             sigar_net_route_list_t *routelist)
+{
+    sigar_net_route_t *route;
+
+    sigar_net_route_list_create(routelist);
+
+    return SIGAR_OK;
+}
+
+int sigar_net_interface_stat_get(sigar_t *sigar, const char *name,
+                                 sigar_net_interface_stat_t *ifstat)
+{
+    int status;
+    struct ifnet data;
+    caddr_t offset = 0;
+    char if_name[32];
+
+    status = kread(sigar, &offset, sizeof(offset),
+                   sigar->koffsets[KOFFSET_IFNET]);
+
+    if (status != SIGAR_OK) {
+        return status;
+    }
+
+    for (; offset; offset = (caddr_t)data.if_next) {
+        status = kread(sigar, &data, sizeof(data), (long)offset);
+
+        if (status != SIGAR_OK) {
+            return status;
+        }
+
+        status = kread(sigar, if_name, sizeof(if_name),
+                       (long)&data.if_name[0]);
+
+        if (status != SIGAR_OK) {
+            return status;
+        }
+
+        /* XXX if_name is 'en' or 'lo', not 'en0' or 'lo0' */
+        if (!strnEQ(if_name, name, strlen(if_name))) {
+            continue;
+        }
+
+        ifstat->rx_bytes      = data.if_ibytes;
+        ifstat->rx_packets    = data.if_ipackets;
+        ifstat->rx_errors     = data.if_ierrors;
+        ifstat->rx_dropped    = data.if_iqdrops;
+        ifstat->rx_overruns   = -1;
+        ifstat->rx_frame      = -1;
+
+        ifstat->tx_bytes      = data.if_obytes;
+        ifstat->tx_packets    = data.if_opackets;
+        ifstat->tx_errors     = data.if_oerrors;
+        ifstat->tx_dropped    = -1;
+        ifstat->tx_overruns   = -1;
+        ifstat->tx_collisions = data.if_collisions;
+        ifstat->tx_carrier    = -1;
+
+        return SIGAR_OK;
+    }
+
+    return ENXIO;
+}
+
+int sigar_net_connection_list_get(sigar_t *sigar,
+                                  sigar_net_connection_list_t *connlist,
+                                  int flags)
+{
+    return SIGAR_ENOTIMPL;
+}

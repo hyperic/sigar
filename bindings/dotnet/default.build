@@ -1,0 +1,48 @@
+<?xml version="1.0"?>
+
+<!-- NAnt build file: http://sourceforge.net/projects/nant/ -->
+
+<project name="SigarSharp" default="build">
+  <property name="debug" value="true"/>
+
+ <target name="clean" description="clean build files">
+    <delete dir="build"/>
+  </target>
+
+  <target name="build" description="Build C# Sigar bindings">
+    <mkdir dir="build"/>
+
+    <csc target="library" output="build/SigarSharp.dll" debug="${debug}">
+      <sources>
+        <includes name="src/Sigar.cs"/>
+      </sources>
+    </csc>
+
+    <csc target="exe" output="build/Free.exe" debug="${debug}">
+      <sources>
+        <includes name="examples/Free.cs"/>
+      </sources>
+      <references>
+        <includes name="build/SigarSharp.dll"/>
+      </references>
+    </csc>
+
+    <csc target="exe" output="build/CpuInfo.exe" debug="${debug}">
+      <sources>
+        <includes name="examples/CpuInfo.cs"/>
+      </sources>
+      <references>
+        <includes name="build/SigarSharp.dll"/>
+      </references>
+    </csc>
+
+    <csc target="exe" output="build/Df.exe" debug="${debug}">
+      <sources>
+        <includes name="examples/Df.cs"/>
+      </sources>
+      <references>
+        <includes name="build/SigarSharp.dll"/>
+      </references>
+    </csc>
+  </target>
+</project>

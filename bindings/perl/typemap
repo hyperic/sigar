@@ -1,0 +1,27 @@
+Sigar       T_PTROBJ
+sigar_pid_t T_UV
+const char *	T_PV
+UV		T_UV
+
+#generated list
+Sigar::Uptime T_PTROBJ
+Sigar::Mem T_PTROBJ
+Sigar::ProcCred T_PTROBJ
+Sigar::ProcFd T_PTROBJ
+Sigar::DirStat T_PTROBJ
+Sigar::ProcCredName T_PTROBJ
+Sigar::FileAttrs T_PTROBJ
+Sigar::Cpu T_PTROBJ
+Sigar::CpuInfo T_PTROBJ
+Sigar::NetInterfaceConfig T_PTROBJ
+Sigar::Swap T_PTROBJ
+Sigar::ProcState T_PTROBJ
+Sigar::NetConnection T_PTROBJ
+Sigar::ProcExe T_PTROBJ
+Sigar::ProcTime T_PTROBJ
+Sigar::ProcMem T_PTROBJ
+Sigar::FileSystem T_PTROBJ
+Sigar::FileSystemUsage T_PTROBJ
+Sigar::ProcStat T_PTROBJ
+Sigar::NetRoute T_PTROBJ
+Sigar::NetInterfaceStat T_PTROBJ
