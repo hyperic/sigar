@@ -5,12 +5,13 @@ import java.io.FileInputStream;
 
 import net.hyperic.sigar.Sigar;
 import net.hyperic.sigar.SigarException;
-import net.hyperic.sigar.ThreadCpuTime;
+import net.hyperic.sigar.ThreadCpu;
 
 //import java.lang.management.ManagementFactory;
 
 public class RunThreadCpu {
     static Sigar sigar = new Sigar();
+    static ThreadCpu cpu = new ThreadCpu();
     static int iter = 5000;
 
     private static long toMillis(long nano) {
@@ -19,9 +20,8 @@ public class RunThreadCpu {
 
     private static void printTimes(long start) {
         //ThreadMXBean mx = ManagementFactory.getThreadMXBean();
-        ThreadCpuTime cpu = new ThreadCpuTime(sigar);
         try {
-            cpu.getCurrent();
+            cpu.gather(sigar, 0);
         } catch (SigarException e) {
             e.printStackTrace();
             return;
