@@ -42,9 +42,7 @@ int sigar_proc_psinfo_get(sigar_t *sigar, sigar_pid_t pid);
 
 int sigar_proc_usage_get(sigar_t *sigar, prusage_t *prusage, sigar_pid_t pid);
 
-int sigar_get_cred_get(sigar_t *sigar, prcred_t *prcred, sigar_pid_t pid);
-
-int sigar_get_proc_status(sigar_t *sigar, pstatus_t *pstatus, sigar_pid_t pid);
+int sigar_proc_status_get(sigar_t *sigar, pstatus_t *pstatus, sigar_pid_t pid);
 
 #define CPU_ONLINE(n) \
     (p_online(n, P_STATUS) == P_ONLINE)

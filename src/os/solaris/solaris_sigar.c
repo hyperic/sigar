@@ -586,7 +586,7 @@ int sigar_proc_time_get(sigar_t *sigar, sigar_pid_t pid,
         /* XXX wtf?  seen on solaris 10, only for the self process */
         pstatus_t pstatus;
 
-        status = sigar_get_proc_status(sigar, &pstatus, pid);
+        status = sigar_proc_status_get(sigar, &pstatus, pid);
         if (status != SIGAR_OK) {
             return status;
         }

@@ -60,27 +60,7 @@ int sigar_proc_usage_get(sigar_t *sigar, prusage_t *prusage, sigar_pid_t pid)
     return retval;
 }
 
-int sigar_get_cred_get(sigar_t *sigar, prcred_t *prcred, sigar_pid_t pid)
-{
-    int fd, retval = SIGAR_OK;
-    char buffer[BUFSIZ];
-
-    (void)SIGAR_PROC_FILENAME(buffer, pid, "/cred");
-
-    if ((fd = open(buffer, O_RDONLY)) < 0) {
-        return ESRCH;
-    }
-
-    if (!my_pread(fd, prcred, prcred_t, 0)) {
-        retval = errno;
-    }
-
-    close(fd);
-
-    return retval;
-}
-
-int sigar_get_proc_status(sigar_t *sigar, pstatus_t *pstatus, sigar_pid_t pid)
+int sigar_proc_status_get(sigar_t *sigar, pstatus_t *pstatus, sigar_pid_t pid)
 {
     int fd, retval = SIGAR_OK;
     char buffer[BUFSIZ];
