@@ -1462,7 +1462,47 @@ int sigar_net_route_list_get(sigar_t *sigar,
                              sigar_net_route_list_t *routelist)
 
 {
-    return SIGAR_ENOTIMPL;
+    char *data;
+    int len, rc;
+    struct opthdr *op;
+
+    sigar_net_route_list_create(routelist);
+
+    while ((rc = get_mib2(&sigar->mib2, &op, &data, &len)) == GET_MIB2_OK) {
+        mib2_ipRouteEntry_t *entry;
+        char *end;
+
+        if (!((op->level == MIB2_IP) && (op->name == MIB2_IP_21))) {
+            continue;
+        }
+
+        for (entry = (mib2_ipRouteEntry_t *)data, end = data + len;
+             (char *)entry < end; entry++)
+        {
+            sigar_net_route_t *route;
+
+            SIGAR_NET_ROUTE_LIST_GROW(routelist);
+            route = &routelist->data[routelist->number++];
+
+            route->destination = entry->ipRouteDest;
+            route->gateway     = entry->ipRouteNextHop;
+            route->mask        = entry->ipRouteMask;
+            route->refcnt      = entry->ipRouteInfo.re_ref;
+            route->irtt        = entry->ipRouteInfo.re_rtt;
+            route->metric      = entry->ipRouteMetric1;
+
+            SIGAR_SSTRCPY(route->ifname, entry->ipRouteIfIndex.o_bytes);
+
+            route->flags = route->use = route->window = route->mtu = 
+                SIGAR_FIELD_NOTIMPL; /*XXX*/
+        }
+    }
+
+    if (rc != GET_MIB2_EOD) {
+        /*XXX*/
+    }
+
+    return SIGAR_OK;
 }
 
 #define kHME(v) kSTAT_uint(v, hme)
