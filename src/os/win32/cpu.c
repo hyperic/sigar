@@ -282,6 +282,11 @@ int sigar_cpu_info_get(sigar_t *sigar, sigar_cpu_info_t *info)
     {
         SIGAR_SSTRCPY(info->vendor, "Intel");
     }
+    else {
+        if (strEQ(info->vendor, "AuthenticAMD")) {
+            SIGAR_SSTRCPY(info->vendor, "AMD");
+        }
+    }
 
     size = sizeof(info->model);
     if (RegQueryValueEx(cpu, "Identifier", NULL, NULL,
