@@ -66,6 +66,7 @@ public class TestPTQL extends SigarTestCase {
         "Pid.Pid.eq=foo",
         "Pid.Service.ne=Eventlog",
         "Cpu.Percent.ge=x",
+        "Port.foo.eq=8080",
         "",
         null
     };

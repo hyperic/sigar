@@ -233,16 +233,16 @@ public class SynchronizedSigar implements SigarProxy {
         return this.sigar.getProcModules(pid);
     }
 
-    public synchronized long getProcPort(long port)
+    public synchronized long getProcPort(int protocol, long port)
         throws SigarException
     {
-        return this.sigar.getProcPort(port);
+        return this.sigar.getProcPort(protocol, port);
     }
 
-    public synchronized long getProcPort(String port)
+    public synchronized long getProcPort(String protocol, String port)
         throws SigarException
     {
-        return this.sigar.getProcPort(port);
+        return this.sigar.getProcPort(protocol, port);
     }
 
     public synchronized FileSystem[] getFileSystemList()

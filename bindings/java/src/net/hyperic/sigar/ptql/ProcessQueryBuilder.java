@@ -9,6 +9,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import net.hyperic.sigar.NetFlags;
+import net.hyperic.sigar.SigarException;
 import net.hyperic.sigar.SigarProxy;
 
 import org.apache.bcel.Constants;
@@ -411,7 +413,8 @@ public class ProcessQueryBuilder {
     }
 
     //special case
-    public void appendProcPortOp(String flags, String op, long val)
+    public void appendProcPortOp(String flags, String op,
+                                 int protocol, long val)
         throws MalformedQueryException {
 
         //XXX flags current unused; could be used to narrow search scope.
@@ -419,12 +422,17 @@ public class ProcessQueryBuilder {
 
         loadSigarArg();
 
+        this.qi.append(new PUSH(this.pool, protocol));
+
         this.qi.append(new PUSH(this.pool, val)); //port
         
         this.qi.append(this.factory.createInvoke(PROXY_CLASS,
                                                  "getProcPort",
                                                  Type.LONG,
-                                                 new Type[] { Type.LONG },
+                                                 new Type[] {
+                                                     Type.INT,
+                                                     Type.LONG
+                                                 },
                                                  Constants.INVOKEINTERFACE));
 
         loadPidArg();
@@ -693,6 +701,7 @@ public class ProcessQueryBuilder {
             }
         }
         else if (attrClass.equals("Port")) {
+            int protocol;
             long port;
             try {
                 port = Long.parseLong(val);
@@ -700,7 +709,13 @@ public class ProcessQueryBuilder {
                 String msg = "Port value '" + val + "' is not a number";
                 throw new MalformedQueryException(msg);
             }
-            appendProcPortOp(attr, op, port);
+            try {
+                protocol = NetFlags.getConnectionProtocol(attr);
+            } catch (SigarException e) {
+                throw new MalformedQueryException(e.getMessage());
+            }
+            
+            appendProcPortOp(attr, op, protocol, port);
         }
         else if (attrClass.equals("Pid")) {
             appendPidOp(op, val);

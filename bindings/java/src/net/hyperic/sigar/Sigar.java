@@ -465,10 +465,14 @@ public class Sigar implements SigarProxy {
      * @return pid of the process.
      * @exception SigarException on failure.
      */
-    public native long getProcPort(long port) throws SigarException;
+    public native long getProcPort(int protocol, long port)
+        throws SigarException;
 
-    public long getProcPort(String port) throws SigarException {
-        return getProcPort(Integer.parseInt(port));
+    public long getProcPort(String protocol, String port)
+        throws SigarException {
+
+        return getProcPort(NetFlags.getConnectionProtocol(protocol),
+                           Integer.parseInt(port));
     }
 
     /**

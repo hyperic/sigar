@@ -862,13 +862,13 @@ JNIEXPORT void SIGAR_JNI(FileInfo_gatherLink)
 }
 
 JNIEXPORT jlong SIGAR_JNI(Sigar_getProcPort)
-(JNIEnv *env, jobject sigar_obj, jlong port)
+(JNIEnv *env, jobject sigar_obj, jint protocol, jlong port)
 {
     int status;
     sigar_pid_t pid;
     dSIGAR(0);
 
-    status = sigar_proc_port_get(sigar, SIGAR_NETCONN_TCP, /*XXX UDP*/
+    status = sigar_proc_port_get(sigar, protocol,
                                  (unsigned long)port, &pid);
     if (status != SIGAR_OK) {
         sigar_throw_error(env, jsigar, status);

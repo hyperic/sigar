@@ -83,9 +83,9 @@ public interface SigarProxy {
 
     public List getProcModules(String pid) throws SigarException;
 
-    public long getProcPort(long port) throws SigarException;
+    public long getProcPort(int protocol, long port) throws SigarException;
 
-    public long getProcPort(String port) throws SigarException;
+    public long getProcPort(String protocol, String port) throws SigarException;
 
     public FileSystem[] getFileSystemList() throws SigarException;
 

@@ -247,8 +247,12 @@ public class Proxy {
                             objArgs = new Object[] { arg };
                             break;
                           case 2:
-                            //XXX assume ProcEnv for now.
-                            objArgs = new Object[] { arg, "SHELL" };
+                            if (type.equals("ProcEnv")) {
+                                objArgs = new Object[] { arg, "SHELL" };
+                            }
+                            else if (type.equals("ProcPort")) {
+                                objArgs = new Object[] { "tcp", "80" };
+                            }
                             break;
                         }
                     }
