@@ -6,7 +6,9 @@ using System.Text;
 
 namespace Hyperic.Sigar {
     public class Sigar {
-        public const int OK = 0;
+        internal const int OK = 0;
+        internal const int SIGAR_START_ERROR = 20000;
+        internal const int SIGAR_ENOTIMPL = (SIGAR_START_ERROR + 1);
 
         public const String NULL_HWADDR = "00:00:00:00:00:00";
 
@@ -94,13 +96,22 @@ namespace Hyperic.Sigar {
             x += size;
             return (IntPtr)x;
         }
+
+        internal static SigarException FindException(Sigar sigar, int errno) {
+            switch (errno) {
+              case SIGAR_ENOTIMPL:
+                return new SigarNotImplementedException(sigar, errno);
+              default:
+                return new SigarException(sigar, errno);
+            }
+        }
     }
 
     public class SigarException : Exception {
         Sigar sigar;
         int errno;
 
-        public SigarException(Sigar sigar, int errno) : base () {
+        public SigarException(Sigar sigar, int errno) : base() {
             this.sigar = sigar;
             this.errno = errno;
         }
@@ -114,6 +125,11 @@ namespace Hyperic.Sigar {
                 return sigar_strerror(this.sigar.sigar.Handle, this.errno);
             }
         }
+    }
+
+    public class SigarNotImplementedException : SigarException {
+        public SigarNotImplementedException(Sigar sigar, int errno) :
+            base(sigar, errno) { }
     }
 
     [StructLayout(LayoutKind.Sequential)]
@@ -139,7 +155,7 @@ namespace Hyperic.Sigar {
 
             if (status != Sigar.OK) {
                 Marshal.FreeHGlobal(ptr);
-                throw new SigarException(sigar, status);
+                throw Sigar.FindException(sigar, status);
             }
 
             //memcpy(ptr, this, sizeof(this))
@@ -167,7 +183,7 @@ namespace Hyperic.Sigar {
 
             if (status != Sigar.OK) {
                 Marshal.FreeHGlobal(ptr);
-                throw new SigarException(sigar, status);
+                throw Sigar.FindException(sigar, status);
             }
 
             Swap swap = (Swap)Marshal.PtrToStructure(ptr, type);
@@ -197,7 +213,7 @@ namespace Hyperic.Sigar {
 
             if (status != Sigar.OK) {
                 Marshal.FreeHGlobal(ptr);
-                throw new SigarException(sigar, status);
+                throw Sigar.FindException(sigar, status);
             }
 
             Cpu cpu = (Cpu)Marshal.PtrToStructure(ptr, type);
@@ -239,7 +255,7 @@ namespace Hyperic.Sigar {
 
             if (status != Sigar.OK) {
                 Marshal.FreeHGlobal(ptr);
-                throw new SigarException(sigar, status);
+                throw Sigar.FindException(sigar, status);
             }
 
             CpuInfoList infosPtr =
@@ -302,7 +318,7 @@ namespace Hyperic.Sigar {
 
             if (status != Sigar.OK) {
                 Marshal.FreeHGlobal(ptr);
-                throw new SigarException(sigar, status);
+                throw Sigar.FindException(sigar, status);
             }
 
             FileSystemList fsPtr =
@@ -354,7 +370,7 @@ namespace Hyperic.Sigar {
 
             if (status != Sigar.OK) {
                 Marshal.FreeHGlobal(ptr);
-                throw new SigarException(sigar, status);
+                throw Sigar.FindException(sigar, status);
             }
 
             FileSystemUsage fsusage =
@@ -389,7 +405,7 @@ namespace Hyperic.Sigar {
 
             if (status != Sigar.OK) {
                 Marshal.FreeHGlobal(ptr);
-                throw new SigarException(sigar, status);
+                throw Sigar.FindException(sigar, status);
             }
 
             NetInterfaceList ifPtr =
@@ -441,7 +457,7 @@ namespace Hyperic.Sigar {
 
             if (status != Sigar.OK) {
                 Marshal.FreeHGlobal(ptr);
-                throw new SigarException(sigar, status);
+                throw Sigar.FindException(sigar, status);
             }
 
             NetInterfaceConfig ifconfig =
@@ -552,7 +568,7 @@ namespace Hyperic.Sigar {
 
             if (status != Sigar.OK) {
                 Marshal.FreeHGlobal(ptr);
-                throw new SigarException(sigar, status);
+                throw Sigar.FindException(sigar, status);
             }
 
             NetInterfaceStat ifstat =
