@@ -411,14 +411,18 @@ void sigar_cpu_model_adjust(sigar_t *sigar, sigar_cpu_info_t *info)
 #include <rpc/rpc.h>
 #include <rpc/pmap_prot.h>
 #include <rpc/pmap_clnt.h>
+#ifdef SIGAR_HPUX
+#include <nfs/nfs.h>
+#else
 #include <rpcsvc/nfs_prot.h>
+#endif
 #if defined(__FreeBSD__) || defined(__sun)
 #include <arpa/inet.h>
 #endif
-#ifdef __sun
+#if defined(__sun) || defined(SIGAR_HPUX)
 #include <rpc/clnt_soc.h>
 #endif
-#ifdef _AIX
+#if defined(_AIX) || defined(SIGAR_HPUX)
 #include <sys/socket.h>
 #endif
 
