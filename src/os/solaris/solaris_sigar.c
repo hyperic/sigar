@@ -411,6 +411,18 @@ int sigar_loadavg_get(sigar_t *sigar,
         return SIGAR_ENOTIMPL; \
     }
 
+static char *proc_readlink(const char *name, char *buffer, size_t size)
+{
+    int len;
+
+    if ((len = readlink(name, buffer, size-1)) < 0) {
+        return NULL;
+    }
+
+    buffer[len] = '\0';
+    return buffer;
+}
+
 static int sigar_init_libproc(sigar_t *sigar)
 {
     if (sigar->plib) {
@@ -437,7 +449,6 @@ static int sigar_init_libproc(sigar_t *sigar)
     CHECK_PSYM(pgrab);
     CHECK_PSYM(pfree);
     CHECK_PSYM(pobjname);
-    /* CHECK_PSYM(pdirname); not in solaris 10 */
 
     return SIGAR_OK;
 }
@@ -785,6 +796,30 @@ int sigar_proc_fd_get(sigar_t *sigar, sigar_pid_t pid,
     return status;
 }
 
+static int sigar_proc_path_exe_get(sigar_t *sigar, sigar_pid_t pid,
+                                   sigar_proc_exe_t *procexe)
+{
+    /* solaris 10+ */
+    char buffer[BUFSIZ];
+
+    (void)SIGAR_PROC_FILENAME(buffer, pid, "/path/a.out");
+    if (!proc_readlink(buffer, procexe->name, sizeof(procexe->name))) {
+        procexe->name[0] = '\0';
+    }
+
+    (void)SIGAR_PROC_FILENAME(buffer, pid, "/path/cwd");
+    if (!proc_readlink(buffer, procexe->cwd, sizeof(procexe->cwd))) {
+        procexe->cwd[0] = '\0';
+    }
+
+    (void)SIGAR_PROC_FILENAME(buffer, pid, "/path/root");
+    if (!proc_readlink(buffer, procexe->root, sizeof(procexe->root))) {
+        procexe->root[0] = '\0';
+    }
+
+    return SIGAR_OK;
+}
+
 int sigar_proc_exe_get(sigar_t *sigar, sigar_pid_t pid,
                        sigar_proc_exe_t *procexe)
 {
@@ -794,6 +829,11 @@ int sigar_proc_exe_get(sigar_t *sigar, sigar_pid_t pid,
 
     if ((status = sigar_init_libproc(sigar)) != SIGAR_OK) {
         return status;
+    }
+
+    if (!sigar->pdirname) {
+        /* XXX detect solaris 10+ and skip init_libproc */
+        return sigar_proc_path_exe_get(sigar, pid, procexe);
     }
 
     procexe->name[0] = '\0';
@@ -817,12 +857,6 @@ int sigar_proc_exe_get(sigar_t *sigar, sigar_pid_t pid,
 
     if (procexe->name[0] == '\0') {
         /*XXX*/
-    }
-
-    if (!sigar->pdirname) {
-        /* XXX not in solaris 10 */
-        procexe->cwd[0] = procexe->root[0] = '\0';
-        return SIGAR_OK;
     }
 
     (void)SIGAR_PROC_FILENAME(buffer, pid, "/cwd");
