@@ -1360,4 +1360,7 @@ int sigar_net_interface_stat_get(sigar_t *sigar, const char *name,
 
 int sigar_net_connection_list_get(sigar_t *sigar,
                                   sigar_net_connection_list_t *connlist,
-                                  int flags
+                                  int flags)
+{
+    return SIGAR_ENOTIMPL;
+}
