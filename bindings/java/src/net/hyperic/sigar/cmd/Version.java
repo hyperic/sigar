@@ -7,6 +7,7 @@ import java.net.UnknownHostException;
 import net.hyperic.sigar.Sigar;
 import net.hyperic.sigar.SigarException;
 
+import net.hyperic.sigar.SigarLoader;
 /**
  * Display Sigar, java and system version information.
  */
@@ -55,6 +56,8 @@ public class Version extends SigarCommandBase {
         String host = getHostName();
         os.println("Sigar version=" + Sigar.VERSION_STRING);
         os.println("Sigar build date=" + Sigar.BUILD_DATE);
+        os.println("Sigar archlib=" +
+                   SigarLoader.getNativeLibraryName());
         os.println("Current fqdn=" + fqdn);
         if (!fqdn.equals(host)) {
             os.println("Current host=" + host);
