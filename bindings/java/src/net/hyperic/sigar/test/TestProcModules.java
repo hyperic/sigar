@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.List;
 
 import net.hyperic.sigar.Sigar;
+import net.hyperic.sigar.SigarException;
 import net.hyperic.sigar.SigarNotImplementedException;
 
 public class TestProcModules extends SigarTestCase {
@@ -12,13 +13,11 @@ public class TestProcModules extends SigarTestCase {
         super(name);
     }
 
-    public void testCreate() throws Exception {
-        Sigar sigar = new Sigar();
-
-        traceln("");
+    private void printModules(Sigar sigar, long pid) throws SigarException {
+        traceln("\npid=" + pid);
 
         try {
-            List modules = sigar.getProcModules(sigar.getPid());
+            List modules = sigar.getProcModules(pid);
 
             for (int i=0; i<modules.size(); i++) {
                 traceln(i + "=" + modules.get(i));
@@ -26,5 +25,27 @@ public class TestProcModules extends SigarTestCase {
         } catch (SigarNotImplementedException e) {
             //ok
         }
+    }
+
+    public void testCreate() throws Exception {
+        Sigar sigar = new Sigar();
+
+        traceln("");
+
+        try {
+	    printModules(sigar, sigar.getPid());
+        } catch (SigarNotImplementedException e) {
+            return;
+        }
+
+	long[] pids = sigar.getProcList();
+
+	for (int i=0; i<pids.length; i++) {
+	  try {
+	      printModules(sigar, pids[i]);
+	  } catch (SigarException e) {
+	      traceln(pids[i] + ": " + e.getMessage());
+	  }
+	}
     }
 }
