@@ -1436,6 +1436,18 @@ int sigar_file_system_list_get(sigar_t *sigar,
 
 #define FSDEV_ID(sb) (sb.st_ino + sb.st_dev)
 
+typedef struct {
+    char *name;
+    long addr;
+} aix_diskio_t;
+
+static void diskio_free(void *data)
+{
+    aix_diskio_t *diskio = (aix_diskio_t *)data;
+    free(diskio->name);
+    free(diskio);
+}
+
 /*
  * dont have per-partition metrics on aix.
  * need to build a mount point => diskname map.
@@ -1447,6 +1459,7 @@ static int create_diskmap(sigar_t *sigar)
     char buffer[BUFSIZ], *ptr;
 
     sigar->diskmap = sigar_cache_new(25);
+    sigar->diskmap->free_value = diskio_free;
 
     if (!fp) {
         return ENOENT;
@@ -1487,7 +1500,10 @@ static int create_diskmap(sigar_t *sigar)
             retval = stat(ptr, &sb);
             ent = sigar_cache_get(sigar->diskmap, FSDEV_ID(sb));
             if (retval == 0) {
-                ent->value = strdup(disk);
+                aix_diskio_t *diskio = malloc(sizeof(*diskio));
+                diskio->name = strdup(disk);
+                diskio->addr = -1;
+                ent->value = diskio;
             }
         }
         pclose(lfp);
@@ -1497,9 +1513,8 @@ static int create_diskmap(sigar_t *sigar)
 
 static int get_disk_metrics(sigar_t *sigar,
                             sigar_file_system_usage_t *fsusage,
-                            char *diskname)
+                            aix_diskio_t *diskio)
 {
-    /* XXX some caching can optimize */
     int fd, i;
     int cnt;
     struct iostat iostat;
@@ -1511,6 +1526,23 @@ static int get_disk_metrics(sigar_t *sigar,
     if ((fd = open("/dev/mem", O_RDONLY)) <= 0) {
         return errno;
     }
+
+    if (diskio->addr != -1) {
+        int status;
+        lseek(fd, diskio->addr, SEEK_SET);
+        read(fd, &dkstat, sizeof(dkstat));
+        if (strEQ(diskio->name, dkstat.diskname)) {
+            fsusage->disk_reads = dkstat.dk_rblks;
+            fsusage->disk_writes = dkstat.dk_wblks;
+            status = SIGAR_OK;
+        }
+        else {
+            status = ENOENT;
+        }
+        close(fd);
+        return status;
+    }
+
     i = knlist(nl, 1, sizeof(struct nlist));
 
     if (i == -1) {
@@ -1531,9 +1563,11 @@ static int get_disk_metrics(sigar_t *sigar,
     {
         lseek(fd, (long)dp, SEEK_SET);
         read(fd, &dkstat, sizeof(dkstat));
-        if (strEQ(diskname, dkstat.diskname)) {
+
+        if (strEQ(diskio->name, dkstat.diskname)) {
             fsusage->disk_reads = dkstat.dk_rblks;
             fsusage->disk_writes = dkstat.dk_wblks;
+            diskio->addr = (long)dp;
             break;
         }
     }
@@ -1578,7 +1612,7 @@ int sigar_file_system_usage_get(sigar_t *sigar,
         if (!ent->value) {
             return SIGAR_OK;
         }
-        get_disk_metrics(sigar, fsusage, (char *)ent->value);
+        get_disk_metrics(sigar, fsusage, (aix_diskio_t *)ent->value);
     }
 
     return SIGAR_OK;
