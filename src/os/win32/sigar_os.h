@@ -124,7 +124,8 @@ int sigar_wsa_init(sigar_t *sigar);
 int sigar_proc_exe_peb_get(sigar_t *sigar, HANDLE proc,
                            sigar_proc_exe_t *procexe);
 
-int sigar_proc_cmdline_get(sigar_t *sigar, HANDLE proc, char *cmdline);
+int sigar_proc_args_peb_get(sigar_t *sigar, HANDLE proc,
+                            sigar_proc_args_t *procargs);
 
 unsigned int sigar_cpu_count(sigar_t *sigar);
 

@@ -7,6 +7,7 @@
 #include "sigar.h"
 #include "sigar_private.h"
 #include "sigar_os.h"
+#include <shellapi.h>
 
 #define PAGE_START    0x00020000
 #define CWD_OFFSET    PAGE_START + 0x0290
@@ -79,12 +80,16 @@ int sigar_proc_exe_peb_get(sigar_t *sigar, HANDLE proc,
     return SIGAR_OK;
 }
 
-int sigar_proc_cmdline_get(sigar_t *sigar, HANDLE proc, char *cmdline)
+int sigar_proc_args_peb_get(sigar_t *sigar, HANDLE proc,
+                            sigar_proc_args_t *procargs)
 {
     int status;
     LPBYTE scratch;
     DWORD base;
     WCHAR buf[SIGAR_CMDLINE_MAX];
+    char arg[SIGAR_CMDLINE_MAX];
+    LPWSTR *args;
+    int num, i;
 
     if ((status = sigar_peb_get(sigar, proc, &base)) != SIGAR_OK) {
         return status;
@@ -99,7 +104,20 @@ int sigar_proc_cmdline_get(sigar_t *sigar, HANDLE proc, char *cmdline)
     wcsncpy(buf, (LPWSTR)scratch, SIGAR_CMDLINE_MAX);
     buf[SIGAR_CMDLINE_MAX-1] = L'\0';
 
-    SIGAR_W2A(buf, cmdline, SIGAR_CMDLINE_MAX);
+    args = CommandLineToArgvW(buf, &num);
+
+    sigar_proc_args_create(procargs);
+
+    for (i=0; i<=num; i++) {
+        if (!iswprint(*args[i])) {
+            continue; /* seen trailing garbage */
+        }
+        SIGAR_PROC_ARGS_GROW(procargs);
+        SIGAR_W2A(args[i], arg, SIGAR_CMDLINE_MAX);
+        procargs->data[procargs->number++] = strdup(arg);
+    }
+
+    GlobalFree(args);
 
     return SIGAR_OK;
 }

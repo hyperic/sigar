@@ -820,22 +820,11 @@ static int sigar_remote_proc_args_get(sigar_t *sigar, sigar_pid_t pid,
         return GetLastError();
     }
     
-    status = sigar_proc_cmdline_get(sigar, proc, cmdline);
+    status = sigar_proc_args_peb_get(sigar, proc, procargs);
 
     CloseHandle(proc);
 
-    if (status != SIGAR_OK) {
-        return status;
-    }
-
-    sigar_proc_args_create(procargs);
-
-    while (*ptr && (arg = getarg(&ptr))) {
-        SIGAR_PROC_ARGS_GROW(procargs);
-        procargs->data[procargs->number++] = strdup(arg);
-    }
-
-    return SIGAR_OK;
+    return status;
 }
 
 static int sigar_local_proc_args_get(sigar_t *sigar, sigar_pid_t pid,
