@@ -1044,7 +1044,7 @@ $proto
     $release_string
 
     if (status != SIGAR_OK) {
-        sigar_throw_error(env, sigar, status);
+        sigar_throw_error(env, jsigar, status);
         return;
     }
 

@@ -65,7 +65,7 @@ static void sigar_throw_notimpl(JNIEnv *env, char *msg)
     JENV->ThrowNew(env, errorClass, msg);
 }
 
-static void sigar_throw_error(JNIEnv *env, sigar_t *sigar, int err)
+static void sigar_throw_error(JNIEnv *env, jni_sigar_t *jsigar, int err)
 {
     jclass errorClass;
 
@@ -86,7 +86,7 @@ static void sigar_throw_error(JNIEnv *env, sigar_t *sigar, int err)
     }
 
     JENV->ThrowNew(env, errorClass,
-                   sigar_strerror(sigar, err));
+                   sigar_strerror(jsigar->sigar, err));
 }
 
 static jni_sigar_t *sigar_get_pointer(JNIEnv *env, jobject obj) {
@@ -105,7 +105,7 @@ static jni_sigar_t *sigar_get_pointer(JNIEnv *env, jobject obj) {
     }
 
     if (jsigar->open_status != SIGAR_OK) {
-        sigar_throw_error(env, jsigar->sigar,
+        sigar_throw_error(env, jsigar,
                           jsigar->open_status);
         return NULL;
     }
@@ -148,7 +148,7 @@ JNIEXPORT void SIGAR_JNI(Sigar_open)
      * when methods are invoked (see sigar_get_pointer).
      */
     if ((jsigar->open_status = sigar_open(&jsigar->sigar)) != SIGAR_OK) {
-        sigar_throw_error(env, jsigar->sigar, jsigar->open_status);
+        sigar_throw_error(env, jsigar, jsigar->open_status);
         return;
     }
 }
@@ -200,7 +200,7 @@ JNIEXPORT void SIGAR_JNI(Sigar_kill)
     dSIGAR_VOID;
 
     if ((status = sigar_proc_kill(pid, signum)) != SIGAR_OK) {
-        sigar_throw_error(env, sigar, status);
+        sigar_throw_error(env, jsigar, status);
     }
 }
 
@@ -247,7 +247,7 @@ JNIEXPORT jobjectArray SIGAR_JNI(Sigar_getFileSystemList)
     dSIGAR(NULL);
 
     if ((status = sigar_file_system_list_get(sigar, &fslist)) != SIGAR_OK) {
-        sigar_throw_error(env, sigar, status);
+        sigar_throw_error(env, jsigar, status);
         return NULL;
     }
 
@@ -311,7 +311,7 @@ JNIEXPORT jobjectArray SIGAR_JNI(Sigar_getCpuInfoList)
     dSIGAR(NULL);
 
     if ((status = sigar_cpu_info_list_get(sigar, &cpu_infos)) != SIGAR_OK) {
-        sigar_throw_error(env, sigar, status);
+        sigar_throw_error(env, jsigar, status);
         return NULL;
     }
 
@@ -342,7 +342,7 @@ JNIEXPORT jobjectArray SIGAR_JNI(Sigar_getCpuListNative)
     dSIGAR(NULL);
 
     if ((status = sigar_cpu_list_get(sigar, &cpulist)) != SIGAR_OK) {
-        sigar_throw_error(env, sigar, status);
+        sigar_throw_error(env, jsigar, status);
         return NULL;
     }
 
@@ -372,7 +372,7 @@ JNIEXPORT jlongArray SIGAR_JNI(Sigar_getProcList)
     dSIGAR(NULL);
 
     if ((status = sigar_proc_list_get(sigar, &proclist)) != SIGAR_OK) {
-        sigar_throw_error(env, sigar, status);
+        sigar_throw_error(env, jsigar, status);
         return NULL;
     }
 
@@ -413,7 +413,7 @@ JNIEXPORT jobjectArray SIGAR_JNI(Sigar_getProcArgs)
     dSIGAR(NULL);
 
     if ((status = sigar_proc_args_get(sigar, pid, &procargs)) != SIGAR_OK) {
-        sigar_throw_error(env, sigar, status);
+        sigar_throw_error(env, jsigar, status);
         return NULL;
     }
 
@@ -478,7 +478,7 @@ JNIEXPORT jobject SIGAR_JNI(ProcEnv_getAll)
 
     if ((status = sigar_proc_env_get(sigar, pid, &procenv)) != SIGAR_OK) {
         JENV->DeleteLocalRef(env, hashmap);
-        sigar_throw_error(env, sigar, status);
+        sigar_throw_error(env, jsigar, status);
         return NULL;
     }
 
@@ -530,7 +530,7 @@ JNIEXPORT jstring SIGAR_JNI(ProcEnv_getValue)
 
     if ((status = sigar_proc_env_get(sigar, pid, &procenv)) != SIGAR_OK) {
         JENV->ReleaseStringUTFChars(env, key, get.key);
-        sigar_throw_error(env, sigar, status);
+        sigar_throw_error(env, jsigar, status);
         return NULL;
     }
 
@@ -585,7 +585,7 @@ JNIEXPORT jobject SIGAR_JNI(Sigar_getProcModulesNative)
 
     if ((status = sigar_proc_modules_get(sigar, pid, &procmods)) != SIGAR_OK) {
         JENV->DeleteLocalRef(env, listobj);
-        sigar_throw_error(env, sigar, status);
+        sigar_throw_error(env, jsigar, status);
         return NULL;
     }
 
@@ -601,7 +601,7 @@ JNIEXPORT jdoubleArray SIGAR_JNI(Sigar_getLoadAverage)
     dSIGAR(NULL);
 
     if ((status = sigar_loadavg_get(sigar, &loadavg)) != SIGAR_OK) {
-        sigar_throw_error(env, sigar, status);
+        sigar_throw_error(env, jsigar, status);
         return NULL;
     }
 
@@ -624,7 +624,7 @@ JNIEXPORT jobjectArray SIGAR_JNI(Sigar_getNetRouteList)
     dSIGAR(NULL);
 
     if ((status = sigar_net_route_list_get(sigar, &routelist)) != SIGAR_OK) {
-        sigar_throw_error(env, sigar, status);
+        sigar_throw_error(env, jsigar, status);
         return NULL;
     }
 
@@ -656,7 +656,7 @@ JNIEXPORT jobjectArray SIGAR_JNI(Sigar_getNetConnectionList)
     status = sigar_net_connection_list_get(sigar, &connlist, flags);
 
     if (status != SIGAR_OK) {
-        sigar_throw_error(env, sigar, status);
+        sigar_throw_error(env, jsigar, status);
         return NULL;
     }
 
@@ -732,7 +732,7 @@ JNIEXPORT void SIGAR_JNI(FileInfo_nativeGetLink)
     JENV->ReleaseStringUTFChars(env, name, utf);
 
     if (status != SIGAR_OK) {
-        sigar_throw_error(env, sigar, status);
+        sigar_throw_error(env, jsigar, status);
         return;
     }
 
@@ -752,12 +752,12 @@ JNIEXPORT jlong SIGAR_JNI(Sigar_getProcPort)
     /* just thinking about implementing this on other platforms hurts */
 
     if ((status = sigar_proc_port_get(sigar, (unsigned long)port, &pid)) != SIGAR_OK) {
-        sigar_throw_error(env, sigar, status);
+        sigar_throw_error(env, jsigar, status);
     }
 #else
     status = SIGAR_ENOTIMPL;
     pid = -1;
-    sigar_throw_error(env, sigar, status);
+    sigar_throw_error(env, jsigar, status);
 #endif
 
     return pid;
@@ -774,7 +774,7 @@ JNIEXPORT jobjectArray SIGAR_JNI(Sigar_getNetInterfaceList)
     dSIGAR(NULL);
 
     if ((status = sigar_net_interface_list_get(sigar, &iflist)) != SIGAR_OK) {
-        sigar_throw_error(env, sigar, status);
+        sigar_throw_error(env, jsigar, status);
         return NULL;
     }
 
@@ -818,7 +818,7 @@ JNIEXPORT jstring SIGAR_JNI(Sigar_getFQDN)
     dSIGAR(NULL);
 
     if ((status = sigar_fqdn_get(sigar, fqdn, sizeof(fqdn))) != SIGAR_OK) {
-        sigar_throw_error(env, sigar, status);
+        sigar_throw_error(env, jsigar, status);
         return NULL;
     }
 
@@ -1119,7 +1119,7 @@ JNIEXPORT jlong SIGAR_JNI(Sigar_getServicePid)
     }
 
     if (err != ERROR_SUCCESS) {
-        sigar_throw_error(env, sigar, err);
+        sigar_throw_error(env, jsigar, err);
     }
 
     return pid;

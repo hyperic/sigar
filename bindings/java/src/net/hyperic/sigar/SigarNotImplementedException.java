@@ -6,6 +6,9 @@ package net.hyperic.sigar;
  */
 public class SigarNotImplementedException extends SigarException {
 
+    public static final SigarNotImplementedException INSTANCE =
+        new SigarNotImplementedException();
+
     public SigarNotImplementedException () { super(); }
 
     public SigarNotImplementedException (String s) { super(s); }
