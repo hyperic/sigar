@@ -168,7 +168,7 @@ int sigar_proc_list_get(sigar_t *sigar,
 
         for (i=0; i<elts; i++) {
             struct tbl_procinfo *info = &procinfo[i];
-            if (!info->pi_status) {
+            if (info->pi_status == PI_EMPTY) {
                 continue;
             }
 
