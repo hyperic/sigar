@@ -341,6 +341,71 @@ void sigar_cpu_model_adjust(sigar_t *sigar, sigar_cpu_info_t *info)
     strcpy(info->model, ptr);
 }
 
+#ifndef WIN32
+#include <netdb.h>
+#include <rpc/rpc.h>
+#include <rpc/pmap_prot.h>
+#include <rpc/pmap_clnt.h>
+#include <rpcsvc/nfs_prot.h>
+
+static int get_sockaddr(struct sockaddr_in *addr, char *host)
+{
+    register struct hostent *hp;
+
+    memset(addr, 0, sizeof(struct sockaddr_in));
+    addr->sin_family = AF_INET;
+
+    if ((addr->sin_addr.s_addr = inet_addr(host)) == -1) {
+        if (!(hp = gethostbyname(host))) {
+            fprintf(stderr, "%s: unknown host\n", host);
+            return 0;
+        }
+        memcpy(&addr->sin_addr, hp->h_addr, hp->h_length);
+    }
+
+    return 1;
+}
+
+int sigar_nfsping(char *host)
+{
+    CLIENT *client;
+    struct sockaddr_in addr;
+    int sock;
+    struct timeval timeout, interval;
+    unsigned short port = 0;
+    char buffer[1024];
+    enum clnt_stat rpc_stat; 
+
+    if (get_sockaddr(&addr, host) == 0) {
+        return 0;
+    }
+
+    interval.tv_sec = 2;
+    interval.tv_usec = 0;
+    addr.sin_port = htons(port);
+    sock = RPC_ANYSOCK;
+    client = clntudp_create(&addr, NFS_PROGRAM, NFS_VERSION,
+                            interval, &sock);
+    if (!client) {
+        clnt_pcreateerror(buffer);
+        return 0;
+    }
+
+    timeout.tv_sec = 10;
+    timeout.tv_usec = 0;
+    rpc_stat = clnt_call(client, NULLPROC, (xdrproc_t)xdr_void, NULL,
+                         (xdrproc_t)xdr_void, NULL, timeout);
+
+    if (rpc_stat != RPC_SUCCESS) {
+        clnt_perror(client, buffer);
+        clnt_destroy(client);
+        return 0;
+    }
+
+    return 1;
+}
+#endif
+
 #ifdef WIN32
 #define vsnprintf _vsnprintf
 #endif
