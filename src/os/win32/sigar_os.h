@@ -113,6 +113,7 @@ struct sigar_t {
     int ws_error;
     LPBYTE peb; //scratch pad for getting peb info
     int ht_enabled;
+    int winnt;
 };
 
 int sigar_wsa_init(sigar_t *sigar);

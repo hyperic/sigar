@@ -127,6 +127,7 @@ int sigar_os_open(sigar_t **sigar)
 {
     LONG result;
     HINSTANCE h;
+    OSVERSIONINFO version;
 
     *sigar = malloc(sizeof(**sigar));
     (*sigar)->machine = ""; /* local machine */
@@ -134,6 +135,11 @@ int sigar_os_open(sigar_t **sigar)
 
     (*sigar)->perfbuf = NULL;
     (*sigar)->perfbuf_size = 0;
+
+    version.dwOSVersionInfoSize = sizeof(version);
+    GetVersionEx(&version);
+    (*sigar)->winnt =
+        (version.dwPlatformId == VER_PLATFORM_WIN32_NT);
 
     if (USING_WIDE_S(*sigar)) {
         WCHAR wmachine[MAX_PATH+1];
@@ -1212,7 +1218,10 @@ static int sigar_proc_modules_get_toolhelp(sigar_t *sigar,
 SIGAR_DECLARE(int) sigar_proc_modules_get(sigar_t *sigar, sigar_pid_t pid,
                                           sigar_proc_modules_t *procmods)
 {
-    /* XXX need to use psapi.dll for NT */
+    if (sigar->winnt) {
+        /* XXX need to use psapi.dll for NT */
+        return SIGAR_ENOTIMPL;
+    }
     return sigar_proc_modules_get_toolhelp(sigar,
                                            pid,
                                            procmods);
