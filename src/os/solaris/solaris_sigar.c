@@ -1801,9 +1801,67 @@ int sigar_net_interface_stat_get(sigar_t *sigar, const char *name,
     return ENXIO;
 }
 
+static int tcp_connection_list_get(sigar_t *sigar,
+                                   sigar_net_connection_list_t *connlist,
+                                   int flags,
+                                   struct mib2_tcpConnEntry *entry,
+                                   int len)
+{
+    char *end = (char *)entry + len;
+
+    while ((char *)entry < end) {
+        entry++;
+    }
+
+    return SIGAR_OK;
+}
+
+static int udp_connection_list_get(sigar_t *sigar,
+                                   sigar_net_connection_list_t *connlist,
+                                   int flags,
+                                   struct mib2_udpEntry *entry,
+                                   int len)
+{
+    char *end = (char *)entry + len;
+
+    while ((char *)entry < end) {
+        entry++;
+    }
+
+    return SIGAR_OK;
+}
+
 int sigar_net_connection_list_get(sigar_t *sigar,
                                   sigar_net_connection_list_t *connlist,
                                   int flags)
 {
+    char *data;
+    int len;
+    int rc;
+    struct opthdr *op;
+
+    while ((rc = get_mib2(&sigar->mib2, &op, &data, &len)) == GET_MIB2_OK) {
+        if ((op->level == MIB2_TCP) && 
+            (op->name == MIB2_TCP_13) &&
+            (flags & SIGAR_NETCONN_TCP))
+        {
+            tcp_connection_list_get(sigar, connlist, flags,
+                                    (struct mib2_tcpConnEntry *)data,
+                                    len);
+        }
+        else if ((op->level == MIB2_UDP) && 
+                 (op->name == MIB2_UDP_5) &&
+                 (flags & SIGAR_NETCONN_UDP))
+        {
+            udp_connection_list_get(sigar, connlist, flags,
+                                    (struct mib2_udpEntry *)data,
+                                    len);
+        }
+    }
+
+    if (rc != GET_MIB2_EOD) {
+        /*XXX*/ 
+    }
+
     return SIGAR_ENOTIMPL;
 }
