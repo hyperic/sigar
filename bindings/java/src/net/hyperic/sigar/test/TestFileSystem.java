@@ -43,6 +43,8 @@ public class TestFileSystem extends SigarTestCase {
                 double usePercent = usage.getUsePercent() * 100;
                 traceln("Used=" + usePercent + "%");
                 assertTrue(usePercent <= 100.0);
+                traceln("DiskReads=" + usage.getDiskReads());
+                traceln("DiskWrites=" + usage.getDiskWrites());
                 break;
             }
         }

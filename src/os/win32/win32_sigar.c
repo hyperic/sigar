@@ -13,6 +13,7 @@
 #define PERF_TITLE_PROC       230
 #define PERF_TITLE_PROC_KEY  "230"
 #define PERF_TITLE_CPU_KEY   "238"
+#define PERF_TITLE_DISK_KEY  "236"
 
 #define PERF_TITLE_CPU_USER    142
 #define PERF_TITLE_CPU_IDLE    1746
@@ -49,6 +50,15 @@ typedef enum {
     PERF_IX_START_TIME,
     PERF_IX_MAX
 } perf_proc_offsets_t;
+
+typedef enum {
+    PERF_IX_DISK_READ,
+    PERF_IX_DISK_WRITE,
+    PERF_IX_DISK_MAX
+} perf_disk_offsets_t;
+
+#define PERF_TITLE_DISK_READ  208
+#define PERF_TITLE_DISK_WRITE 210
 
 /* 
  * diff is:
@@ -1330,6 +1340,89 @@ SIGAR_DECLARE(int) sigar_file_system_list_get(sigar_t *sigar,
     return SIGAR_OK;
 }
 
+static PERF_INSTANCE_DEFINITION *get_disk_instance(sigar_t *sigar,
+                                                   DWORD *perf_offsets,
+                                                   DWORD *num, DWORD *err)
+{
+    PERF_OBJECT_TYPE *object = get_perf_object(sigar, "236", err);
+    PERF_INSTANCE_DEFINITION *inst;
+    PERF_COUNTER_DEFINITION *counter;
+    DWORD i;
+
+    if (!object) {
+        return NULL;
+    }
+
+    if (object->NumInstances < 1) {
+        *err = ENOENT;
+        return NULL;
+    }
+
+    for (i=0, counter = PdhFirstCounter(object);
+         i<object->NumCounters;
+         i++, counter = PdhNextCounter(counter))
+    {
+        DWORD offset = counter->CounterOffset;
+
+        switch (counter->CounterNameTitleIndex) {
+          case PERF_TITLE_DISK_READ:
+            perf_offsets[PERF_IX_DISK_READ] = offset;
+            break;
+          case PERF_TITLE_DISK_WRITE:
+            perf_offsets[PERF_IX_DISK_WRITE] = offset;
+            break;
+        }
+    }
+
+    if (num) {
+        *num = object->NumInstances;
+    }
+
+    return PdhFirstInstance(object);
+}
+
+static int get_disk_metrics(sigar_t *sigar,
+                            const char *dirname,
+                            sigar_file_system_usage_t *fsusage)
+{
+    DWORD i, err;
+    PERF_OBJECT_TYPE *object =
+        get_perf_object(sigar, PERF_TITLE_CPU_KEY, &err);
+    PERF_INSTANCE_DEFINITION *inst;
+    PERF_COUNTER_DEFINITION *counter;
+    DWORD perf_offsets[PERF_IX_DISK_MAX];
+
+    if (!object) {
+        return err;
+    }
+
+    memset(&perf_offsets, 0, sizeof(perf_offsets));
+    inst = get_disk_instance(sigar, (DWORD*)&perf_offsets, 0, &err);
+
+    if (!inst) {
+        return err;
+    }
+
+    for (i=0, inst = PdhFirstInstance(object);
+         i<object->NumInstances;
+         i++, inst = PdhNextInstance(inst))
+    {
+        char drive[MAX_PATH];
+        PERF_COUNTER_BLOCK *counter_block = PdhGetCounterBlock(inst);
+        wchar_t *name = (wchar_t *)((BYTE *)inst + inst->NameOffset);
+
+        SIGAR_W2A(name, drive, sizeof(drive));
+
+        if (strnEQ(drive, dirname, 2)) {
+            fsusage->disk_reads  = PERF_VAL(PERF_IX_DISK_READ);
+            fsusage->disk_writes = PERF_VAL(PERF_IX_DISK_WRITE);
+            return SIGAR_OK;
+        }
+    }
+
+    return ENOENT;
+}
+
 SIGAR_DECLARE(int)
 sigar_file_system_usage_get(sigar_t *sigar,
                             const char *dirname,
@@ -1337,6 +1430,7 @@ sigar_file_system_usage_get(sigar_t *sigar,
 {
     BOOL retval;
     ULARGE_INTEGER avail, total, free;
+    int status;
 
     /* prevent dialog box if A:\ drive is empty */
     UINT errmode = SetErrorMode(SEM_FAILCRITICALERRORS);
@@ -1360,6 +1454,11 @@ sigar_file_system_usage_get(sigar_t *sigar,
     /* XXX */
     fsusage->files = 0;
     fsusage->free_files = 0;
+
+    status = get_disk_metrics(sigar, dirname, fsusage);
+    if (status != SIGAR_OK) {
+        fsusage->disk_reads = fsusage->disk_writes = 0;
+    }
 
     return SIGAR_OK;
 }

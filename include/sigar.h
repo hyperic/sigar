@@ -340,7 +340,9 @@ typedef struct {
         free,
         avail,
         files,
-        free_files;
+        free_files,
+        disk_reads,
+        disk_writes;
     double use_percent;
 } sigar_file_system_usage_t;
 
