@@ -703,6 +703,7 @@ SIGAR_DECLARE(const char *)sigar_net_connection_state_get(int state)
         return "LISTEN";
       case SIGAR_TCP_CLOSING:
         return "CLOSING";
+      case SIGAR_TCP_UNKNOWN:
       default:
         return "UNKNOWN";
     }
