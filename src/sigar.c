@@ -184,6 +184,12 @@ SIGAR_DECLARE(char *) sigar_format_size(sigar_uint64_t size, char *buf)
     const char *o = ord;
     int remain;
 
+    if (size == SIGAR_FIELD_NOTIMPL) {
+        buf[0] = '-';
+        buf[1] = '\0';
+        return buf;
+    }
+
     if (size < 973) {
         sprintf(buf, "%3d ", (int) size);
         return buf;
