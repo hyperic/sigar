@@ -35,6 +35,7 @@ public class SigarTestRunner extends SigarCommandBase {
         TestProcStat.class,
         TestProcTime.class,
         TestSwap.class,
+        TestThreadCpu.class,
         TestUptime.class,
     };
 
