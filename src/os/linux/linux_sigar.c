@@ -1743,8 +1743,7 @@ int sigar_proc_port_get(sigar_t *sigar, int protocol,
     *pid = 0;
 
     status = sigar_net_connection_get(sigar, &netconn, port,
-                                      SIGAR_NETCONN_SERVER|
-                                      SIGAR_NETCONN_TCP|SIGAR_NETCONN_UDP);
+                                      SIGAR_NETCONN_SERVER|protocol);
 
     if (status != SIGAR_OK) {
         return status;
