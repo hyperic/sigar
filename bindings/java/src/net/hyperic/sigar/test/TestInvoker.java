@@ -47,8 +47,6 @@ public class TestInvoker extends SigarTestCase {
         SigarProxy proxy =
             SigarProxyCache.newInstance(sigar);
 
-        traceln("");
-
         testOK(proxy);
     }
 

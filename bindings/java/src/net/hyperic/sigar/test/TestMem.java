@@ -10,11 +10,9 @@ public class TestMem extends SigarTestCase {
     }
 
     public void testCreate() throws Exception {
-        Sigar sigar = new Sigar();
+        Sigar sigar = getSigar();
 
         Mem mem = sigar.getMem();
-
-        traceln("");
 
         assertGtZeroTrace("Total", mem.getTotal());
 

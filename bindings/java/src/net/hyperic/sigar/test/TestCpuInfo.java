@@ -13,14 +13,13 @@ public class TestCpuInfo extends SigarTestCase {
     }
 
     public void testCreate() throws Exception {
-        Sigar sigar = new Sigar();
+        Sigar sigar = getSigar();
 
         CpuInfo[] infos = sigar.getCpuInfoList();
 
         for (int i=0; i<infos.length; i++) {
             CpuInfo info = infos[i];
 
-            traceln("");
             traceln("num=" + i);
             traceln("vendor=" + info.getVendor());
             traceln("model=" + info.getModel());

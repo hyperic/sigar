@@ -13,10 +13,9 @@ public class TestProcEnv extends SigarTestCase {
     }
 
     public void testCreate() throws Exception {
-        Sigar sigar = new Sigar();
+        Sigar sigar = getSigar();
 
         long pid = sigar.getPid();
-        traceln("");
 
         try {
             Map env = sigar.getProcEnv(pid);

@@ -10,13 +10,13 @@ public class TestLoadAverage extends SigarTestCase {
     }
 
     public void testCreate() throws Exception {
-        Sigar sigar = new Sigar();
+        Sigar sigar = getSigar();
 
         try {
             double[] loadavg = sigar.getLoadAverage();
 
             assertTrue(loadavg.length == 3);
-            traceln("");
+
             traceln("1min=" + loadavg[0]);
             traceln("5min=" + loadavg[1]);
             traceln("15min=" + loadavg[2]);

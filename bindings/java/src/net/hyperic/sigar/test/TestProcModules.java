@@ -28,9 +28,7 @@ public class TestProcModules extends SigarTestCase {
     }
 
     public void testCreate() throws Exception {
-        Sigar sigar = new Sigar();
-
-        traceln("");
+        Sigar sigar = getSigar();
 
         try {
 	    printModules(sigar, sigar.getPid());

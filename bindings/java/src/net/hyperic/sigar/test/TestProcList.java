@@ -11,9 +11,8 @@ public class TestProcList extends SigarTestCase {
     }
 
     public void testCreate() throws Exception {
-        Sigar sigar = new Sigar();
+        Sigar sigar = getSigar();
 
-        traceln("");
         ArrayList traceList = new ArrayList();
 
         long[] pids = sigar.getProcList();

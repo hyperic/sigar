@@ -26,8 +26,6 @@ public class TestCpu extends SigarTestCase {
 
         Cpu cpu = sigar.getCpu();
 
-        traceln("");
-
         traceln("getCpu:");
         checkCpu(cpu);
 

@@ -80,9 +80,7 @@ public class TestFileInfo extends SigarTestCase {
     }
 
     public void testCreate() throws Exception {
-        Sigar sigar = new Sigar();
-
-        traceln("");
+        Sigar sigar = getSigar();
 
         String file;
         File dir = new File(System.getProperty("user.dir"));

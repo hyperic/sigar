@@ -21,7 +21,6 @@ public class TestNetIf extends SigarTestCase {
             NetInterfaceConfig ifconfig =
                 sigar.getNetInterfaceConfig(name);
 
-            traceln("");
             traceln("name=" + name);
 
             assertTrueTrace("Address", ifconfig.getAddress());
@@ -72,7 +71,7 @@ public class TestNetIf extends SigarTestCase {
     }
 
     public void testCreate() throws Exception {
-        Sigar sigar = new Sigar();
+        Sigar sigar = getSigar();
 
         /* call twice to make sure caching works */
         getNetIflist(sigar, false);

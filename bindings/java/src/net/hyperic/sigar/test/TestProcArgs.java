@@ -26,9 +26,7 @@ public class TestProcArgs extends SigarTestCase {
     }
 
     public void testCreate() throws Exception {
-        Sigar sigar = new Sigar();
-
-        traceln("");
+        Sigar sigar = getSigar();
 
         try {
             String[] args = sigar.getProcArgs(sigar.getPid());

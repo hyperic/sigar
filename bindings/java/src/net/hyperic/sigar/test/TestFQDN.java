@@ -26,9 +26,8 @@ public class TestFQDN extends SigarTestCase {
             }
         }
 
-        String fqdn = new Sigar().getFQDN();
+        String fqdn = getSigar().getFQDN();
 
-        traceln("");
         traceln("fqdn=" + fqdn);
 
         boolean validFQDN = fqdn.indexOf(".") > 0;

@@ -13,7 +13,7 @@ public class TestFileSystem extends SigarTestCase {
     }
 
     public void testCreate() throws Exception {
-        Sigar sigar = new Sigar();
+        Sigar sigar = getSigar();
 
         FileSystem[] fslist = sigar.getFileSystemList();
         FileSystemMap mounts = sigar.getFileSystemMap();
@@ -25,7 +25,6 @@ public class TestFileSystem extends SigarTestCase {
         for (int i=0; i<fslist.length; i++) {
             FileSystem fs = fslist[i];
 
-            traceln("");
             assertTrue(mounts.getFileSystem(fs.getDirName()) != null);
             assertLengthTrace("DevName", fs.getDevName());
             assertLengthTrace("DirName", fs.getDirName());
