@@ -783,8 +783,41 @@ int sigar_proc_state_get(sigar_t *sigar, sigar_pid_t pid,
 int sigar_proc_args_get(sigar_t *sigar, sigar_pid_t pid,
                         sigar_proc_args_t *procargs)
 {
-#ifdef DARWIN
+#if defined(DARWIN)
     return SIGAR_ENOTIMPL;
+#elif defined (__FreeBSD__) && (__FreeBSD_version >= 500013)
+    char buffer[8096], *ptr=buffer;
+    size_t len = sizeof(buffer);
+    int mib[4] = { CTL_KERN, KERN_PROC, KERN_PROC_ARGS, 0 };
+
+    mib[3] = pid;
+
+    if (sysctl(mib, NMIB(mib), buffer, &len, NULL, 0) < 0) {
+        return errno;
+    }
+
+    sigar_proc_args_create(procargs);
+
+    if (len == 0) {
+        procargs->number = 0;
+        return SIGAR_OK;
+    }
+
+    buffer[len] = '\0';
+
+    while (*ptr) {
+        int alen = strlen(ptr)+1;
+        char *arg = malloc(alen);
+
+        SIGAR_PROC_ARGS_GROW(procargs);
+        memcpy(arg, ptr, alen);
+
+        procargs->data[procargs->number++] = arg;
+
+        ptr += alen;
+    }
+
+    return SIGAR_OK;
 #else
     return PROCFS_STATUS(sigar_procfs_args_get(sigar, pid, procargs));
 #endif
