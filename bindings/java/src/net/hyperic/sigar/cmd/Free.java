@@ -21,23 +21,35 @@ public class Free extends SigarCommandBase {
         return "Display information about free and used memory";
     }
 
+    private static Long format(long value) {
+        return new Long(value / 1024);
+    }
+
     public void output(String[] args) throws SigarException {
-        Mem mem = this.sigar.getMem();
+        Mem mem   = this.sigar.getMem();
         Swap swap = this.sigar.getSwap();
 
-        this.out.println("\tTotal\tUsed\tFree");
+        Object[] header = new Object[] { "total", "used", "free" };
 
-        this.out.println("Mem:    " +
-                         mem.getTotal() / 1024 + "\t" +
-                         mem.getUsed() / 1024 + "\t" +
-                         mem.getFree() / 1024);
+        Object[] memRow = new Object[] {
+            format(mem.getTotal()),
+            format(mem.getUsed()),
+            format(mem.getFree())
+        };
 
-        this.out.println("Swap:   " + 
-                         swap.getTotal() / 1024 + "\t" +
-                         swap.getUsed() / 1024 + "\t" +
-                         swap.getFree() / 1024);
+        Object[] swapRow = new Object[] {
+            format(swap.getTotal()),
+            format(swap.getUsed()),
+            format(swap.getFree())
+        };
 
-        this.out.println("RAM:    " + mem.getRam() + "MB");        
+        printf("%18s %10s %10s", header);
+
+        printf("Mem:    %10ld %10ld %10ld", memRow);
+
+        printf("Swap:   %10ld %10ld %10ld", swapRow);
+
+        printf("RAM:    %10ls", new Object[] { mem.getRam() + "MB" });
     }
 
     public static void main(String[] args) throws Exception {
