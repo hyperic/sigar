@@ -676,7 +676,27 @@ int sigar_proc_fd_get(sigar_t *sigar, sigar_pid_t pid,
 int sigar_proc_exe_get(sigar_t *sigar, sigar_pid_t pid,
                        sigar_proc_exe_t *procexe)
 {
+#ifdef DARWIN
     return SIGAR_ENOTIMPL;
+#else
+    int len;
+    char name[1024];
+
+    procexe->cwd[0] = '\0';
+    procexe->root[0] = '\0';
+
+    (void)SIGAR_PROC_FILENAME(name, pid, "/file");
+
+    if ((len = readlink(name, procexe->name,
+                        sizeof(procexe->name)-1)) < 0)
+    {
+        return errno;
+    }
+
+    procexe->name[len] = '\0';
+
+    return SIGAR_OK;
+#endif
 }
 
 int sigar_proc_modules_get(sigar_t *sigar, sigar_pid_t pid,
