@@ -281,8 +281,8 @@ void sigar_cpu_model_adjust(sigar_t *sigar, sigar_cpu_info_t *info)
         ptr += len;
         if (IS_CPU_R(ptr)) {
             ptr += 3; /* remove (R) */
-            while (*ptr == ' ') ++ptr;
         }
+        while (*ptr == ' ') ++ptr;
     }
 
     strcpy(info->model, ptr);
