@@ -198,12 +198,12 @@ int sigar_file_system_usage_get(sigar_t *sigar,
     return SIGAR_OK;
 }
 
-int sigar_cpu_infos_get(sigar_t *sigar,
-                        sigar_cpu_infos_t *cpu_infos)
+int sigar_cpu_info_list_get(sigar_t *sigar,
+                            sigar_cpu_info_list_t *cpu_infos)
 {
     sigar_cpu_info_t *info;
 
-    sigar_cpu_infos_create(cpu_infos);
+    sigar_cpu_info_list_create(cpu_infos);
 
     info = &cpu_infos->data[cpu_infos->number++];
 

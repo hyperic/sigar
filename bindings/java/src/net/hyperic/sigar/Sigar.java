@@ -136,13 +136,13 @@ public class Sigar implements SigarProxy {
         return (this.lastCpu = Cpu.fetch(this));
     }
 
-    private static void pause(int millis) {
+    static void pause(int millis) {
         try {
             Thread.sleep(millis);
         } catch(InterruptedException e) { }
     }
 
-    private static void pause() {
+    static void pause() {
         pause(500);
     }
 

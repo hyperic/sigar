@@ -486,7 +486,7 @@ sigar_file_system_list_destroy(sigar_t *sigar,
     return SIGAR_OK;
 }
 
-int sigar_cpu_infos_create(sigar_cpu_infos_t *cpu_infos)
+int sigar_cpu_info_list_create(sigar_cpu_info_list_t *cpu_infos)
 {
     cpu_infos->number = 0;
     cpu_infos->size = SIGAR_CPU_INFO_MAX;
@@ -495,7 +495,7 @@ int sigar_cpu_infos_create(sigar_cpu_infos_t *cpu_infos)
     return SIGAR_OK;
 }
 
-int sigar_cpu_infos_grow(sigar_cpu_infos_t *cpu_infos)
+int sigar_cpu_info_list_grow(sigar_cpu_info_list_t *cpu_infos)
 {
     cpu_infos->data = realloc(cpu_infos->data,
                               sizeof(*(cpu_infos->data)) *
@@ -505,8 +505,9 @@ int sigar_cpu_infos_grow(sigar_cpu_infos_t *cpu_infos)
     return SIGAR_OK;
 }
 
-SIGAR_DECLARE(int) sigar_cpu_infos_destroy(sigar_t *sigar,
-                                           sigar_cpu_infos_t *cpu_infos)
+SIGAR_DECLARE(int)
+sigar_cpu_info_list_destroy(sigar_t *sigar,
+                            sigar_cpu_info_list_t *cpu_infos)
 {
     if (cpu_infos->size) {
         free(cpu_infos->data);

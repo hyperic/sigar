@@ -201,15 +201,15 @@ file_system_list(sigar)
     RETVAL
 
 SV *
-cpu_infos(sigar)
+cpu_info_list(sigar)
     Sigar sigar
 
     PREINIT:
-    sigar_cpu_infos_t cpu_infos;
+    sigar_cpu_info_list_t cpu_infos;
     int status;
 
     CODE:
-    status = sigar_cpu_infos_get(sigar, &cpu_infos);
+    status = sigar_cpu_info_list_get(sigar, &cpu_infos);
 
     if (status != SIGAR_OK) {
         SIGAR_CROAK(sigar, "cpu_infos");
@@ -220,7 +220,7 @@ cpu_infos(sigar)
                            sizeof(*cpu_infos.data),
                            "Sigar::CpuInfo");
 
-    sigar_cpu_infos_destroy(sigar, &cpu_infos);
+    sigar_cpu_info_list_destroy(sigar, &cpu_infos);
 
     OUTPUT:
     RETVAL

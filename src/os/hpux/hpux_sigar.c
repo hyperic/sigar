@@ -538,8 +538,8 @@ int sigar_file_system_usage_get(sigar_t *sigar,
     return SIGAR_OK;
 }
 
-int sigar_cpu_infos_get(sigar_t *sigar,
-                        sigar_cpu_infos_t *cpu_infos)
+int sigar_cpu_info_list_get(sigar_t *sigar,
+                            sigar_cpu_info_list_t *cpu_infos)
 {
     int i;
     struct pst_dynamic stats;
@@ -547,7 +547,7 @@ int sigar_cpu_infos_get(sigar_t *sigar,
     pstat_getdynamic(&stats, sizeof(stats), 1, 0);
     sigar->ncpu = stats.psd_proc_cnt;
 
-    sigar_cpu_infos_create(cpu_infos);
+    sigar_cpu_info_list_create(cpu_infos);
 
     for (i=0; i<sigar->ncpu; i++) {
         sigar_cpu_info_t *info;
@@ -558,7 +558,7 @@ int sigar_cpu_infos_get(sigar_t *sigar,
             continue;
         }
 
-        SIGAR_CPU_INFOS_GROW(cpu_infos);
+        SIGAR_CPU_INFO_LIST_GROW(cpu_infos);
 
         info = &cpu_infos->data[cpu_infos->number++];
 

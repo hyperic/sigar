@@ -7,7 +7,7 @@ public class CpuInfo {
         Sigar sigar = new Sigar();
 
         Hyperic.Sigar.CpuInfo[] infos = 
-            sigar.CpuInfos();
+            sigar.CpuInfoList();
 
         System.Console.WriteLine(infos.Length + " total CPUs..");
 

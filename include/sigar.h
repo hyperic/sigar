@@ -123,13 +123,15 @@ typedef struct {
     unsigned long number;
     unsigned long size;
     sigar_cpu_info_t *data;
-} sigar_cpu_infos_t;
+} sigar_cpu_info_list_t;
 
-SIGAR_DECLARE(int) sigar_cpu_infos_get(sigar_t *sigar,
-                                       sigar_cpu_infos_t *cpu_infos);
+SIGAR_DECLARE(int)
+sigar_cpu_info_list_get(sigar_t *sigar,
+                        sigar_cpu_info_list_t *cpu_infos);
 
-SIGAR_DECLARE(int) sigar_cpu_infos_destroy(sigar_t *sigar,
-                                           sigar_cpu_infos_t *cpu_infos);
+SIGAR_DECLARE(int)
+sigar_cpu_info_list_destroy(sigar_t *sigar,
+                            sigar_cpu_info_list_t *cpu_infos);
 
 typedef struct {
     double uptime;

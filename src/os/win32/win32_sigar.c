@@ -1360,15 +1360,15 @@ sigar_file_system_usage_get(sigar_t *sigar,
     return SIGAR_OK;
 }
 
-SIGAR_DECLARE(int) sigar_cpu_infos_get(sigar_t *sigar,
-                                       sigar_cpu_infos_t *cpu_infos)
+SIGAR_DECLARE(int) sigar_cpu_info_list_get(sigar_t *sigar,
+                                           sigar_cpu_info_list_t *cpu_infos)
 {
     int i, status;
     sigar_cpu_info_t *info;
 
     sigar_cpu_count(sigar);
 
-    sigar_cpu_infos_create(cpu_infos);
+    sigar_cpu_info_list_create(cpu_infos);
 
     info = &cpu_infos->data[cpu_infos->number++];
 
@@ -1380,7 +1380,7 @@ SIGAR_DECLARE(int) sigar_cpu_infos_get(sigar_t *sigar,
 
     if (sigar->ncpu > 1) {
         for (i=1; i<sigar->ncpu; i++) {
-            SIGAR_CPU_INFOS_GROW(cpu_infos);
+            SIGAR_CPU_INFO_LIST_GROW(cpu_infos);
 
             memcpy(&cpu_infos->data[cpu_infos->number++],
                    info, sizeof(*info));

@@ -5,7 +5,7 @@ use Sigar;
 
 my $sigar = new Sigar;
 
-my $infos = $sigar->cpu_infos;
+my $infos = $sigar->cpu_info_list;
 
 my $num = scalar @$infos;
 

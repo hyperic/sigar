@@ -305,12 +305,12 @@ JNIEXPORT jobjectArray SIGAR_JNI(Sigar_getCpuInfoList)
 {
     int status;
     unsigned int i;
-    sigar_cpu_infos_t cpu_infos;
+    sigar_cpu_info_list_t cpu_infos;
     jobjectArray cpuarray;
     jclass cls = SIGAR_FIND_CLASS("CpuInfo");
     dSIGAR(NULL);
 
-    if ((status = sigar_cpu_infos_get(sigar, &cpu_infos)) != SIGAR_OK) {
+    if ((status = sigar_cpu_info_list_get(sigar, &cpu_infos)) != SIGAR_OK) {
         sigar_throw_error(env, sigar, status);
         return NULL;
     }
@@ -326,7 +326,7 @@ JNIEXPORT jobjectArray SIGAR_JNI(Sigar_getCpuInfoList)
         JENV->SetObjectArrayElement(env, cpuarray, i, info_obj);
     }
 
-    sigar_cpu_infos_destroy(sigar, &cpu_infos);
+    sigar_cpu_info_list_destroy(sigar, &cpu_infos);
 
     return cpuarray;
 }

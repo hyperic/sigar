@@ -141,13 +141,13 @@ static int is_ht_enabled(sigar_t *sigar)
 {
     if (sigar->ht_enabled == -1) {
         /* only check once */
-        sigar_cpu_infos_t cpuinfos;
+        sigar_cpu_info_list_t cpuinfos;
 
-        if (sigar_cpu_infos_get(sigar, &cpuinfos) != SIGAR_OK) {
+        if (sigar_cpu_info_list_get(sigar, &cpuinfos) != SIGAR_OK) {
             sigar->ht_enabled = 0; /* chances we reach here: slim..none */
         }
 
-        sigar_cpu_infos_destroy(sigar, &cpuinfos);
+        sigar_cpu_info_list_destroy(sigar, &cpuinfos);
     }
 
     return sigar->ht_enabled;
@@ -1075,8 +1075,8 @@ static int get_cpu_info(sigar_t *sigar, sigar_cpu_info_t *info,
     return found;
 }
 
-int sigar_cpu_infos_get(sigar_t *sigar,
-                        sigar_cpu_infos_t *cpu_infos)
+int sigar_cpu_info_list_get(sigar_t *sigar,
+                            sigar_cpu_info_list_t *cpu_infos)
 {
     FILE *fp;
     int id;
@@ -1090,7 +1090,7 @@ int sigar_cpu_infos_get(sigar_t *sigar,
 
     sigar->ht_enabled = 0; /* figure out below */
 
-    sigar_cpu_infos_create(cpu_infos);
+    sigar_cpu_info_list_create(cpu_infos);
     memset(&cpu_id[0], -1, sizeof(cpu_id));
 
     while (get_cpu_info(sigar, &cpu_infos->data[cpu_infos->number], fp, &id)) {
@@ -1118,7 +1118,7 @@ int sigar_cpu_infos_get(sigar_t *sigar,
         }
 
         ++cpu_infos->number;
-        SIGAR_CPU_INFOS_GROW(cpu_infos);
+        SIGAR_CPU_INFO_LIST_GROW(cpu_infos);
     }
 
     fclose(fp);

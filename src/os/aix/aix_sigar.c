@@ -1183,20 +1183,20 @@ static int sigar_get_cpu_mhz(sigar_t *sigar)
     return sigar->cpu_mhz;
 }
 
-int sigar_cpu_infos_get(sigar_t *sigar,
-                        sigar_cpu_infos_t *cpu_infos)
+int sigar_cpu_info_list_get(sigar_t *sigar,
+                            sigar_cpu_info_list_t *cpu_infos)
 {
     int i;
     int ncpu = _system_configuration.ncpus; /* this can change */
 
     /*XXX should only do this once*/
-    sigar_cpu_infos_create(cpu_infos);
+    sigar_cpu_info_list_create(cpu_infos);
 
     for (i=0; i<ncpu; i++) {
         sigar_cpu_info_t *info;
         char *arch, *model=NULL;
 
-        SIGAR_CPU_INFOS_GROW(cpu_infos);
+        SIGAR_CPU_INFO_LIST_GROW(cpu_infos);
 
         info = &cpu_infos->data[cpu_infos->number++];        
 

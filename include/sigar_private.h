@@ -120,13 +120,13 @@ int sigar_os_fs_type_get(sigar_file_system_t *fsp);
 
 void sigar_fs_type_get(sigar_file_system_t *fsp);
 
-int sigar_cpu_infos_create(sigar_cpu_infos_t *cpu_infos);
+int sigar_cpu_info_list_create(sigar_cpu_info_list_t *cpu_infos);
 
-int sigar_cpu_infos_grow(sigar_cpu_infos_t *cpu_infos);
+int sigar_cpu_info_list_grow(sigar_cpu_info_list_t *cpu_infos);
 
-#define SIGAR_CPU_INFOS_GROW(cpu_infos) \
+#define SIGAR_CPU_INFO_LIST_GROW(cpu_infos) \
     if (cpu_infos->number >= cpu_infos->size) { \
-        sigar_cpu_infos_grow(cpu_infos); \
+        sigar_cpu_info_list_grow(cpu_infos); \
     }
 
 int sigar_cpu_list_create(sigar_cpu_list_t *cpulist);

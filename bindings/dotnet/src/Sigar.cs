@@ -32,8 +32,8 @@ namespace Hyperic.Sigar {
             return Hyperic.Sigar.Swap.NativeGet(this);
         }
 
-        public CpuInfo[] CpuInfos() {
-            return Hyperic.Sigar.CpuInfos.NativeGet(this);
+        public CpuInfo[] CpuInfoList() {
+            return Hyperic.Sigar.CpuInfoList.NativeGet(this);
         }
 
         public FileSystem[] FileSystemList() {
@@ -126,31 +126,32 @@ namespace Hyperic.Sigar {
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    internal struct CpuInfos {
+    internal struct CpuInfoList {
         private readonly uint Number; //sizeof(unsigned long) == 4
         private readonly uint size;
         private readonly IntPtr data;
 
         [DllImport(Sigar.LIBSIGAR)]
-        private static extern int sigar_cpu_infos_get(IntPtr sigar,
-                                                      IntPtr cpu_infos);
-
-        [DllImport(Sigar.LIBSIGAR)]
-        private static extern int sigar_cpu_infos_destroy(IntPtr sigar,
+        private static extern int sigar_cpu_info_list_get(IntPtr sigar,
                                                           IntPtr cpu_infos);
 
+        [DllImport(Sigar.LIBSIGAR)]
+        private static extern int sigar_cpu_info_list_destroy(IntPtr sigar,
+                                                              IntPtr cpu_infos);
+
         internal static CpuInfo[] NativeGet(Sigar sigar) {
-            Type type = typeof(CpuInfos);
+            Type type = typeof(CpuInfoList);
             IntPtr ptr = Marshal.AllocHGlobal(Marshal.SizeOf(type));
 
-            int status = sigar_cpu_infos_get(sigar.sigar.Handle, ptr);
+            int status = sigar_cpu_info_list_get(sigar.sigar.Handle, ptr);
 
             if (status != Sigar.OK) {
                 Marshal.FreeHGlobal(ptr);
-                throw new ApplicationException("cpu_infos_get");
+                throw new ApplicationException("cpu_info_list_get");
             }
 
-            CpuInfos infosPtr = (CpuInfos)Marshal.PtrToStructure(ptr, type);
+            CpuInfoList infosPtr =
+                (CpuInfoList)Marshal.PtrToStructure(ptr, type);
 
             CpuInfo[] infos = new CpuInfo[infosPtr.Number];
 
@@ -164,7 +165,7 @@ namespace Hyperic.Sigar {
                 eptr = Sigar.incrementIntPtr(eptr, size);
             }
 
-            sigar_cpu_infos_destroy(sigar.sigar.Handle, ptr);
+            sigar_cpu_info_list_destroy(sigar.sigar.Handle, ptr);
 
             Marshal.FreeHGlobal(ptr);
 
