@@ -1,7 +1,7 @@
 #include "sigar.h"
 #include "sigar_private.h"
-#include "sigar_os.h"
 #include "sigar_util.h"
+#include "sigar_os.h"
 
 #define my_pread(fd, ptr, type, offset) \
     (pread(fd, ptr, sizeof(type), offset) == sizeof(type))

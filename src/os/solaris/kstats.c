@@ -1,7 +1,7 @@
 #include "sigar.h"
 #include "sigar_private.h"
-#include "sigar_os.h"
 #include "sigar_util.h"
+#include "sigar_os.h"
 
 int sigar_get_multi_kstats(sigar_t *sigar,
                            kstat_list_t *kl,

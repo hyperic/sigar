@@ -220,6 +220,8 @@ struct sigar_t {
     proc_objname_func_t pobjname;
     proc_dirname_func_t pdirname;
     proc_exename_func_t pexename;
+
+    sigar_cache_t *fsdev;
 };
 
 #define kSTAT_uint(v, type) \
