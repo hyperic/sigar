@@ -835,7 +835,45 @@ int sigar_proc_exe_get(sigar_t *sigar, sigar_pid_t pid,
 int sigar_proc_modules_get(sigar_t *sigar, sigar_pid_t pid,
                            sigar_proc_modules_t *procmods)
 {
-    return SIGAR_ENOTIMPL;
+    FILE *fp;
+    char buffer[BUFSIZ], *ptr;
+    unsigned long inode, last_inode = 0;
+
+    (void)SIGAR_PROC_FILENAME(buffer, pid, "/maps");
+
+    if (!(fp = fopen(buffer, "r"))) {
+        return errno;
+    }
+
+    while ((ptr = fgets(buffer, sizeof(buffer), fp))) {
+        int len;
+        /* skip region, flags, offset, dev */
+        ptr = sigar_skip_multiple_token(ptr, 4);
+        inode = sigar_strtoul(ptr);
+
+        if ((inode == 0) || (inode == last_inode)) {
+            last_inode = 0;
+            continue;
+        }
+
+        last_inode = inode;
+        SIGAR_SKIP_SPACE(ptr);
+        len = strlen(ptr);
+        ptr[len-1] = '\0'; /* chop \n */
+
+        int status =
+            procmods->module_getter(procmods->data,
+                                    ptr, len-1);
+
+        if (status != SIGAR_OK) {
+            /* not an error; just stop iterating */
+            break;
+        }
+    }
+    
+    fclose(fp);
+
+    return SIGAR_OK;
 }
 
 #include <mntent.h>
