@@ -1016,7 +1016,6 @@ SIGAR_DECLARE(int) sigar_fqdn_get(sigar_t *sigar, char *name, int namelen)
 
     /* XXX use _r versions of these functions. */
     if (!(p = gethostbyname(name))) {
-
         if (SIGAR_LOG_IS_DEBUG(sigar)) {
             sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
                              "[%s] gethostbyname(%s) failed: %s",
@@ -1032,8 +1031,10 @@ SIGAR_DECLARE(int) sigar_fqdn_get(sigar_t *sigar, char *name, int namelen)
 
     if (strchr(p->h_name, '.')) {
         FQDN_SET(p->h_name);
+
         sigar_log(sigar, SIGAR_LOG_DEBUG,
                   "FQDN resolved using gethostbyname.h_name");
+
         return SIGAR_OK;
     }
 
@@ -1101,6 +1102,10 @@ SIGAR_DECLARE(int) sigar_fqdn_get(sigar_t *sigar, char *name, int namelen)
 
         sigar_log(sigar, SIGAR_LOG_DEBUG,
                   "FQDN resolved using getdomainname");
+    }
+    else {
+        sigar_log(sigar, SIGAR_LOG_DEBUG,
+                  "FQDN getdomainname failed");
     }
 #endif
 
