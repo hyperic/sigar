@@ -23,6 +23,11 @@ public class SynchronizedSigar implements SigarProxy {
         return this.sigar.getPid();
     }
 
+    public synchronized long getServicePid(String name)
+    {
+        return this.sigar.getServicePid(name);
+    }
+
     public synchronized Mem getMem()
         throws SigarException
     {
