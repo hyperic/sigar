@@ -18,6 +18,8 @@
     sigar->ks.dev.name = #dev; \
     sigar->ks.dev.nlen = strlen(#dev)
 
+#define PROC_ERRNO ((errno == ENOENT) ? ESRCH : errno)
+
 int sigar_os_open(sigar_t **sig)
 {
     kstat_ctl_t *kc;
@@ -697,7 +699,7 @@ int sigar_proc_args_get(sigar_t *sigar, sigar_pid_t pid,
     (void)SIGAR_PROC_FILENAME(buffer, pid, "/as");
 
     if ((fd = open(buffer, O_RDONLY)) < 0) {
-        return ESRCH;
+        return PROC_ERRNO;
     }
 
     if (argv_size > sizeof(argvb)) {
@@ -759,7 +761,7 @@ int sigar_proc_env_get(sigar_t *sigar, sigar_pid_t pid,
     (void)SIGAR_PROC_FILENAME(buffer, pid, "/as");
 
     if ((fd = open(buffer, O_RDONLY)) < 0) {
-        return ESRCH;
+        return PROC_ERRNO;
     }
 
     if ((nread = pread(fd, offsets, sizeof(offsets),
