@@ -209,17 +209,17 @@ my %classes = (
       {
          name => 'vendor', type => 'String',
          desc => 'CPU vendor id',
-         plat => 'ALHSW'
+         plat => 'AFLHSW'
       },
       {
          name => 'model', type => 'String',
          desc => 'CPU model',
-         plat => 'ALHSW'
+         plat => 'AFLHSW'
       },
       {
          name => 'mhz', type => 'Int',
          desc => 'CPU speed',
-         plat => 'AHLSW'
+         plat => 'AFHLSW'
       },
       {
          name => 'cache_size', type => 'Long',
@@ -238,12 +238,12 @@ my %classes = (
       {
          name => 'size', type => 'Long',
          desc => 'Total process memory',
-         plat => 'AHLSW'
+         plat => 'AFHLSW'
       },
       {
          name => 'vsize', type => 'Long',
          desc => 'Total process virtual memory',
-         plat => 'AHLSW'
+         plat => 'AFHLSW'
       },
       {
          name => 'resident', type => 'Long',
@@ -258,7 +258,7 @@ my %classes = (
       {
          name => 'rss', type => 'Long',
          desc => 'Process resident set size',
-         plat => 'AHL'
+         plat => 'AFHL'
       },
     ],
     ProcCred => [
@@ -270,17 +270,17 @@ my %classes = (
       {
          name => 'gid', type => 'Long',
          desc => 'Process group id',
-         plat => 'DFHLS'
+         plat => 'ADFHLS'
       },
       {
          name => 'euid', type => 'Long',
          desc => 'Process effective user id',
-         plat => 'DFHLS'
+         plat => 'ADFHLS'
       },
       {
          name => 'egid', type => 'Long',
          desc => 'Process effective group id',
-         plat => 'DFHLS'
+         plat => 'ADFHLS'
       },
     ],
     ProcCredName => [
@@ -299,22 +299,22 @@ my %classes = (
       {
          name => 'start_time', type => 'Long',
          desc => 'Time process was started in seconds',
-         plat => 'ADHLSW'
+         plat => '*'
       },
       {
          name => 'user', type => 'Long',
          desc => 'Process cpu user time',
-         plat => 'ADHLSW'
+         plat => '*'
       },
       {
          name => 'sys', type => 'Long',
          desc => 'Process cpu kernel time',
-         plat => 'ADHLSW'
+         plat => '*'
       },
       {
          name => 'total', type => 'Long',
          desc => 'Process cpu time (sum of User and Sys)',
-         plat => 'ADHLSW'
+         plat => '*'
       },
     ],
     ProcState => [
@@ -331,7 +331,7 @@ my %classes = (
       {
          name => 'ppid', type => 'Long',
          desc => 'Process parent process id',
-         plat => 'ADFHLSW'
+         plat => '*'
       },
       {
          name => 'tty', type => 'Int',
@@ -341,7 +341,7 @@ my %classes = (
       {
          name => 'nice', type => 'Int',
          desc => 'Nice value of process',
-         plat => 'ADHLS'
+         plat => 'ADFHLS'
       },
       {
          name => 'priority', type => 'Int',
@@ -367,7 +367,7 @@ my %classes = (
       {
          name => 'name', type => 'String',
          desc => 'Name of process executable',
-         plat => 'L',
+         plat => 'FLSW',
          cmd  => {
              AIX => '',
              Darwin  => '',
@@ -381,7 +381,7 @@ my %classes = (
       {
          name => 'cwd', type => 'String',
          desc => 'Name of process current working directory',
-         plat => 'L',
+         plat => 'LSW',
          cmd  => {
              AIX => '',
              Darwin  => '',
@@ -397,17 +397,17 @@ my %classes = (
       {
          name => 'user', type => 'Long',
          desc => 'Thread cpu user time',
-         plat => 'HLSW'
+         plat => 'AHLSW'
       },
       {
          name => 'sys', type => 'Long',
          desc => 'Thread cpu kernel time',
-         plat => 'HLSW'
+         plat => 'AHLSW'
       },
       {
          name => 'total', type => 'Long',
          desc => 'Thread cpu time (sum of User and Sys)',
-         plat => 'HLSW'
+         plat => 'AHLSW'
       },
     ],
     FileSystem => [
