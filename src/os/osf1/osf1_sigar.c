@@ -82,7 +82,14 @@ int sigar_cpu_get(sigar_t *sigar, sigar_cpu_t *cpu)
 
 int sigar_cpu_list_get(sigar_t *sigar, sigar_cpu_list_t *cpulist)
 {
-    return SIGAR_ENOTIMPL;
+    sigar_cpu_t *cpu;
+
+    sigar_cpu_list_create(cpulist);
+
+    /* XXX multi cpu */
+    cpu = &cpulist->data[cpulist->number++];
+
+    return sigar_cpu_get(sigar, cpu);
 }
 
 int sigar_uptime_get(sigar_t *sigar,
