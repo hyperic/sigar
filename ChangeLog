@@ -1,6 +1,6 @@
 2005-01-06  Doug MacEachern  <dougm@hyperic.net>
 
-        * 1.1.13 released
+        * 1.1.14 released
         
         * fix solaris bug w/ multiple network interfaces that have the
         same name (hme0, hme1, etc)
