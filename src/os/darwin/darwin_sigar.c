@@ -43,6 +43,10 @@ static int get_koffsets(sigar_t *sigar)
         { NULL }
     };
 
+    if (!sigar->kmem) {
+        return SIGAR_EPERM_KMEM;
+    }
+
     kvm_nlist(sigar->kmem, klist);
     if (klist[0].n_type == 0) {
         return errno;
@@ -57,11 +61,9 @@ static int get_koffsets(sigar_t *sigar)
 
 static int kread(sigar_t *sigar, void *data, int size, long offset)
 {
-#if 0
-    if (sigar->kmem < 0) {
+    if (!sigar->kmem) {
         return SIGAR_EPERM_KMEM;
     }
-#endif
 
     if (kvm_read(sigar->kmem, offset, data, size) != size) {
         return errno;
@@ -126,7 +128,12 @@ int sigar_os_close(sigar_t *sigar)
 
 char *sigar_os_error_string(int err)
 {
-    return NULL;
+    switch (err) {
+      case SIGAR_EPERM_KMEM:
+        return "Failed to open /dev/kmem for reading";
+      default:
+        return NULL;
+    }
 }
 
 int sigar_mem_get(sigar_t *sigar, sigar_mem_t *mem)
@@ -250,6 +257,10 @@ int sigar_swap_get(sigar_t *sigar, sigar_swap_t *swap)
 
 #else
     struct kvm_swap kswap[1];
+
+    if (!sigar->kmem) {
+        return SIGAR_EPERM_KMEM;
+    }
 
     if (kvm_getswapinfo(sigar->kmem, kswap, 1, 0) < 0) {
         return errno;
@@ -375,8 +386,13 @@ int sigar_proc_list_get(sigar_t *sigar,
     return SIGAR_OK;
 #else
     int i, num;
-    struct kinfo_proc *proc =
-        kvm_getprocs(sigar->kmem, KERN_PROC_ALL, 0, &num);
+    struct kinfo_proc *proc;
+
+    if (!sigar->kmem) {
+        return SIGAR_EPERM_KMEM;
+    }
+
+    proc = kvm_getprocs(sigar->kmem, KERN_PROC_ALL, 0, &num);
     
     proclist->number = 0;
     proclist->size = num;
@@ -624,6 +640,10 @@ int sigar_proc_env_get(sigar_t *sigar, sigar_pid_t pid,
     char **env;
     struct kinfo_proc *pinfo;
     int num;
+
+    if (!sigar->kmem) {
+        return SIGAR_EPERM_KMEM;
+    }
 
     pinfo = kvm_getprocs(sigar->kmem, KERN_PROC_PID, pid, &num);
     if (!pinfo || (num < 1)) {

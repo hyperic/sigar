@@ -31,4 +31,6 @@ struct sigar_t {
 #endif
 };
 
+#define SIGAR_EPERM_KMEM (SIGAR_OS_START_ERROR+1)
+
 #endif /* SIGAR_OS_H */
