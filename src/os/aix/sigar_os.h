@@ -40,6 +40,7 @@ struct sigar_t {
     struct procsinfo *pinfo;
     struct cpuinfo *cpuinfo;
     int cpuinfo_size;
+    char model[128];
 };
 
 #define HAVE_STRERROR_R
