@@ -123,8 +123,7 @@ public class Runner {
         String[] pargs = new String[args.length - 1];
         System.arraycopy(args, 1, pargs, 0, args.length-1);
 
-        String sigarLib = 
-            new SigarLoader(SigarLoader.class).findJarPath("sigar.jar");
+        String sigarLib = SigarLoader.getLocation();
 
         String[] dirs = { sigarLib, "lib", "." };
         for (int i=0; i<dirs.length; i++) {
