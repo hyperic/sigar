@@ -223,6 +223,11 @@ int sigar_os_close(sigar_t *sigar)
 
 char *sigar_os_error_string(int err)
 {
+    switch (err) {
+      case SIGAR_NO_SUCH_PROCESS:
+        return "No such process";
+        break;
+    }
     return NULL;
 }
 
@@ -772,7 +777,7 @@ static int get_proc_info(sigar_t *sigar, sigar_pid_t pid)
         return SIGAR_OK;
     }
 
-    return -1; /*XXX*/
+    return SIGAR_NO_SUCH_PROCESS;
 }
 
 static int sigar_remote_proc_args_get(sigar_t *sigar, sigar_pid_t pid,

@@ -134,4 +134,6 @@ unsigned int sigar_cpu_count(sigar_t *sigar);
 
 int sigar_cpu_info_get(sigar_t *sigar, sigar_cpu_info_t *info);
 
+#define SIGAR_NO_SUCH_PROCESS (SIGAR_OS_START_ERROR+1)
+
 #endif /* SIGAR_OS_H */
