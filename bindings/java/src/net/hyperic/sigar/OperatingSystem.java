@@ -37,6 +37,31 @@ public class OperatingSystem {
             if (os.name.equals("Linux")) {
                 os.getLinuxInfo();
             }
+            else if (os.name.indexOf("Windows") > -1) {
+                os.vendor = "Microsoft";
+            }
+            else if (os.name.equals("SunOS")) {
+                os.vendor = "Sun Microsystems";
+            }
+            else if (os.name.equals("HP-UX")) {
+                os.vendor = "Hewlett-Packard";
+            }
+            else if (os.name.equals("OSF1")) {
+                //HP acquired DEC
+                os.vendor = "Hewlett-Packard";
+            }
+            else if (os.name.equals("AIX")) {
+                os.vendor = "IBM";
+            }
+            else if (os.name.equals("Mac OS X")) {
+                os.vendor = "Apple";
+            }
+            else if (os.name.equals("FreeBSD")) {
+                os.vendor = "FreeBSD";
+            }
+            else {
+                os.vendor = "Unknown";
+            }
 
             instance = os;
         }
