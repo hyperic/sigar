@@ -36,6 +36,7 @@ int sigar_os_open(sigar_t **sig)
         return errno;
     }
 
+    sigar->cpulist.size = 0;
     sigar->ncpu = 0;
     sigar->ks.cpu = NULL;
     sigar->ks.cpuid = NULL;
@@ -98,6 +99,9 @@ int sigar_os_close(sigar_t *sigar)
     }
     if (sigar->pinfo) {
         free(sigar->pinfo);
+    }
+    if (sigar->cpulist.size != 0) {
+        sigar_cpu_list_destroy(sigar, &sigar->cpulist);
     }
     free(sigar);
     return SIGAR_OK;
@@ -276,10 +280,20 @@ int sigar_cpu_list_get(sigar_t *sigar, sigar_cpu_list_t *cpulist)
     unsigned int i, n;
     sigar_kstat_update(sigar);
 
-    if (cpulist != &sigar->cpulist) {
+    if (cpulist == &sigar->cpulist) {
+        if (sigar->cpulist.size == 0) {
+            /* create once */
+            sigar_cpu_list_create(cpulist);
+        }
+        else {
+            /* reset, re-using cpulist.data */
+            sigar->cpulist.number = 0;
+        }
+    }
+    else {
         sigar_cpu_list_create(cpulist);
     }
-    
+
     for (i=0; i<sigar->ncpu; i++) {
         sigar_cpu_t *cpu;
         char *buf;
