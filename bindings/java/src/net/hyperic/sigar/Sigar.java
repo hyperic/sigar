@@ -528,15 +528,29 @@ public class Sigar implements SigarProxy {
      * This method checks that the given directory is mounted.
      * Unlike getFileSystemUsage() which only requires that the
      * directory exists within a mounted file system.
+     * This method will also check that NFS servers are reachable via RPC
+     * before attempting to get the file system stats to prevent application
+     * hang when an NFS server is down.
      * @param name Name of the directory on which filesystem is mounted.
-     * @exception SigarException If given directory is not mounted.
+     * @exception SigarException If given directory is not mounted
+     * or NFS server is unreachable.
      * @see net.hyperic.sigar.Sigar#getFileSystemUsage
      */
     public FileSystemUsage getMountedFileSystemUsage(String name)
         throws SigarException {
 
-        if (!getFileSystemMap().isMounted(name)) {
+        FileSystem fs = getFileSystemMap().getMountPoint(name);
+
+        if (fs == null) {
             throw new SigarException(name + " is not a mounted filesystem");
+        }
+
+        if (fs instanceof NfsFileSystem) {
+            NfsFileSystem nfs = (NfsFileSystem)fs;
+            if (!nfs.ping()) {
+                throw new SigarException(nfs.getHostname() + ":" + name +
+                                         " nfs server unreachable");
+            }
         }
 
         return FileSystemUsage.fetch(this, name);
