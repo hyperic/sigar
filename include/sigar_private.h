@@ -87,7 +87,7 @@ int sigar_os_open(sigar_t **sigar);
 
 int sigar_os_close(sigar_t *sigar);
 
-char *sigar_os_error_string(int err);
+char *sigar_os_error_string(sigar_t *sigar, int err);
 
 int sigar_proc_list_create(sigar_proc_list_t *proclist);
 

@@ -29,7 +29,7 @@ int sigar_os_close(sigar_t *sigar)
     return SIGAR_OK;
 }
 
-char *sigar_os_error_string(int err)
+char *sigar_os_error_string(sigar_t *sigar, int err)
 {
     return NULL;
 }

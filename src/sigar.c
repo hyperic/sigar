@@ -99,7 +99,7 @@ SIGAR_DECLARE(char *) sigar_strerror(sigar_t *sigar, int err)
 #endif
 
     if (err > SIGAR_OS_START_ERROR) {
-        if ((buf = sigar_os_error_string(err)) != NULL) {
+        if ((buf = sigar_os_error_string(sigar, err)) != NULL) {
             return buf;
         }
         return "Unknown OS Error"; /* should never happen */
