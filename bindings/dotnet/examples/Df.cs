@@ -21,7 +21,7 @@ public class Df {
                 avail = usage.Avail;
                 total = usage.Total;
                 pct = (ulong)(usage.UsePercent * 100);
-            } catch (ApplicationException) {
+            } catch (SigarException) {
                 used = avail = total = pct = 0;
                 continue;
             }
