@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Collections;
 using System.Runtime.InteropServices;
+using System.Text;
 
 namespace Hyperic.Sigar {
     public class Sigar {
@@ -394,6 +395,42 @@ namespace Hyperic.Sigar {
             Marshal.FreeHGlobal(ptr);
 
             return ifconfig;
+        }
+
+        [DllImport(Sigar.LIBSIGAR)]
+        private static extern int
+        sigar_inet_ntoa(IntPtr sigar, ulong address,
+                        StringBuilder addr_str);
+
+        private string inet_ntoa(ulong address) {
+            StringBuilder buffer = new StringBuilder();
+            buffer.Capacity = (3 * 4 + 3 + 1);
+            sigar_inet_ntoa(IntPtr.Zero, address, buffer);
+            return buffer.ToString();
+        }
+
+        public string Address {
+            get {
+                return inet_ntoa(this.address);
+            }
+        }
+
+        public string Destination {
+            get {
+                return inet_ntoa(this.destination);
+            }
+        }
+
+        public string Broadcast {
+            get {
+                return inet_ntoa(this.broadcast);
+            }
+        }
+
+        public string Netmask {
+            get {
+                return inet_ntoa(this.netmask);
+            }
         }
     }
 }
