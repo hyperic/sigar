@@ -1,6 +1,7 @@
 package net.hyperic.sigar;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
@@ -59,6 +60,14 @@ public class Sigar implements SigarProxy {
     private static void load() throws SigarException {
         try {
             loader.load();
+            if (SigarLoader.IS_WIN32 &&
+                System.getProperty("os.version").equals("4.0"))
+            {
+                String lib =
+                    loader.findJarPath("pdh.dll") +
+                    File.separator + "pdh.dll";
+                loader.systemLoad(lib);
+            }
         } catch (ArchNotSupportedException e) {
             throw new SigarException(e.getMessage());
         } catch (ArchLoaderException e) {
