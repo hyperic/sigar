@@ -466,6 +466,20 @@ sigar_net_interface_list_destroy(sigar_t *sigar,
 #   define INET6_ADDRSTRLEN 46
 #endif
 
+enum {
+    SIGAR_TCP_ESTABLISHED = 1,
+    SIGAR_TCP_SYN_SENT,
+    SIGAR_TCP_SYN_RECV,
+    SIGAR_TCP_FIN_WAIT1,
+    SIGAR_TCP_FIN_WAIT2,
+    SIGAR_TCP_TIME_WAIT,
+    SIGAR_TCP_CLOSE,
+    SIGAR_TCP_CLOSE_WAIT,
+    SIGAR_TCP_LAST_ACK,
+    SIGAR_TCP_LISTEN,
+    SIGAR_TCP_CLOSING
+};
+
 typedef struct {
     unsigned long local_port;
     char local_address[INET6_ADDRSTRLEN];
