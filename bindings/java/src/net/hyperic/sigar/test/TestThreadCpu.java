@@ -3,7 +3,6 @@ package net.hyperic.sigar.test;
 import net.hyperic.sigar.Sigar;
 import net.hyperic.sigar.SigarNotImplementedException;
 import net.hyperic.sigar.ThreadCpu;
-import net.hyperic.sigar.ThreadCpuTime;
 
 public class TestThreadCpu extends SigarTestCase {
 
@@ -14,10 +13,9 @@ public class TestThreadCpu extends SigarTestCase {
     public void testCreate() throws Exception {
         Sigar sigar = new Sigar();
 
-        ThreadCpuTime cpu = new ThreadCpuTime(sigar);
-
+        ThreadCpu cpu;
         try {
-            cpu.getCurrent();
+            cpu = sigar.getThreadCpu();
         } catch (SigarNotImplementedException e) {
             return;
         }
@@ -34,7 +32,7 @@ public class TestThreadCpu extends SigarTestCase {
 
         traceln("\nDiff...\n");
 
-        ThreadCpu diff = cpu.getDiff();
+        ThreadCpu diff = sigar.getThreadCpuDiff(cpu);
 
         assertGtEqZeroTrace("User", diff.getUser());
 
