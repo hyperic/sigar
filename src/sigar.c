@@ -729,7 +729,7 @@ SIGAR_DECLARE(int) sigar_who_list_get(sigar_t *sigar,
 #  endif
 #endif
 
-#ifdef __FreeBSD__
+#if defined(__FreeBSD__) || defined(DARWIN)
 #  define ut_user ut_name
 #endif
 
