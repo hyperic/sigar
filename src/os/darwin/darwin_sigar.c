@@ -77,7 +77,7 @@
 
 #define PROCFS_STATUS(status) \
     ((((status) != SIGAR_OK) && !sigar->proc_mounted) ? \
-     SIGAR_EPROC_NOENT : status)
+     SIGAR_ENOTIMPL : status)
 
 static int get_koffsets(sigar_t *sigar)
 {
