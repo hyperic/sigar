@@ -1536,6 +1536,123 @@ int sigar_net_connection_list_get(sigar_t *sigar,
     return SIGAR_OK;
 }
 
+#define _KERNEL
+#include <sys/file.h>
+#undef _KERNEL
+
+/* derived from
+ * /usr/ports/security/pidentd/work/pidentd-3.0.16/src/k_freebsd2.c
+ */
+int sigar_proc_port_get(sigar_t *sigar, int protocol,
+                        unsigned long port, sigar_pid_t *pid)
+{
+    struct nlist nl[2];
+    struct inpcbhead tcb;
+    struct socket *sockp = NULL;
+    struct kinfo_proc *pinfo;
+    struct inpcb *head, pcbp;
+    int i, nentries, status;
+
+    if (protocol != SIGAR_NETCONN_TCP) {
+        return SIGAR_ENOTIMPL;
+    }
+
+    if (!sigar->kmem) {
+        return EPERM;
+    }
+
+    nl[0].n_name = "_tcb"; /* XXX cache */
+    if (kvm_nlist(sigar->kmem, nl) < 0) {
+        return errno;
+    }
+
+    status = kread(sigar, &tcb, sizeof(tcb), nl[0].n_value);
+    if (status != SIGAR_OK) {
+        return status;
+    }
+
+    for (head = tcb.lh_first; head != NULL;
+         head = pcbp.inp_list.le_next)
+    {
+        status = kread(sigar, &pcbp, sizeof(pcbp), (long)head);
+        if (status != SIGAR_OK) {
+            return status;
+        }
+        if (!(pcbp.inp_vflag & INP_IPV4)) {
+            continue;
+        }
+        if (pcbp.inp_fport != 0) {
+            continue;
+        }
+        if (ntohs(pcbp.inp_lport) == port) {
+            sockp = pcbp.inp_socket;
+            break;
+        }
+    }
+
+    if (!sockp) {
+        return ENOENT;
+    }
+
+    pinfo = kvm_getprocs(sigar->kmem, KERN_PROC_ALL, 0, &nentries);
+    if (!pinfo) {
+        return errno;
+    }
+
+    for (i=0; i<nentries; i++) {
+        if (pinfo[i].ki_fd) {
+            struct filedesc pfd;
+            struct file **ofiles, ofile;
+            int j, osize;
+
+            status = kread(sigar, &pfd, sizeof(pfd), (long)pinfo[i].ki_fd);
+            if (status != SIGAR_OK) {
+                return status;
+            }
+
+            osize = pfd.fd_nfiles * sizeof(struct file *);
+            ofiles = malloc(osize); /* XXX reuse */
+            if (!ofiles) {
+                return errno;
+            }
+
+            status = kread(sigar, ofiles, osize, (long)pfd.fd_ofiles);
+            if (status != SIGAR_OK) {
+                free(ofiles);
+                return status;
+            }
+
+            for (j=0; j<pfd.fd_nfiles; j++) {
+                if (!ofiles[j]) {
+                    continue;
+                }
+
+                status = kread(sigar, &ofile, sizeof(ofile), (long)ofiles[j]);
+                if (status != SIGAR_OK) {
+                    free(ofiles);
+                    return status;
+                }
+
+                if (ofile.f_count == 0) {
+                    continue;
+                }
+
+                if (ofile.f_type == DTYPE_SOCKET &&
+                    (struct socket *)ofile.f_data == sockp)
+                {
+                    *pid = pinfo[i].ki_pid;
+                    free(ofiles);
+                    return SIGAR_OK;
+                }
+            }
+
+            free(ofiles);
+        }
+    }
+
+    return ENOENT;
+}
+
 #else
 
 int sigar_net_connection_list_get(sigar_t *sigar,
@@ -1545,10 +1662,10 @@ int sigar_net_connection_list_get(sigar_t *sigar,
     return SIGAR_ENOTIMPL;
 }
 
-#endif
-
 int sigar_proc_port_get(sigar_t *sigar, int protocol,
                         unsigned long port, sigar_pid_t *pid)
 {
     return SIGAR_ENOTIMPL;
 }
+
+#endif
