@@ -717,42 +717,42 @@ my %classes = (
       {
          name => 'local_port', type => 'Long',
          desc => '',
-         plat => 'LSW'
+         plat => 'LFSW'
       },
       {
          name => 'local_address', type => 'String',
          desc => '',
-         plat => 'LSW'
+         plat => 'LFSW'
       },
       {
          name => 'remote_port', type => 'Long',
          desc => '',
-         plat => 'LSW'
+         plat => 'LFSW'
       },
       {
          name => 'remote_address', type => 'String',
          desc => '',
-         plat => 'LSW'
+         plat => 'LFSW'
       },
       {
          name => 'type', type => 'Int',
          desc => '',
-         plat => 'LSW'
+         plat => 'LFSW'
       },
       {
          name => 'state', type => 'Int',
          desc => '',
-         plat => 'LSW'
+         plat => 'LFSW'
       },
       {
          name => 'send_queue', type => 'Long',
          desc => '',
-         plat => 'LS'
+         plat => 'LFS'
       },
       {
          name => 'receive_queue', type => 'Long',
          desc => '',
-         plat => 'LS'
+         plat => 'LFS'
       },
     ],
     Who => [
