@@ -431,10 +431,12 @@ static int sigar_init_libproc(sigar_t *sigar)
     sigar->pgrab    = (proc_grab_func_t)dlsym(sigar->plib, "Pgrab");
     sigar->pfree    = (proc_free_func_t)dlsym(sigar->plib, "Pfree");
     sigar->pobjname = (proc_objname_func_t)dlsym(sigar->plib, "Pobjname");
+    sigar->pdirname = (proc_dirname_func_t)dlsym(sigar->plib, "proc_dirname");
 
     CHECK_PSYM(pgrab);
     CHECK_PSYM(pfree);
     CHECK_PSYM(pobjname);
+    CHECK_PSYM(pdirname);
 
     return SIGAR_OK;
 }
@@ -697,7 +699,28 @@ int sigar_proc_fd_get(sigar_t *sigar, sigar_pid_t pid,
 int sigar_proc_exe_get(sigar_t *sigar, sigar_pid_t pid,
                        sigar_proc_exe_t *procexe)
 {
-    return SIGAR_ENOTIMPL;
+    int status;
+    char buffer[BUFSIZ];
+
+    if ((status = sigar_init_libproc(sigar)) != SIGAR_OK) {
+        return status;
+    }
+
+    procexe->name[0] = '\0'; /*XXX*/
+
+    (void)SIGAR_PROC_FILENAME(buffer, pid, "/cwd");
+
+    if (!sigar->pdirname(buffer, procexe->cwd, sizeof(procexe->cwd))) {
+        procexe->cwd[0] = '\0';
+    }
+
+    (void)SIGAR_PROC_FILENAME(buffer, pid, "/root");
+
+    if (!(sigar->pdirname(buffer, procexe->root, sizeof(procexe->root)))) {
+        procexe->root[0] = '\0';
+    }
+
+    return SIGAR_OK;
 }
 
 /* from libproc.h, not included w/ solaris distro */
