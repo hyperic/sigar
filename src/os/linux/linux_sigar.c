@@ -8,8 +8,8 @@
 
 #include "sigar.h"
 #include "sigar_private.h"
-#include "sigar_os.h"
 #include "sigar_util.h"
+#include "sigar_os.h"
 
 #include <asm/page.h> /* for PAGE_SHIFT */
 
@@ -139,11 +139,16 @@ int sigar_os_open(sigar_t **sigar)
         (*sigar)->iostat = IOSTAT_NONE;
     }
 
+    (*sigar)->fsdev = NULL;
+
     return SIGAR_OK;
 }
 
 int sigar_os_close(sigar_t *sigar)
 {
+    if (sigar->fsdev) {
+        sigar_cache_destroy(sigar->fsdev);
+    }
     free(sigar);
     return SIGAR_OK;
 }
@@ -1011,42 +1016,89 @@ int sigar_file_system_list_get(sigar_t *sigar,
     return SIGAR_OK;
 }
 
+#define FSDEV_NONE "__NONE__"
+
+#define FSDEV_ID(sb) (sb.st_ino + sb.st_dev)
+
+static void fsdev_free(void *ptr)
+{
+    if (ptr != FSDEV_NONE) {
+        free(ptr);
+    }
+}
+
 static char *get_fsdev(sigar_t *sigar,
                        const char *dirname,
                        char *fsdev)
 {
-    /* XXX cache this shit */
-    struct mntent ent;
-    char buf[1025]; /* buffer for strings within ent */
-    FILE *fp;
-    char *ptr = NULL;
+    sigar_cache_entry_t *entry;
+    struct stat sb;
+    sigar_uint64_t id;
 
-    if (!(fp = setmntent(MOUNTED, "r"))) {
+    if (stat(dirname, &sb) < 0) {
         return NULL;
     }
 
-    while (getmntent_r(fp, &ent, buf, sizeof(buf))) {
-        if (strEQ(ent.mnt_dir, dirname)) {
-            ptr = ent.mnt_fsname;
-            break;
+    id = FSDEV_ID(sb);
+
+    if (!sigar->fsdev) {
+        sigar->fsdev = sigar_cache_new(15);
+        sigar->fsdev->free_value = fsdev_free;
+    }
+
+    entry = sigar_cache_get(sigar->fsdev, id);
+
+    if (entry->value == NULL) {
+        sigar_file_system_list_t fslist;
+        int status = sigar_file_system_list_get(sigar, &fslist);
+        int i;
+
+        if (status != SIGAR_OK) {
+            return NULL;
         }
+
+        for (i=0; i<fslist.number; i++) {
+            sigar_file_system_t *fsp = &fslist.data[i];
+
+            if (fsp->type == SIGAR_FSTYPE_LOCAL_DISK) {
+                int retval = stat(fsp->dir_name, &sb);
+                sigar_cache_entry_t *ent;
+                char *ptr;
+
+                if (retval < 0) {
+                    return NULL; /* cant cache w/o inode */
+                }
+
+                ent = sigar_cache_get(sigar->fsdev, FSDEV_ID(sb));
+                if (ent->value) {
+                    continue; /* already cached */
+                }
+
+                ptr = fsp->dev_name;
+                if (strnEQ(ptr, "/dev/", 5)) {
+                    ptr += 5;
+                    ent->value = strdup(ptr);
+                    continue;
+                }
+
+                ent->value = FSDEV_NONE;
+            }
+        }
+
+        sigar_file_system_list_destroy(sigar, &fslist);
     }
 
-    endmntent(fp);
-
-    if (!ptr) {
+    if (entry->value == FSDEV_NONE) {
         return NULL;
     }
-
-    if (!strnEQ(ptr, "/dev/", 5)) {
+    else if (entry->value == NULL) {
+        entry->value = FSDEV_NONE;
         return NULL;
     }
-
-    ptr += 5;
-
-    strcpy(fsdev, ptr);
-
-    return ptr;
+    else {
+        strcpy(fsdev, (char*)entry->value);
+        return fsdev;
+    }
 }
 
 static int get_iostat_sys(sigar_t *sigar,
