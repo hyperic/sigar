@@ -27,6 +27,7 @@ public class SigarTestRunner extends SigarCommandBase {
         TestProcArgs.class,
         TestProcEnv.class,
         TestProcExe.class,
+        TestProcModules.class,
         TestProcFd.class,
         TestProcList.class,
         TestProcMem.class,
