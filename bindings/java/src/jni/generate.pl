@@ -74,7 +74,35 @@ my %classes = (
       },
       {
          name => 'free', type => 'Long',
-         desc => 'Total free system memory',
+         desc => 'Total free system memory (e.g. Linux plus cached)',
+         plat => '*',
+         cmd  => {
+             AIX     => '',
+             Darwin  => '',
+             FreeBSD => '',
+             HPUX    => '',
+             Linux   => 'free',
+             Solaris => '',
+             Win32   => 'taskman',
+         },
+      },
+      {
+         name => 'actual_used', type => 'Long',
+         desc => 'Actual total used system memory (e.g. Linux minus buffers)',
+         plat => '*',
+         cmd  => {
+             AIX     => '',
+             Darwin  => '',
+             FreeBSD => '',
+             HPUX    => '',
+             Linux   => 'free',
+             Solaris => '',
+             Win32   => 'taskman',
+         },
+      },
+      {
+         name => 'actual_free', type => 'Long',
+         desc => 'Actual total free system memory',
          plat => '*',
          cmd  => {
              AIX     => '',
