@@ -125,6 +125,14 @@ public class Sigar implements SigarProxy {
      */
     public native long getPid();
 
+
+    /**
+     * Get pid for the Windows service with the given name.
+     * This method is implemented on Windows only as a helper
+     * for PTQL.
+     */
+    public native long getServicePid(String name);
+
     /**
      * Send a signal to a process.
      *

@@ -8,8 +8,6 @@ public class WindowsServiceQuery implements ProcessQuery {
 
     private String name;
 
-    public static native long getServicePid(String name);
-
     public WindowsServiceQuery(String name) {
         this.name = name;
     }
@@ -17,11 +15,11 @@ public class WindowsServiceQuery implements ProcessQuery {
     public boolean match(SigarProxy sigar, long pid) 
         throws SigarException {
 
-        return pid == getServicePid(this.name);
+        return pid == sigar.getServicePid(this.name);
     }
 
     public static void main(String[] args) throws Exception {
         Sigar sigar = new Sigar(); //load the .dll
-        System.out.println(getServicePid(args[0]));
+        System.out.println(sigar.getServicePid(args[0]));
     }
 }

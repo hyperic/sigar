@@ -13,6 +13,8 @@ public interface SigarProxy {
 
     public long getPid();
 
+    public long getServicePid(String name);
+
     public Mem getMem() throws SigarException;
 
     public Swap getSwap() throws SigarException;

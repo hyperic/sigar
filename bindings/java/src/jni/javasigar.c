@@ -1054,8 +1054,8 @@ typedef BOOL (CALLBACK *QueryServiceStatusExFunc)(SC_HANDLE,
                                                   LPDWORD);
 #endif
 
-JNIEXPORT jlong SIGAR_JNI(ptql_WindowsServiceQuery_getServicePid)
-(JNIEnv *env, jclass classinstance, jstring jname)
+JNIEXPORT jlong SIGAR_JNI(Sigar_getServicePid)
+(JNIEnv *env, jobject sigar_obj, jstring jname)
 {
 #ifdef WIN32
     const char *name;
@@ -1063,6 +1063,7 @@ JNIEXPORT jlong SIGAR_JNI(ptql_WindowsServiceQuery_getServicePid)
     jlong pid = 0;
     DWORD err = ERROR_SUCCESS;
     SC_HANDLE mgr;
+    dSIGAR(0);
 
     name = JENV->GetStringUTFChars(env, jname, &is_copy);
 
@@ -1118,10 +1119,7 @@ JNIEXPORT jlong SIGAR_JNI(ptql_WindowsServiceQuery_getServicePid)
     }
 
     if (err != ERROR_SUCCESS) {
-        /* XXX need sigar for sigar_strerror */
-        char msg[256];
-        sprintf(msg, "error=%d", err);
-        sigar_throw_exception(env, msg);
+        sigar_throw_error(env, sigar, err);
     }
 
     return pid;
