@@ -1,6 +1,7 @@
 package net.hyperic.sigar.test;
 
 import net.hyperic.sigar.Sigar;
+import net.hyperic.sigar.SigarProxy;
 import net.hyperic.sigar.Cpu;
 
 public class TestCpu extends SigarTestCase {
@@ -21,7 +22,7 @@ public class TestCpu extends SigarTestCase {
     }
 
     public void testCreate() throws Exception {
-        Sigar sigar = new Sigar();
+        SigarProxy sigar = Sigar.getInstance(); //test reuse
 
         Cpu cpu = sigar.getCpu();
 
