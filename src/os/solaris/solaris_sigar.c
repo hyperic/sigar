@@ -3,6 +3,7 @@
 #include "sigar_os.h"
 #include "sigar_util.h"
 
+#include <sys/link.h>
 #include <sys/proc.h>
 #include <sys/swap.h>
 #include <sys/stat.h>
@@ -747,8 +748,8 @@ static int sigar_pgrab_modules(sigar_t *sigar, sigar_pid_t pid,
 
         if (!sigar->plib) {
             sigar_log_printf(sigar, SIGAR_LOG_WARN,
-                             "dlopen(%s) = %s",
-                             LIBPROC, dlerror());
+                             "[%s] dlopen(%s) = %s",
+                             SIGAR_FUNC, LIBPROC, dlerror());
             return SIGAR_ENOTIMPL;
         }
 
@@ -828,11 +829,51 @@ static int sigar_pgrab_modules(sigar_t *sigar, sigar_pid_t pid,
     return SIGAR_OK;
 }
 
+static int sigar_dlinfo_modules(sigar_t *sigar, sigar_proc_modules_t *procmods)
+{
+    void *handle;
+    Dl_info dli;
+    Link_map *map;
+
+    if (!dladdr((void *)((uintptr_t)sigar_dlinfo_modules), &dli)) {
+        sigar_log_printf(sigar, SIGAR_LOG_ERROR,
+                         "[%s] dladdr(%s) = %s",
+                         SIGAR_FUNC, SIGAR_FUNC, dlerror());
+        return ESRCH;
+    }
+
+    if (!(handle = dlopen(dli.dli_fname, RTLD_LAZY))) {
+        sigar_log_printf(sigar, SIGAR_LOG_ERROR,
+                         "[%s] dlopen(%s) = %s",
+                         SIGAR_FUNC, dli.dli_fname, dlerror());
+        return ESRCH;
+    }
+
+    dlinfo(handle, RTLD_DI_LINKMAP, &map);
+
+    do {
+        int status = 
+            procmods->module_getter(procmods->data,
+                                    map->l_name, strlen(map->l_name));
+
+        if (status != SIGAR_OK) {
+            /* not an error; just stop iterating */
+            return status;
+        }
+    } while ((map = map->l_next));
+
+    dlclose(handle);
+
+    return SIGAR_OK;
+}
+
 int sigar_proc_modules_get(sigar_t *sigar, sigar_pid_t pid,
                            sigar_proc_modules_t *procmods)
 {
     if (pid == sigar_pid_get(sigar)) {
-        return SIGAR_ENOTIMPL;
+        /* Pgrab would return G_SELF, this is faster anyhow */
+        /* XXX one difference to Pgrab, first entry is not the exe name */
+        return sigar_dlinfo_modules(sigar, procmods);
     }
     else {
         return sigar_pgrab_modules(sigar, pid, procmods);
