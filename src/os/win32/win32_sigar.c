@@ -2164,6 +2164,10 @@ SIGAR_DECLARE(int) sigar_proc_port_get(sigar_t *sigar,
         return SIGAR_ENOTIMPL;
     }
 
+    if (protocol != SIGAR_NETCONN_TCP) {
+        return SIGAR_ENOTIMPL; /* XXX UDP */
+    }
+
     rc = sigar->get_tcpx_table(&tcp, FALSE, GetProcessHeap(),
                                2, 2);
 
