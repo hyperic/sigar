@@ -71,18 +71,21 @@ static void sigar_throw_notimpl(JNIEnv *env, char *msg)
     JENV->ThrowNew(env, errorClass, msg);
 }
 
+#ifdef WIN32
+#  define SIGAR_ENOENT ERROR_FILE_NOT_FOUND
+#else
+#  define SIGAR_ENOENT ENOENT
+#endif
+
 static void sigar_throw_error(JNIEnv *env, jni_sigar_t *jsigar, int err)
 {
     jclass errorClass;
 
     switch (err) {
-#ifndef WIN32
-      case ENOENT:
+      case SIGAR_ENOENT:
         errorClass = SIGAR_FIND_CLASS("SigarFileNotFoundException");
         break;
-#else
-      /*XXX*/
-#endif
+
       case SIGAR_ENOTIMPL:
         if (jsigar->not_impl == NULL) {
             jfieldID id;
