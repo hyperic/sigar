@@ -19,33 +19,33 @@ public class Service extends Win32Bindings implements java.io.Serializable
     public static final int SERVICE_DISABLED     = 0x00000004;
 
     // Service Controls
-    protected static final int SERVICE_CONTROL_STOP             = 0x00000001;
-    protected static final int SERVICE_CONTROL_PAUSE            = 0x00000002;
-    protected static final int SERVICE_CONTROL_CONTINUE         = 0x00000003;
-    protected static final int SERVICE_CONTROL_INTERROGATE      = 0x00000004;
-    protected static final int SERVICE_CONTROL_SHUTDOWN         = 0x00000005;
-    protected static final int SERVICE_CONTROL_PARAMCHANGE      = 0x00000006;
-    protected static final int SERVICE_CONTROL_NETBINDADD       = 0x00000007;
-    protected static final int SERVICE_CONTROL_NETBINDREMOVE    = 0x00000008;
-    protected static final int SERVICE_CONTROL_NETBINDENABLE    = 0x00000009;
-    protected static final int SERVICE_CONTROL_NETBINDDISABLE   = 0x0000000A;
-    protected static final int SERVICE_CONTROL_DEVICEEVENT      = 0x0000000B;
-    protected static final int SERVICE_CONTROL_HARDWAREPROFILECHANGE 
+    private static final int SERVICE_CONTROL_STOP             = 0x00000001;
+    private static final int SERVICE_CONTROL_PAUSE            = 0x00000002;
+    private static final int SERVICE_CONTROL_CONTINUE         = 0x00000003;
+    private static final int SERVICE_CONTROL_INTERROGATE      = 0x00000004;
+    private static final int SERVICE_CONTROL_SHUTDOWN         = 0x00000005;
+    private static final int SERVICE_CONTROL_PARAMCHANGE      = 0x00000006;
+    private static final int SERVICE_CONTROL_NETBINDADD       = 0x00000007;
+    private static final int SERVICE_CONTROL_NETBINDREMOVE    = 0x00000008;
+    private static final int SERVICE_CONTROL_NETBINDENABLE    = 0x00000009;
+    private static final int SERVICE_CONTROL_NETBINDDISABLE   = 0x0000000A;
+    private static final int SERVICE_CONTROL_DEVICEEVENT      = 0x0000000B;
+    private static final int SERVICE_CONTROL_HARDWAREPROFILECHANGE 
         = 0x0000000C;
-    protected static final int SERVICE_CONTROL_POWEREVENT       = 0x0000000D;
-    protected static final int SERVICE_CONTROL_SESSIONCHANGE    = 0x0000000E;
+    private static final int SERVICE_CONTROL_POWEREVENT       = 0x0000000D;
+    private static final int SERVICE_CONTROL_SESSIONCHANGE    = 0x0000000E;
 
     // Service Control Manager object specific access types
-    protected static final int STANDARD_RIGHTS_REQUIRED = (int)0x000F0000L;
+    private static final int STANDARD_RIGHTS_REQUIRED = (int)0x000F0000L;
 
-    protected static final int SC_MANAGER_CONNECT            = 0x0001;
-    protected static final int SC_MANAGER_CREATE_SERVICE     = 0x0002;
-    protected static final int SC_MANAGER_ENUMERATE_SERVICE  = 0x0004;
-    protected static final int SC_MANAGER_LOCK               = 0x0008;
-    protected static final int SC_MANAGER_QUERY_LOCK_STATUS  = 0x0010;
-    protected static final int SC_MANAGER_MODIFY_BOOT_CONFIG = 0x0020;
+    private static final int SC_MANAGER_CONNECT            = 0x0001;
+    private static final int SC_MANAGER_CREATE_SERVICE     = 0x0002;
+    private static final int SC_MANAGER_ENUMERATE_SERVICE  = 0x0004;
+    private static final int SC_MANAGER_LOCK               = 0x0008;
+    private static final int SC_MANAGER_QUERY_LOCK_STATUS  = 0x0010;
+    private static final int SC_MANAGER_MODIFY_BOOT_CONFIG = 0x0020;
 
-    protected static final int SC_MANAGER_ALL_ACCESS = 
+    private static final int SC_MANAGER_ALL_ACCESS = 
         (STANDARD_RIGHTS_REQUIRED |
          SC_MANAGER_CONNECT             |
          SC_MANAGER_CREATE_SERVICE      |
@@ -55,17 +55,17 @@ public class Service extends Win32Bindings implements java.io.Serializable
          SC_MANAGER_MODIFY_BOOT_CONFIG);
 
     // Service object specific access type
-    protected static final int SERVICE_QUERY_CONFIG         = 0x0001;
-    protected static final int SERVICE_CHANGE_CONFIG        = 0x0002;
-    protected static final int SERVICE_QUERY_STATUS         = 0x0004;
-    protected static final int SERVICE_ENUMERATE_DEPENDENTS = 0x0008;
-    protected static final int SERVICE_START                = 0x0010;
-    protected static final int SERVICE_STOP                 = 0x0020;
-    protected static final int SERVICE_PAUSE_CONTINUE       = 0x0040;
-    protected static final int SERVICE_INTERROGATE          = 0x0080;
-    protected static final int SERVICE_USER_DEFINED_CONTROL = 0x0100;
+    private static final int SERVICE_QUERY_CONFIG         = 0x0001;
+    private static final int SERVICE_CHANGE_CONFIG        = 0x0002;
+    private static final int SERVICE_QUERY_STATUS         = 0x0004;
+    private static final int SERVICE_ENUMERATE_DEPENDENTS = 0x0008;
+    private static final int SERVICE_START                = 0x0010;
+    private static final int SERVICE_STOP                 = 0x0020;
+    private static final int SERVICE_PAUSE_CONTINUE       = 0x0040;
+    private static final int SERVICE_INTERROGATE          = 0x0080;
+    private static final int SERVICE_USER_DEFINED_CONTROL = 0x0100;
 
-    protected static final int SERVICE_ALL_ACCESS =
+    private static final int SERVICE_ALL_ACCESS =
         (STANDARD_RIGHTS_REQUIRED |
          SERVICE_QUERY_CONFIG           |
          SERVICE_CHANGE_CONFIG          |
@@ -78,26 +78,26 @@ public class Service extends Win32Bindings implements java.io.Serializable
          SERVICE_USER_DEFINED_CONTROL);
     
     // Service Types (Bit Mask)
-    protected static final int SERVICE_KERNEL_DRIVER       = 0x00000001;
-    protected static final int SERVICE_FILE_SYSTEM_DRIVER  = 0x00000002;
-    protected static final int SERVICE_ADAPTER             = 0x00000004;
-    protected static final int SERVICE_RECOGNIZER_DRIVER   = 0x00000008;
-    protected static final int SERVICE_WIN32_OWN_PROCESS   = 0x00000010;
-    protected static final int SERVICE_WIN32_SHARE_PROCESS = 0x00000020;
-    protected static final int SERVICE_INTERACTIVE_PROCESS = 0x00000100;
+    private static final int SERVICE_KERNEL_DRIVER       = 0x00000001;
+    private static final int SERVICE_FILE_SYSTEM_DRIVER  = 0x00000002;
+    private static final int SERVICE_ADAPTER             = 0x00000004;
+    private static final int SERVICE_RECOGNIZER_DRIVER   = 0x00000008;
+    private static final int SERVICE_WIN32_OWN_PROCESS   = 0x00000010;
+    private static final int SERVICE_WIN32_SHARE_PROCESS = 0x00000020;
+    private static final int SERVICE_INTERACTIVE_PROCESS = 0x00000100;
 
     // Error control type
-    protected static final int SERVICE_ERROR_IGNORE   = 0x00000000;
-    protected static final int SERVICE_ERROR_NORMAL   = 0x00000001;
-    protected static final int SERVICE_ERROR_SEVERE   = 0x00000002;
-    protected static final int SERVICE_ERROR_CRITICAL = 0x00000003;
+    private static final int SERVICE_ERROR_IGNORE   = 0x00000000;
+    private static final int SERVICE_ERROR_NORMAL   = 0x00000001;
+    private static final int SERVICE_ERROR_SEVERE   = 0x00000002;
+    private static final int SERVICE_ERROR_CRITICAL = 0x00000003;
 
     ///////////////////////////////////////////////////////
     // Object Variables
-    protected long  m_hMgr;
-    protected long  m_hService;
+    private long  m_hMgr;
+    private long  m_hService;
 
-    protected Service() throws Win32Exception
+    private Service() throws Win32Exception
     {
         this.m_hMgr = OpenSCManager("", SC_MANAGER_ALL_ACCESS);
         
@@ -296,7 +296,7 @@ public class Service extends Win32Bindings implements java.io.Serializable
             Service.throwLastErrorException();
     }
 
-    protected static final void throwLastErrorException() 
+    private static final void throwLastErrorException() 
         throws Win32Exception
     {
         int iErr = Service.GetLastError();
@@ -304,32 +304,32 @@ public class Service extends Win32Bindings implements java.io.Serializable
                                  iErr + ": " + Service.GetErrorMessage(iErr));
     }
     
-    protected static final native boolean 
+    private static final native boolean 
         ChangeServiceDescription(long handle,
                                  String description);
-    protected static final native boolean CloseServiceHandle(long handle);
-    protected static final native long    CreateService(long handle,
-                                                        String serviceName,
-                                                        String displayName,
-                                                        int serviceType,
-                                                        int startType,
-                                                        int errorControl,
-                                                        String path,
-                                                        String[] dependicies,
-                                                        String startName,
-                                                        String password);
-    protected static final native boolean ControlService(long handle,
-                                                         int control);
-    protected static final native boolean DeleteService(long handle);
-    protected static final native String  GetErrorMessage(int error);
-    protected static final native int     GetLastError();
-    protected static final native long    OpenSCManager(String machine,
-                                                        int access);
-    protected static final native long    OpenService(long handle,
-                                                      String service,
+    private static final native boolean CloseServiceHandle(long handle);
+    private static final native long    CreateService(long handle,
+                                                      String serviceName,
+                                                      String displayName,
+                                                      int serviceType,
+                                                      int startType,
+                                                      int errorControl,
+                                                      String path,
+                                                      String[] dependicies,
+                                                      String startName,
+                                                      String password);
+    private static final native boolean ControlService(long handle,
+                                                       int control);
+    private static final native boolean DeleteService(long handle);
+    private static final native String  GetErrorMessage(int error);
+    private static final native int     GetLastError();
+    private static final native long    OpenSCManager(String machine,
                                                       int access);
-    protected static final native int     QueryServiceStatus(long handle);
-    protected static final native int     QueryServiceStartType(long handle);
-    protected static final native boolean StartService(long handle);
-    protected static final native boolean StopService(long handle);
+    private static final native long    OpenService(long handle,
+                                                    String service,
+                                                    int access);
+    private static final native int     QueryServiceStatus(long handle);
+    private static final native int     QueryServiceStartType(long handle);
+    private static final native boolean StartService(long handle);
+    private static final native boolean StopService(long handle);
 }
