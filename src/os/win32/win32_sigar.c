@@ -294,6 +294,15 @@ static PERF_INSTANCE_DEFINITION *get_cpu_instance(sigar_t *sigar,
         return NULL;
     }
 
+    /* XXX dont know why this happens, seen on
+     * 2003 server mail.hyperic.net
+     */
+
+    if (object->NumInstances < 1) {
+        *err = ENOENT;
+        return NULL;
+    }
+
     for (i=0, counter = PdhFirstCounter(object);
          i<object->NumCounters;
          i++, counter = PdhNextCounter(counter))
@@ -332,7 +341,7 @@ SIGAR_DECLARE(int) sigar_cpu_get(sigar_t *sigar, sigar_cpu_t *cpu)
     inst = get_cpu_instance(sigar, (DWORD*)&perf_offsets, 0, &err);
 
     if (!inst) {
-        return GetLastError();
+        return err;
     }
 
     /* first instance is total, rest are per-cpu */
