@@ -12,6 +12,7 @@
 #include <sys/types.h>
 #include <sys/param.h>
 #include <sys/user.h>
+#include <sys/vmmeter.h>
 #include <fcntl.h>
 #endif
 
@@ -38,6 +39,7 @@ static int get_koffsets(sigar_t *sigar)
     int i;
     struct nlist klist[] = {
         { "_cp_time" },
+        { "_cnt" },
         { NULL }
     };
 
@@ -104,6 +106,8 @@ int sigar_os_open(sigar_t **sigar)
 
     (*sigar)->boot_time = boottime.tv_sec; /* XXX seems off a bit */
 
+    (*sigar)->pagesize = getpagesize();
+
     (*sigar)->last_pid = -1;
 
     (*sigar)->pinfo = NULL;
@@ -131,7 +135,6 @@ int sigar_mem_get(sigar_t *sigar, sigar_mem_t *mem)
     vm_statistics_data_t vmstat;
     kern_return_t status;
     mach_msg_type_number_t count = sizeof(vmstat) / sizeof(integer_t);
-#endif
     int mib[2];
     int totmem;
     size_t len = sizeof(totmem);
@@ -150,9 +153,6 @@ int sigar_mem_get(sigar_t *sigar, sigar_mem_t *mem)
 
     mem->total = totmem;
 
-    sigar_mem_calc_ram(sigar, mem);
-
-#ifdef DARWIN
     status = host_statistics(sigar->mach_port, HOST_VM_INFO,
                              (host_info_t)&vmstat, &count);
 
@@ -162,11 +162,24 @@ int sigar_mem_get(sigar_t *sigar, sigar_mem_t *mem)
 
     mem->free = vmstat.free_count * sigar->pagesize;
 #else
-    mem->free = 1; /*XXX*/
+    int status;
+    struct vmmeter vmem;
+
+    status = kread(sigar, &vmem, sizeof(vmem),
+                   sigar->koffsets[KOFFSET_VMMETER]);
+
+    if (status != SIGAR_OK) {
+        return status;
+    }    
+
+    mem->total = vmem.v_page_count * sigar->pagesize;
+    mem->free  = vmem.v_free_count * sigar->pagesize;
 #endif
 
     mem->used = mem->total - mem->free;
     mem->shared = SIGAR_FIELD_NOTIMPL; /*XXX*/
+
+    sigar_mem_calc_ram(sigar, mem);
 
     mem->actual_free = mem->free;
     mem->actual_used = mem->used;

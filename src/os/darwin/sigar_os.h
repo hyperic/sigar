@@ -12,6 +12,7 @@
 
 enum {
     KOFFSET_CPUINFO,
+    KOFFSET_VMMETER,
     KOFFSET_MAX
 };
 
