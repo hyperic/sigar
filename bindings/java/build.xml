@@ -293,6 +293,9 @@
 
    <!-- header files -->
    <copy toDir="${dist}/sigar-bin" overwrite="true">
+     <fileset dir=".">
+       <include name=".sigar_shellrc"/>
+     </fileset>
      <fileset dir="${sigar-bin}">
        <include name="include/*.h"/>
      </fileset>
