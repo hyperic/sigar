@@ -17,7 +17,7 @@ implemented for Java, Perl and C#.
 
 The following platforms are currently supported:
 
-- Linux (2.2 kernel)
+- Linux (2.2, 2.4 kernels)
 
 - Win32 (NT 4.0 sp6, 2000 Pro/Server, 2003 Server, XP)
 
@@ -27,7 +27,7 @@ The following platforms are currently supported:
 
 - HP/UX (11)
 
-- AIX (4.3, 5.1, 5.3)
+- AIX (4.3, 5.1, 5.2)
 
 To test drive run the following command:
 
