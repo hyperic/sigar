@@ -1,3 +1,9 @@
+2005-02-16  Doug MacEachern  <dougm@hyperic.net>
+
+        * Add FreeBSD support
+
+        * Add 64-bit linux support
+        
 2005-01-26  Doug MacEachern  <dougm@hyperic.net>
 
         * 1.1.15 released
