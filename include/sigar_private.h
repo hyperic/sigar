@@ -60,6 +60,9 @@
 #define strnEQ(s1, s2, n) (strncmp(s1, s2, n) == 0)
 #endif
 
+#define SIGAR_SEC2NANO(s) \
+    ((sigar_uint64_t)(s) * (sigar_uint64_t)1000000000)
+
 #define SIGAR_LAST_PROC_EXPIRE 2
 
 #define SIGAR_FS_MAX 10
