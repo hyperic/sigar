@@ -1368,9 +1368,181 @@ int sigar_net_interface_stat_get(sigar_t *sigar, const char *name,
     return SIGAR_OK;
 }
 
+#if defined(SIGAR_FREEBSD5)
+
+#include <sys/socketvar.h>
+#include <netinet/in_pcb.h>
+#include <netinet/tcp_var.h>
+#include <netinet/tcp_fsm.h>
+
+static int net_connection_list_get(sigar_t *sigar,
+                                   sigar_net_connection_list_t *connlist,
+                                   int flags, int proto)
+{
+    int type, istcp = 0;
+    char *buf;
+    const char *mibvar;
+    struct tcpcb *tp = NULL;
+    struct inpcb *inp;
+    struct xinpgen *xig, *oxig;
+    struct xsocket *so;
+    size_t len;
+
+    switch (proto) {
+      case IPPROTO_TCP:
+        mibvar = "net.inet.tcp.pcblist";
+        istcp = 1;
+        type = SIGAR_NETCONN_TCP;
+        break;
+      case IPPROTO_UDP:
+        mibvar = "net.inet.udp.pcblist";
+        type = SIGAR_NETCONN_UDP;
+        break;
+      default:
+        mibvar = "net.inet.raw.pcblist";
+        type = SIGAR_NETCONN_RAW;
+        break;
+    }
+
+    len = 0;
+    if (sysctlbyname(mibvar, 0, &len, 0, 0) < 0) {
+        return errno;
+    }
+    if ((buf = malloc(len)) == 0) {
+        return errno;
+    }
+    if (sysctlbyname(mibvar, buf, &len, 0, 0) < 0) {
+        free(buf);
+        return errno;
+    }
+
+    oxig = xig = (struct xinpgen *)buf;
+    for (xig = (struct xinpgen *)((char *)xig + xig->xig_len);
+         xig->xig_len > sizeof(struct xinpgen);
+         xig = (struct xinpgen *)((char *)xig + xig->xig_len))
+    {
+        if (istcp) {
+            struct xtcpcb *cb = (struct xtcpcb *)xig;
+            tp = &cb->xt_tp;
+            inp = &cb->xt_inp;
+            so = &cb->xt_socket;
+        }
+        else {
+            struct xinpcb *cb = (struct xincb *)xig;
+            inp = &cb->xi_inp;
+            so = &cb->xi_socket;
+        }
+
+        if (so->xso_protocol != proto) {
+            continue;
+        }
+
+        if (inp->inp_gencnt > oxig->xig_gen) {
+            continue;
+        }
+
+        if ((((flags & SIGAR_NETCONN_SERVER) && so->so_qlimit) ||
+            ((flags & SIGAR_NETCONN_CLIENT) && !so->so_qlimit)))
+        {
+            sigar_net_connection_t *conn;
+
+            SIGAR_NET_CONNLIST_GROW(connlist);
+            conn = &connlist->data[connlist->number++];
+
+            sigar_inet_ntoa(sigar, inp->inp_laddr.s_addr,
+                            conn->local_address);
+            sigar_inet_ntoa(sigar, inp->inp_faddr.s_addr,
+                            conn->remote_address);
+            conn->local_port  = ntohs(inp->inp_lport);
+            conn->remote_port = ntohs(inp->inp_fport);
+            conn->receive_queue = so->so_rcv.sb_cc;
+            conn->send_queue    = so->so_snd.sb_cc;
+            conn->type = type;
+
+            if (!istcp) {
+                conn->state = SIGAR_TCP_UNKNOWN;
+                continue;
+            }
+
+            switch (tp->t_state) {
+              case TCPS_CLOSED:
+                conn->state = SIGAR_TCP_CLOSE;
+                break;
+              case TCPS_LISTEN:
+                conn->state = SIGAR_TCP_LISTEN;
+                break;
+              case TCPS_SYN_SENT:
+                conn->state = SIGAR_TCP_SYN_SENT;
+                break;
+              case TCPS_SYN_RECEIVED:
+                conn->state = SIGAR_TCP_SYN_RECV;
+                break;
+              case TCPS_ESTABLISHED:
+                conn->state = SIGAR_TCP_ESTABLISHED;
+                break;
+              case TCPS_CLOSE_WAIT:
+                conn->state = SIGAR_TCP_CLOSE_WAIT;
+                break;
+              case TCPS_FIN_WAIT_1:
+                conn->state = SIGAR_TCP_FIN_WAIT1;
+                break;
+              case TCPS_CLOSING:
+                conn->state = SIGAR_TCP_CLOSING;
+                break;
+              case TCPS_LAST_ACK:
+                conn->state = SIGAR_TCP_LAST_ACK;
+                break;
+              case TCPS_FIN_WAIT_2:
+                conn->state = SIGAR_TCP_FIN_WAIT2;
+                break;
+              case TCPS_TIME_WAIT:
+                conn->state = SIGAR_TCP_TIME_WAIT;
+                break;
+              default:
+                conn->state = SIGAR_TCP_UNKNOWN;
+                break;
+            }
+        }
+    }
+
+    free(buf);
+
+    return SIGAR_OK;
+}
+
+int sigar_net_connection_list_get(sigar_t *sigar,
+                                  sigar_net_connection_list_t *connlist,
+                                  int flags)
+{
+    int status;
+
+    sigar_net_connection_list_create(connlist);
+
+    if (flags & SIGAR_NETCONN_TCP) {
+        status = net_connection_list_get(sigar, connlist,
+                                         flags, IPPROTO_TCP);
+        if (status != SIGAR_OK) {
+            return status;
+        }
+    }
+    if (flags & SIGAR_NETCONN_UDP) {
+        status = net_connection_list_get(sigar, connlist,
+                                         flags, IPPROTO_UDP);
+        if (status != SIGAR_OK) {
+            return status;
+        }
+    }
+
+    return SIGAR_OK;
+}
+
+#else
+
 int sigar_net_connection_list_get(sigar_t *sigar,
                                   sigar_net_connection_list_t *connlist,
                                   int flags)
 {
     return SIGAR_ENOTIMPL;
 }
+
+#endif
