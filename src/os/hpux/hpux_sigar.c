@@ -15,8 +15,6 @@ int sigar_os_open(sigar_t **sigar)
                     sizeof((*sigar)->pstatic),
                     1, 0);
 
-    (*sigar)->proctab = NULL;
-
     (*sigar)->ticks = sysconf(_SC_CLK_TCK);
 
     (*sigar)->last_pid = -1;
@@ -29,9 +27,6 @@ int sigar_os_open(sigar_t **sigar)
 
 int sigar_os_close(sigar_t *sigar)
 {
-    if (sigar->proctab) {
-        free(sigar->proctab);
-    }
     if (sigar->pinfo) {
         free(sigar->pinfo);
     }
@@ -170,29 +165,30 @@ int sigar_loadavg_get(sigar_t *sigar,
     return SIGAR_OK;
 }
 
+#define PROC_ELTS 16
+
 int sigar_proc_list_get(sigar_t *sigar,
                         sigar_proc_list_t *proclist)
 {
-    int n;
-    
-    if (!sigar->proctab) {
-        /* malloc this only once per-sigar_t as the size will not change */
-        sigar->proctab = malloc(sizeof(*sigar->proctab) *
-                                sigar->pstatic.max_proc);     
+    int num, idx=0;
+    struct pst_status proctab[PROC_ELTS];
+
+    sigar_proc_list_create(proclist);
+
+    while ((num = pstat_getproc(proctab, sizeof(proctab[0]),
+                                PROC_ELTS, idx)) > 0)
+    {
+        int i;
+
+        for (i=0; i<num; i++) {
+            SIGAR_PROC_LIST_GROW(proclist);
+            proclist->data[proclist->number++] =
+                proctab[i].pst_pid;
+        }
+
+        idx = proctab[num-1].pst_idx + 1;
     }
-
-    n = pstat_getproc(sigar->proctab, sizeof(*sigar->proctab),
-                      sigar->pstatic.max_proc, 0);
-
-    proclist->number = 0;
-    proclist->size = n;
-    proclist->data = malloc(sizeof(*(proclist->data)) * n);
-
-    for (n=0; n<proclist->size; n++) {
-        proclist->data[proclist->number++] =
-            sigar->proctab[n].pst_pid;
-    }
-    
+     
     return SIGAR_OK;
 }
 

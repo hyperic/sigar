@@ -9,7 +9,6 @@
 struct sigar_t {
     SIGAR_T_BASE;
     struct pst_static pstatic;
-    struct pst_status *proctab;
     time_t last_getprocs;
     sigar_pid_t last_pid;
     struct pst_status *pinfo;
