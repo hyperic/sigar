@@ -73,7 +73,7 @@ void sigar_cache_destroy(sigar_cache_t *table)
             if (ptr->value) {
                 free(ptr->value);
             }
-        } while (ptr = ptr->next);
+        } while ((ptr = ptr->next));
         free(entry);
     }
 
