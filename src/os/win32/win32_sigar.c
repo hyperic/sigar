@@ -1222,6 +1222,35 @@ SIGAR_DECLARE(int) sigar_proc_modules_get(sigar_t *sigar, sigar_pid_t pid,
                                            procmods);
 }
 
+#define FT2INT64(ft) \
+  ((__int64)((__int64)(ft).dwHighDateTime << 32 | \
+             (__int64)(ft).dwLowDateTime))
+
+SIGAR_DECLARE(int) sigar_thread_cpu_get(sigar_t *sigar,
+                                        sigar_uint64_t id,
+                                        sigar_thread_cpu_t *cpu)
+{
+    FILETIME start, exit, sys, user;
+    DWORD retval;
+
+    if (id != 0) {
+        return SIGAR_ENOTIMPL;
+    }
+
+    retval = GetThreadTimes(GetCurrentThread(),
+                            &start, &exit, &sys, &user);
+
+    if (retval == 0) {
+        return GetLastError();
+    }
+
+    cpu->user  = FT2INT64(user) * 100;
+    cpu->sys   = FT2INT64(sys)  * 100;
+    cpu->total = (FT2INT64(user) + FT2INT64(sys)) * 100;
+
+    return SIGAR_OK;
+}
+
 int sigar_os_fs_type_get(sigar_file_system_t *fsp)
 {
     return fsp->type;
