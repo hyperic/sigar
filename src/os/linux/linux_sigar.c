@@ -1017,6 +1017,12 @@ static int get_cpu_info(sigar_cpu_info_t *info, FILE *fp, int *id)
           case 'v':
             if (strnEQ(ptr, "vendor_id", 9)) {
                 cpu_info_strcpy(ptr, info->vendor, sizeof(info->vendor));
+                if (strEQ(info->vendor, "GenuineIntel")) {
+                    SIGAR_SSTRCPY(info->vendor, "Intel");
+                }
+                else if (strEQ(info->vendor, "AuthenticAMD")) {
+                    SIGAR_SSTRCPY(info->vendor, "AMD");
+                }
             }
             break;
           case 'm':
