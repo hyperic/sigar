@@ -306,6 +306,9 @@ JNIEXPORT jobjectArray SIGAR_JNI(Sigar_getFileSystemList)
         jobject fsobj;
         jclass obj_cls;
 
+#ifdef WIN32
+        obj_cls = cls;
+#else
         if ((fs->type == SIGAR_FSTYPE_NETWORK) &&
             (strcmp(fs->sys_type_name, "nfs") == 0) &&
             strstr(fs->dev_name, ":/"))
@@ -318,6 +321,7 @@ JNIEXPORT jobjectArray SIGAR_JNI(Sigar_getFileSystemList)
         else {
             obj_cls = cls;
         }
+#endif
 
         fsobj = JENV->AllocObject(env, obj_cls);
 
