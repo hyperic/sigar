@@ -425,27 +425,26 @@ static int get_sockaddr(struct sockaddr_in *addr, char *host)
 
     if ((addr->sin_addr.s_addr = inet_addr(host)) == -1) {
         if (!(hp = gethostbyname(host))) {
-            fprintf(stderr, "%s: unknown host\n", host);
-            return 0;
+            return -1;
         }
         memcpy(&addr->sin_addr, hp->h_addr, hp->h_length);
     }
 
-    return 1;
+    return SIGAR_OK;
 }
 
-int sigar_nfsping(char *host)
+SIGAR_DECLARE(int) sigar_nfs_ping(char *host)
 {
     CLIENT *client;
     struct sockaddr_in addr;
-    int sock, retval=1;
+    int sock, retval=SIGAR_OK;
     struct timeval timeout, interval;
     unsigned short port = 0;
     char buffer[1024];
     enum clnt_stat rpc_stat; 
 
-    if (get_sockaddr(&addr, host) == 0) {
-        return 0;
+    if (get_sockaddr(&addr, host) != SIGAR_OK) {
+        return -1;
     }
 
     interval.tv_sec = 2;
@@ -456,7 +455,7 @@ int sigar_nfsping(char *host)
                             interval, &sock);
     if (!client) {
         clnt_pcreateerror(buffer);
-        return 0;
+        return -1;
     }
 
     timeout.tv_sec = 10;
@@ -466,7 +465,7 @@ int sigar_nfsping(char *host)
 
     if (rpc_stat != RPC_SUCCESS) {
         clnt_perror(client, buffer);
-        retval = 0;
+        retval = -1;
     }
     clnt_destroy(client);
 
