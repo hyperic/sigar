@@ -23,6 +23,8 @@
 #define PROC_PSTAT   "/stat"
 #define PROC_PSTATUS "/status"
 
+#define SYS_BLOCK "/sys/block"
+
 /*
  * /proc/self/stat fields:
  * 1 - pid
@@ -103,6 +105,7 @@ int sigar_os_open(sigar_t **sigar)
 {
     char buffer[BUFSIZ], *ptr;
     int status = sigar_file2str(PROC_STAT, buffer, sizeof(buffer));
+    struct stat sb;
 
     *sigar = malloc(sizeof(**sigar));
 
@@ -123,6 +126,13 @@ int sigar_os_open(sigar_t **sigar)
     (*sigar)->last_proc_stat.pid = -1;
 
     (*sigar)->ht_enabled = -1;
+
+    if (stat(SYS_BLOCK, &sb) == 0) {
+        (*sigar)->iostat = IOSTAT_SYS;
+    }
+    else {
+        (*sigar)->iostat = IOSTAT_NONE;
+    }
 
     return SIGAR_OK;
 }
@@ -996,6 +1006,66 @@ int sigar_file_system_list_get(sigar_t *sigar,
     return SIGAR_OK;
 }
 
+static int get_iostat_sys(sigar_t *sigar,
+                          const char *dirname,
+                          sigar_file_system_usage_t *fsusage)
+{
+    /* open source is really great */
+    /* see how intuitive this is */
+    struct mntent ent;
+    char buf[1025]; /* buffer for strings within ent */
+    char stat[1025];
+    FILE *fp;
+    char *name, *fsdev = NULL, *ptr;
+    int partition, status;
+
+    if (!(fp = setmntent(MOUNTED, "r"))) {
+        return errno;
+    }
+
+    while (getmntent_r(fp, &ent, buf, sizeof(buf))) {
+        if (strEQ(ent.mnt_dir, dirname)) {
+            fsdev = ent.mnt_fsname;
+            break;
+        }
+    }
+
+    endmntent(fp);
+
+    if (!fsdev) {
+        return ENOENT;
+    }
+
+    if (!strnEQ(fsdev, "/dev/", 5)) {
+        return ENOENT;
+    }
+
+    fsdev += 5;
+    name = fsdev;
+
+    while (!sigar_isdigit(*fsdev)) {
+        fsdev++;
+    }
+
+    partition = strtoul(fsdev, NULL, 0);
+    *fsdev = '\0';
+
+    sprintf(stat, SYS_BLOCK "/%s/%s%d/stat", name, name, partition);
+
+    status = sigar_file2str(stat, buf, sizeof(buf));
+    if (status != SIGAR_OK) {
+        return status;
+    }
+
+    ptr = buf;
+    ptr = sigar_skip_token(ptr);
+    fsusage->disk_reads = sigar_strtoul(ptr);
+    ptr = sigar_skip_token(ptr);
+    fsusage->disk_writes = sigar_strtoul(ptr);
+
+    return SIGAR_OK;
+}
+
 #include <sys/vfs.h>
 
 #define SIGAR_FS_BLOCKS_TO_BYTES(buf, f) \
@@ -1017,6 +1087,14 @@ int sigar_file_system_usage_get(sigar_t *sigar,
     fsusage->files = buf.f_files;
     fsusage->free_files = buf.f_ffree;
     fsusage->use_percent = sigar_file_system_usage_calc_used(sigar, fsusage);
+
+    if (sigar->iostat == IOSTAT_SYS) {
+        if (get_iostat_sys(sigar, dirname, fsusage) == SIGAR_OK) {
+            return SIGAR_OK;
+        }
+    }
+
+    fsusage->disk_reads = fsusage->disk_writes = 0;
 
     return SIGAR_OK;
 }

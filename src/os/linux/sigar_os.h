@@ -30,6 +30,11 @@ typedef struct {
     char state;
 } linux_proc_stat_t;
 
+typedef enum {
+    IOSTAT_NONE,
+    IOSTAT_SYS /* 2.6 */
+} linux_iostat_e;
+
 struct sigar_t {
     SIGAR_T_BASE;
     int ram;
@@ -37,6 +42,7 @@ struct sigar_t {
     linux_proc_stat_t last_proc_stat;
     int ht_enabled;
     int lcpu;
+    linux_iostat_e iostat;
 };
 
 #define HAVE_STRERROR_R
