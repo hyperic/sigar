@@ -51,5 +51,18 @@ public class TestProcArgs extends SigarTestCase {
         } catch (SigarNotImplementedException e) {
             //ok; might not happen on win32
         }
+
+	long[] pids = sigar.getProcList();
+
+	for (int i=0; i<pids.length; i++) {
+            try {
+                String[] args = sigar.getProcArgs(pids[i]);
+                traceln("pid=" + pids[i]);
+                for (int j=0; j<args.length; j++) {
+                    traceln("   " + j + "=>" + args[j] + "<==");
+                }
+            } catch (SigarException e) {
+            }
+	}
     }
 }

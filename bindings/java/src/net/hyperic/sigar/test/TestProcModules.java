@@ -44,11 +44,11 @@ public class TestProcModules extends SigarTestCase {
 	long[] pids = sigar.getProcList();
 
 	for (int i=0; i<pids.length; i++) {
-	  try {
-	      printModules(sigar, pids[i]);
-	  } catch (SigarException e) {
-	      traceln(pids[i] + ": " + e.getMessage());
-	  }
+            try {
+                printModules(sigar, pids[i]);
+            } catch (SigarException e) {
+                traceln(pids[i] + ": " + e.getMessage());
+            }
 	}
     }
 }
