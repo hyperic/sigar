@@ -80,6 +80,32 @@ int sigar_proc_exe_peb_get(sigar_t *sigar, HANDLE proc,
     return SIGAR_OK;
 }
 
+static int sigar_parse_proc_args(sigar_t *sigar, WCHAR *buf,
+                                 sigar_proc_args_t *procargs)
+{
+    char arg[SIGAR_CMDLINE_MAX];
+    LPWSTR *args;
+    int num, i;
+
+    sigar_proc_args_create(procargs);
+
+    args = CommandLineToArgvW(buf, &num);
+
+    if (args == NULL) {
+        return SIGAR_OK;
+    }
+
+    for (i=0; i<num; i++) {
+        SIGAR_W2A(args[i], arg, SIGAR_CMDLINE_MAX);
+        SIGAR_PROC_ARGS_GROW(procargs);
+        procargs->data[procargs->number++] = strdup(arg);
+    }
+
+    GlobalFree(args);
+
+    return SIGAR_OK;
+}
+
 int sigar_proc_args_peb_get(sigar_t *sigar, HANDLE proc,
                             sigar_proc_args_t *procargs)
 {
@@ -87,9 +113,6 @@ int sigar_proc_args_peb_get(sigar_t *sigar, HANDLE proc,
     LPBYTE scratch;
     DWORD base;
     WCHAR buf[SIGAR_CMDLINE_MAX];
-    char arg[SIGAR_CMDLINE_MAX];
-    LPWSTR *args;
-    int num, i;
 
     if ((status = sigar_peb_get(sigar, proc, &base)) != SIGAR_OK) {
         return status;
@@ -104,20 +127,5 @@ int sigar_proc_args_peb_get(sigar_t *sigar, HANDLE proc,
     wcsncpy(buf, (LPWSTR)scratch, SIGAR_CMDLINE_MAX);
     buf[SIGAR_CMDLINE_MAX-1] = L'\0';
 
-    args = CommandLineToArgvW(buf, &num);
-
-    sigar_proc_args_create(procargs);
-
-    for (i=0; i<=num; i++) {
-        if (!iswprint(*args[i])) {
-            continue; /* seen trailing garbage */
-        }
-        SIGAR_PROC_ARGS_GROW(procargs);
-        SIGAR_W2A(args[i], arg, SIGAR_CMDLINE_MAX);
-        procargs->data[procargs->number++] = strdup(arg);
-    }
-
-    GlobalFree(args);
-
-    return SIGAR_OK;
+    return sigar_parse_proc_args(sigar, buf, procargs);
 }
