@@ -429,13 +429,15 @@ int sigar_proc_list_get(sigar_t *sigar,
         return SIGAR_EPERM_KMEM;
     }
 
-    proc = kvm_getprocs(sigar->kmem, KERN_PROC_ALL, 0, &num);
+    proc = kvm_getprocs(sigar->kmem, KERN_PROC_PROC, 0, &num);
     
-    proclist->number = 0;
-    proclist->size = num;
-    proclist->data = malloc(sizeof(*(proclist->data)) * num);
+    sigar_proc_list_create(proclist);
 
     for (i=0; i<num; i++) {
+        if (proc[i].ki_flag & P_SYSTEM) {
+            continue;
+        }
+        SIGAR_PROC_LIST_GROW(proclist);
         proclist->data[proclist->number++] = proc[i].KI_PID;
     }
 #endif
