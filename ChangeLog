@@ -1,3 +1,21 @@
+2005-01-26  Doug MacEachern  <dougm@hyperic.net>
+
+        * 1.1.15 released
+        
+        * fix windows 2003 problem with metrics that use the perfdata
+        registry interface when pdh.dll functions are used by the same
+        process.
+
+        * Pdh.getSingleValue now uses PdhGetRawCounterValue underneath
+
+        * fix win32.Pdh.close method
+
+        * fix win32.Service.finalize method
+        
+2005-01-07  Doug MacEachern  <dougm@hyperic.net>
+
+        * implement thread-cpu metrics for aix
+
 2005-01-06  Doug MacEachern  <dougm@hyperic.net>
 
         * 1.1.14 released
