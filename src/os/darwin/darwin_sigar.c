@@ -8,6 +8,7 @@
 #include <mach/message.h>
 #include <mach/kern_return.h>
 #else
+#include <sys/dkstat.h>
 #include <sys/types.h>
 #include <sys/param.h>
 #include <sys/user.h>
@@ -30,6 +31,43 @@
 #include <errno.h>
 
 #define NMIB(mib) (sizeof(mib)/sizeof(mib[0]))
+
+#ifndef DARWIN
+static int get_koffsets(sigar_t *sigar)
+{
+    int i;
+    struct nlist klist[] = {
+        { "_cp_time" },
+        { NULL }
+    };
+
+    kvm_nlist(sigar->kp, klist);
+    if (klist[0].n_type == 0) {
+        return errno;
+    }
+
+    for (i=0; i<KOFFSET_MAX; i++) {
+        sigar->koffsets[i] = klist[i].n_value;
+    }
+
+    return SIGAR_OK;
+}
+
+static int kread(sigar_t *sigar, void *data, int size, long offset)
+{
+#if 0
+    if (sigar->kmem < 0) {
+        return SIGAR_EPERM_KMEM;
+    }
+#endif
+
+    if (kvm_read(sigar->kp, offset, data, size) != size) {
+        return errno;
+    }
+
+    return SIGAR_OK;
+}
+#endif
 
 int sigar_os_open(sigar_t **sigar)
 {
@@ -59,6 +97,8 @@ int sigar_os_open(sigar_t **sigar)
 #else
     (*sigar)->kp = kvm_open(NULL, NULL, NULL, O_RDONLY, "kvm_open");
 #endif
+
+    get_koffsets(*sigar);
 
     (*sigar)->ncpu = ncpu;
 
@@ -239,12 +279,21 @@ int sigar_cpu_get(sigar_t *sigar, sigar_cpu_t *cpu)
     cpu->total = cpu->user + cpu->nice + cpu->sys + cpu->idle;
 
 #else
-    /*XXX*/
-    cpu->user = 0;
-    cpu->nice = 0;
-    cpu->sys  = 0;
-    cpu->idle = 0;
-    cpu->wait = 0; /*N/A*/
+    int status;
+    long cp_time[CPUSTATES];
+
+    status = kread(sigar, &cp_time, sizeof(cp_time),
+                   sigar->koffsets[KOFFSET_CPUINFO]);
+
+    if (status != SIGAR_OK) {
+        return status;
+    }
+
+    cpu->user = cp_time[CP_USER];
+    cpu->nice = cp_time[CP_NICE];
+    cpu->sys  = cp_time[CP_SYS];
+    cpu->idle = cp_time[CP_IDLE];
+    cpu->wait = cp_time[CP_INTR];
     cpu->total = cpu->user + cpu->nice + cpu->sys + cpu->idle;
 #endif
 

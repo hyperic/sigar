@@ -10,6 +10,11 @@
 
 #include <sys/sysctl.h>
 
+enum {
+    KOFFSET_CPUINFO,
+    KOFFSET_MAX
+};
+
 struct sigar_t {
     SIGAR_T_BASE;
     int pagesize;
@@ -20,6 +25,8 @@ struct sigar_t {
     mach_port_t mach_port;
 #else
     kvm_t *kp;
+    /* offsets for seeking on kmem */
+    unsigned long koffsets[KOFFSET_MAX];
 #endif
 };
 
