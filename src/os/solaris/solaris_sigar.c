@@ -790,24 +790,6 @@ static int sigar_pgrab_modules(sigar_t *sigar, sigar_pid_t pid,
     struct stat statbuf;
     char buffer[BUFSIZ];
 
-    if ((pstatus = sigar_init_libproc(sigar)) != SIGAR_OK) {
-        return pstatus;
-    }
-
-    if (!(phandle = sigar->pgrab(pid, 0x01, &pstatus))) {
-        switch (pstatus) {
-          case G_NOPROC:
-            return ESRCH;
-          case G_PERM:
-            return EACCES;
-          default:
-            sigar_log_printf(sigar, SIGAR_LOG_ERROR,
-                             "[%s] Pgrab error=%d",
-                             SIGAR_FUNC, pstatus);
-            return ENOTSUP; /*XXX*/
-        }
-    }
-
     (void)SIGAR_PROC_FILENAME(buffer, pid, "/xmap");
 
     if ((fd = open(buffer, O_RDONLY)) < 0) {
@@ -827,12 +809,31 @@ static int sigar_pgrab_modules(sigar_t *sigar, sigar_pid_t pid,
                          SIGAR_FUNC, pid, map_size);
     }
 
+    if ((pstatus = sigar_init_libproc(sigar)) != SIGAR_OK) {
+        return pstatus;
+    }
+
+    if (!(phandle = sigar->pgrab(pid, 0x01, &pstatus))) {
+        switch (pstatus) {
+          case G_NOPROC:
+            return ESRCH;
+          case G_PERM:
+            return EACCES;
+          default:
+            sigar_log_printf(sigar, SIGAR_LOG_ERROR,
+                             "[%s] Pgrab error=%d",
+                             SIGAR_FUNC, pstatus);
+            return ENOTSUP; /*XXX*/
+        }
+    }
+
     for (nread=0; nread<statbuf.st_size; ) {
         off_t wanted = map_size > sizeof(xmaps) ? sizeof(xmaps) : map_size;
         int total = wanted / sizeof(prxmap_t);
 
         if (pread(fd, xmaps, wanted, nread) != wanted) {
             close(fd);
+            sigar->pfree(phandle);
             return errno;
         }
 
