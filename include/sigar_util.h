@@ -62,6 +62,10 @@ int sigar_proc_fd_count(sigar_t *sigar, sigar_pid_t pid,
 
 int sigar_proc_count(sigar_t *sigar, sigar_uint64_t *total);
 
+/* linux + freebsd */
+int sigar_procfs_args_get(sigar_t *sigar, sigar_pid_t pid,
+                          sigar_proc_args_t *procargs);
+
 int sigar_mem_calc_ram(sigar_t *sigar, sigar_mem_t *mem);
 
 double sigar_file_system_usage_calc_used(sigar_t *sigar,

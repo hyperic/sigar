@@ -221,6 +221,71 @@ int sigar_proc_count(sigar_t *sigar, sigar_uint64_t *total)
     return SIGAR_OK;
 }
 
+int sigar_procfs_args_get(sigar_t *sigar, sigar_pid_t pid,
+                          sigar_proc_args_t *procargs)
+{
+    char buffer[9086], *buf=NULL, *ptr;
+    int fd, len, total=0;
+
+    (void)SIGAR_PROC_FILENAME(buffer, pid, "/cmdline");
+
+    if ((fd = open(buffer, O_RDONLY)) < 0) {
+        if (errno == ENOENT) {
+            return ESRCH;
+        }
+        return errno;
+    }
+
+    buffer[0] = '\0';
+
+    /* XXX: possible to get rid of some mallocs here.
+     * but, unlikely this will be called often so it
+     * might not even matter much.
+     */
+    while ((len = read(fd, buffer, sizeof(buffer)-1)) > 0) {
+        if (len == 0) {
+            break;
+        }
+        if (buf) {
+            buf = realloc(buf, total+len);
+        }
+        else {
+            buf = malloc(len+1);
+        }
+        memcpy(buf+total, buffer, len);
+        total += len;
+    }
+
+    close(fd);
+
+    sigar_proc_args_create(procargs);
+
+    //e.g. /proc/2/cmdline
+    if (total == 0) {
+        procargs->number = 0;
+        return SIGAR_OK;
+    }
+
+    buf[total] = '\0';
+    ptr = buf;
+
+    while (*ptr) {
+        int alen = strlen(ptr)+1;
+        char *arg = malloc(alen);
+
+        SIGAR_PROC_ARGS_GROW(procargs);
+        memcpy(arg, ptr, alen);
+
+        procargs->data[procargs->number++] = arg;
+            
+        ptr += alen;
+    }
+
+    free(buf);
+
+    return SIGAR_OK;
+}
+
 int sigar_mem_calc_ram(sigar_t *sigar, sigar_mem_t *mem)
 {
     sigar_uint64_t lram = (mem->total / (1024 * 1024));
