@@ -18,15 +18,19 @@ public class CpuTimer {
     }
 
     public CpuTimer(Sigar sigar) {
+        clear();
         this.sigar = sigar;
     }
 
-    public void start() {
-        this.startTime = System.currentTimeMillis();
+    public void clear() {
         this.totalTime = 0;
         this.cpuTotal = 0;
         this.cpuUser  = 0;
         this.cpuSys   = 0;
+    }
+
+    public void start() {
+        this.startTime = System.currentTimeMillis();
 
         try {
             this.cpu.gather(this.sigar, 0);
@@ -38,15 +42,15 @@ public class CpuTimer {
     public void stop() {
         ThreadCpu diff = getDiff();
 
-        this.cpuTotal = diff.total;
-        this.cpuUser  = diff.user;
-        this.cpuSys   = diff.sys;
+        this.cpuTotal += diff.total;
+        this.cpuUser  += diff.user;
+        this.cpuSys   += diff.sys;
 
         long stopTime = System.currentTimeMillis();
         
         long time = stopTime - this.startTime;
 
-        this.totalTime = time;
+        this.totalTime += time;
     }
 
     public ThreadCpu getDiff() {
