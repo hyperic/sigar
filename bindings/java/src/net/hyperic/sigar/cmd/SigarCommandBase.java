@@ -61,6 +61,14 @@ public abstract class SigarCommandBase
         return this.formatter;
     }
 
+    public String sprintf(String format, Object[] items) {
+        return new PrintfFormat(format).sprintf(items);
+    }
+
+    public void printf(String format, Object[] items) {
+        println(sprintf(format, items));
+    }
+
     public void printf(Object[] items) {
         println(getFormatter().sprintf(items));
     }
