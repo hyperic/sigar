@@ -111,8 +111,9 @@ JNIEXPORT jdouble SIGAR_JNI(win32_Pdh_pdhGetSingleValue)
 {
     HCOUNTER              h_counter      = (HCOUNTER)counter;
     HQUERY                h_query        = (HQUERY)query;
-    PDH_FMT_COUNTERVALUE  pdh_value;
     PDH_STATUS            status;
+    PDH_RAW_COUNTER raw_value;
+    DWORD type;
 
     status = PdhCollectQueryData(h_query);
    
@@ -121,18 +122,14 @@ JNIEXPORT jdouble SIGAR_JNI(win32_Pdh_pdhGetSingleValue)
         return 0;
     }
 
-    // Format the performance data record.
-    status = PdhGetFormattedCounterValue(h_counter,
-                                         PDH_FMT_DOUBLE,
-                                         (LPDWORD)NULL,
-                                         &pdh_value);
+    status = PdhGetRawCounterValue(h_counter, &type, &raw_value);
 
     if (status != ERROR_SUCCESS) {
         win32_throw_exception(env, get_error_message(status));
         return 0;
     }
 
-    return pdh_value.doubleValue;
+    return (jdouble)raw_value.FirstValue;
 }
 
 JNIEXPORT jobjectArray SIGAR_JNI(win32_Pdh_pdhGetInstances)
