@@ -443,8 +443,6 @@ SIGAR_DECLARE(int) sigar_proc_list_get(sigar_t *sigar,
         return err;
     }
 
-    sigar_proc_list_create(proclist);
-
     /*
      * note we assume here:
      *  block->NumObjectTypes == 1
@@ -465,6 +463,15 @@ SIGAR_DECLARE(int) sigar_proc_list_get(sigar_t *sigar,
             break;
         }
     }
+
+    /* XXX dont know why this happens, have only
+     * seen it using 2003 server within vmware.
+     */
+    if (object->NumInstances < 1) {
+        return ENOENT;
+    }
+
+    sigar_proc_list_create(proclist);
 
     for (i=0, inst = PdhFirstInstance(object);
          i<object->NumInstances;
@@ -675,9 +682,6 @@ static int get_proc_info(sigar_t *sigar, sigar_pid_t pid)
         }
     }
 
-    pinfo->pid = pid;
-    pinfo->mtime = timenow;
-
     memset(&perf_offsets, 0, sizeof(perf_offsets));
 
     object = get_process_object(sigar, &err);
@@ -685,6 +689,16 @@ static int get_proc_info(sigar_t *sigar, sigar_pid_t pid)
     if (object == NULL) {
         return err;
     }
+
+    /* XXX dont know why this happens, have only
+     * seen it using 2003 server within vmware.
+     */
+    if (object->NumInstances < 1) {
+        return ENOENT;
+    }
+
+    pinfo->pid = pid;
+    pinfo->mtime = timenow;
 
     /*
      * note we assume here:
