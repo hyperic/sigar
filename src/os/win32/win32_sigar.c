@@ -481,7 +481,8 @@ SIGAR_DECLARE(int) sigar_cpu_get(sigar_t *sigar, sigar_cpu_t *cpu)
     }
 }
 
-SIGAR_DECLARE(int) sigar_cpu_list_get(sigar_t *sigar, sigar_cpu_list_t *cpulist)
+static int sigar_cpu_list_perflib_get(sigar_t *sigar,
+                                      sigar_cpu_list_t *cpulist)
 {
     int status, i, j, hthread=0;
     PERF_INSTANCE_DEFINITION *inst;
@@ -534,14 +535,82 @@ SIGAR_DECLARE(int) sigar_cpu_list_get(sigar_t *sigar, sigar_cpu_list_t *cpulist)
         cpu->sys  += PERF_VAL(PERF_IX_CPU_SYS);
         cpu->user += PERF_VAL(PERF_IX_CPU_USER);
         get_idle_cpu(sigar, cpu, i, counter_block, perf_offsets);
-        cpu->nice = 0; /* no nice here */
-        
+        cpu->nice = cpu->wait = 0; /*N/A*/
+
+        /*XXX adding up too much here if xeon, but not using this atm*/
         cpu->total += cpu->sys + cpu->user + cpu->idle;
 
         inst = PdhNextInstance(inst);
     }
 
     return SIGAR_OK;
+}
+
+static int sigar_cpu_list_ntsys_get(sigar_t *sigar,
+                                    sigar_cpu_list_t *cpulist)
+{
+    DWORD retval, num;
+    int status, i, j, hthread=0;
+    /* XXX unhardcode 16 */
+    SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION info[16];
+    /* into the lungs of hell */
+    sigar->get_ntsys_info(SystemProcessorPerformanceInformation,
+                          &info, sizeof(info), &retval);
+
+    if (!retval) {
+        return GetLastError();
+    }
+    num = retval/sizeof(info[0]);
+
+    sigar_cpu_count(sigar);
+    sigar_cpu_list_create(cpulist);
+
+    /*
+     * if hyper-threading was detected and ncpu is less than
+     * the number of counter instances, assume there is a counter
+     * for each logical processor.
+     * XXX assuming this is correct until have something to test on.
+     */
+    if (sigar->ht_enabled && ((sigar->ncpu * sigar->lcpu) == num)) {
+        hthread = 1;
+    }
+
+    for (i=0; i<num; i++) {
+        sigar_cpu_t *cpu;
+        sigar_uint64_t idle, user, sys;
+
+        if (hthread && (i % sigar->lcpu)) {
+            /* merge times of logical processors */
+            cpu = &cpulist->data[cpulist->number-1];
+        }
+        else {
+            SIGAR_CPU_LIST_GROW(cpulist);
+            cpu = &cpulist->data[cpulist->number++];
+            SIGAR_ZERO(cpu);
+        }
+
+        idle = info[i].IdleTime.QuadPart;
+        user = info[i].UserTime.QuadPart;
+        sys  = info[i].KernelTime.QuadPart - info[i].IdleTime.QuadPart;
+        cpu->idle += idle;
+        cpu->user += user;
+        cpu->sys  += sys;
+        cpu->nice = cpu->wait = 0; /*N/A*/
+        cpu->total += idle + user + sys;
+    }
+
+    return SIGAR_OK;
+}
+
+SIGAR_DECLARE(int) sigar_cpu_list_get(sigar_t *sigar,
+                                      sigar_cpu_list_t *cpulist)
+{
+    if (sigar->get_ntsys_info) {
+        return sigar_cpu_list_ntsys_get(sigar, cpulist);
+    }
+    else {
+        return sigar_cpu_list_perflib_get(sigar, cpulist);
+    }
 }
 
 SIGAR_DECLARE(int) sigar_uptime_get(sigar_t *sigar,
