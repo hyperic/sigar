@@ -32,7 +32,10 @@
  * 4. This notice may not be removed or altered.
  */
 
-
+/*
+ * Changes for sigar:
+ * - remove static stuff to make thread-safe 
+ */
 #if	!defined(GET_MIB2_H)
 #define	GET_MIB2_H
 
@@ -86,11 +89,21 @@
 #define	GET_MIB2_ERR_MAX	13	/* maximum error number + 1 */
 
 
+typedef struct {
+    char *db;       /* data buffer */
+    int db_len;     /* data buffer length */
+    char *smb;      /* stream message buffer */
+    size_t smb_len; /* size of Smb[] */
+    int sd;         /* stream device descriptor */
+    char errmsg[GET_MIB2_ERRMSGL]; /* error message buffer */
+} solaris_mib2_t;
+
 /*
  * Function prototypes
  */
 
 int close_mib2(				/* close acccess to MIB2 information */
+        solaris_mib2_t *mib2, 
 	char **errmsg				/* error message buffer return
 						 * address (if return value
 						 * > GET_MIB2_OK.)  The error
@@ -99,6 +112,7 @@ int close_mib2(				/* close acccess to MIB2 information */
 						 * been defined. */
 	);
 int get_mib2(				/* get MIB2 information */
+        solaris_mib2_t *mib2, 
 	struct opthdr **opt,			/* opthdr pointer return (see
 						 * <sys/socket.h> */
 	char **data,				/* data buffer return address */
@@ -112,6 +126,7 @@ int get_mib2(				/* get MIB2 information */
 						 * been defined. */
 	);
 int open_mib2(				/* open acccess to MIB2 information */
+        solaris_mib2_t *mib2, 
 	char **errmsg				/* error message buffer return
 						 * address (if return value
 						 * > GET_MIB2_OK.)  The error

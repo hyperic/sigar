@@ -48,18 +48,6 @@ static char copyright[] =
 #include <unistd.h>
 
 /*
- * Local static values
- */
-
-static char *Db = NULL;			/* data buffer */
-static int Dbl = 0;			/* data buffer length */
-static char *Smb = NULL;		/* stream message buffer */
-static size_t Smbl = 0;			/* size of Smb[] */
-static int Sd = -1;			/* stream device descriptor; not open
-					 * if -1 */
-static char ErrMsg[GET_MIB2_ERRMSGL];	/* error message buffer */
-
-/*
  * close_mib2() - close MIB2 access
  *
  * return:
@@ -70,27 +58,27 @@ static char ErrMsg[GET_MIB2_ERRMSGL];	/* error message buffer */
  */
 
 int
-close_mib2(char **errmsg)
+close_mib2(solaris_mib2_t *mib2, char **errmsg)
 {
-    *errmsg = ErrMsg;
-    if (Sd < 0) {
-        (void) strcpy(ErrMsg, "close_mib2: socket not open");
+    *errmsg = mib2->errmsg;
+    if (mib2->sd < 0) {
+        (void) strcpy(mib2->errmsg, "close_mib2: socket not open");
         return(GET_MIB2_ERR_NOTOPEN);
     }
-    if (close(Sd)) {
-        (void) sprintf(ErrMsg, "close_mib2: %s", strerror(errno));
+    if (close(mib2->sd)) {
+        (void) sprintf(mib2->errmsg, "close_mib2: %s", strerror(errno));
         return(GET_MIB2_ERR_CLOSE);
     }
-    Sd = -1;
-    if (Dbl && Db) {
-        Dbl = 0;
-        free((void *)Db);
-        Db = NULL;
+    mib2->sd = -1;
+    if (mib2->db_len && mib2->db) {
+        mib2->db_len = 0;
+        free((void *)mib2->db);
+        mib2->db = NULL;
     }
-    if (Smbl && Smb) {
-        Smbl = 0;
-        free((void *)Smb);
-        Smb = NULL;
+    if (mib2->smb_len && mib2->smb) {
+        mib2->smb_len = 0;
+        free((void *)mib2->smb);
+        mib2->smb = NULL;
     }
     return(GET_MIB2_OK);
 }
@@ -110,7 +98,8 @@ close_mib2(char **errmsg)
  */
 
 int
-get_mib2(struct opthdr **opt,
+get_mib2(solaris_mib2_t *mib2,
+         struct opthdr **opt,
          char **data,
          int *datalen,
          char **errmsg)
@@ -125,24 +114,24 @@ get_mib2(struct opthdr **opt,
     static struct T_optmgmt_req *r;	/* message request pointer */
     int rc;				/* reply code */
 
-    *errmsg = ErrMsg;
+    *errmsg = mib2->errmsg;
     /*
      * If MIB2 access isn't open, open it and issue the preliminary stream
      * messages.
      */
-    if (Sd < 0) {
+    if (mib2->sd < 0) {
 
 	/*
 	 * Open access.  Return on error.
 	 */
-        if ((err = open_mib2(errmsg))) {
+        if ((err = open_mib2(mib2, errmsg))) {
             return(err);
         }
 	/*
 	 * Set up message request and option.
 	 */
-        r = (struct T_optmgmt_req *)Smb;
-        o = (struct opthdr *)&Smb[sizeof(struct T_optmgmt_req)];
+        r = (struct T_optmgmt_req *)mib2->smb;
+        o = (struct opthdr *)&mib2->smb[sizeof(struct T_optmgmt_req)];
         r->PRIM_type = T_OPTMGMT_REQ;
         r->OPT_offset = sizeof(struct T_optmgmt_req);
         r->OPT_length = sizeof(struct opthdr);
@@ -159,30 +148,30 @@ get_mib2(struct opthdr **opt,
 
         o->level = MIB2_IP;
         o->name = o->len = 0;
-        c.buf = Smb;
+        c.buf = mib2->smb;
         c.len = r->OPT_offset + r->OPT_length;
 	/*
 	 * Put the message.
 	 */
-        if (putmsg(Sd, &c, (struct strbuf *)NULL, 0) == -1) {
-            (void) sprintf(ErrMsg,
+        if (putmsg(mib2->sd, &c, (struct strbuf *)NULL, 0) == -1) {
+            (void) sprintf(mib2->errmsg,
                            "get_mib2: putmsg request: %s", strerror(errno));
             return(GET_MIB2_ERR_PUTMSG);
         }
 	/*
 	 * Set up to process replies.
 	 */
-        a = (struct T_optmgmt_ack *)Smb;
-        c.maxlen = Smbl;
-        e = (struct T_error_ack *)Smb;
-        o = (struct opthdr *)&Smb[sizeof(struct T_optmgmt_ack)];
+        a = (struct T_optmgmt_ack *)mib2->smb;
+        c.maxlen = mib2->smb_len;
+        e = (struct T_error_ack *)mib2->smb;
+        o = (struct opthdr *)&mib2->smb[sizeof(struct T_optmgmt_ack)];
     }
     /*
      * Get the next (first) reply message.
      */
     f = 0;
-    if ((rc = getmsg(Sd, &c, NULL, &f)) < 0) {
-        (void) sprintf(ErrMsg, "get_mib2: getmsg(reply): %s",
+    if ((rc = getmsg(mib2->sd, &c, NULL, &f)) < 0) {
+        (void) sprintf(mib2->errmsg, "get_mib2: getmsg(reply): %s",
                        strerror(errno));
         return(GET_MIB2_ERR_GETMSGR);
     }
@@ -195,7 +184,7 @@ get_mib2(struct opthdr **opt,
 	&&  a->MGMT_flags == T_SUCCESS
 	&&  o->len == 0)
     {
-        err = close_mib2(errmsg);
+        err = close_mib2(mib2, errmsg);
         if (err) {
             return(err);
         }
@@ -207,7 +196,7 @@ get_mib2(struct opthdr **opt,
     if (c.len >= sizeof(struct T_error_ack)
 	&&  e->PRIM_type == T_ERROR_ACK)
     {
-        (void) sprintf(ErrMsg,
+        (void) sprintf(mib2->errmsg,
                        "get_mib2: T_ERROR_ACK: len=%d, TLI=%#x, UNIX=%#x",
                        c.len, (int)e->TLI_error, (int)e->UNIX_error);
         return(GET_MIB2_ERR_ACK);
@@ -220,7 +209,7 @@ get_mib2(struct opthdr **opt,
 	||  a->PRIM_type != T_OPTMGMT_ACK
 	||  a->MGMT_flags != T_SUCCESS)
     {
-        (void) sprintf(ErrMsg,
+        (void) sprintf(mib2->errmsg,
                        "get_mib2: T_OPTMGMT_ACK: "
                        "rc=%d len=%d type=%#x flags=%#x",
                        rc, c.len, (int)a->PRIM_type, (int)a->MGMT_flags);
@@ -229,17 +218,18 @@ get_mib2(struct opthdr **opt,
     /*
      * Allocate (or enlarge) the data buffer.
      */
-    if (o->len >= Dbl) {
-        Dbl = o->len;
-        if (Db == NULL) {
-            Db = (char *)malloc(Dbl);
+    if (o->len >= mib2->db_len) {
+        mib2->db_len = o->len;
+        if (mib2->db == NULL) {
+            mib2->db = (char *)malloc(mib2->db_len);
         }
         else {
-            Db = (char *)realloc(Db, Dbl);
+            mib2->db = (char *)realloc(mib2->db, mib2->db_len);
         }
-        if (Db == NULL) {
-            (void) sprintf(ErrMsg,
-                           "get_mib2: no space for %d byte data buffer", Dbl);
+        if (mib2->db == NULL) {
+            (void) sprintf(mib2->errmsg,
+                           "get_mib2: no space for %d byte data buffer",
+                           mib2->db_len);
             return(GET_MIB2_ERR_NOSPC);
         }
     }
@@ -247,16 +237,16 @@ get_mib2(struct opthdr **opt,
      * Get the data part of the message -- the MIB2 part.
      */
     d.maxlen = o->len;
-    d.buf = Db;
+    d.buf = mib2->db;
     d.len = 0;
     f = 0;
-    if ((rc = getmsg(Sd, NULL, &d, &f)) < 0) {
-        (void) sprintf(ErrMsg, "get_mib2: getmsg(data): %s",
+    if ((rc = getmsg(mib2->sd, NULL, &d, &f)) < 0) {
+        (void) sprintf(mib2->errmsg, "get_mib2: getmsg(data): %s",
                        strerror(errno));
         return(GET_MIB2_ERR_GETMSGD);
     }
     if (rc) {
-        (void) sprintf(ErrMsg,
+        (void) sprintf(mib2->errmsg,
                        "get_mib2: getmsg(data): rc=%d maxlen=%d len=%d: %s",
                        rc, d.maxlen, d.len, strerror(errno));
         return(GET_MIB2_ERR_GETMSGD);
@@ -265,7 +255,7 @@ get_mib2(struct opthdr **opt,
      * Compose a successful return.
      */
     *opt = o;
-    *data = Db;
+    *data = mib2->db;
     *datalen = d.len;
     return(GET_MIB2_OK);
 }
@@ -282,46 +272,46 @@ get_mib2(struct opthdr **opt,
  */
 
 int
-open_mib2(char **errmsg)
+open_mib2(solaris_mib2_t *mib2, char **errmsg)
 {
-    *errmsg = ErrMsg;
+    *errmsg = mib2->errmsg;
     /*
      * It's an error if the stream device is already open.
      */
-    if (Sd >= 0) {
-        (void) strcpy(ErrMsg, "open_mib2: MIB2 access already open");
+    if (mib2->sd >= 0) {
+        (void) strcpy(mib2->errmsg, "open_mib2: MIB2 access already open");
         return(GET_MIB2_ERR_OPEN);
     }
     /*
      * Open the ARP stream device, push TCP and UDP on it.
      */
-    if ((Sd = open(GET_MIB2_ARPDEV, O_RDWR, 0600)) < 0) {
-        (void) sprintf(ErrMsg, "open_mib2: %s: %s", GET_MIB2_ARPDEV,
+    if ((mib2->sd = open(GET_MIB2_ARPDEV, O_RDWR, 0600)) < 0) {
+        (void) sprintf(mib2->errmsg, "open_mib2: %s: %s", GET_MIB2_ARPDEV,
                        strerror(errno));
         return(GET_MIB2_ERR_ARPOPEN);
     }
-    if (ioctl(Sd, I_PUSH, GET_MIB2_TCPSTREAM) == -1) {
-        (void) sprintf(ErrMsg, "open_mib2: push %s: %s",
+    if (ioctl(mib2->sd, I_PUSH, GET_MIB2_TCPSTREAM) == -1) {
+        (void) sprintf(mib2->errmsg, "open_mib2: push %s: %s",
                        GET_MIB2_TCPSTREAM, strerror(errno));
         return(GET_MIB2_ERR_TCPPUSH);
     }
-    if (ioctl(Sd, I_PUSH, GET_MIB2_UDPSTREAM) == -1) {
-        (void) sprintf(ErrMsg, "open_mib2: push %s: %s",
+    if (ioctl(mib2->sd, I_PUSH, GET_MIB2_UDPSTREAM) == -1) {
+        (void) sprintf(mib2->errmsg, "open_mib2: push %s: %s",
                        GET_MIB2_UDPSTREAM, strerror(errno));
         return(GET_MIB2_ERR_UDPPUSH);
     }
     /*
      * Allocate a stream message buffer.
      */
-    Smbl = sizeof(struct opthdr) + sizeof(struct T_optmgmt_req);
-    if (Smbl < (sizeof (struct opthdr) + sizeof(struct T_optmgmt_ack))) {
-        Smbl = sizeof (struct opthdr) + sizeof(struct T_optmgmt_ack);
+    mib2->smb_len = sizeof(struct opthdr) + sizeof(struct T_optmgmt_req);
+    if (mib2->smb_len < (sizeof (struct opthdr) + sizeof(struct T_optmgmt_ack))) {
+        mib2->smb_len = sizeof (struct opthdr) + sizeof(struct T_optmgmt_ack);
     }
-    if (Smbl < sizeof(struct T_error_ack)) {
-        Smbl = sizeof(struct T_error_ack);
+    if (mib2->smb_len < sizeof(struct T_error_ack)) {
+        mib2->smb_len = sizeof(struct T_error_ack);
     }
-    if ((Smb = (char *)malloc(Smbl)) == NULL) {
-        (void) strcpy(ErrMsg,
+    if ((mib2->smb = (char *)malloc(mib2->smb_len)) == NULL) {
+        (void) strcpy(mib2->errmsg,
                       "open_mib2: no space for stream message buffer");
         return(GET_MIB2_ERR_NOSPC);
     }
