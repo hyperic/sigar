@@ -889,7 +889,7 @@ int sigar_cpu_info_list_get(sigar_t *sigar,
 
     size = sizeof(value);
     if (!sysctlbyname(CTL_HW_FREQ, &value, &size, NULL, 0)) {
-        mhz = value;
+        mhz = (int)(value / 1000000);
     }
     else {
         mhz = SIGAR_FIELD_NOTIMPL;
