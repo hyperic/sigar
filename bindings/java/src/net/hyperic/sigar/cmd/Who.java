@@ -1,6 +1,7 @@
 package net.hyperic.sigar.cmd;
 
 import java.util.Date;
+import java.text.SimpleDateFormat;
 
 import net.hyperic.sigar.Sigar;
 import net.hyperic.sigar.SigarException;
@@ -19,12 +20,17 @@ public class Who extends SigarCommandBase {
         return "Show who is logged on";
     }
 
+    private String getTime(long time) {
+        String fmt = "MMM dd HH:mm";
+        return new SimpleDateFormat(fmt).format(new Date(time));
+    }
+
     public void output(String[] args) throws SigarException {
         net.hyperic.sigar.Who[] who = this.sigar.getWhoList();
         for (int i=0; i<who.length; i++) {
             println(who[i].getUser() + "\t" +
                     who[i].getDevice() + "\t" +
-                    new Date(who[i].getTime() * 1000) + "\t" +
+                    getTime(who[i].getTime() * 1000) + "\t" +
                     who[i].getHost());
         }
     }
