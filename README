@@ -21,9 +21,9 @@ The following platforms are currently supported:
 
 - Win32 (NT 4.0 sp6, 2000 Pro/Server, 2003 Server, XP)
 
-- Solaris (2.6, 7, 8, 9)
+- Solaris (2.6, 7, 8, 9, 10)
 
-- Solaris x86 (8, 9)
+- Solaris x86 (8, 9, 10)
 
 - HP/UX (11)
 
