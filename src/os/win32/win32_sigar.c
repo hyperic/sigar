@@ -122,12 +122,9 @@ static PERF_OBJECT_TYPE *get_perf_object(sigar_t *sigar, char *counter_key,
      * confucius say what the fuck.
      */
     if (object->NumInstances == PERF_NO_INSTANCES) {
-        bytes =
-            (block->TotalByteLength -
-             block->HeaderLength -
-             object->TotalByteLength);
+        int i;
 
-        for (; bytes > 0; bytes -= object->TotalByteLength) {
+        for (i=0; i<block->NumObjectTypes; i++) {
             if (object->NumInstances != PERF_NO_INSTANCES) {
                 return object;
             }
