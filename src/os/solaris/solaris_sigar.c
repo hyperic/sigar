@@ -997,10 +997,13 @@ int sigar_cpu_infos_get(sigar_t *sigar,
         if (strEQ(info->model, "i386")) {
             /* XXX assuming Intel on x86 */
             SIGAR_SSTRCPY(info->vendor, "Intel");
+            SIGAR_SSTRCPY(info->model, "x86");
         }
         else {
             /* sparc */
-            SIGAR_SSTRCPY(info->vendor, "Sun Microsystems");
+            SIGAR_SSTRCPY(info->vendor, "Sun");
+            /* s/sparc/Sparc/ */
+            info->model[0] = toupper(info->model[0]);
         }
 
         info->mhz = stats.pi_clock;
@@ -1357,7 +1360,4 @@ int sigar_net_interface_stat_get(sigar_t *sigar, const char *name,
 
 int sigar_net_connection_list_get(sigar_t *sigar,
                                   sigar_net_connection_list_t *connlist,
-                                  int flags)
-{
-    return SIGAR_ENOTIMPL;
-}
+                                  int flags
