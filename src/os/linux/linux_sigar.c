@@ -1366,7 +1366,11 @@ static unsigned int hex2int(const char *x)
     return j;
 }
 
+#ifdef __LP64__
+#define ROUTE_FMT "%16s %128s %128s %X %ld %ld %ld %128s %ld %ld %ld\n"
+#else
 #define ROUTE_FMT "%16s %128s %128s %X %lld %lld %lld %128s %lld %lld %lld\n"
+#endif
 #define RTF_UP 0x0001
 
 int sigar_net_route_list_get(sigar_t *sigar,
