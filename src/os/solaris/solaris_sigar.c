@@ -782,8 +782,13 @@ int sigar_proc_exe_get(sigar_t *sigar, sigar_pid_t pid,
 
     procexe->name[0] = '\0';
 
+    /* Pgrab would return G_SELF error */
     if (pid == sigar_pid_get(sigar)) {
-        /*XXX*/
+        /* XXX: dunno if this will always work? */
+        char *exe = getenv("_");
+        if (exe) {
+            SIGAR_STRNCPY(procexe->name, exe, sizeof(procexe->name));
+        }
     }
     else {
         status = sigar_pgrab(sigar, pid, SIGAR_FUNC, &phandle);
