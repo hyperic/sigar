@@ -449,7 +449,18 @@ static int boot_time_v5(int fd, time_t *time)
         }
     } while (data.ut_type != BOOT_TIME);
 
-    *time = data.ut_time;
+    if (data.ut_time != 0) {
+        *time = data.ut_time;
+    }
+    else {
+        /* XXX: dunno wtf is going on here.
+         * this exact code above works as expected
+         * in a standalone program.
+         * sizeof(utmp_v5) is the same if compiled on 4.3
+         * or 5.2, this workaround hack will have todo for now.
+         */
+        *time = data.__time_t_space;
+    }
 
     return SIGAR_OK;
 }
