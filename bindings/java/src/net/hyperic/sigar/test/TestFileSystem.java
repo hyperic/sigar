@@ -31,11 +31,11 @@ public class TestFileSystem extends SigarTestCase {
             assertLengthTrace("TypeName", fs.getTypeName());
             assertLengthTrace("SysTypeName", fs.getSysTypeName());
 
+            FileSystemUsage usage =
+                sigar.getFileSystemUsage(fs.getDirName());
+
             switch (fs.getType()) {
               case FileSystem.TYPE_LOCAL_DISK:
-                FileSystemUsage usage =
-                    sigar.getFileSystemUsage(fs.getDirName());
-
                 assertGtZeroTrace("  Total", usage.getTotal());
                 //possible machines have full filesystems
                 assertGtEqZeroTrace("  Free", usage.getFree());
@@ -43,9 +43,9 @@ public class TestFileSystem extends SigarTestCase {
                 double usePercent = usage.getUsePercent() * 100;
                 traceln("  Used=" + usePercent + "%");
                 assertTrue(usePercent <= 100.0);
+              default:
                 traceln("  DiskReads=" + usage.getDiskReads());
                 traceln("  DiskWrites=" + usage.getDiskWrites());
-                break;
             }
         }
 
