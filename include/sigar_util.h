@@ -80,6 +80,7 @@ struct sigar_cache_entry_t {
 typedef struct {
     sigar_cache_entry_t **entries;
     unsigned int count, size;
+    void (*free_value)(void *ptr);
 } sigar_cache_t;
 
 #endif /* SIGAR_UTIL_H */

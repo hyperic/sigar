@@ -20,6 +20,7 @@ sigar_cache_t *sigar_cache_new(int size)
     table->size = size;
     table->entries = malloc(ENTRIES_SIZE(size));
     memset(table->entries, '\0', ENTRIES_SIZE(size));
+    table->free_value = free;
     return table;
 }
 
@@ -71,7 +72,7 @@ void sigar_cache_destroy(sigar_cache_t *table)
 
         do {
             if (ptr->value) {
-                free(ptr->value);
+                table->free_value(ptr->value);
             }
         } while ((ptr = ptr->next));
         free(entry);
