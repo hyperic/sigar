@@ -4,7 +4,7 @@
 
 <project name="Sigar" default="build" basedir=".">
 
-  <property name="sigar.version" value="1.1.8"/>
+  <property name="sigar.version" value="1.1.9-dev"/>
 
   <property file="${user.home}/.sigar-build.properties"/>
   <property name="project.name" value="sigar"/>
