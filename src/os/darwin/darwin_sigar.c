@@ -794,7 +794,17 @@ int sigar_file_system_usage_get(sigar_t *sigar,
 int sigar_cpu_info_list_get(sigar_t *sigar,
                             sigar_cpu_info_list_t *cpu_infos)
 {
-    int i;
+    int i, mhz;
+    unsigned long long value;
+    size_t size;
+
+    size = sizeof(value);
+    if (!sysctlbyname("hw.cpufrequency", &value, &size, NULL, 0)) {
+        mhz = value;
+    }
+    else {
+        mhz = SIGAR_FIELD_NOTIMPL;
+    }
 
     sigar_cpu_info_list_create(cpu_infos);
 
@@ -808,7 +818,7 @@ int sigar_cpu_info_list_get(sigar_t *sigar,
         SIGAR_SSTRCPY(info->vendor, "Apple");
         SIGAR_SSTRCPY(info->model, "powerpc");
 
-        info->mhz = SIGAR_FIELD_NOTIMPL; /*XXX*/
+        info->mhz = mhz;
         info->cache_size = SIGAR_FIELD_NOTIMPL;
     }
 
