@@ -27,8 +27,12 @@ typedef int (*vminfo_func_t) (void *, int, int);
 
 typedef int (*proc_fd_func_t) (sigar_t *, sigar_pid_t, sigar_proc_fd_t *);
 
+typedef int (*perfstat_cpu_total_func_t)(perfstat_id_t *,
+                                         perfstat_cpu_total_t *,
+                                         int, int);
+
 typedef int (*perfstat_cpu_func_t)(perfstat_id_t *,
-                                   perfstat_cpu_total_t *,
+                                   perfstat_cpu_t *,
                                    int, int);
 
 struct sigar_t {
@@ -40,7 +44,8 @@ struct sigar_t {
     proc_fd_func_t getprocfd;
     struct {
         int avail;
-        perfstat_cpu_func_t cpu_total;
+        perfstat_cpu_func_t cpu;
+        perfstat_cpu_total_func_t cpu_total;
         void *handle;
     } perfstat;
     int pagesize;

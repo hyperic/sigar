@@ -234,7 +234,6 @@ static char *sigar_get_self_path(sigar_t *sigar)
 
 static int sigar_perfstat_init(sigar_t *sigar)
 {
-    perfstat_cpu_func_t pcpu;
     void *handle;
     char libperfstat[SIGAR_PATH_MAX], *path;
     int len;
@@ -264,10 +263,11 @@ static int sigar_perfstat_init(sigar_t *sigar)
         return errno;
     }
 
-    pcpu = (perfstat_cpu_func_t)dlsym(handle,
-                                      "sigar_perfstat_cpu_total");
+    sigar->perfstat.cpu_total =
+        (perfstat_cpu_total_func_t)dlsym(handle,
+                                         "sigar_perfstat_cpu_total");
 
-    if (!pcpu) {
+    if (!sigar->perfstat.cpu_total) {
         if (SIGAR_LOG_IS_DEBUG(sigar)) {
             sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
                              "dlsym(sigar_perfstat_cpu_total) failed: %s",
@@ -280,9 +280,25 @@ static int sigar_perfstat_init(sigar_t *sigar)
         return ENOENT;
     }
 
+    sigar->perfstat.cpu =
+        (perfstat_cpu_func_t)dlsym(handle,
+                                   "sigar_perfstat_cpu");
+
+    if (!sigar->perfstat.cpu) {
+        if (SIGAR_LOG_IS_DEBUG(sigar)) {
+            sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
+                             "dlsym(sigar_perfstat_cpu) failed: %s",
+                             dlerror());
+        }
+
+        dlclose(handle);
+
+        sigar->perfstat.avail = -1;
+        return ENOENT;
+    }
+
     sigar->perfstat.avail = 1;
     sigar->perfstat.handle = handle;
-    sigar->perfstat.cpu_total = pcpu;
 
     return SIGAR_OK;
 }
@@ -540,7 +556,7 @@ int sigar_cpu_get(sigar_t *sigar, sigar_cpu_t *cpu)
  * };
  */
 
-int sigar_cpu_list_get(sigar_t *sigar, sigar_cpu_list_t *cpulist)
+static int sigar_cpu_list_get_kmem(sigar_t *sigar, sigar_cpu_list_t *cpulist)
 {
     int status, i, j;
     int ncpu = _system_configuration.ncpus; /* this can change */
@@ -580,6 +596,59 @@ int sigar_cpu_list_get(sigar_t *sigar, sigar_cpu_list_t *cpulist)
     }
 
     return SIGAR_OK;
+}
+
+static int sigar_cpu_list_get_pstat(sigar_t *sigar, sigar_cpu_list_t *cpulist)
+{
+    perfstat_cpu_t data;
+    int i, ncpu = _system_configuration.ncpus; /* this can change */
+    perfstat_id_t id;
+
+    id.name[0] = '\0';
+
+    sigar_cpu_list_create(cpulist);
+
+    for (i=0; i<ncpu; i++) {
+        sigar_cpu_t *cpu;
+
+        SIGAR_CPU_LIST_GROW(cpulist);
+
+        cpu = &cpulist->data[cpulist->number++];
+
+        if (SIGAR_LOG_IS_DEBUG(sigar)) {
+            sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
+                             "cpu%d perfstat_id='%s'",
+                             i, id.name);
+        }
+
+        if (sigar->perfstat.cpu(&id, &data, sizeof(data), 1)) {
+            cpu->user  = data.user;
+            cpu->nice  = -1; /* N/A */
+            cpu->sys   = data.sys;
+            cpu->idle  = data.idle;
+            cpu->total = cpu->user + cpu->sys + cpu->idle + data.wait;
+        }
+        else {
+            sigar_log_printf(sigar, SIGAR_LOG_ERROR,
+                             "cpu%d perfstat_cpu(%s) failed",
+                             i, id.name);
+            SIGAR_ZERO(cpu);
+        }
+    }
+
+    return SIGAR_OK;
+}
+
+int sigar_cpu_list_get(sigar_t *sigar, sigar_cpu_list_t *cpulist)
+{
+    if (sigar_perfstat_init(sigar) == SIGAR_OK) {
+        sigar_log(sigar, SIGAR_LOG_DEBUG, "[cpu_list] using libperfstat");
+        return sigar_cpu_list_get_pstat(sigar, cpulist);
+    }
+    else {
+        sigar_log(sigar, SIGAR_LOG_DEBUG, "[cpu_list] using /dev/kmem");
+        return sigar_cpu_list_get_kmem(sigar, cpulist);
+    }
 }
 
 static int boot_time_v4(int fd, time_t *time)
