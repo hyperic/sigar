@@ -1,3 +1,7 @@
+2005-02-20  Doug MacEachern  <dougm@hyperic.net>
+
+        * Add NfsFileSystem class w/ ping method
+
 2005-02-16  Doug MacEachern  <dougm@hyperic.net>
 
         * Add FreeBSD support
