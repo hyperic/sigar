@@ -141,7 +141,13 @@ public class SigarInvoker {
             if (typeClass.isArray()) {
                 this.typeIsArray = true;
                 if (argIsArrayIdx) {
-                    this.arrayIdx = Integer.parseInt((String)args[0]);
+                    try {
+                        this.arrayIdx = Integer.parseInt((String)args[0]);
+                    } catch (NumberFormatException ne) {
+                        String msg = getType() + ": '" +
+                            args[0] + "' is not a number";
+                        throw new SigarException(msg);
+                    }
                     this.hasArrayIdx = true;
                 }
                 Class componentClass = typeClass.getComponentType();
@@ -186,6 +192,10 @@ public class SigarInvoker {
         return invoke(args, attr);
     }
 
+    private String aobMsg(int idx, int length) {
+        return "Array index " + idx + " out of bounds " + length;
+    }
+
     public Object invoke(Object[] args, String attr)
         throws SigarException {
 
@@ -219,7 +229,12 @@ public class SigarInvoker {
          */
         if (this.typeIsArray) {
             if (this.hasArrayIdx) {
-                typeObject = ((Object[])typeObject)[this.arrayIdx];
+                Object[] array = (Object[])typeObject;
+                if (this.arrayIdx >= array.length) {
+                    throw new SigarException(aobMsg(this.arrayIdx,
+                                                    array.length));
+                }
+                typeObject = array[this.arrayIdx];
             }
             else {
                 int idx = getAttributeIndex(attr);
@@ -228,11 +243,26 @@ public class SigarInvoker {
                 }
                 switch (this.typeArrayType) {
                   case ARRAY_TYPE_DOUBLE:
-                    return new Double(((double[])typeObject)[idx]);
+                    double[] d_array = (double[])typeObject;
+                    if (idx >= d_array.length) {
+                        throw new SigarException(aobMsg(idx,
+                                                        d_array.length));
+                    }
+                    return new Double(d_array[idx]);
                   case ARRAY_TYPE_LONG:
-                    return new Long(((long[])typeObject)[idx]);
+                    long[] l_array = (long[])typeObject;
+                    if (idx >= l_array.length) {
+                        throw new SigarException(aobMsg(idx,
+                                                        l_array.length));
+                    }
+                    return new Long(l_array[idx]);
                   case ARRAY_TYPE_OBJECT:
-                    return ((Object[])typeObject)[idx];
+                    Object[] o_array = (Object[])typeObject;
+                    if (idx >= o_array.length) {
+                        throw new SigarException(aobMsg(idx,
+                                                        o_array.length));
+                    }
+                    return o_array[idx];
                 }
             }
         }
