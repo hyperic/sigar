@@ -139,7 +139,7 @@ namespace Hyperic.Sigar {
 
             if (status != Sigar.OK) {
                 Marshal.FreeHGlobal(ptr);
-                throw new ApplicationException("mem_get");
+                throw new SigarException(sigar, status);
             }
 
             //memcpy(ptr, this, sizeof(this))
@@ -167,7 +167,7 @@ namespace Hyperic.Sigar {
 
             if (status != Sigar.OK) {
                 Marshal.FreeHGlobal(ptr);
-                throw new ApplicationException("swap_get");
+                throw new SigarException(sigar, status);
             }
 
             Swap swap = (Swap)Marshal.PtrToStructure(ptr, type);
@@ -197,7 +197,7 @@ namespace Hyperic.Sigar {
 
             if (status != Sigar.OK) {
                 Marshal.FreeHGlobal(ptr);
-                throw new ApplicationException("cpu_get");
+                throw new SigarException(sigar, status);
             }
 
             Cpu cpu = (Cpu)Marshal.PtrToStructure(ptr, type);
@@ -239,7 +239,7 @@ namespace Hyperic.Sigar {
 
             if (status != Sigar.OK) {
                 Marshal.FreeHGlobal(ptr);
-                throw new ApplicationException("cpu_info_list_get");
+                throw new SigarException(sigar, status);
             }
 
             CpuInfoList infosPtr =
@@ -302,7 +302,7 @@ namespace Hyperic.Sigar {
 
             if (status != Sigar.OK) {
                 Marshal.FreeHGlobal(ptr);
-                throw new ApplicationException("sigar_file_system_list_get");
+                throw new SigarException(sigar, status);
             }
 
             FileSystemList fsPtr =
@@ -354,7 +354,7 @@ namespace Hyperic.Sigar {
 
             if (status != Sigar.OK) {
                 Marshal.FreeHGlobal(ptr);
-                throw new ApplicationException("file_system_usage_get");
+                throw new SigarException(sigar, status);
             }
 
             FileSystemUsage fsusage =
@@ -389,7 +389,7 @@ namespace Hyperic.Sigar {
 
             if (status != Sigar.OK) {
                 Marshal.FreeHGlobal(ptr);
-                throw new ApplicationException("sigar_net_interface_list_get");
+                throw new SigarException(sigar, status);
             }
 
             NetInterfaceList ifPtr =
@@ -441,7 +441,7 @@ namespace Hyperic.Sigar {
 
             if (status != Sigar.OK) {
                 Marshal.FreeHGlobal(ptr);
-                throw new ApplicationException("net_interface_config_get");
+                throw new SigarException(sigar, status);
             }
 
             NetInterfaceConfig ifconfig =
@@ -552,7 +552,7 @@ namespace Hyperic.Sigar {
 
             if (status != Sigar.OK) {
                 Marshal.FreeHGlobal(ptr);
-                throw new ApplicationException("net_interface_stat_get");
+                throw new SigarException(sigar, status);
             }
 
             NetInterfaceStat ifstat =
