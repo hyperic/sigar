@@ -845,6 +845,18 @@ int sigar_net_interface_config_get(sigar_t *sigar, const char *name,
 #  define MY_SIOCGIFCONF SIOCGIFCONF
 #endif
 
+#ifdef __osf__
+static int sigar_netif_configured(sigar_t *sigar, char *name)
+{
+    int status;
+    sigar_net_interface_config_t ifconfig;
+
+    status = sigar_net_interface_config_get(sigar, name, &ifconfig);
+
+    return status == SIGAR_OK;
+}
+#endif
+
 int sigar_net_interface_list_get(sigar_t *sigar,
                                  sigar_net_interface_list_t *iflist)
 {
@@ -906,6 +918,13 @@ int sigar_net_interface_list_get(sigar_t *sigar,
              */
             continue;
         }
+#   ifdef __osf__
+        /* weed out "sl0", "tun0" and the like */
+        /* XXX must be a better way to check this */
+        if (!sigar_netif_configured(sigar, ifr->ifr_name)) {
+            continue;
+        }
+#   endif        
 #endif
         iflist->data[iflist->number++] = strdup(ifr->ifr_name);
     }
