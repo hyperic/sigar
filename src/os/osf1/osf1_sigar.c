@@ -8,6 +8,7 @@ int sigar_os_open(sigar_t **sigar)
     *sigar = malloc(sizeof(**sigar));
 
     (*sigar)->pagesize = getpagesize();
+    (*sigar)->boot_time = 0;
 
     return SIGAR_OK;
 }
@@ -81,7 +82,17 @@ int sigar_cpu_list_get(sigar_t *sigar, sigar_cpu_list_t *cpulist)
 int sigar_uptime_get(sigar_t *sigar,
                      sigar_uptime_t *uptime)
 {
-    uptime->uptime   = -1;
+    if (sigar->boot_time == 0) {
+        struct tbl_sysinfo sysinfo;
+    
+        if (table(TBL_SYSINFO, 0, &sysinfo, 1, sizeof(sysinfo)) != 1) {
+            return errno;
+        }
+
+        sigar->boot_time = sysinfo.si_boottime;
+    }
+
+    uptime->uptime = time(NULL) - sigar->boot_time;
 
     return SIGAR_OK;
 }
