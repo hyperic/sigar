@@ -69,13 +69,11 @@ public class Sigar implements SigarProxy {
 
     /**
      * Convenience method to keep a sigar instance alive.
-     * This instance is not thread safe.
+     * This instance is safe to share between threads.
      */
-    //XXX we could make it thread safe by returning a SigarProxy
-    //impl which synchronizes all method calls.
     public static synchronized SigarProxy getInstance() {
         if (instance == null) {
-            instance = new Sigar();
+            instance = new SynchronizedSigar();
         }
         return instance;
     }
