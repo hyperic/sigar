@@ -96,6 +96,26 @@ namespace Hyperic.Sigar {
         }
     }
 
+    public class SigarException : Exception {
+        Sigar sigar;
+        int errno;
+
+        public SigarException(Sigar sigar, int errno) : base () {
+            this.sigar = sigar;
+            this.errno = errno;
+        }
+
+        [DllImport(Sigar.LIBSIGAR)]
+        private static extern string
+        sigar_strerror(IntPtr sigar, int errno);
+
+        public override string Message {
+            get {
+                return sigar_strerror(this.sigar.sigar.Handle, this.errno);
+            }
+        }
+    }
+
     [StructLayout(LayoutKind.Sequential)]
     public struct Mem {
         public readonly ulong Ram;
