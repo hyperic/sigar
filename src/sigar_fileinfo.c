@@ -269,7 +269,7 @@ SIGAR_DECLARE(int) sigar_dir_stat_get(sigar_t *sigar,
         return GetLastError();
     }
 
-    while (FindNextFile(handle, &data)) {
+    do {
         /* skip '.' and '..' */
         if (IS_DOTDIR(data.cFileName)) {
             continue;
@@ -303,7 +303,7 @@ SIGAR_DECLARE(int) sigar_dir_stat_get(sigar_t *sigar,
           default:
             ++dirstats->total;
         }
-    } 
+    } while (FindNextFile(handle, &data));
 
     error = GetLastError();
 
