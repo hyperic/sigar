@@ -62,10 +62,10 @@ public class SigarProcess implements SigarProcessMBean {
     }
 
     public Long getTimeUser() {
-        return getLongValue(procTime, "Utime");
+        return getLongValue(procTime, "User");
     }
 
     public Long getTimeSys() {
-        return getLongValue(procTime, "Stime");
+        return getLongValue(procTime, "Sys");
     }
 }

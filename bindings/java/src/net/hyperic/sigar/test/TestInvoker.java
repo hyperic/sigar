@@ -24,6 +24,9 @@ public class TestInvoker extends SigarTestCase {
         { "sigar:Type=LoadAverage", "2" },
         { "sigar:Type=ProcMem,Arg=$$", "Size" },
         { "sigar:Type=ProcMem,Arg=$$", "Vsize" },
+        { "sigar:Type=ProcTime,Arg=$$", "Sys" },
+        { "sigar:Type=ProcTime,Arg=$$", "User" },
+        //test Utime/Stime backcompat.
         { "sigar:Type=ProcTime,Arg=$$", "Stime" },
         { "sigar:Type=ProcTime,Arg=$$", "Utime" },
         { "sigar:Type=CpuPercList,Arg=0", "Idle" },
@@ -32,7 +35,7 @@ public class TestInvoker extends SigarTestCase {
     private static final String[][] BROKEN_QUERIES = {
         { "sigar:Type=BREAK", "Free" },
         { "sigar:Type=Mem", "BREAK" },
-        { "sigar:Type=ProcTime,Arg=BREAK", "Stime" },
+        { "sigar:Type=ProcTime,Arg=BREAK", "Sys" },
         { "sigar:Type=CpuPercList,Arg=1000", "Idle" },
         { "sigar:Type=CpuPercList,Arg=BREAK", "Idle" },
     };

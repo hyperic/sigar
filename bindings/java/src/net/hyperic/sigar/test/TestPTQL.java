@@ -28,7 +28,7 @@ public class TestPTQL extends SigarTestCase {
         "Cred.Uid.gt=0,Cred.Uid.lt=1000", //range of users
         "Cred.Uid.eq=1003,Cred.Gid.eq=1003", //me
         "CredName.User.eq=dougm", //me
-        "Time.Stime.gt=1000", //cpu hog
+        "Time.Sys.gt=1000", //cpu hog
         "Fd.Total.gt=20", //lots of open files
         "Mem.Size.ge=10000000,Mem.Share.le=1000000", //memory hog
         "State.Name.eq=sshd,Cred.Uid.eq=0",
@@ -60,7 +60,7 @@ public class TestPTQL extends SigarTestCase {
         "State.Name.eq=$2",
         "State.State.eq=read",
         "Args.x.eq=foo",
-        "Time.Stime.gt=x",
+        "Time.Sys.gt=x",
         "Pid.PidFile.ne=pid.file",
         "Pid.Pid.eq=foo",
         "Pid.Service.ne=Eventlog",

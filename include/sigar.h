@@ -209,8 +209,8 @@ sigar_proc_cred_name_get(sigar_t *sigar, sigar_pid_t pid,
 typedef struct {
     sigar_uint64_t
         start_time,
-        utime,
-        stime;
+        user,
+        sys;
 } sigar_proc_time_t;
 
 SIGAR_DECLARE(int) sigar_proc_time_get(sigar_t *sigar, sigar_pid_t pid,

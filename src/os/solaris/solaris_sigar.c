@@ -582,8 +582,8 @@ int sigar_proc_time_get(sigar_t *sigar, sigar_pid_t pid,
     proctime->start_time = usage.pr_create.tv_sec + sigar->boot_time;
     proctime->start_time *= 1000;
     
-    proctime->utime = PRTIME_2SIGAR(usage.pr_utime);
-    proctime->stime = PRTIME_2SIGAR(usage.pr_stime);
+    proctime->user = PRTIME_2SIGAR(usage.pr_utime);
+    proctime->sys  = PRTIME_2SIGAR(usage.pr_stime);
 
     return SIGAR_OK;
 }

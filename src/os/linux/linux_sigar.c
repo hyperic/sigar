@@ -637,8 +637,8 @@ int sigar_proc_time_get(sigar_t *sigar, sigar_pid_t pid,
         return status;
     }
 
-    proctime->utime = pstat->utime;
-    proctime->stime = pstat->stime;
+    proctime->user = pstat->utime;
+    proctime->sys  = pstat->stime;
     proctime->start_time = pstat->start_time;
 
     return SIGAR_OK;

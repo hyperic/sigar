@@ -965,8 +965,8 @@ int sigar_proc_time_get(sigar_t *sigar, sigar_pid_t pid,
 
     proctime->start_time = pinfo->pi_start;
     proctime->start_time *= 1000; /* convert to ms */
-    proctime->utime = pinfo->pi_utime;
-    proctime->stime = pinfo->pi_stime;
+    proctime->user = pinfo->pi_utime;
+    proctime->sys  = pinfo->pi_stime;
 
     return SIGAR_OK;
 }

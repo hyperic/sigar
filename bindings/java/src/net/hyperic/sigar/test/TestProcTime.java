@@ -24,8 +24,8 @@ public class TestProcTime extends SigarTestCase {
         //XXX
         //assertTrue(procTime.getStartTime() < System.currentTimeMillis());
 
-        assertGtEqZeroTrace("Utime", procTime.getUtime());
+        assertGtEqZeroTrace("User", procTime.getUser());
 
-        assertGtEqZeroTrace("Stime", procTime.getStime());
+        assertGtEqZeroTrace("Sys", procTime.getSys());
     }
 }

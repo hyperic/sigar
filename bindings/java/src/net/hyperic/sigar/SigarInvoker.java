@@ -16,6 +16,7 @@ public class SigarInvoker {
 
     private static HashMap attrCache = new HashMap();
     private static HashMap compatTypes = new HashMap();
+    private static HashMap compatAttrs = new HashMap();
 
     static {
         //XXX backwards compat for HQ because metric template
@@ -23,6 +24,8 @@ public class SigarInvoker {
         compatTypes.put("NetIfconfig", "NetInterfaceConfig");
         compatTypes.put("NetIfstat", "NetInterfaceStat");
         compatTypes.put("DirStats", "DirStat");
+        compatAttrs.put("Utime", "User");
+        compatAttrs.put("Stime", "Sys");
     }
 
     //avoid object creation as much as possible
@@ -279,6 +282,10 @@ public class SigarInvoker {
     private Method getAttributeMethod(String attr)
         throws SigarException {
 
+        String alias = (String)compatAttrs.get(attr);
+        if (alias != null) {
+            attr = alias;
+        }
         Method attrMethod;
         Class type = getTypeMethod(null).getReturnType();
 

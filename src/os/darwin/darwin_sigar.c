@@ -420,8 +420,8 @@ static int get_proc_times(sigar_pid_t pid, sigar_proc_time_t *time)
     time_value_add(&utime, &tti.user_time);
     time_value_add(&stime, &tti.system_time);
 
-    time->utime  = utime.seconds;
-    time->stime  = stime.seconds;
+    time->user = utime.seconds;
+    time->sys  = stime.seconds;
 
     return SIGAR_OK;
 }

@@ -19,7 +19,7 @@ public class ProcCpu extends ProcTime {
     private void getValues(Sigar sigar, long pid)
         throws SigarException {
         this.nativeGet(sigar, pid);
-        this.time = this.utime + this.stime;
+        this.time = this.user + this.sys;
     }
 
     static synchronized ProcCpu get(Sigar sigar, long pid)
@@ -69,7 +69,7 @@ public class ProcCpu extends ProcTime {
     }
 
     /**
-     * @return Sum of Utime and Stime.
+     * @return Sum of User and Sys.
      */
     public long getTotal() {
         return this.time;

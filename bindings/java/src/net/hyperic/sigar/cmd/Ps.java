@@ -148,6 +148,12 @@ public class Ps extends SigarCommandBase {
 
             } catch (SigarException e) {}
         }
+        else {
+            try {
+                String[] args = sigar.getProcArgs(pid);
+                name = args[0];
+            } catch (SigarException e) {}
+        }
 
         info.add(name);
 
@@ -159,7 +165,7 @@ public class Ps extends SigarCommandBase {
     }
 
     private static String getCpuTime(ProcTime time) {
-        long t = (time.getUtime() + time.getStime());
+        long t = (time.getUser() + time.getSys());
         return t/60 + ":" + t%60;
     }
 

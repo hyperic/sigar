@@ -269,14 +269,14 @@ my %classes = (
          plat => 'ADHLSW'
       },
       {
-         name => 'utime', type => 'Long',
+         name => 'user', type => 'Long',
          desc => 'Process cpu user time',
-         plat => 'AHLSW'
+         plat => 'ADHLSW'
       },
       {
-         name => 'stime', type => 'Long',
+         name => 'sys', type => 'Long',
          desc => 'Process cpu kernel time',
-         plat => 'AHLSW'
+         plat => 'ADHLSW'
       },
     ],
     ProcState => [
