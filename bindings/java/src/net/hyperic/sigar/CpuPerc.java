@@ -8,16 +8,18 @@ public class CpuPerc {
     private double sys;
     private double nice;
     private double idle;
+    private double wait;
 
     CpuPerc(){ }
 
     static CpuPerc calculate(Cpu oldCpu, Cpu curCpu) {
-        double diffUser, diffSys, diffNice, diffIdle, diffTotal;
+        double diffUser, diffSys, diffNice, diffIdle, diffWait, diffTotal;
 
         diffUser = curCpu.getUser() - oldCpu.getUser();
         diffSys  = curCpu.getSys()  - oldCpu.getSys();
         diffNice = curCpu.getNice() - oldCpu.getNice();
         diffIdle = curCpu.getIdle() - oldCpu.getIdle();
+        diffWait = curCpu.getWait() - oldCpu.getWait();
 
         // Sanity check -- sometimes these values waiver in between
         // whole numbers when Cpu is checked very rapidly
@@ -25,14 +27,16 @@ public class CpuPerc {
         diffSys  = diffSys  < 0 ? 0 : diffSys;
         diffNice = diffNice < 0 ? 0 : diffNice;
         diffIdle = diffIdle < 0 ? 0 : diffIdle;
+        diffWait = diffWait < 0 ? 0 : diffWait;
 
-        diffTotal = diffUser + diffSys + diffNice + diffIdle;
+        diffTotal = diffUser + diffSys + diffNice + diffIdle + diffWait;
 
         CpuPerc perc = new CpuPerc();
         perc.setUser(diffUser / diffTotal);
         perc.setSys(diffSys / diffTotal);
         perc.setNice(diffNice / diffTotal);
         perc.setIdle(diffIdle / diffTotal);
+        perc.setWait(diffWait / diffTotal);
         return perc;
     }
 
@@ -66,6 +70,14 @@ public class CpuPerc {
 
     void setIdle(double idle){
         this.idle = idle;
+    }
+
+    public double getWait(){
+        return this.wait;
+    }
+
+    void setWait(double wait){
+        this.wait = wait;
     }
 
     public double getCombined() {
