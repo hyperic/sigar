@@ -1078,7 +1078,7 @@ int sigar_cpu_info_list_get(sigar_t *sigar,
                             sigar_cpu_info_list_t *cpu_infos)
 {
     FILE *fp;
-    int id;
+    int id, fake_id = -1;
     int cpu_id[36], cpu_ix=0;
     /* in the event that a box has > 36 cpus */
     int cpu_id_max = sizeof(cpu_id)/sizeof(int);
@@ -1093,6 +1093,8 @@ int sigar_cpu_info_list_get(sigar_t *sigar,
     memset(&cpu_id[0], -1, sizeof(cpu_id));
 
     while (get_cpu_info(sigar, &cpu_infos->data[cpu_infos->number], fp, &id)) {
+        fake_id++;
+
         if (id >= 0) {
             int i, fold=0;
             for (i=0; (i<cpu_ix) && (i<cpu_id_max); i++) {
@@ -1113,6 +1115,17 @@ int sigar_cpu_info_list_get(sigar_t *sigar,
                 if (cpu_ix < cpu_id_max) {
                     cpu_id[cpu_ix++] = id;
                 }
+            }
+        }
+        else if (strEQ(cpu_infos->data[cpu_infos->number].model, "Xeon")) {
+            /* Redhat AS 2.1 /proc/cpuinfo does not have any of the
+             * attributes we use to detect hyperthreading, in this case
+             * if model Xeon, assume HT enabled.  FUCK IT.
+             */
+            if (fake_id % 2) {
+                sigar->ht_enabled = 1;
+                sigar->lcpu = 2; /* XXX assume 2 for now */
+                continue;
             }
         }
 
