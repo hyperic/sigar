@@ -17,7 +17,7 @@ implemented for Java, Perl and C#.
 
 The following platforms are currently supported:
 
-- Linux (2.2, 2.4 kernels)
+- Linux (2.2, 2.4, 2.6 kernels)
 
 - Win32 (NT 4.0 sp6, 2000 Pro/Server, 2003 Server, XP)
 
