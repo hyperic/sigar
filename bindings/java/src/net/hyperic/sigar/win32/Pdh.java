@@ -36,6 +36,7 @@ public class Pdh extends Win32Bindings {
 
         if (h_query != -1l) {
             pdhCloseQuery(h_query);
+            h_query = -1l;
         }
     }
     
@@ -47,6 +48,7 @@ public class Pdh extends Win32Bindings {
     public double getSingleValue() throws Win32Exception {
         if (h_counter != -1l) {
             pdhRemoveCounter(h_counter);
+            h_counter = -1l;
         }
 
         h_counter = pdhAddCounter(h_query, getCounterPath());
