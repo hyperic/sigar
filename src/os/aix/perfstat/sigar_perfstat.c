@@ -1,4 +1,5 @@
 #include <libperfstat.h>
+#include <pthread.h>
 
 /*
  * ibm docs say:
@@ -24,4 +25,13 @@ int sigar_perfstat_pagingspace(perfstat_id_t *id,
                                int num)
 {
     return perfstat_pagingspace(id, pagingspace, size, num);
+}
+
+/*
+ * not a perfstat function, but from libpthreads.a
+ * requires the same tricks to link on 4.3 and run on 5.2
+ */ 
+int sigar_thread_rusage(struct rusage *usage, int mode)
+{
+    return pthread_getrusage_np(pthread_self(), usage, mode);
 }
