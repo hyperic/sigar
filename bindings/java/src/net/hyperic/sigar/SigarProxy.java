@@ -35,6 +35,8 @@ public interface SigarProxy {
 
     public ProcMem getProcMem(String pid) throws SigarException;
 
+    public ProcMem getMultiProcMem(String query) throws SigarException;
+
     public ProcState getProcState(long pid) throws SigarException;
 
     public ProcState getProcState(String pid) throws SigarException;

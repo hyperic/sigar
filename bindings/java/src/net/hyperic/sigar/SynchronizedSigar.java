@@ -131,6 +131,12 @@ public class SynchronizedSigar implements SigarProxy {
         return this.sigar.getMultiProcCpu(query);
     }
 
+    public ProcMem getMultiProcMem(String query)
+        throws SigarException
+    {
+        return this.sigar.getMultiProcMem(query);
+    }
+
     public synchronized ProcCred getProcCred(long pid)
         throws SigarException
     {

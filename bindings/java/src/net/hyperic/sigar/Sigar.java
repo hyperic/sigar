@@ -279,6 +279,10 @@ public class Sigar implements SigarProxy {
         return getProcMem(convertPid(pid));
     }
 
+    public ProcMem getMultiProcMem(String query) throws SigarException {
+        return MultiProcMem.get(this, query);
+    }
+
     /**
      * Get process state info.
      * @param pid The process id.
