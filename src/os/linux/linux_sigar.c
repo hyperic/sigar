@@ -1229,8 +1229,7 @@ int sigar_file_system_usage_get(sigar_t *sigar,
         break;
     }
 
-    fsusage->disk_reads = fsusage->disk_writes =
-        SIGAR_FIELD_NOTIMPL;
+    SIGAR_DISK_STATS_NOTIMPL(fsusage);
 
     return SIGAR_OK;
 }

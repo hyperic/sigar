@@ -1457,8 +1457,7 @@ sigar_file_system_usage_get(sigar_t *sigar,
 
     status = get_disk_metrics(sigar, dirname, fsusage);
     if (status != SIGAR_OK) {
-        fsusage->disk_reads = fsusage->disk_writes =
-            SIGAR_FIELD_NOTIMPL;
+        SIGAR_DISK_STATS_NOTIMPL(fsusage);
     }
 
     return SIGAR_OK;

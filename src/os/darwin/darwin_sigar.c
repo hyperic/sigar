@@ -604,6 +604,8 @@ int sigar_file_system_usage_get(sigar_t *sigar,
     fsusage->free_files = buf.f_files;
     fsusage->use_percent = sigar_file_system_usage_calc_used(sigar, fsusage);
 
+    SIGAR_DISK_STATS_NOTIMPL(fsusage);
+
     return SIGAR_OK;
 }
 

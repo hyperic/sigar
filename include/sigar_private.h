@@ -193,4 +193,7 @@ int sigar_group_name_get(sigar_t *sigar, int gid, char *buf, int buflen);
         return SIGAR_OK; \
     }
 
+#define SIGAR_DISK_STATS_NOTIMPL(fsusage) \
+    fsusage->disk_reads = fsusage->disk_writes = SIGAR_FIELD_NOTIMPL
+
 #endif
