@@ -251,6 +251,14 @@
      </fileset>
    </copy>
 
+   <mkdir dir="${dist}/bindings/csharp"/>
+   <copy toDir="${dist}/bindings/csharp" overwrite="true">
+     <fileset dir="../dotnet">
+       <include name="default.build"/>
+       <include name="src/Sigar.cs"/>
+     </fileset>
+   </copy>
+
    <!-- docs -->
    <mkdir dir="${dist}/docs"/>
    <copy toDir="${dist}/docs" overwrite="true">
