@@ -488,6 +488,7 @@ typedef struct {
     sigar_uid_t uid;
     unsigned long inode;
     int type;
+    int state;
 } sigar_net_connection_t;
 
 typedef struct {
