@@ -672,7 +672,7 @@ int sigar_proc_args_get(sigar_t *sigar, sigar_pid_t pid,
 {
     /* XXX if buffer is not large enough args are truncated */
     char buffer[8192], *ptr;
-    struct procinfo pinfo;
+    struct procsinfo pinfo;
 
     pinfo.pi_pid = pid;
 
@@ -706,7 +706,7 @@ int sigar_proc_env_get(sigar_t *sigar, sigar_pid_t pid,
 {
     /* XXX if buffer is not large enough args are truncated */
     char buffer[8192], *ptr;
-    struct procinfo pinfo;
+    struct procsinfo pinfo;
 
     pinfo.pi_pid = pid;
 
@@ -757,7 +757,7 @@ static int V5_sigar_proc_fd_get(sigar_t *sigar, sigar_pid_t pid,
                                 sigar_proc_fd_t *procfd)
 {
     int i;
-    struct procinfo pinfo;
+    struct procsinfo pinfo;
     struct user_v5 uinfo; /* V5 */
 
     procfd->total = 0;
@@ -785,7 +785,7 @@ static int V4_sigar_proc_fd_get(sigar_t *sigar, sigar_pid_t pid,
                                 sigar_proc_fd_t *procfd)
 {
     int i;
-    struct procinfo pinfo;
+    struct procsinfo pinfo;
     struct user uinfo; /* V4 */
 
     procfd->total = 0;
