@@ -7,6 +7,8 @@ int sigar_os_open(sigar_t **sigar)
 {
     *sigar = malloc(sizeof(**sigar));
 
+    (*sigar)->pagesize = getpagesize();
+
     return SIGAR_OK;
 }
 
@@ -45,9 +47,16 @@ int sigar_mem_get(sigar_t *sigar, sigar_mem_t *mem)
 
 int sigar_swap_get(sigar_t *sigar, sigar_swap_t *swap)
 {
-    swap->total  = -1;
-    swap->used   = -1;
-    swap->free   = -1;
+    struct tbl_swapinfo info;
+   
+    table(TBL_SWAPINFO, -1, &info, 1, sizeof(info));
+
+    swap->total  = info.size;
+    swap->free   = info.free;
+    swap->total *= sigar->pagesize;
+    swap->free  *= sigar->pagesize;
+
+    swap->used   = swap->total - swap->free;
 
     return SIGAR_OK;
 }
