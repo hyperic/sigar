@@ -73,6 +73,10 @@
 
 #ifndef DARWIN
 
+#define PROCFS_STATUS(status) \
+    ((((status) != SIGAR_OK) && !sigar->proc_mounted) ? \
+     SIGAR_EPROC_NOENT : status)
+
 static int get_koffsets(sigar_t *sigar)
 {
     int i;
@@ -642,7 +646,7 @@ int sigar_proc_time_get(sigar_t *sigar, sigar_pid_t pid,
     int status = SIGAR_PROC_FILE2STR(buffer, pid, "/status");
 
     if (status != SIGAR_OK) {
-        return status;
+        return PROCFS_STATUS(status);
     }
 
     ptr = sigar_skip_multiple_token(ptr, 7);
@@ -699,10 +703,7 @@ int sigar_proc_args_get(sigar_t *sigar, sigar_pid_t pid,
 #ifdef DARWIN
     return SIGAR_ENOTIMPL;
 #else
-    if (!sigar->proc_mounted) {
-        return SIGAR_EPROC_NOENT;
-    }
-    return sigar_procfs_args_get(sigar, pid, procargs);
+    return PROCFS_STATUS(sigar_procfs_args_get(sigar, pid, procargs));
 #endif
 }
 
