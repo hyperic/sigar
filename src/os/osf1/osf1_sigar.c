@@ -9,6 +9,7 @@ int sigar_os_open(sigar_t **sigar)
 
     (*sigar)->pagesize = getpagesize();
     (*sigar)->boot_time = 0;
+    (*sigar)->mhz = 0;
 
     return SIGAR_OK;
 }
@@ -262,13 +263,23 @@ int sigar_cpu_info_list_get(sigar_t *sigar,
 {
     sigar_cpu_info_t *info;
 
+    if (sigar->mhz == 0) {
+        struct tbl_sysinfo sysinfo;
+    
+        if (table(TBL_SYSINFO, 0, &sysinfo, 1, sizeof(sysinfo)) != 1) {
+            return errno;
+        }
+
+        sigar->mhz = sysinfo.si_hz;
+    }
+
     sigar_cpu_info_list_create(cpu_infos);
 
     info = &cpu_infos->data[cpu_infos->number++];
 
-    SIGAR_SSTRCPY(info->vendor, "vendor");
-    SIGAR_SSTRCPY(info->model, "model");
-    info->mhz = -1;
+    SIGAR_SSTRCPY(info->vendor, "DEC");
+    SIGAR_SSTRCPY(info->model, "alpha");
+    info->mhz = sigar->mhz;
     info->cache_size = -1;
 
     return SIGAR_OK;

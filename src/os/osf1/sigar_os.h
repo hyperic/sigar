@@ -17,6 +17,7 @@
 struct sigar_t {
     SIGAR_T_BASE;
     int pagesize;
+    int mhz;
 };
 
 #endif /* SIGAR_OS_H */
