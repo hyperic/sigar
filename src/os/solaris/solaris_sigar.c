@@ -437,7 +437,7 @@ static int sigar_init_libproc(sigar_t *sigar)
     CHECK_PSYM(pgrab);
     CHECK_PSYM(pfree);
     CHECK_PSYM(pobjname);
-    CHECK_PSYM(pdirname);
+    /* CHECK_PSYM(pdirname); not in solaris 10 */
 
     return SIGAR_OK;
 }
@@ -818,7 +818,13 @@ int sigar_proc_exe_get(sigar_t *sigar, sigar_pid_t pid,
     if (procexe->name[0] == '\0') {
         /*XXX*/
     }
-    
+
+    if (!sigar->pdirname) {
+        /* XXX not in solaris 10 */
+        procexe->cwd[0] = procexe->root[0] = '\0';
+        return SIGAR_OK;
+    }
+
     (void)SIGAR_PROC_FILENAME(buffer, pid, "/cwd");
 
     if (!sigar->pdirname(buffer, procexe->cwd, sizeof(procexe->cwd))) {
