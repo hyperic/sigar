@@ -1008,19 +1008,32 @@ SIGAR_DECLARE(int) sigar_fqdn_get(sigar_t *sigar, char *name, int namelen)
 #endif
 
     if (gethostname(name, namelen - 1) != 0) {
-        return ENOENT;
+        sigar_log_printf(sigar, SIGAR_LOG_ERROR,
+                         "[%s] gethostname failed: %s",
+                         SIGAR_FUNC, sigar_strerror(sigar, errno));
+        return errno;
     }
 
     /* XXX use _r versions of these functions. */
     if (!(p = gethostbyname(name))) {
+
+        if (SIGAR_LOG_IS_DEBUG(sigar)) {
+            sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
+                             "[%s] gethostbyname(%s) failed: %s",
+                             SIGAR_FUNC, name, sigar_strerror(sigar, errno));
+        }
+
         if (!strchr(name, '.')) {
             fqdn_ip_get(sigar, name);
         }
+
         return SIGAR_OK;
     }
 
     if (strchr(p->h_name, '.')) {
         FQDN_SET(p->h_name);
+        sigar_log(sigar, SIGAR_LOG_DEBUG,
+                  "FQDN resolved using gethostbyname.h_name");
         return SIGAR_OK;
     }
 
@@ -1030,6 +1043,10 @@ SIGAR_DECLARE(int) sigar_fqdn_get(sigar_t *sigar, char *name, int namelen)
         for (i=0; p->h_aliases[i]; i++) {
             if (H_ALIAS_MATCH(p->h_aliases[i], p->h_name)) {
                 FQDN_SET(p->h_aliases[i]);
+
+                sigar_log(sigar, SIGAR_LOG_DEBUG,
+                          "FQDN resolved using gethostbyname.h_aliases");
+
                 return SIGAR_OK;
             }
         }
@@ -1046,12 +1063,21 @@ SIGAR_DECLARE(int) sigar_fqdn_get(sigar_t *sigar, char *name, int namelen)
             
             if (strchr(q->h_name, '.')) {
                 FQDN_SET(q->h_name);
+
+                sigar_log(sigar, SIGAR_LOG_DEBUG,
+                          "FQDN resolved using gethostbyaddr.h_name");
+
                 return SIGAR_OK;
             }
             else {
                 for (j=0; q->h_aliases[j]; j++) {
                     if (H_ALIAS_MATCH(q->h_aliases[j], q->h_name)) {
                         FQDN_SET(q->h_aliases[j]);
+
+                        sigar_log(sigar, SIGAR_LOG_DEBUG,
+                                  "FQDN resolved using "
+                                  "gethostbyaddr.h_aliases");
+
                         return SIGAR_OK;
                     }
                 }
@@ -1072,6 +1098,9 @@ SIGAR_DECLARE(int) sigar_fqdn_get(sigar_t *sigar, char *name, int namelen)
         *ptr++ = '.';
         namelen -= (len+1);
         SIGAR_STRNCPY(ptr, domain, namelen);
+
+        sigar_log(sigar, SIGAR_LOG_DEBUG,
+                  "FQDN resolved using getdomainname");
     }
 #endif
 
