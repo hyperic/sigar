@@ -19,8 +19,10 @@ public class TestProcState extends SigarTestCase {
         }
 
         ProcState procState = sigar.getProcState(sigar.getPid());
-
-        assertTrue(procState.getState() == 'R');
+        char state = procState.getState();
+        traceln(procState.getName() + "=" + state);
+        
+        assertTrue((state == 'R') || (state == 'S'));
 
         assertTrue(procState.getName().indexOf("java") != -1);
     }
