@@ -1519,11 +1519,11 @@ static int create_diskmap_v4(sigar_t *sigar)
                 continue;
             }
             retval = stat(ptr, &sb);
-            ent = sigar_cache_get(sigar->diskmap, FSDEV_ID(sb));
             if (retval == 0) {
                 aix_diskio_t *diskio = malloc(sizeof(*diskio));
                 diskio->name = strdup(disk);
                 diskio->addr = -1;
+                ent = sigar_cache_get(sigar->diskmap, FSDEV_ID(sb));
                 ent->value = diskio;
             }
         }
@@ -1583,12 +1583,12 @@ static int create_diskmap_v5(sigar_t *sigar)
 
             if ((attr = getattr(ptr->name, "label", 0, &num))) {
                 retval = stat(attr->value, &sb);
-                ent = sigar_cache_get(sigar->diskmap, FSDEV_ID(sb));
 
                 if (retval == 0) {
                     aix_diskio_t *diskio = malloc(sizeof(*diskio));
                     diskio->name = strdup(disk[i].name);
                     diskio->addr = -1;
+                    ent = sigar_cache_get(sigar->diskmap, FSDEV_ID(sb));
                     ent->value = diskio;
                 }
 
