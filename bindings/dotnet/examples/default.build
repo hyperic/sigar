@@ -16,10 +16,10 @@
   <target name="build-exe">
     <csc target="exe" output="${build.dir}/${name}.exe" debug="${debug}">
       <sources>
-        <includes name="${name}.cs"/>
+        <include name="${name}.cs"/>
       </sources>
       <references>
-        <includes name="${sigarsharp}"/>
+        <include name="${sigarsharp}"/>
       </references>
     </csc>
 

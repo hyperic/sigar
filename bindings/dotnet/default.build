@@ -28,7 +28,7 @@
          unsafe="true"
          output="${sigarsharp}">
       <sources>
-        <includes name="src/Sigar.cs"/>
+        <include name="src/Sigar.cs"/>
       </sources>
     </csc>
   </target>
