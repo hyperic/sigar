@@ -6,8 +6,11 @@ package net.hyperic.sigar;
  */
 public class SigarNotImplementedException extends SigarException {
 
+    private static final String msg = 
+        "This method has not been implemented on this platform";
+
     public static final SigarNotImplementedException INSTANCE =
-        new SigarNotImplementedException();
+        new SigarNotImplementedException(msg);
 
     public SigarNotImplementedException () { super(); }
 
