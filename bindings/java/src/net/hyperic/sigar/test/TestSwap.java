@@ -14,10 +14,14 @@ public class TestSwap extends SigarTestCase {
 
         Swap swap = sigar.getSwap();
 
-        assertTrue(swap.getTotal() >= 0);
+        assertGtEqZeroTrace("Total", swap.getTotal());
 
-        assertTrue(swap.getUsed() >= 0);
+        assertGtEqZeroTrace("Used", swap.getUsed());
 
-        assertTrue(swap.getFree() >= 0);
+        assertGtEqZeroTrace("Free", swap.getFree());
+
+        assertEqualsTrace("Total-Used==Free",
+                          swap.getTotal() - swap.getUsed(),
+                          swap.getFree());
     }
 }
