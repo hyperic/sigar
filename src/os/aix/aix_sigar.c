@@ -16,6 +16,7 @@
 #include <sys/mntctl.h>
 #include <sys/stat.h>
 #include <sys/user.h>
+#include <sys/utsname.h>
 #include <sys/vmount.h>
 
 #include <sys/socket.h>
@@ -88,6 +89,7 @@ int sigar_os_open(sigar_t **sigar)
     void *dlhandle;
     int kmem = -1;
     vminfo_func_t vminfo = NULL;
+    struct utsname name;
 
     if ((dlhandle = dlopen("/unix", RTLD_NOW))) {
         vminfo = (vminfo_func_t)dlsym(dlhandle, "vmgetinfo");
@@ -127,6 +129,10 @@ int sigar_os_open(sigar_t **sigar)
     (*sigar)->model[0] = '\0';
 
     (*sigar)->self_path[0] = '\0';
+
+    uname(&name);
+
+    (*sigar)->aix_version = atoi(name.version);
 
     return SIGAR_OK;
 }
@@ -448,7 +454,7 @@ static int boot_time_v5(int fd, time_t *time)
     return SIGAR_OK;
 }
 
-static int boot_time(time_t *time)
+static int boot_time(sigar_t *sigar, time_t *time)
 {
     struct utmp_v5 data_v5;
     int utmp, status;
@@ -457,8 +463,10 @@ static int boot_time(time_t *time)
         return errno;
     }
 
-    if ((status = boot_time_v4(utmp, time)) != SIGAR_OK) {
-        lseek(utmp, 0, SEEK_SET);
+    if (sigar->aix_version == 4) {
+        status = boot_time_v4(utmp, time);
+    }
+    else {
         status = boot_time_v5(utmp, time);
     }
 
@@ -474,7 +482,7 @@ int sigar_uptime_get(sigar_t *sigar,
         int status;
         time_t time;
 
-        if ((status = boot_time(&time)) != SIGAR_OK) {
+        if ((status = boot_time(sigar, &time)) != SIGAR_OK) {
             return status;
         }
 
