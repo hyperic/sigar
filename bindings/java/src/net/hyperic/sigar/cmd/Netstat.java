@@ -125,6 +125,15 @@ public class Netstat extends SigarCommandBase {
         for (int i=0; i<connections.length; i++) {
             NetConnection conn = connections[i];
             String proto = conn.getTypeString();
+            String state;
+
+            if (conn.getType() == NetFlags.CONN_UDP) {
+                state = "";
+            }
+            else {
+                state = conn.getStateString();
+            }
+
             println(proto +
                     "\t" +
                     formatAddress(conn.getLocalAddress()) + ":" +
@@ -132,7 +141,7 @@ public class Netstat extends SigarCommandBase {
                     "\t" +
                     formatAddress(conn.getRemoteAddress()) + ":" +
                     formatPort(proto, conn.getRemotePort()) + "\t" +
-                    conn.getStateString());
+                    state);
         }
     }
 
