@@ -492,6 +492,8 @@ typedef struct {
     unsigned long inode;
     int type;
     int state;
+    unsigned long send_queue;
+    unsigned long receive_queue;
 } sigar_net_connection_t;
 
 typedef struct {
