@@ -608,7 +608,11 @@ int sigar_proc_state_get(sigar_t *sigar, sigar_pid_t pid,
 int sigar_proc_args_get(sigar_t *sigar, sigar_pid_t pid,
                         sigar_proc_args_t *procargs)
 {
+#ifdef DARWIN
     return SIGAR_ENOTIMPL;
+#else
+    return sigar_procfs_args_get(sigar, pid, procargs);
+#endif
 }
 
 int sigar_proc_env_get(sigar_t *sigar, sigar_pid_t pid,
