@@ -11,9 +11,9 @@ public class ProcCpu extends ProcTime {
     private static ProcCpu key = new ProcCpu();
     private static Map ptable = new HashMap();
 
-    private long lastTime = 0;
-    private long pid;
-    private double percent = 0.0;
+    protected long lastTime = 0;
+    protected double percent = 0.0;
+    protected long pid;
 
     private void getValues(Sigar sigar, long pid)
         throws SigarException {
