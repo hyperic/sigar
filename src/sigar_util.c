@@ -440,7 +440,6 @@ SIGAR_DECLARE(int) sigar_nfs_ping(char *host)
     int sock, retval=SIGAR_OK;
     struct timeval timeout, interval;
     unsigned short port = 0;
-    char buffer[1024];
     enum clnt_stat rpc_stat; 
 
     if (get_sockaddr(&addr, host) != SIGAR_OK) {
@@ -454,7 +453,6 @@ SIGAR_DECLARE(int) sigar_nfs_ping(char *host)
     client = clntudp_create(&addr, NFS_PROGRAM, NFS_VERSION,
                             interval, &sock);
     if (!client) {
-        clnt_pcreateerror(buffer);
         return -1;
     }
 
@@ -464,7 +462,6 @@ SIGAR_DECLARE(int) sigar_nfs_ping(char *host)
                          (xdrproc_t)xdr_void, NULL, timeout);
 
     if (rpc_stat != RPC_SUCCESS) {
-        clnt_perror(client, buffer);
         retval = -1;
     }
     clnt_destroy(client);
