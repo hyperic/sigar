@@ -1018,14 +1018,14 @@ int sigar_file_system_usage_get(sigar_t *sigar,
 int sigar_cpu_info_list_get(sigar_t *sigar,
                             sigar_cpu_info_list_t *cpu_infos)
 {
-    int i, mhz;
-    unsigned long long value;
+    int i;
+    unsigned int mhz;
     size_t size;
     char model[128], vendor[128], *ptr;
 
-    size = sizeof(value);
-    if (!sysctlbyname(CTL_HW_FREQ, &value, &size, NULL, 0)) {
-        mhz = (int)(value / 1000000);
+    size = sizeof(mhz);
+    if (!sysctlbyname(CTL_HW_FREQ, &mhz, &size, NULL, 0)) {
+        mhz /= 1000000;
     }
     else {
         mhz = SIGAR_FIELD_NOTIMPL;
