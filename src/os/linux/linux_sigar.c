@@ -995,7 +995,8 @@ static SIGAR_INLINE void cpu_info_strcpy(char *ptr, char *buf, int len)
     }
 }
 
-static int get_cpu_info(sigar_cpu_info_t *info, FILE *fp, int *id)
+static int get_cpu_info(sigar_t *sigar, sigar_cpu_info_t *info,
+                        FILE *fp, int *id)
 {
     char buffer[BUFSIZ], *ptr;
 
@@ -1028,6 +1029,7 @@ static int get_cpu_info(sigar_cpu_info_t *info, FILE *fp, int *id)
           case 'm':
             if (strnEQ(ptr, "model name", 10)) {
                 cpu_info_strcpy(ptr, info->model, sizeof(info->model));
+                sigar_cpu_model_adjust(sigar, info);
             }
             break;
           case 'c':
@@ -1091,7 +1093,7 @@ int sigar_cpu_infos_get(sigar_t *sigar,
     sigar_cpu_infos_create(cpu_infos);
     memset(&cpu_id[0], -1, sizeof(cpu_id));
 
-    while (get_cpu_info(&cpu_infos->data[cpu_infos->number], fp, &id)) {
+    while (get_cpu_info(sigar, &cpu_infos->data[cpu_infos->number], fp, &id)) {
         if (id >= 0) {
             int i, fold=0;
             for (i=0; (i<cpu_ix) && (i<cpu_id_max); i++) {
