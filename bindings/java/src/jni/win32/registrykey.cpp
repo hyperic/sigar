@@ -109,9 +109,13 @@ JNIEXPORT jlong SIGAR_JNI(win32_RegistryKey_RegOpenKey)
 (JNIEnv *env, jclass, jlong hkey, jstring subkey)
 {
     HKEY    hkeyResult = NULL;
-
-    LPCTSTR lpSubkey = (LPCTSTR)env->GetStringChars(subkey, NULL);
+    jsize len = env->GetStringLength(subkey);
+    LPTSTR lpSubkey = (LPTSTR)env->GetStringChars(subkey, NULL);
+    char orig = lpSubkey[len];
+    /* required under IBM/WebSphere 4.0 for certain keys */
+    lpSubkey[len] = '\0';
     RegOpenKey((HKEY)hkey, lpSubkey, &hkeyResult);
+    lpSubkey[len] = orig;
     env->ReleaseStringChars(subkey, (const jchar *)lpSubkey);
 
     return (jlong)hkeyResult;
