@@ -26,7 +26,10 @@ namespace Hyperic.Sigar {
 
         internal const int FS_NAME_LEN = 64;
 
-        internal const string LIBSIGAR = "sigar-x86-winnt.dll";
+        //cp sigar-x86-winnt.dll sigar.dll
+        //ln -s libsigar-x86-linux.so libsigar.so
+        //XXX can we determine the real name at runtime?
+        internal const string LIBSIGAR = "sigar";
 
         internal HandleRef sigar;
 
