@@ -7,6 +7,7 @@
 #undef usr
 #undef sys
 
+#include <errno.h>
 #include <sys/vm.h>
 
 #include <mach.h>

@@ -89,9 +89,25 @@ int sigar_uptime_get(sigar_t *sigar,
 int sigar_loadavg_get(sigar_t *sigar,
                       sigar_loadavg_t *loadavg)
 {
-    loadavg->loadavg[0] = -1;
-    loadavg->loadavg[1] = -1;
-    loadavg->loadavg[2] = -1;
+    int i;
+    struct tbl_loadavg avg;
+
+    if (table(TBL_LOADAVG, 0, &avg, 1, sizeof(avg)) < 0) {
+        return errno;
+    }
+
+    if (avg.tl_lscale) {
+        for (i=0; i<3; i++) {
+            loadavg->loadavg[i] =
+                ((double)avg.tl_avenrun.l[i] / 
+                 (double)avg.tl_lscale);
+        }
+    }
+    else {
+        for (i=0; i<3; i++) {
+            loadavg->loadavg[i] = avg.tl_avenrun.d[i];
+        }
+    }
 
     return SIGAR_OK;
 }
