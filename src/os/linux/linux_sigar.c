@@ -113,7 +113,7 @@ int sigar_os_open(sigar_t **sigar)
     ptr = sigar_skip_token(ptr);
     (*sigar)->boot_time = sigar_strtoul(ptr);
 
-    (*sigar)->ticks = 100; /* HZ */
+    (*sigar)->ticks = sysconf(_SC_CLK_TCK);
 
     (*sigar)->ram = -1;
 
