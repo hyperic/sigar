@@ -43,6 +43,13 @@ Note that this is a BETA release of Sigar.  Hyperic HQ uses Sigar in
 production, however not all of the Sigar functionality is currently
 used by HQ.
 
+Perl and C# interfaces are still a work in progress.
+
+To try the Perl examples:
+% cd bindings/perl
+% perl Makefile.PL && make
+% perl -Mblib ../../examples/perl/ifconfig.pl
+
 Support questions should be posted to the support forum:
 http://www.hyperic.net/forums/index.jsp
 
