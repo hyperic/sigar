@@ -196,9 +196,10 @@ int sigar_mem_get(sigar_t *sigar, sigar_mem_t *mem)
     vm_statistics_data_t vmstat;
     kern_return_t status;
     mach_msg_type_number_t count = sizeof(vmstat) / sizeof(integer_t);
+#endif
     int mib[2];
-    int totmem;
-    size_t len = sizeof(totmem);
+    int value;
+    size_t len = sizeof(value);
 
     mib[0] = CTL_HW;
 
@@ -208,12 +209,12 @@ int sigar_mem_get(sigar_t *sigar, sigar_mem_t *mem)
     }
 
     mib[1] = HW_PHYSMEM;
-    if (sysctl(mib, NMIB(mib), &totmem, &len, NULL, 0) < 0) {
+    if (sysctl(mib, NMIB(mib), &value, &len, NULL, 0) < 0) {
         return errno;
     }
 
-    mem->total = totmem;
-
+    mem->total = value;
+#ifdef DARWIN
     status = host_statistics(sigar->mach_port, HOST_VM_INFO,
                              (host_info_t)&vmstat, &count);
 
@@ -223,6 +224,17 @@ int sigar_mem_get(sigar_t *sigar, sigar_mem_t *mem)
 
     mem->free = vmstat.free_count * sigar->pagesize;
 #else
+    len = sizeof(value);
+    if (sysctlbyname("vm.stats.vm.v_free_count",
+                     &value, &len, NULL, 0) == -1)
+    {
+        mem->free = 0; /*XXX*/
+    }
+    else {
+        mem->free = value * sigar->pagesize;
+    }
+#endif
+    /*
     int status;
     struct vmmeter vmem;
 
@@ -235,7 +247,7 @@ int sigar_mem_get(sigar_t *sigar, sigar_mem_t *mem)
 
     mem->total = vmem.v_page_count * sigar->pagesize;
     mem->free  = vmem.v_free_count * sigar->pagesize;
-#endif
+    */
 
     mem->used = mem->total - mem->free;
     mem->shared = SIGAR_FIELD_NOTIMPL; /*XXX*/
