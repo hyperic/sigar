@@ -180,10 +180,11 @@ int sigar_mem_get(sigar_t *sigar, sigar_mem_t *mem)
         
         mem->shared = KPAGE_SHIFT(kMEMPAGES(KSTAT_MEMPAGES_EXEC));
 
-        mem->buffer = KPAGE_SHIFT(kMEMPAGES(KSTAT_MEMPAGES_VNODE));
-
-        mem->cached = -1; /*XXX*/
+        /*mem->buffer = KPAGE_SHIFT(kMEMPAGES(KSTAT_MEMPAGES_VNODE));*/
     }
+
+    mem->actual_free = mem->free;
+    mem->actual_used = mem->used;
 
     return SIGAR_OK;
 }

@@ -143,8 +143,8 @@ namespace Hyperic.Sigar {
         public readonly ulong Used;
         public readonly ulong Free;
         public readonly ulong Shared;
-        private readonly ulong NA_buffer;
-        private readonly ulong NA_cached;
+        public readonly ulong ActualFree;
+        public readonly ulong ActualUsed;
 
         [DllImport(Sigar.LIBSIGAR)]
         private static extern int

@@ -354,10 +354,10 @@ int sigar_mem_get(sigar_t *sigar, sigar_mem_t *mem)
     mem->total  = PAGESHIFT(vm.memsizepgs); /* lsattr -El sys0 -a realmem */
     mem->free   = PAGESHIFT(vm.numfrb);
     mem->used   = mem->total - mem->free;
+    mem->actual_used = mem->used;
+    mem->actual_free = mem->free;
 
     mem->shared = -1;
-    mem->buffer = -1;
-    mem->cached = -1;
     
     sigar_mem_calc_ram(sigar, mem);
 

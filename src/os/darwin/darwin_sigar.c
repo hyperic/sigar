@@ -124,8 +124,9 @@ int sigar_mem_get(sigar_t *sigar, sigar_mem_t *mem)
 
     mem->used = mem->total - mem->free;
     mem->shared = -1; /*XXX*/
-    mem->buffer = -1;
-    mem->cached = -1;
+
+    mem->actual_free = mem->free;
+    mem->actual_used = mem->used;
 
     return SIGAR_OK;
 }

@@ -33,8 +33,8 @@ int main(int argc, char *argv[]){
             meminfo.buffer / 1024,
             meminfo.cached / 1024);
     fprintf(stdout, "-/+ buffers/cache: %10ld %10d\n",
-            (meminfo.used - meminfo.buffer - meminfo.cached) / 1024,
-            (meminfo.free + meminfo.buffer + meminfo.cached) / 1024);
+            meminfo.actual_used / 1024,
+            meminfo.actual_free / 1024);
     fprintf(stdout, "Swap:   %10ld %10ld %10ld\n",
             swapinfo.total / 1024,
             swapinfo.used / 1024,

@@ -75,8 +75,8 @@ typedef struct {
         used, 
         free,
         shared,
-        buffer,
-        cached;
+        actual_used,
+        actual_free;
 } sigar_mem_t;
 
 SIGAR_DECLARE(int) sigar_mem_get(sigar_t *sigar, sigar_mem_t *mem);

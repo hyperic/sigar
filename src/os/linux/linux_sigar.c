@@ -233,6 +233,7 @@ static SIGAR_INLINE sigar_uint64_t sigar_meminfo(char *buffer,
 
 int sigar_mem_get(sigar_t *sigar, sigar_mem_t *mem)
 {
+    sigar_uint64_t buffer, cached;
     char buffer[BUFSIZ];
 
     int status = sigar_file2str(PROC_MEMINFO,
@@ -244,9 +245,14 @@ int sigar_mem_get(sigar_t *sigar, sigar_mem_t *mem)
 
     mem->total  = sigar_meminfo(buffer, MEMINFO_PARAM("MemTotal"));
     mem->free   = sigar_meminfo(buffer, MEMINFO_PARAM("MemFree"));
-    mem->buffer = sigar_meminfo(buffer, MEMINFO_PARAM("Buffers"));
-    mem->cached = sigar_meminfo(buffer, MEMINFO_PARAM("Cached"));
     mem->used   = mem->total - mem->free;
+
+    buffer = sigar_meminfo(buffer, MEMINFO_PARAM("Buffers"));
+    cached = sigar_meminfo(buffer, MEMINFO_PARAM("Cached"));
+
+    mem->actual_free = mem->free;
+    mem->actual_used = mem->used;
+
     mem->shared = 0; /* XXX where did this go in 2.6?? */
 
     if (get_ram(sigar, mem) != SIGAR_OK) {
