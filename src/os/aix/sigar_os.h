@@ -5,6 +5,7 @@
 #include <errno.h>
 #include <dlfcn.h>
 #include <procinfo.h>
+#include "libperfstat.h"
 
 enum {
     KOFFSET_LOADAVG,
@@ -26,6 +27,10 @@ typedef int (*vminfo_func_t) (void *, int, int);
 
 typedef int (*proc_fd_func_t) (sigar_t *, sigar_pid_t, sigar_proc_fd_t *);
 
+typedef int (*perfstat_cpu_func_t)(perfstat_id_t *,
+                                   perfstat_cpu_total_t *,
+                                   int, int);
+
 struct sigar_t {
     SIGAR_T_BASE;
     int kmem;
@@ -33,6 +38,11 @@ struct sigar_t {
     long koffsets[KOFFSET_MAX];
     vminfo_func_t getvminfo;
     proc_fd_func_t getprocfd;
+    struct {
+        int avail;
+        perfstat_cpu_func_t cpu_total;
+        void *handle;
+    } perfstat;
     int pagesize;
     swaps_t swaps;
     time_t last_getprocs;

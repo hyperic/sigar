@@ -28,8 +28,6 @@
 #include <sys/cfgdb.h>
 #include <cf.h>
 
-#include "libperfstat.h"
-
 #include "user_v5.h"
 #include "utmp_v5.h"
 
@@ -111,6 +109,7 @@ int sigar_os_open(sigar_t **sigar)
     (*sigar)->cpuinfo = NULL;
     (*sigar)->cpuinfo_size = 0;
     SIGAR_ZERO(&(*sigar)->swaps);
+    SIGAR_ZERO(&(*sigar)->perfstat);
 
     i = getpagesize();
     while ((i >>= 1) > 0) {
@@ -151,6 +150,9 @@ int sigar_os_close(sigar_t *sigar)
     if (sigar->cpuinfo) {
         free(sigar->cpuinfo);
     }
+    if (sigar->perfstat.handle) {
+        dlclose(sigar->perfstat.handle);
+    }
     free(sigar);
     return SIGAR_OK;
 }
@@ -163,6 +165,70 @@ char *sigar_os_error_string(int err)
       default:
         return NULL;
     }
+}
+
+/*
+ * the perfstat api is only supported in aix 5.2+
+ * in order to be binary compatible with 4.3 and 5.1
+ * we must jump through some hoops.  libperfstat.a
+ * is a static library, we need dynamic.
+ * libsigar_aixperfstat.so is juat a proxy to libperfstat.a
+ */
+#define SIGAR_AIXPERFSTAT "/libsigar_aixperfstat.so"
+
+static int sigar_perfstat_init(sigar_t *sigar)
+{
+    perfstat_cpu_func_t pcpu;
+    void *handle;
+    char libperfstat[SIGAR_PATH_MAX], *path;
+    int len;
+
+    if (sigar->perfstat.avail == 1) {
+        return SIGAR_OK;
+    }
+    if (sigar->perfstat.avail == -1) {
+        return ENOENT;
+    }
+
+    path = sigar_get_self_path(sigar);
+    len = strlen(path);
+
+    memcpy(&path[0], sigar->self_path, len);
+    memcpy(&path[len], SIGAR_AIXPERFSTAT, 
+           sizeof(SIGAR_AIXPERFSTAT));
+
+    if (!(handle = dlopen(path, RTLD_LOCAL|RTLD_LAZY))) {
+        if (SIGAR_LOG_IS_DEBUG(sigar)) {
+            sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
+                             "failed to open '%s': %s",
+                             path, sigar_strerror(sigar, errno));
+        }
+
+        sigar->perfstat.avail = -1;
+        return errno;
+    }
+
+    pcpu = (perfstat_cpu_func_t)dlsym(handle,
+                                      "sigar_perfstat_cpu_total");
+
+    if (!pcpu) {
+        if (SIGAR_LOG_IS_DEBUG(sigar)) {
+            sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
+                             "dlsym(sigar_perfstat_cpu_total) failed: %s",
+                             dlerror());
+        }
+
+        dlclose(handle);
+
+        sigar->perfstat.avail = -1;
+        return ENOENT;
+    }
+
+    sigar->perfstat.avail = 1;
+    sigar->perfstat.handle = handle;
+    sigar->perfstat.cpu_total = pcpu;
+
+    return SIGAR_OK;
 }
 
 #define PAGESHIFT(v) \
@@ -1151,67 +1217,18 @@ static char *sigar_get_odm_model(sigar_t *sigar)
 #define SIGAR_CPU_CACHE_SIZE \
   (_system_configuration.L2_cache_size / 1024)
 
-/*
- * the perfstat api is only supported in aix 5.2+
- * in order to be binary compatible with 4.3 and 5.1
- * we must jump through some hoops.  libperfstat.a
- * is a static library, we need dynamic.
- * libsigar_aixperfstat.so is juat a proxy to libperfstat.a
- */
-#define SIGAR_AIXPERFSTAT "/libsigar_aixperfstat.so"
-
-typedef int (*perfstat_cpu_func_t)(perfstat_id_t *,
-                                   perfstat_cpu_total_t *,
-                                   int, int);
-
 static int sigar_get_cpu_mhz_perfstat(sigar_t *sigar)
 {
-    int status = 0;
     perfstat_cpu_total_t data;
-    perfstat_cpu_func_t pcpu;
-    void *handle;
-    char libperfstat[SIGAR_PATH_MAX];
-    char *path = sigar_get_self_path(sigar);
-    int len = strlen(path);
 
-    memcpy(&path[0], sigar->self_path, len);
-    memcpy(&path[len], SIGAR_AIXPERFSTAT, 
-           sizeof(SIGAR_AIXPERFSTAT));
-
-    if (!(handle = dlopen(path, RTLD_LOCAL|RTLD_LAZY))) {
-        if (SIGAR_LOG_IS_DEBUG(sigar)) {
-            sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
-                             "failed to open '%s': %s",
-                             path, sigar_strerror(sigar, errno));
+    if (sigar_perfstat_init(sigar) == SIGAR_OK) {
+        if (sigar->perfstat.cpu_total(0, &data, sizeof(data), 1)) {
+            sigar->cpu_mhz = data.processorHZ / 1000000;
+            return SIGAR_OK;
         }
-
-        return errno;
     }
 
-    pcpu = (perfstat_cpu_func_t)dlsym(handle,
-                                      "sigar_perfstat_cpu_total");
-
-    if (!pcpu) {
-        if (SIGAR_LOG_IS_DEBUG(sigar)) {
-            sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
-                             "dlsym(sigar_perfstat_cpu_total) failed: %s",
-                             dlerror());
-        }
-
-        dlclose(handle);
-        return ENOENT;
-    }
-
-    if (pcpu(0, &data, sizeof(data), 1)) {
-        sigar->cpu_mhz = data.processorHZ / 1000000;
-    }
-    else {
-        dlclose(handle);
-        return errno;
-    }
-
-    dlclose(handle);
-    return SIGAR_OK;
+    return ENOENT;
 }
 
 static int sigar_get_cpu_mhz(sigar_t *sigar)
