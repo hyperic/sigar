@@ -1194,6 +1194,7 @@ static fsdev_path_t *get_fsdev_paths(sigar_t *sigar,
         if (!(strEQ(drv, "sd") ||
               strEQ(drv, "ssd") ||
               strEQ(drv, "st") ||
+              strEQ(drv, "dad") ||
               strEQ(drv, "cmdk")))
         {
             continue;
