@@ -5,17 +5,17 @@ package net.hyperic.sigar.win32;
  */
 public class EventLogRecord {
 
-    public long recordNumber;
-    public long timeGenerated; 
-    public long timeWritten;
-    public long eventId;
+    long recordNumber;
+    long timeGenerated; 
+    long timeWritten;
+    long eventId;
 
-    public short eventType;
+    short eventType;
 
-    public String source;
-    public String computerName;
-    public String user;
-    public String stringData;
+    String source;
+    String computerName;
+    String user;
+    String stringData;
 
     /* Get the record number for this event entry */
     public long getRecordNumber() {
