@@ -133,6 +133,19 @@ DESTROY(sigar)
     (void)sigar_close(sigar);
 
 char *
+format_size(size)
+    UV size
+
+    PREINIT:
+    char buffer[56];
+
+    CODE:
+    RETVAL = sigar_format_size(size, buffer);
+
+    OUTPUT:
+    RETVAL
+
+char *
 sigar_fqdn(sigar)
     Sigar sigar
 
