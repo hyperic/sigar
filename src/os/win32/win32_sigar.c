@@ -2019,6 +2019,8 @@ static int net_conn_get_tcp(sigar_t *sigar,
                   sizeof(conn.remote_address),
                   tcp->table[i].dwRemoteAddr);
 
+        conn.send_queue = conn.receive_queue = SIGAR_FIELD_NOTIMPL;
+
         switch (state) {
           case MIB_TCP_STATE_CLOSED:
             conn.state = SIGAR_TCP_CLOSE;
@@ -2109,6 +2111,8 @@ static int net_conn_get_udp(sigar_t *sigar,
         ip_format(conn.remote_address,
                   sizeof(conn.remote_address),
                   udp->table[i].dwLocalAddr);
+
+        conn.send_queue = conn.receive_queue = SIGAR_FIELD_NOTIMPL;
 
         SIGAR_NET_CONNLIST_GROW(connlist);
         memcpy(&connlist->data[connlist->number++],
