@@ -1562,6 +1562,7 @@ int sigar_proc_port_get(sigar_t *sigar, int protocol,
     }
 
     nl[0].n_name = "_tcb"; /* XXX cache */
+    nl[1].n_name = "";
     if (kvm_nlist(sigar->kmem, nl) < 0) {
         return errno;
     }
