@@ -641,6 +641,22 @@ int sigar_loadavg_get(sigar_t *sigar,
 {
     int status, i;
     int data[3];
+    perfstat_cpu_total_t cpu_data;
+
+    if (sigar_perfstat_init(sigar) == SIGAR_OK) {
+        sigar_log(sigar, SIGAR_LOG_DEBUG,
+                  "[loadavg] using libperfstat");
+
+        if (sigar->perfstat.cpu_total(0, &cpu_data, sizeof(cpu_data), 1)) {
+            for (i=0; i<3; i++) {
+                loadavg->loadavg[i] = FIXED_TO_DOUBLE(cpu_data.loadavg[i]);
+            }
+            return SIGAR_OK;
+        }
+    }
+
+    sigar_log(sigar, SIGAR_LOG_DEBUG,
+              "[loadavg] using /dev/kmem");
 
     status = kread(sigar, &data, sizeof(data),
                    sigar->koffsets[KOFFSET_LOADAVG]);
