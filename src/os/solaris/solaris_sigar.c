@@ -1809,6 +1809,8 @@ static void ip_format(char *buffer, IpAddress addr)
     sprintf(buffer, "%d.%d.%d.%d", ap[0], ap[1], ap[2], ap[3]);
 }
 
+#define TCPQ_SIZE(s) ((s) >= 0 ? (s) : 0)
+
 static int tcp_connection_list_get(sigar_t *sigar,
                                    sigar_net_connection_list_t *connlist,
                                    int flags,
@@ -1833,6 +1835,12 @@ static int tcp_connection_list_get(sigar_t *sigar,
             conn->local_port = entry->tcpConnLocalPort;
             conn->remote_port = entry->tcpConnRemPort;
             conn->type = SIGAR_NETCONN_TCP;
+            conn->send_queue =
+                TCPQ_SIZE(entry->tcpConnEntryInfo.ce_snxt -
+                          entry->tcpConnEntryInfo.ce_suna - 1);
+            conn->receive_queue =
+                TCPQ_SIZE(entry->tcpConnEntryInfo.ce_rnxt -
+                          entry->tcpConnEntryInfo.ce_rack);
 
             switch (state) {
               case TCPS_CLOSED:
