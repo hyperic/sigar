@@ -20,7 +20,7 @@ int sigar_get_multi_kstats(sigar_t *sigar,
         while ((ksp = kstat_lookup(kc, kl->name, i, NULL))) {
             if (i+1 > kl->num) {
                 kl->num = i+1;
-                kl->ks = realloc(kl->ks, kl->num);
+                kl->ks = realloc(kl->ks, kl->num * sizeof(*kl->ks));
             }
             kl->ks[i] = ksp;
             i++;
