@@ -1,18 +1,16 @@
 package net.hyperic.sigar.test;
 
-import junit.framework.TestCase;
-
 import net.hyperic.sigar.Sigar;
 import net.hyperic.sigar.Swap;
 
-public class TestSwap extends TestCase {
+public class TestSwap extends SigarTestCase {
 
     public TestSwap(String name) {
         super(name);
     }
 
     public void testCreate() throws Exception {
-        Sigar sigar = new Sigar();
+        Sigar sigar = getSigar();
 
         Swap swap = sigar.getSwap();
 

@@ -1,18 +1,16 @@
 package net.hyperic.sigar.test;
 
-import junit.framework.TestCase;
-
 import net.hyperic.sigar.Sigar;
 import net.hyperic.sigar.ProcMem;
 
-public class TestProcMem extends TestCase {
+public class TestProcMem extends SigarTestCase {
 
     public TestProcMem(String name) {
         super(name);
     }
 
     public void testCreate() throws Exception {
-        Sigar sigar = new Sigar();
+        Sigar sigar = getSigar();
 
         ProcMem procMem = sigar.getProcMem(sigar.getPid());
 
