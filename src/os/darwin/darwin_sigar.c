@@ -33,7 +33,36 @@
 
 #define NMIB(mib) (sizeof(mib)/sizeof(mib[0]))
 
+#if defined (__FreeBSD__) && (__FreeBSD_version >= 500013)
+
+#define KI_PID  ki_pid
+#define KI_PPID ki_ppid
+#define KI_PRI  ki_pri.pri_user
+#define KI_NICE ki_nice
+#define KI_COMM ki_comm
+#define KI_STAT ki_stat
+#define KI_UID  ki_ruid
+#define KI_GID  ki_rgid
+#define KI_EUID ki_svuid
+#define KI_EGID ki_svgid
+
+#else
+
+#define KI_PID  kp_proc.p_pid
+#define KI_PPID kp_eproc.e_ppid
+#define KI_PRI  kp_proc.p_priority
+#define KI_NICE kp_proc.p_nice
+#define KI_COMM kp_proc.p_comm
+#define KI_STAT kp_proc.p_stat
+#define KI_UID  kp_eproc.e_pcred.p_ruid
+#define KI_GID  kp_eproc.e_pcred.p_rgid
+#define KI_EUID kp_eproc.e_pcred.p_svuid
+#define KI_EGID kp_eproc.e_pcred.p_svgid
+
+#endif
+
 #ifndef DARWIN
+
 static int get_koffsets(sigar_t *sigar)
 {
     int i;
@@ -378,7 +407,7 @@ int sigar_proc_list_get(sigar_t *sigar,
     proclist->data = malloc(sizeof(*(proclist->data)) * num);
 
     for (i=0; i<num; i++) {
-        proclist->data[proclist->number++] = proc[i].kp_proc.p_pid;
+        proclist->data[proclist->number++] = proc[i].KI_PID;
     }
 
     free(proc);
@@ -399,7 +428,7 @@ int sigar_proc_list_get(sigar_t *sigar,
     proclist->data = malloc(sizeof(*(proclist->data)) * num);
 
     for (i=0; i<num; i++) {
-        proclist->data[proclist->number++] = proc[i].kp_proc.p_pid;
+        proclist->data[proclist->number++] = proc[i].KI_PID;
     }
 #endif
 
@@ -504,10 +533,10 @@ int sigar_proc_cred_get(sigar_t *sigar, sigar_pid_t pid,
         return status;
     }
 
-    proccred->uid  = pinfo->kp_eproc.e_pcred.p_ruid;
-    proccred->gid  = pinfo->kp_eproc.e_pcred.p_rgid;
-    proccred->euid = pinfo->kp_eproc.e_pcred.p_svuid;
-    proccred->egid = pinfo->kp_eproc.e_pcred.p_svgid;
+    proccred->uid  = pinfo->KI_UID;
+    proccred->gid  = pinfo->KI_GID;
+    proccred->euid = pinfo->KI_EUID;
+    proccred->egid = pinfo->KI_EGID;
 
     return SIGAR_OK;
 }
@@ -611,13 +640,13 @@ int sigar_proc_state_get(sigar_t *sigar, sigar_pid_t pid,
         return status;
     }
 
-    SIGAR_SSTRCPY(procstate->name, pinfo->kp_proc.p_comm);
-    procstate->ppid     = pinfo->kp_eproc.e_ppid;
-    procstate->priority = pinfo->kp_proc.p_priority;
-    procstate->nice     = pinfo->kp_proc.p_nice;
+    SIGAR_SSTRCPY(procstate->name, pinfo->KI_COMM);
+    procstate->ppid     = pinfo->KI_PPID;
+    procstate->priority = pinfo->KI_PRI;
+    procstate->nice     = pinfo->KI_NICE;
     procstate->tty      = SIGAR_FIELD_NOTIMPL; /*XXX*/
 
-    switch (pinfo->kp_proc.p_stat) {
+    switch (pinfo->KI_STAT) {
       case SIDL:
         procstate->state = 'D';
         break;
