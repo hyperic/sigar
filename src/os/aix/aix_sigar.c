@@ -1,7 +1,7 @@
 #include "sigar.h"
 #include "sigar_private.h"
-#include "sigar_os.h"
 #include "sigar_util.h"
+#include "sigar_os.h"
 
 #include <dlfcn.h>
 #include <nlist.h>
@@ -144,6 +144,8 @@ int sigar_os_open(sigar_t **sigar)
 
     (*sigar)->aix_version = atoi(name.version);
 
+    (*sigar)->diskmap = NULL;
+
     return SIGAR_OK;
 }
 
@@ -163,6 +165,9 @@ int sigar_os_close(sigar_t *sigar)
     }
     if (sigar->perfstat.handle) {
         dlclose(sigar->perfstat.handle);
+    }
+    if (sigar->diskmap) {
+        sigar_cache_destroy(sigar->diskmap);
     }
     free(sigar);
     return SIGAR_OK;
@@ -1366,10 +1371,119 @@ int sigar_file_system_list_get(sigar_t *sigar,
 #define SIGAR_FS_BLOCKS_TO_BYTES(buf, f) \
     ((buf.f * (buf.f_bsize / 512)) >> 1)
 
+#define LSPV_CMD "/usr/sbin/lspv"
+
+#define FSDEV_ID(sb) (sb.st_ino + sb.st_dev)
+
+/*
+ * dont have per-partition metrics on aix.
+ * need to build a mount point => diskname map.
+ * see 'lspv -l hdisk0' for example.
+ */
+static int create_diskmap(sigar_t *sigar)
+{
+    FILE *fp = popen(LSPV_CMD, "r");
+    char buffer[BUFSIZ], *ptr;
+
+    sigar->diskmap = sigar_cache_new(25);
+
+    if (!fp) {
+        return ENOENT;
+    }
+
+    while ((ptr = fgets(buffer, sizeof(buffer), fp))) {
+        FILE *lfp;
+        char cmd[256], disk[56];
+        char *s = strchr(ptr, ' ');
+        if (s) {
+            *s = '\0';
+        }
+        strcpy(disk, ptr);
+        sprintf(cmd, LSPV_CMD " -l %s", disk);
+        if (!(lfp = popen(cmd, "r"))) {
+            continue;
+        }
+
+        (void)fgets(buffer, sizeof(buffer), lfp); /* skip disk: */
+        (void)fgets(buffer, sizeof(buffer), lfp); /* skip headers */
+        while ((ptr = fgets(buffer, sizeof(buffer), lfp))) {
+            sigar_cache_entry_t *ent;
+            struct stat sb;
+            int retval;
+            /* LV NAME LPs PPs DISTRIBUTION */
+            ptr = sigar_skip_multiple_token(ptr, 4);
+            SIGAR_SKIP_SPACE(ptr);
+            if ((s = strchr(ptr, '\n'))) {
+                *s = '\0';
+            }
+            if (strEQ(ptr, "N/A")) {
+                continue;
+            }
+            retval = stat(ptr, &sb);
+            ent = sigar_cache_get(sigar->diskmap, FSDEV_ID(sb));
+            if (retval == 0) {
+                ent->value = strdup(disk);
+            }
+        }
+        pclose(lfp);
+    }
+    pclose(fp);
+}
+
+static int get_disk_metrics(sigar_t *sigar,
+                            sigar_file_system_usage_t *fsusage,
+                            char *diskname)
+{
+    /* XXX some caching can optimize */
+    int fd, i;
+    int cnt;
+    struct iostat iostat;
+    struct dkstat dkstat, *dp;
+    struct nlist nl[] = {
+        { "iostat" },
+    };
+
+    if ((fd = open("/dev/mem", O_RDONLY)) <= 0) {
+        return errno;
+    }
+    i = knlist(nl, 1, sizeof(struct nlist));
+
+    if (i == -1) {
+        close(fd);
+        return errno;
+    }
+
+    if (nl[i].n_value == 0) {
+        return ENOENT;
+    }
+
+    lseek(fd, nl[0].n_value, SEEK_SET);
+    read(fd, &iostat, sizeof(iostat));
+
+    for (dp = iostat.dkstatp, cnt = iostat.dk_cnt;
+         cnt && dp;
+         --cnt, dp = dkstat.dknextp)
+    {
+        lseek(fd, (long)dp, SEEK_SET);
+        read(fd, &dkstat, sizeof(dkstat));
+        if (strEQ(diskname, dkstat.diskname)) {
+            fsusage->disk_reads = dkstat.dk_rblks;
+            fsusage->disk_writes = dkstat.dk_wblks;
+            break;
+        }
+    }
+
+    close(fd);
+    return SIGAR_OK;
+}
+
 int sigar_file_system_usage_get(sigar_t *sigar,
                                 const char *dirname,
                                 sigar_file_system_usage_t *fsusage)
 {
+    sigar_cache_entry_t *ent;
+    struct stat sb;
+    int status;
     struct statfs buf;
 
     if (statfs((char *)dirname, &buf) != 0) {
@@ -1384,6 +1498,23 @@ int sigar_file_system_usage_get(sigar_t *sigar,
     fsusage->use_percent = sigar_file_system_usage_calc_used(sigar, fsusage);
 
     SIGAR_DISK_STATS_NOTIMPL(fsusage);
+
+    if (!sigar->diskmap) {
+        status = create_diskmap(sigar);
+        if (status != SIGAR_OK) {
+            return SIGAR_OK;
+        }
+    }
+
+    status = stat(dirname, &sb);
+    if (status == 0) {
+        sigar_cache_entry_t *ent =
+            sigar_cache_get(sigar->diskmap, FSDEV_ID(sb));
+        if (!ent->value) {
+            return SIGAR_OK;
+        }
+        get_disk_metrics(sigar, fsusage, (char *)ent->value);
+    }
 
     return SIGAR_OK;
 }
