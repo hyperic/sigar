@@ -244,10 +244,19 @@ int sigar_proc_cred_get(sigar_t *sigar, sigar_pid_t pid,
 int sigar_proc_time_get(sigar_t *sigar, sigar_pid_t pid,
                         sigar_proc_time_t *proctime)
 {
-    proctime->start_time = -1;
-    proctime->user = -1;
-    proctime->sys  = -1;
+    struct user s_user;
+    int status;
+
+    status = table(TBL_UAREA, pid, &s_user, 1, sizeof(s_user));
+
+    if (status != 1) {
+        return errno;
+    }
+
+    proctime->user  = s_user.u_ru.ru_utime.tv_sec;
+    proctime->sys   = s_user.u_ru.ru_stime.tv_sec;
     proctime->total = proctime->user + proctime->sys;
+    proctime->start_time = s_user.u_start.tv_sec;
 
     return SIGAR_OK;
 }
