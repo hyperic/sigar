@@ -470,10 +470,15 @@ SIGAR_DECLARE(int) sigar_proc_list_get(sigar_t *sigar,
          i++, inst = PdhNextInstance(inst))
     {
         PERF_COUNTER_BLOCK *counter_block = PdhGetCounterBlock(inst);
+        DWORD pid = PERF_VAL(PERF_IX_PID);
+
+        if (pid == 0) {
+            continue; /* dont include the system Idle process */
+        }
+
         SIGAR_PROC_LIST_GROW(proclist);
 
-        proclist->data[proclist->number++] =
-            PERF_VAL(PERF_IX_PID);
+        proclist->data[proclist->number++] = pid;
     }
 
     return SIGAR_OK;
