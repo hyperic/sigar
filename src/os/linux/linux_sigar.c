@@ -934,6 +934,7 @@ int sigar_file_system_list_get(sigar_t *sigar,
 
         fsp = &fslist->data[fslist->number++];
 
+        fsp->type = SIGAR_FSTYPE_UNKNOWN; /* unknown, will be set later */
         SIGAR_SSTRCPY(fsp->dir_name, ent.mnt_dir);
         SIGAR_SSTRCPY(fsp->dev_name, ent.mnt_fsname);
         SIGAR_SSTRCPY(fsp->sys_type_name, ent.mnt_type);
