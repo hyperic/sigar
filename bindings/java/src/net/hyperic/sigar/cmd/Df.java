@@ -17,7 +17,7 @@ import net.hyperic.sigar.util.GetlineCompleter;
 public class Df extends SigarCommandBase {
 
     private static final String OUTPUT_FORMAT =
-        "%-10s %4s %4s %5s %4s %-10s %s";
+        "%-15s %4s %4s %5s %4s %-15s %s";
 
     //like df -h -a
     private static final String[] HEADER = new String[] {

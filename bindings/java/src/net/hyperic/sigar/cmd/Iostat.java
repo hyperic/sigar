@@ -17,7 +17,7 @@ import net.hyperic.sigar.util.GetlineCompleter;
 public class Iostat extends SigarCommandBase {
 
     private static final String OUTPUT_FORMAT =
-        "%-10s %-10s %-10s %-10s";
+        "%-15s %-15s %-10s %-10s";
 
     //like df -h -a
     private static final String[] HEADER = new String[] {
