@@ -277,7 +277,8 @@ int sigar_cpu_info_get(sigar_t *sigar, sigar_cpu_info_t *info)
 
     size = sizeof(info->vendor);
     if (RegQueryValueEx(cpu, "VendorIdentifier", NULL, NULL,
-                        (LPVOID)&info->vendor, &size))
+                        (LPVOID)&info->vendor, &size) ||
+        strEQ(info->vendor, "GenuineIntel"))
     {
         SIGAR_SSTRCPY(info->vendor, "Intel");
     }
