@@ -139,6 +139,9 @@ int sigar_os_close(sigar_t *sigar)
     if (sigar->fsdev) {
         sigar_cache_destroy(sigar->fsdev);
     }
+    if (sigar->mib2.sd != -1) {
+        close_mib2(&sigar->mib2);
+    }
     free(sigar);
     return SIGAR_OK;
 }
