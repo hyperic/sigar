@@ -528,11 +528,13 @@ int sigar_proc_list_get(sigar_t *sigar,
     }
 
     num = len/sizeof(*proc);
-    proclist->number = 0;
-    proclist->size = num;
-    proclist->data = malloc(sizeof(*(proclist->data)) * num);
+    sigar_proc_list_create(proclist);
 
     for (i=0; i<num; i++) {
+        if (proc[i].KI_FLAG & P_SYSTEM) {
+            continue;
+        }
+        SIGAR_PROC_LIST_GROW(proclist);
         proclist->data[proclist->number++] = proc[i].KI_PID;
     }
 
