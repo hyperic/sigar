@@ -449,6 +449,38 @@ namespace Hyperic.Sigar {
                 return inet_ntoa(this.netmask);
             }
         }
+
+        public String FlagsString() {
+            ulong flags = this.Flags;
+            String retval = "";
+
+            if (flags == 0)
+                retval += "[NO FLAGS] ";
+            if ((flags & Sigar.IFF_UP) > 0)
+                retval += "UP ";
+            if ((flags & Sigar.IFF_BROADCAST) > 0)
+                retval += "BROADCAST ";
+            if ((flags & Sigar.IFF_DEBUG) > 0)
+                retval += "DEBUG ";
+            if ((flags & Sigar.IFF_LOOPBACK) > 0)
+                retval += "LOOPBACK ";
+            if ((flags & Sigar.IFF_POINTOPOINT) > 0)
+                retval += "POINTOPOINT ";
+            if ((flags & Sigar.IFF_NOTRAILERS) > 0)
+                retval += "NOTRAILERS ";
+            if ((flags & Sigar.IFF_RUNNING) > 0)
+                retval += "RUNNING ";
+            if ((flags & Sigar.IFF_NOARP) > 0)
+                retval += "NOARP ";
+            if ((flags & Sigar.IFF_PROMISC) > 0)
+                retval += "PROMISC ";
+            if ((flags & Sigar.IFF_ALLMULTI) > 0)
+                retval += "ALLMULTI ";
+            if ((flags & Sigar.IFF_MULTICAST) > 0)
+                retval += "MULTICAST ";
+            
+            return retval;
+        }
     }
 
     [StructLayout(LayoutKind.Sequential)]
