@@ -34,7 +34,9 @@ public class Pdh extends Win32Bindings {
             h_counter = -1l;
         }
 
-        pdhCloseQuery(h_query);
+        if (h_query != -1l) {
+            pdhCloseQuery(h_query);
+        }
     }
     
     public double getSingleValue(String cp) throws Win32Exception {
