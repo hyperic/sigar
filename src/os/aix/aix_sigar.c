@@ -121,6 +121,8 @@ int sigar_os_open(sigar_t **sigar)
 
     (*sigar)->model[0] = '\0';
 
+    (*sigar)->self_path[0] = '\0';
+
     return SIGAR_OK;
 }
 
@@ -829,6 +831,45 @@ int sigar_proc_exe_get(sigar_t *sigar, sigar_pid_t pid,
                        sigar_proc_exe_t *procexe)
 {
     return SIGAR_ENOTIMPL;
+}
+
+static int proc_module_get_self(void *data, char *name, int len)
+{
+    sigar_t *sigar = (sigar_t *)data;
+    char *ptr = rindex(name, '/');
+
+    if (!ptr) {
+        return SIGAR_OK;
+    }
+
+    if (strnEQ(ptr+1, "libsigar-", 9)) {
+        *ptr = '\0'; /* chop libsigar-powerpc-ibm-aix-4.3.x.so */
+
+        SIGAR_SSTRCPY(sigar->self_path, name);
+
+        return !SIGAR_OK; /* break loop */
+    }
+
+    return SIGAR_OK;
+}
+
+static char *sigar_get_self_path(sigar_t *sigar)
+{
+    if (sigar->self_path[0] == '\0') {
+        sigar_proc_modules_t procmods;
+        procmods.module_getter = proc_module_get_self;
+        procmods.data = sigar;
+
+        sigar_proc_modules_get(sigar, sigar_pid_get(sigar),
+                               &procmods);
+
+        if (sigar->self_path[0] == '\0') {
+            /* dont try again */
+            SIGAR_SSTRCPY(sigar->self_path, "unknown");
+        }
+    }
+
+    return sigar->self_path;
 }
 
 static int sigar_proc_modules_local_get(sigar_t *sigar,
