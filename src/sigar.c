@@ -898,7 +898,7 @@ int sigar_net_interface_list_get(sigar_t *sigar,
 
     ifr = ifc.ifc_req;
     for (n = 0; n < ifc.ifc_len; n += sizeof(struct ifreq), ifr++) {
-#ifdef _AIX
+#if defined(_AIX) || defined(__osf__) /* pass the bourbon */
         if (ifr->ifr_addr.sa_family != AF_LINK) {
             /* XXX: dunno if this is right.
              * otherwise end up with two 'en0' and three 'lo0'
