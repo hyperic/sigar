@@ -24,6 +24,42 @@ import org.apache.bcel.generic.ObjectType;
 import org.apache.bcel.generic.PUSH;
 import org.apache.bcel.generic.Type;
 
+/**
+ * Build a Process Query using a PTQL string.
+ *
+ * Queries must be in the following format:
+ * <pre>
+ * Class.Attribute.operator=value
+ * </pre>
+ * Where:
+ * <ul>
+ * <li> <b>Class</b> is the name of the Sigar class minus the Proc prefix.
+ * <li> <b>Attribute</b> is an attribute of the given <b>Class</b>,
+ * index into an array or key in a Map class.
+ * <li> <b>operator</b> is one of the following for String values:
+ *   <ul>
+ *    <li> <b>eq</b> - Equal to <b>value</b>
+ *    <li> <b>ne</b> - Not Equal to <b>value</b>
+ *    <li> <b>ew</b> - Ends with <b>value</b>
+ *    <li> <b>sw</b> - Starts with <b>value</b>
+ *    <li> <b>ct</b> - Contains <b>value</b> (substring)
+ *    <li> <b>re</b> - Regular expression <b>value</b> matches
+ *   </ul>
+ * <li> <b>operator</b> is one of the following for numeric values:
+ *   <ul>
+ *    <li> <b>eq</b> - Equal to <b>value</b>
+ *    <li> <b>ne</b> - Not Equal to <b>value</b>
+ *    <li> <b>gt</b> - Greater than <b>value</b>
+ *    <li> <b>ge</b> - Greater than or equal <b>value</b>
+ *    <li> <b>lt</b> - Less than <b>value</b>
+ *    <li> <b>le</b> - Less than or equal <b>value</b>
+ *   </ul>
+ * </ul>
+ * Multiple queries must delimited by a comma.
+ * <p>
+ * Examples can be found in the sigar-bin/lib/.sigar_shellrc file of
+ * the Sigar distribution.
+ */
 public class ProcessQueryBuilder {
 
     //set true during development to dump generated
@@ -75,7 +111,7 @@ public class ProcessQueryBuilder {
     //branches of query method
     private ArrayList branches = new ArrayList();
 
-    public static final boolean COMPAT_1_4;
+    static final boolean COMPAT_1_4;
 
     static {
         //long

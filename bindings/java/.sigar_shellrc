@@ -2,20 +2,24 @@
 #commands in this file are run just as they would be if they
 #were typed in by hand in the shell prompt.
 
-#find weblogic nodes
+#find weblogic nodes (-1 means last index in the array)
 alias wlfind ptql State.Name.eq=java,Args.-1.eq=weblogic.Server
 
 #find jboss
 alias jbfind ptql State.Name.eq=java,Args.-1.eq=org.jboss.Main
 
 #find ers apache worker or prefork httpsd
+#($1 is the return value of the first query in the string)
 alias erfind ptql State.Name.sw=httpsd.,State.Name.Pne=$1
 
 #find ant processes (ant hangs on me sometimes)
+#(* matches any value in the array)
 alias hant ptql State.Name.eq=java,Args.*.eq=org.apache.tools.ant.Main
 
 #my HQ agent
+#(user.name is in System.getProperties)
 alias myag ptql CredName.User.eq=$user.name,State.Name.eq=java,Args.-1.ew=SpiderAgent
 
 #find all java procs except the shell itself
+#($$ is the current process id)
 alias java ptql State.Name.eq=java,Pid.Pid.ne=$$
