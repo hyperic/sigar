@@ -5,6 +5,9 @@
 #find weblogic nodes (-1 means last index in the array)
 alias wlfind ptql State.Name.eq=java,Args.-1.eq=weblogic.Server
 
+#find websphere nodes
+alias wsfind ptql State.Name.eq=java,Args.*.eq=com.ibm.ws.runtime.WsServer
+
 #find jboss
 alias jbfind ptql State.Name.eq=java,Args.*.eq=org.jboss.Main
 
