@@ -13,13 +13,11 @@ public class ProcCpu extends ProcTime {
 
     private long lastTime = 0;
     private long pid;
-    private long time = 0;
     private double percent = 0.0;
 
     private void getValues(Sigar sigar, long pid)
         throws SigarException {
         this.nativeGet(sigar, pid);
-        this.time = this.user + this.sys;
     }
 
     static synchronized ProcCpu get(Sigar sigar, long pid)
@@ -44,7 +42,7 @@ public class ProcCpu extends ProcTime {
 
         cpu.lastTime = timeNow;
 
-        long otime = cpu.time;
+        long otime = cpu.total;
 
         cpu.getValues(sigar, pid);
 
@@ -53,7 +51,7 @@ public class ProcCpu extends ProcTime {
             return cpu;
         }
 
-        cpu.percent = ((cpu.time - otime) / diff);
+        cpu.percent = ((cpu.total - otime) / diff);
         if (cpu.percent >= 1.0) {
             cpu.percent = 0.99;
         }
@@ -66,13 +64,6 @@ public class ProcCpu extends ProcTime {
      */
     public double getPercent() {
         return this.percent;
-    }
-
-    /**
-     * @return Sum of User and Sys.
-     */
-    public long getTotal() {
-        return this.time;
     }
 
     /**
