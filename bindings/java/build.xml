@@ -66,7 +66,7 @@
       <group title="Sigar" packages="net.hyperic.sigar" />
       <classpath refid="libjars"/>
       <classpath><path path="${env.ANT_HOME}/lib/ant.jar"/></classpath> 
-     <bottom>Copyright &#169; 2004 <![CDATA[<a target="_top" href="http://www.hyperic.net/">Hyperic, LLC</a>]]>. All Rights Reserved.</bottom>
+     <bottom>Copyright &#169; 2004,2005 <![CDATA[<a target="_top" href="http://www.hyperic.net/">Hyperic, LLC</a>]]>. All Rights Reserved.</bottom>
     </javadoc>
   </target>
 
