@@ -35,6 +35,8 @@ struct sigar_t {
     int ram;
     int proc_signal_offset;
     linux_proc_stat_t last_proc_stat;
+    int ht_enabled;
+    int lcpu;
 };
 
 #define HAVE_STRERROR_R

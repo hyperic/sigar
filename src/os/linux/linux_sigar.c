@@ -23,38 +23,6 @@
 #define PROC_PSTATUS "/status"
 
 /*
- * could also parse /proc/cpuinfo
- * but there is less to parse this way.
- */
-#define PROC_CPU "/proc/1/cpu"
-
-static void get_ncpu(sigar_t *sigar)
-{
-    struct stat sb;
-    FILE *fp;
-
-    sigar->ncpu = 0;
-
-    if (stat(PROC_CPU, &sb) < 0) {
-        /* file does not exist unless ncpu > 1 */
-        sigar->ncpu = 1;
-    }
-    else {
-        char buffer[BUFSIZ], *ptr;
-        if ((fp = fopen(PROC_CPU, "r"))) {
-            while ((ptr = fgets(buffer, sizeof(buffer), fp))) {
-                if (strnEQ(ptr, "cpu", 3) &&
-                    isdigit(ptr[3]))
-                {
-                    ++sigar->ncpu;
-                }
-            }
-            fclose(fp);
-        }
-    }
-}
-
-/*
  * /proc/self/stat fields:
  * 1 - pid
  * 2 - comm
@@ -151,9 +119,9 @@ int sigar_os_open(sigar_t **sigar)
 
     (*sigar)->proc_signal_offset = -1;
 
-    get_ncpu(*sigar);
-
     (*sigar)->last_proc_stat.pid = -1;
+
+    (*sigar)->ht_enabled = -1;
 
     return SIGAR_OK;
 }
@@ -167,6 +135,22 @@ int sigar_os_close(sigar_t *sigar)
 char *sigar_os_error_string(int err)
 {
     return NULL;
+}
+
+static int is_ht_enabled(sigar_t *sigar)
+{
+    if (sigar->ht_enabled == -1) {
+        /* only check once */
+        sigar_cpu_infos_t cpuinfos;
+
+        if (sigar_cpu_infos_get(sigar, &cpuinfos) != SIGAR_OK) {
+            sigar->ht_enabled = 0; /* chances we reach here: slim..none */
+        }
+
+        sigar_cpu_infos_destroy(sigar, &cpuinfos);
+    }
+
+    return sigar->ht_enabled;
 }
 
 static int get_ram(sigar_t *sigar, sigar_mem_t *mem)
@@ -279,12 +263,12 @@ static void get_cpu_metrics(sigar_cpu_t *cpu, char *line)
 {
     char *ptr = sigar_skip_token(line); /* "cpu%d" */
 
-    cpu->user = sigar_strtoul(ptr);
-    cpu->nice = sigar_strtoul(ptr);
-    cpu->sys  = sigar_strtoul(ptr);
-    cpu->idle = sigar_strtoul(ptr);
+    cpu->user += sigar_strtoul(ptr);
+    cpu->nice += sigar_strtoul(ptr);
+    cpu->sys  += sigar_strtoul(ptr);
+    cpu->idle += sigar_strtoul(ptr);
 
-    cpu->total = cpu->user + cpu->nice + cpu->sys + cpu->idle;
+    cpu->total += cpu->user + cpu->nice + cpu->sys + cpu->idle;
 }
 
 int sigar_cpu_get(sigar_t *sigar, sigar_cpu_t *cpu)
@@ -296,6 +280,7 @@ int sigar_cpu_get(sigar_t *sigar, sigar_cpu_t *cpu)
         return status;
     }
 
+    SIGAR_ZERO(cpu);
     get_cpu_metrics(cpu, buffer);
 
     return SIGAR_OK;
@@ -305,6 +290,7 @@ int sigar_cpu_list_get(sigar_t *sigar, sigar_cpu_list_t *cpulist)
 {
     FILE *fp;
     char buffer[BUFSIZ], *ptr;
+    int hthread = is_ht_enabled(sigar), i=0;
 
     if (!(fp = fopen(PROC_STAT, "r"))) {
         return errno;
@@ -323,10 +309,19 @@ int sigar_cpu_list_get(sigar_t *sigar, sigar_cpu_list_t *cpulist)
             break;
         }
 
-        SIGAR_CPU_LIST_GROW(cpulist);
-        cpu = &cpulist->data[cpulist->number++];
+        if (hthread && (i % sigar->lcpu)) {
+            /* merge times of logical processors */
+            cpu = &cpulist->data[cpulist->number-1];
+        }
+        else {
+            SIGAR_CPU_LIST_GROW(cpulist);
+            cpu = &cpulist->data[cpulist->number++];
+            SIGAR_ZERO(cpu);
+        }
 
         get_cpu_metrics(cpu, ptr);
+
+        i++;
     }
 
     fclose(fp);
@@ -1041,6 +1036,8 @@ int sigar_cpu_infos_get(sigar_t *sigar,
         return errno;
     }
 
+    sigar->ht_enabled = 0; /* figure out below */
+
     sigar_cpu_infos_create(cpu_infos);
     memset(&cpu_id[0], -1, sizeof(cpu_id));
 
@@ -1057,6 +1054,8 @@ int sigar_cpu_infos_get(sigar_t *sigar,
             /* e.g. each Intel Xeon cpu is reported twice */
             /* fold dups based on physical id */
             if (fold) {
+                sigar->ht_enabled = 1;
+                sigar->lcpu = 2; /* XXX assume 2 for now */
                 continue;
             }
             else {
