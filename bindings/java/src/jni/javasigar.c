@@ -15,6 +15,10 @@
 
 #include "javasigar_generated.h"
 
+#if defined(__osf__)
+#define SIGAR_POINTER_LONG
+#endif
+
 #define JENV (*env)
 
 #define SIGAR_PACKAGE "net/hyperic/sigar/"
