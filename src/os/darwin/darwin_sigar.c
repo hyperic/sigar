@@ -359,9 +359,16 @@ int sigar_cpu_get(sigar_t *sigar, sigar_cpu_t *cpu)
 #else
     int status;
     long cp_time[CPUSTATES];
+    size_t size = sizeof(cp_time);
 
-    status = kread(sigar, &cp_time, sizeof(cp_time),
-                   sigar->koffsets[KOFFSET_CPUINFO]);
+    /* try sysctl first, does not require /dev/kmem perms */
+    if (sysctlbyname("kern.cp_time", &cp_time, &size, NULL, 0) == -1) {
+        status = kread(sigar, &cp_time, sizeof(cp_time),
+                       sigar->koffsets[KOFFSET_CPUINFO]);
+    }
+    else {
+        status = SIGAR_OK;
+    }
 
     if (status != SIGAR_OK) {
         return status;
