@@ -4,6 +4,7 @@
 #include <errno.h>
 #include <sys/param.h>
 #include <sys/stat.h>
+#include <sys/times.h>
 
 #include "sigar.h"
 #include "sigar_private.h"
@@ -899,11 +900,26 @@ int sigar_proc_modules_get(sigar_t *sigar, sigar_pid_t pid,
     return SIGAR_OK;
 }
 
+#define TIME_NSEC(t) \
+    SIGAR_SEC2NANO(((sigar_uint64_t)(t) / sigar->ticks))
+
 int sigar_thread_cpu_get(sigar_t *sigar,
                          sigar_uint64_t id,
                          sigar_thread_cpu_t *cpu)
 {
-    return SIGAR_ENOTIMPL;
+    struct tms now;
+
+    if (id != 0) {
+        return SIGAR_ENOTIMPL;
+    }
+
+    times(&now);
+
+    cpu->user  = TIME_NSEC(now.tms_utime);
+    cpu->sys   = TIME_NSEC(now.tms_stime);
+    cpu->total = TIME_NSEC(now.tms_utime + now.tms_stime);
+
+    return SIGAR_OK;
 }
 
 #include <mntent.h>

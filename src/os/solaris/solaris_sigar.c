@@ -4,6 +4,7 @@
 #include "sigar_util.h"
 
 #include <sys/link.h>
+#include <sys/lwp.h>
 #include <sys/proc.h>
 #include <sys/swap.h>
 #include <sys/stat.h>
@@ -1038,11 +1039,26 @@ int sigar_proc_modules_get(sigar_t *sigar, sigar_pid_t pid,
     }
 }
 
+#define TIME_NSEC(t) \
+    (SIGAR_SEC2NANO((t).tv_sec) + (sigar_uint64_t)(t).tv_nsec)
+
 int sigar_thread_cpu_get(sigar_t *sigar,
                          sigar_uint64_t id,
                          sigar_thread_cpu_t *cpu)
 {
-    return SIGAR_ENOTIMPL;
+    struct lwpinfo info;
+
+    if (id != 0) {
+        return SIGAR_ENOTIMPL;
+    }
+
+    _lwp_info(&info);
+
+    cpu->user  = TIME_NSEC(info.lwp_utime);
+    cpu->sys   = TIME_NSEC(info.lwp_stime);
+    cpu->total = TIME_NSEC(info.lwp_utime) + TIME_NSEC(info.lwp_stime);
+
+    return SIGAR_OK;
 }
 
 #include <sys/mnttab.h>
