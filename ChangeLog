@@ -2,7 +2,7 @@
 
         * add iostat shell command
         
-        * implement disk io metrics for aix and solaris
+        * implement disk io metrics for aix, solaris and hpux
 
 2004-12-05  Doug MacEachern  <dougm@hyperic.net>
 

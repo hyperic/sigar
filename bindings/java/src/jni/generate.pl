@@ -471,12 +471,12 @@ my %classes = (
       {
          name => 'disk_reads', type => 'Long',
          desc => 'Number of physical disk reads',
-         plat => 'ALSW'
+         plat => 'AHLSW'
       },
       {
          name => 'disk_writes', type => 'Long',
          desc => 'Number of physical disk writes',
-         plat => 'ALSW'
+         plat => 'AHLSW'
       },
       {
          name => 'use_percent', type => 'Double',
