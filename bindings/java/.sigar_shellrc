@@ -1,0 +1,21 @@
+#this file is loaded by the sigar shell.
+#commands in this file are run just as they would be if they
+#were typed in by hand in the shell prompt.
+
+#find weblogic nodes
+alias wlfind ptql State.Name.eq=java,Args.-1.eq=weblogic.Server
+
+#find jboss
+alias jbfind ptql State.Name.eq=java,Args.-1.eq=org.jboss.Main
+
+#find ers apache worker or prefork httpsd
+alias erfind ptql State.Name.sw=httpsd.,State.Name.Pne=$1
+
+#find ant processes (ant hangs on me sometimes)
+alias hant ptql State.Name.eq=java,Args.*.eq=org.apache.tools.ant.Main
+
+#my HQ agent
+alias myag ptql CredName.User.eq=$user.name,State.Name.eq=java,Args.-1.ew=SpiderAgent
+
+#find all java procs except the shell itself
+alias java ptql State.Name.eq=java,Pid.Pid.ne=$$
