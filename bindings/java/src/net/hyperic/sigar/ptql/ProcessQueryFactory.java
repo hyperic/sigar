@@ -116,6 +116,9 @@ public class ProcessQueryFactory implements Comparator {
         if (branch.attr.equals("PidFile")) {
             return new PidFileQuery(val);
         }
+        else if (branch.attr.equals("Service")) {
+            return new WindowsServiceQuery(val);
+        }
 
         throw new MalformedQueryException("Unsupported method: " +
                                           branch.attr);
@@ -146,7 +149,9 @@ public class ProcessQueryFactory implements Comparator {
             return pQuery;
         }
 
-        if (query.startsWith("Pid.PidFile.")) {
+        if (query.startsWith("Pid.PidFile.") ||
+            query.startsWith("Pid.Service."))
+        {
             pQuery = getPidInstance(query);
             cache.put(query, pQuery);
             return pQuery;
