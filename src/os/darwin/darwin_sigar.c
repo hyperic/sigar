@@ -473,7 +473,24 @@ int sigar_proc_mem_get(sigar_t *sigar, sigar_pid_t pid,
 
     return SIGAR_OK;
 #else
-    return SIGAR_ENOTIMPL;
+    int status = sigar_get_pinfo(sigar, pid);
+    struct kinfo_proc *pinfo = sigar->pinfo;
+
+    if (status != SIGAR_OK) {
+        return status;
+    }
+
+    procmem->size = procmem->vsize = 
+        (pinfo->kp_eproc.e_vm.vm_tsize +
+         pinfo->kp_eproc.e_vm.vm_dsize +
+         pinfo->kp_eproc.e_vm.vm_ssize) * sigar->pagesize;
+
+    procmem->resident = procmem->rss =
+        pinfo->kp_eproc.e_vm.vm_rssize * sigar->pagesize;
+
+    procmem->share = SIGAR_FIELD_NOTIMPL;
+
+    return SIGAR_OK;
 #endif
 }
 
