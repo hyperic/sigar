@@ -416,7 +416,7 @@ void sigar_cpu_model_adjust(sigar_t *sigar, sigar_cpu_info_t *info)
 #else
 #include <rpcsvc/nfs_prot.h>
 #endif
-#if defined(__FreeBSD__) || defined(__sun)
+#if defined(__FreeBSD__) || defined(__sun) || defined(DARWIN)
 #include <arpa/inet.h>
 #endif
 #if defined(__sun) || defined(SIGAR_HPUX)
