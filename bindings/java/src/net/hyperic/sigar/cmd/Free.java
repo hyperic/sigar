@@ -37,6 +37,11 @@ public class Free extends SigarCommandBase {
             format(mem.getFree())
         };
 
+        Object[] actualRow = new Object[] {
+            format(mem.getActualUsed()),
+            format(mem.getActualFree())
+        };
+
         Object[] swapRow = new Object[] {
             format(swap.getTotal()),
             format(swap.getUsed()),
@@ -46,6 +51,13 @@ public class Free extends SigarCommandBase {
         printf("%18s %10s %10s", header);
 
         printf("Mem:    %10ld %10ld %10ld", memRow);
+
+        //e.g. linux
+        if ((mem.getUsed() != mem.getActualUsed()) ||
+            (mem.getFree() != mem.getActualFree()))
+        {
+            printf("-/+ buffers/cache: " + "%10ld %10d", actualRow);
+        }
 
         printf("Swap:   %10ld %10ld %10ld", swapRow);
 
