@@ -3,6 +3,7 @@ package net.hyperic.sigar.test;
 import java.io.File;
 
 import net.hyperic.sigar.Sigar;
+import net.hyperic.sigar.SigarException;
 import net.hyperic.sigar.ProcExe;
 import net.hyperic.sigar.SigarNotImplementedException;
 
@@ -14,6 +15,11 @@ public class TestProcExe extends SigarTestCase {
 
     public void testCreate() throws Exception {
         Sigar sigar = getSigar();
+
+        try {
+            sigar.getProcExe(getInvalidPid());
+        } catch (SigarException e) {
+        }
 
         try {
             ProcExe exe = sigar.getProcExe(sigar.getPid());

@@ -1,6 +1,7 @@
 package net.hyperic.sigar.test;
 
 import net.hyperic.sigar.Sigar;
+import net.hyperic.sigar.SigarException;
 import net.hyperic.sigar.SigarNotImplementedException;
 
 public class TestProcArgs extends SigarTestCase {
@@ -27,6 +28,11 @@ public class TestProcArgs extends SigarTestCase {
 
     public void testCreate() throws Exception {
         Sigar sigar = getSigar();
+
+        try {
+            sigar.getProcArgs(getInvalidPid());
+        } catch (SigarException e) {
+        }
 
         try {
             String[] args = sigar.getProcArgs(sigar.getPid());

@@ -1,6 +1,7 @@
 package net.hyperic.sigar.test;
 
 import net.hyperic.sigar.Sigar;
+import net.hyperic.sigar.SigarException;
 import net.hyperic.sigar.ProcMem;
 
 public class TestProcMem extends SigarTestCase {
@@ -11,6 +12,11 @@ public class TestProcMem extends SigarTestCase {
 
     public void testCreate() throws Exception {
         Sigar sigar = getSigar();
+
+        try {
+            sigar.getProcMem(getInvalidPid());
+        } catch (SigarException e) {
+        }
 
         ProcMem procMem = sigar.getProcMem(sigar.getPid());
 

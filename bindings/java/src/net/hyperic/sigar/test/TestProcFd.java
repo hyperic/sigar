@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 
 import net.hyperic.sigar.Sigar;
+import net.hyperic.sigar.SigarException;
 import net.hyperic.sigar.SigarLoader;
 import net.hyperic.sigar.SigarNotImplementedException;
 
@@ -15,6 +16,11 @@ public class TestProcFd extends SigarTestCase {
 
     public void testCreate() throws Exception {
         Sigar sigar = getSigar();
+
+        try {
+            sigar.getProcFd(getInvalidPid());
+        } catch (SigarException e) {
+        }
 
         try {
             long pid = sigar.getPid();

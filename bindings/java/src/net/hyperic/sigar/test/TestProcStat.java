@@ -1,6 +1,7 @@
 package net.hyperic.sigar.test;
 
 import net.hyperic.sigar.Sigar;
+import net.hyperic.sigar.SigarException;
 import net.hyperic.sigar.ProcStat;
 
 public class TestProcStat extends SigarTestCase {

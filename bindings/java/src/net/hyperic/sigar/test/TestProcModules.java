@@ -31,6 +31,11 @@ public class TestProcModules extends SigarTestCase {
         Sigar sigar = getSigar();
 
         try {
+	    printModules(sigar, getInvalidPid());
+        } catch (SigarException e) {
+        }
+
+        try {
 	    printModules(sigar, sigar.getPid());
         } catch (SigarNotImplementedException e) {
             return;

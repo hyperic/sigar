@@ -80,6 +80,10 @@ public abstract class SigarTestCase extends TestCase {
         return out;
     }
 
+    public long getInvalidPid() {
+        return 666666;
+    }
+
     public void traceln(String msg) {
         if (getVerbose()) {
             getWriter().println(msg);

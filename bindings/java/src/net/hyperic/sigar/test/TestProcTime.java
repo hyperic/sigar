@@ -1,6 +1,7 @@
 package net.hyperic.sigar.test;
 
 import net.hyperic.sigar.Sigar;
+import net.hyperic.sigar.SigarException;
 import net.hyperic.sigar.ProcTime;
 
 public class TestProcTime extends SigarTestCase {
@@ -11,6 +12,11 @@ public class TestProcTime extends SigarTestCase {
 
     public void testCreate() throws Exception {
         Sigar sigar = new Sigar();
+
+        try {
+            sigar.getProcTime(getInvalidPid());
+        } catch (SigarException e) {
+        }
 
         ProcTime procTime = sigar.getProcTime(sigar.getPid());
 

@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.Map;
 
 import net.hyperic.sigar.Sigar;
+import net.hyperic.sigar.SigarException;
 import net.hyperic.sigar.SigarNotImplementedException;
 
 public class TestProcEnv extends SigarTestCase {
@@ -14,6 +15,11 @@ public class TestProcEnv extends SigarTestCase {
 
     public void testCreate() throws Exception {
         Sigar sigar = getSigar();
+
+        try {
+            sigar.getProcEnv(getInvalidPid());
+        } catch (SigarException e) {
+        }
 
         long pid = sigar.getPid();
 
