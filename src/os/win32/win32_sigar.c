@@ -347,10 +347,15 @@ SIGAR_DECLARE(int) sigar_cpu_list_get(sigar_t *sigar, sigar_cpu_list_t *cpulist)
 
     /* first instance is total, rest are per-cpu */
     inst = get_cpu_instance(sigar, (DWORD*)&perf_offsets, &num, &err);
-    --num;
 
     if (!inst) {
         return err;
+    }
+
+    if (!sigar->winnt) {
+        /* skip Processor _Total instance (NT doesnt have one) */
+        --num;
+        inst = PdhNextInstance(inst);
     }
 
     sigar_cpu_count(sigar);
@@ -380,7 +385,6 @@ SIGAR_DECLARE(int) sigar_cpu_list_get(sigar_t *sigar, sigar_cpu_list_t *cpulist)
             SIGAR_ZERO(cpu);
         }
 
-        inst = PdhNextInstance(inst);
         counter_block = PdhGetCounterBlock(inst);
 
         cpu->sys  += PERF_VAL(PERF_IX_CPU_SYS);
@@ -389,6 +393,8 @@ SIGAR_DECLARE(int) sigar_cpu_list_get(sigar_t *sigar, sigar_cpu_list_t *cpulist)
         cpu->nice = 0; /* no nice here */
         
         cpu->total += cpu->sys + cpu->user + cpu->idle;
+
+        inst = PdhNextInstance(inst);
     }
 
     return SIGAR_OK;
