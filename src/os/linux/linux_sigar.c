@@ -846,7 +846,7 @@ int sigar_proc_modules_get(sigar_t *sigar, sigar_pid_t pid,
     }
 
     while ((ptr = fgets(buffer, sizeof(buffer), fp))) {
-        int len;
+        int len, status;
         /* skip region, flags, offset, dev */
         ptr = sigar_skip_multiple_token(ptr, 4);
         inode = sigar_strtoul(ptr);
@@ -861,7 +861,7 @@ int sigar_proc_modules_get(sigar_t *sigar, sigar_pid_t pid,
         len = strlen(ptr);
         ptr[len-1] = '\0'; /* chop \n */
 
-        int status =
+        status =
             procmods->module_getter(procmods->data,
                                     ptr, len-1);
 
