@@ -39,6 +39,19 @@ public class OperatingSystem {
             }
             else if (os.name.indexOf("Windows") > -1) {
                 os.vendor = "Microsoft";
+                if (os.name.endsWith("XP")) {
+                    os.vendorVersion = "XP";
+                }
+                else if (os.name.indexOf("2003") != -1) {
+                    os.vendorVersion = "2003";
+                }
+                else if (os.name.indexOf("2000") != -1) {
+                    os.vendorVersion = "2000";
+                }
+                else if (os.name.indexOf("NT") != -1) {
+                    os.vendorVersion = "NT";
+                }
+                os.name = "Win32";
             }
             else if (os.name.equals("SunOS")) {
                 os.vendor = "Sun Microsystems";
