@@ -176,12 +176,12 @@ my %classes = (
       {
          name => 'vendor', type => 'String',
          desc => 'CPU vendor id',
-         plat => 'ALSW'
+         plat => 'ALHSW'
       },
       {
          name => 'model', type => 'String',
          desc => 'CPU model',
-         plat => 'ALSW'
+         plat => 'ALHSW'
       },
       {
          name => 'mhz', type => 'Int',
@@ -205,12 +205,12 @@ my %classes = (
       {
          name => 'size', type => 'Long',
          desc => 'Total process memory',
-         plat => 'AHLW'
+         plat => 'AHLSW'
       },
       {
          name => 'vsize', type => 'Long',
          desc => 'Total process virtual memory',
-         plat => 'AHLW'
+         plat => 'AHLSW'
       },
       {
          name => 'resident', type => 'Long',
@@ -220,7 +220,7 @@ my %classes = (
       {
          name => 'share', type => 'Long',
          desc => 'Total process shared memory',
-         plat => 'AHL'
+         plat => 'AHLS'
       },
       {
          name => 'rss', type => 'Long',
@@ -254,10 +254,12 @@ my %classes = (
       {
          name => 'user', type => 'String',
          desc => 'Process owner user name',
+         plat => '*'
       },
       {
          name => 'group', type => 'String',
          desc => 'Process owner group name',
+         plat => '*'
       },
     ],
     ProcTime => [
@@ -291,12 +293,12 @@ my %classes = (
       {
          name => 'ppid', type => 'Long',
          desc => 'Process parent process id',
-         plat => 'ADFHLS'
+         plat => 'ADFHLSW'
       },
       {
          name => 'tty', type => 'Int',
          desc => 'Device number of rocess controling terminal',
-         plat => 'HLS'
+         plat => 'AHLS'
       },
       {
          name => 'nice', type => 'Int',
@@ -306,7 +308,7 @@ my %classes = (
       {
          name => 'priority', type => 'Int',
          desc => 'Kernel scheduling priority of process',
-         plat => 'DFHLS'
+         plat => 'DFHLSW'
       },
     ],
     ProcFd => [
