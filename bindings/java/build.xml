@@ -183,7 +183,14 @@
 
  <target name="test" depends="build,xtest"/>
 
- <target name="dist">
+ <target name="dist" depends="javadoc">
+   <mkdir dir="${dist}/docs"/>
+   <copy toDir="${dist}/docs" overwrite="true">
+     <fileset dir="${build}">
+       <include name="javadoc/**"/>
+     </fileset>
+   </copy>
+
    <mkdir dir="${dist}/sigar-bin"/>
    <copy toDir="${dist}/sigar-bin" overwrite="true">
      <fileset dir="${sigar-bin}">
@@ -192,6 +199,7 @@
        <include name="lib/*.sl"/>
        <include name="lib/*.so"/>
        <include name="lib/*.dylib"/>
+       <include name="include/*.h"/>
      </fileset>
      <fileset dir=".">
        <include name="lib/*.jar"/>
