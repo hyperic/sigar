@@ -1,5 +1,7 @@
 2005-02-24  Doug MacEachern  <dougm@hyperic.net>
 
+        * 1.1.17 released
+        
         * Optimize aix disk i/o metric collection
 
         * Add 'time' command to the shell
