@@ -1025,3 +1025,107 @@ JNIEXPORT void SIGAR_JNI(SigarLog_setLevel)
 
     sigar_log_level_set(sigar, level);
 }
+
+/*
+ * XXX temporary function for ptql to map windows service to pid.
+ * in the future would better to integrate win32bindings w/ sigar.
+ */
+#ifdef WIN32
+typedef struct _SERVICE_STATUS_PROCESS {
+    DWORD dwServiceType;
+    DWORD dwCurrentState;
+    DWORD dwControlsAccepted;
+    DWORD dwWin32ExitCode;
+    DWORD dwServiceSpecificExitCode;
+    DWORD dwCheckPoint;
+    DWORD dwWaitHint;
+    DWORD dwProcessId;
+    DWORD dwServiceFlags;
+} SERVICE_STATUS_PROCESS;
+
+typedef enum {
+    SC_STATUS_PROCESS_INFO = 0
+} SC_STATUS_TYPE;
+
+typedef BOOL (CALLBACK *QueryServiceStatusExFunc)(SC_HANDLE,
+                                                  SC_STATUS_TYPE,
+                                                  LPBYTE,
+                                                  DWORD,
+                                                  LPDWORD);
+#endif
+
+JNIEXPORT jlong SIGAR_JNI(ptql_WindowsServiceQuery_getServicePid)
+(JNIEnv *env, jclass classinstance, jstring jname)
+{
+#ifdef WIN32
+    const char *name;
+    jboolean is_copy;
+    jlong pid = 0;
+    DWORD err = ERROR_SUCCESS;
+    SC_HANDLE mgr;
+
+    name = JENV->GetStringUTFChars(env, jname, &is_copy);
+
+    mgr = OpenSCManager(NULL, SERVICES_ACTIVE_DATABASE,
+                        SC_MANAGER_ALL_ACCESS);
+
+    if (mgr) {
+        HANDLE svc = OpenService(mgr, name, SERVICE_ALL_ACCESS);
+
+        if (svc) {
+            SERVICE_STATUS_PROCESS status;
+            DWORD bytes;
+            HANDLE lib;
+
+            if ((lib = LoadLibrary("advapi32.dll"))) {
+                QueryServiceStatusExFunc status_query;
+                status_query =
+                    (QueryServiceStatusExFunc)
+                    GetProcAddress(lib, "QueryServiceStatusEx");
+
+                if (!status_query) {
+                    err = SIGAR_ENOTIMPL;
+                }
+                else if (status_query(svc,
+                                      SC_STATUS_PROCESS_INFO,
+                                      (LPBYTE)&status, sizeof(status), &bytes))
+                {
+                    pid = status.dwProcessId;
+                }
+                else {
+                    err = GetLastError();
+                }
+
+                FreeLibrary(lib);
+            }
+            else {
+                err = GetLastError();
+            }
+            CloseServiceHandle(svc);
+        }
+        else {
+            err = GetLastError();
+        }
+
+        CloseServiceHandle(mgr);
+    }
+    else {
+        err = GetLastError();
+    }
+
+    if (is_copy) {
+        JENV->ReleaseStringUTFChars(env, jname, name);
+    }
+
+    if (err != ERROR_SUCCESS) {
+        /* XXX need sigar for sigar_strerror */
+        char msg[256];
+        sprintf(msg, "error=%d", err);
+        sigar_throw_exception(env, msg);
+    }
+
+    return pid;
+#else
+    sigar_throw_notimpl(env, "Win32 only");
+#endif
+}
