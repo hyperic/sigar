@@ -3,6 +3,9 @@ package net.hyperic.sigar.cmd;
 import net.hyperic.sigar.SigarException;
 import net.hyperic.sigar.SigarNotImplementedException;
 
+/**
+ * Show process command line arguments.
+ */
 public class ShowArgs extends SigarCommandBase {
 
     public ShowArgs(Shell shell) {

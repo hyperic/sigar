@@ -5,6 +5,9 @@ import net.hyperic.sigar.SigarException;
 import net.hyperic.sigar.NetConnection;
 import net.hyperic.sigar.NetFlags;
 
+/**
+ * Display network connections.
+ */
 public class Netstat extends SigarCommandBase {
 
     public Netstat(Shell shell) {
@@ -20,7 +23,7 @@ public class Netstat extends SigarCommandBase {
     }
 
     public String getUsageShort() {
-        return "Show network connections";
+        return "Display network connections";
     }
 
     //poor mans getopt.

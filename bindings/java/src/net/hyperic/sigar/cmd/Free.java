@@ -4,6 +4,9 @@ import net.hyperic.sigar.Mem;
 import net.hyperic.sigar.Swap;
 import net.hyperic.sigar.SigarException;
 
+/**
+ * Display amount of free and used memory in the system.
+ */
 public class Free extends SigarCommandBase {
 
     public Free(Shell shell) {

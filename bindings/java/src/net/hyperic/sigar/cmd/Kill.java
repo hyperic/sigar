@@ -2,6 +2,9 @@ package net.hyperic.sigar.cmd;
 
 import net.hyperic.sigar.SigarException;
 
+/**
+ * Send a signal to a process.
+ */
 public class Kill extends SigarCommandBase {
 
     public Kill(Shell shell) {

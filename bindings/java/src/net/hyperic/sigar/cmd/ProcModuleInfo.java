@@ -6,6 +6,9 @@ import net.hyperic.sigar.Sigar;
 import net.hyperic.sigar.SigarException;
 import net.hyperic.sigar.SigarNotImplementedException;
 
+/**
+ * Display process module info.
+ */
 public class ProcModuleInfo extends SigarCommandBase {
 
     public ProcModuleInfo(Shell shell) {

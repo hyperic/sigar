@@ -11,6 +11,9 @@ import net.hyperic.sigar.FileSystemUsage;
 import net.hyperic.sigar.shell.FileCompleter;
 import net.hyperic.sigar.util.GetlineCompleter;
 
+/**
+ * Report filesytem disk space usage.
+ */
 public class Df extends SigarCommandBase {
 
     private static final String OUTPUT_FORMAT =

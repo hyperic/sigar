@@ -8,6 +8,9 @@ import net.hyperic.sigar.util.PrintfFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+/**
+ * Display how long the system has been running and the current load averages.
+ */
 public class Uptime extends SigarCommandBase {
 
     private static Object[] loadAvg = new Object[3];
@@ -24,7 +27,7 @@ public class Uptime extends SigarCommandBase {
     }
 
     public String getUsageShort() {
-        return "Show how long the system has been running";
+        return "Display how long the system has been running";
     }
 
     public void output(String[] args) throws SigarException {

@@ -9,6 +9,9 @@ import net.hyperic.sigar.NetInterfaceConfig;
 import net.hyperic.sigar.NetInterfaceStat;
 import net.hyperic.sigar.NetFlags;
 
+/**
+ * Display network interface configuration and metrics.
+ */
 public class Ifconfig extends SigarCommandBase {
 
     public Ifconfig(Shell shell) {

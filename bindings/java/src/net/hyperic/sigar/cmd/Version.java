@@ -7,6 +7,9 @@ import java.net.UnknownHostException;
 import net.hyperic.sigar.Sigar;
 import net.hyperic.sigar.SigarException;
 
+/**
+ * Display Sigar, java and system version information.
+ */
 public class Version extends SigarCommandBase {
     private static String[] SYS_PROPS = {
         "os.name",

@@ -23,3 +23,6 @@ alias myag ptql CredName.User.eq=$user.name,State.Name.eq=java,Args.-1.ew=Spider
 #find all java procs except the shell itself
 #($$ is the current process id)
 alias java ptql State.Name.eq=java,Pid.Pid.ne=$$
+
+#find all processes owned by the current user
+alias myproc ptql CredName.User.eq=$user.name

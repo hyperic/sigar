@@ -10,6 +10,9 @@ import net.hyperic.sigar.FileInfo;
 import net.hyperic.sigar.FileTail;
 import net.hyperic.sigar.FileWatcherThread;
 
+/**
+ * Display the last part of files to the standard output.
+ */
 public class Tail {
 
     public static void main(String[] args) throws SigarException {

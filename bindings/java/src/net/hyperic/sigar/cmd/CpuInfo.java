@@ -3,6 +3,9 @@ package net.hyperic.sigar.cmd;
 import net.hyperic.sigar.CpuPerc;
 import net.hyperic.sigar.SigarException;
 
+/**
+ * Display cpu information for each cpu found on the system.
+ */
 public class CpuInfo extends SigarCommandBase {
 
     public CpuInfo(Shell shell) {

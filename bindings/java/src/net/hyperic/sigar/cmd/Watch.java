@@ -12,6 +12,9 @@ import net.hyperic.sigar.FileInfo;
 import net.hyperic.sigar.FileWatcher;
 import net.hyperic.sigar.FileWatcherThread;
 
+/**
+ * Watch a file or directory displaying attribute changes.
+ */
 public class Watch {
 
     private static void printHeader(Sigar sigar, FileInfo info)

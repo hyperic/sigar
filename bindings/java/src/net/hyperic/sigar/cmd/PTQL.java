@@ -22,6 +22,10 @@ import net.hyperic.sigar.shell.ShellCommandInitException;
 import net.hyperic.sigar.shell.ShellCommandHandler;
 import net.hyperic.sigar.shell.ShellCommandUsageException;
 
+/**
+ * Run process table queries.
+ * @see net.hyperic.sigar.ptql.ProcessQueryBuilder
+ */
 public class PTQL
     extends MultiwordShellCommand
     implements GetlineCompleter {

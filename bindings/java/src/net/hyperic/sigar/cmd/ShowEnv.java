@@ -5,6 +5,9 @@ import java.util.Iterator;
 
 import net.hyperic.sigar.SigarException;
 
+/**
+ * Show process environment.
+ */
 public class ShowEnv extends SigarCommandBase {
 
     public ShowEnv(Shell shell) {

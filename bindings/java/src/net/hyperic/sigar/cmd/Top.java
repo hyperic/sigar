@@ -10,8 +10,15 @@ import net.hyperic.sigar.ProcCpu;
 import net.hyperic.sigar.CurrentProcessSummary;
 
 /**
- * Example:<br>
+ * Display system resource utilization summaries and process information.
+ * <p>
+ * This version of the top command requires a ptql query to select which
+ * processes to display.
+ *
+ * Example to display java processes only:<br>
  * <code>% java -jar sigar-bin/lib/sigar.jar Top State.Name.eq=java</code>
+ *
+ * @see net.hyperic.sigar.ptql.ProcessQueryBuilder
  */
 public class Top {
     private static final int SLEEP_TIME = 1000 * 5;

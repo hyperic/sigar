@@ -5,6 +5,9 @@ import net.hyperic.sigar.SigarException;
 import net.hyperic.sigar.ProcFd;
 import net.hyperic.sigar.ProcExe;
 
+/**
+ * Display process file information.
+ */
 public class ProcFileInfo extends SigarCommandBase {
 
     public ProcFileInfo(Shell shell) {

@@ -14,6 +14,9 @@ import java.util.List;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+/**
+ * Show process status.
+ */
 public class Ps extends SigarCommandBase {
 
     public Ps(Shell shell) {
