@@ -1602,7 +1602,7 @@ int sigar_file_system_usage_get(sigar_t *sigar,
     fsusage->use_percent = sigar_file_system_usage_calc_used(sigar, fsusage);
 
     SIGAR_DISK_STATS_NOTIMPL(fsusage);
-
+#if 0
     if (!sigar->diskmap) {
         status = create_diskmap(sigar);
         if (status != SIGAR_OK) {
@@ -1619,7 +1619,7 @@ int sigar_file_system_usage_get(sigar_t *sigar,
         }
         get_disk_metrics(sigar, fsusage, (aix_diskio_t *)ent->value);
     }
-
+#endif
     return SIGAR_OK;
 }
 
