@@ -1,3 +1,10 @@
+2005-03-01  Doug MacEachern  <dougm@hyperic.net>
+
+        * fix bug in ptql args glob substring operators (Args.*.{sw,ew,ct})
+        
+        * added OperatingSystem class to help determine linux
+        vendor/version info, etc.
+
 2005-02-24  Doug MacEachern  <dougm@hyperic.net>
 
         * 1.1.17 released
