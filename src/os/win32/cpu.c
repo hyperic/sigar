@@ -289,10 +289,15 @@ int sigar_cpu_info_get(sigar_t *sigar, sigar_cpu_info_t *info)
     }
 
     size = sizeof(info->model);
-    if (RegQueryValueEx(cpu, "Identifier", NULL, NULL,
+    if (RegQueryValueEx(cpu, "ProcessorNameString", NULL, NULL,
                         (LPVOID)&info->model, &size))
     {
-        SIGAR_SSTRCPY(info->vendor, "x86");
+        size = sizeof(info->model);
+        if (RegQueryValueEx(cpu, "Identifier", NULL, NULL,
+                            (LPVOID)&info->model, &size))
+        {
+            SIGAR_SSTRCPY(info->model, "x86");
+        }
     }
 
     size = sizeof(info->mhz); // == sizeof(DWORD)
