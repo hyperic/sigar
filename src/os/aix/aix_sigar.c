@@ -5,6 +5,7 @@
 
 #include <dlfcn.h>
 #include <nlist.h>
+#include <pthread.h>
 #include <stdio.h>
 #include <utmp.h>
 
@@ -37,6 +38,12 @@
 /* not defined in aix 4.3 */
 #ifndef SBITS
 #define SBITS 16
+#endif
+
+#ifndef PTHRDSINFO_RUSAGE_START
+#define PTHRDSINFO_RUSAGE_START   0x00000001
+#define PTHRDSINFO_RUSAGE_STOP    0x00000002
+#define PTHRDSINFO_RUSAGE_COLLECT 0x00000004
 #endif
 
 /*
@@ -144,6 +151,8 @@ int sigar_os_open(sigar_t **sigar)
 
     (*sigar)->aix_version = atoi(name.version);
 
+    (*sigar)->thrusage = PTHRDSINFO_RUSAGE_STOP;
+
     (*sigar)->diskmap = NULL;
 
     return SIGAR_OK;
@@ -168,6 +177,11 @@ int sigar_os_close(sigar_t *sigar)
     }
     if (sigar->diskmap) {
         sigar_cache_destroy(sigar->diskmap);
+    }
+    if (sigar->thrusage == PTHRDSINFO_RUSAGE_START) {
+        struct rusage usage;
+        sigar->perfstat.thread_rusage(&usage,
+                                      PTHRDSINFO_RUSAGE_STOP);
     }
     free(sigar);
     return SIGAR_OK;
@@ -266,6 +280,18 @@ static int sigar_perfstat_init(sigar_t *sigar)
 
         sigar->perfstat.avail = -1;
         return errno;
+    }
+
+    sigar->perfstat.thread_rusage =
+        (thread_rusage_func_t)dlsym(handle,
+                                    "sigar_thread_rusage");
+
+    if (!sigar->perfstat.thread_rusage) {
+        if (SIGAR_LOG_IS_DEBUG(sigar)) {
+            sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
+                             "dlsym(sigar_thread_rusage) failed: %s",
+                             dlerror());
+        }
     }
 
     sigar->perfstat.cpu_total =
@@ -1237,11 +1263,46 @@ int sigar_proc_modules_get(sigar_t *sigar, sigar_pid_t pid,
     }
 }
 
+#define SIGAR_MICROSEC2NANO(s) \
+    ((sigar_uint64_t)(s) * (sigar_uint64_t)1000)
+
+#define TIME_NSEC(t) \
+    (SIGAR_SEC2NANO((t).tv_sec) + SIGAR_MICROSEC2NANO((t).tv_usec))
+
 int sigar_thread_cpu_get(sigar_t *sigar,
                          sigar_uint64_t id,
                          sigar_thread_cpu_t *cpu)
 {
-    return SIGAR_ENOTIMPL;
+    struct rusage usage;
+    int retval;
+
+    sigar_perfstat_init(sigar);
+    if (!sigar->perfstat.thread_rusage) {
+        return SIGAR_ENOTIMPL;
+    }
+
+    if (sigar->thrusage != PTHRDSINFO_RUSAGE_START) {
+        sigar->thrusage = PTHRDSINFO_RUSAGE_START;
+        retval =
+            sigar->perfstat.thread_rusage(&usage,
+                                          PTHRDSINFO_RUSAGE_START);
+        if (retval != 0) {
+            return retval;
+        }
+    }
+
+    retval = 
+        sigar->perfstat.thread_rusage(&usage,
+                                      PTHRDSINFO_RUSAGE_COLLECT);
+    if (retval != 0) {
+        return retval;
+    }
+
+    cpu->user  = TIME_NSEC(usage.ru_utime);
+    cpu->sys   = TIME_NSEC(usage.ru_stime);
+    cpu->total = TIME_NSEC(usage.ru_utime) + TIME_NSEC(usage.ru_stime);
+
+    return SIGAR_OK;
 }
 
 int sigar_os_fs_type_get(sigar_file_system_t *fsp)

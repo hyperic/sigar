@@ -5,6 +5,8 @@
 #include <errno.h>
 #include <dlfcn.h>
 #include <procinfo.h>
+#include <sys/resource.h>
+
 #include "libperfstat.h"
 
 enum {
@@ -37,6 +39,8 @@ typedef int (*perfstat_swap_func_t)(perfstat_id_t *,
                                     perfstat_pagingspace_t *,
                                     size_t, int);
 
+typedef int (*thread_rusage_func_t)(struct rusage *, int);
+
 struct sigar_t {
     SIGAR_T_BASE;
     int kmem;
@@ -49,6 +53,7 @@ struct sigar_t {
         perfstat_cpu_func_t cpu;
         perfstat_cpu_total_func_t cpu_total;
         perfstat_swap_func_t swap;
+        thread_rusage_func_t thread_rusage;
         void *handle;
     } perfstat;
     int pagesize;
@@ -62,6 +67,7 @@ struct sigar_t {
     char model[128];
     char self_path[SIGAR_PATH_MAX]; /* path to where libsigar.so lives */
     int aix_version;
+    int thrusage;
     sigar_cache_t *diskmap; 
 };
 
