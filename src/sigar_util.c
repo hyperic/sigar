@@ -296,6 +296,8 @@ static const cpu_model_str_t cpu_models[] = {
     CPU_MODEL_ENT("Opteron"),
     CPU_MODEL_ENT("Athlon"),
     CPU_MODEL_ENT("Duron"),
+    CPU_MODEL_ENT_R("K6(tm)-III", "K6 III"),
+    CPU_MODEL_ENT_R("K6(tm) 3D+", "K6 3D+"),
     { NULL }
 };
 
@@ -321,6 +323,10 @@ void sigar_cpu_model_adjust(sigar_t *sigar, sigar_cpu_info_t *info)
             ptr += 3; /* remove (R) */
         }
         while (*ptr == ' ') ++ptr;
+    }
+
+    if (*ptr == '-') {
+        ++ptr; /* e.g. was AMD-K6... */
     }
 
     for (i=0; cpu_models[i].name; i++) {
