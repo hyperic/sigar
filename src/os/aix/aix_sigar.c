@@ -803,7 +803,6 @@ int sigar_uptime_get(sigar_t *sigar,
     }
 
     uptime->uptime = time(NULL) - sigar->boot_time;
-    uptime->idletime = -1;
 
     return SIGAR_OK;
 }

@@ -152,7 +152,6 @@ int sigar_uptime_get(sigar_t *sigar,
                      sigar_uptime_t *uptime)
 {
     uptime->uptime = time(NULL) - sigar->pstatic.boot_time;
-    uptime->idletime = 0; /*XXX*/;
 
     return SIGAR_OK;
 }

@@ -63,7 +63,6 @@ int sigar_uptime_get(sigar_t *sigar,
                      sigar_uptime_t *uptime)
 {
     uptime->uptime   = -1;
-    uptime->idletime = -1;
 
     return SIGAR_OK;
 }

@@ -358,8 +358,6 @@ int sigar_cpu_list_get(sigar_t *sigar, sigar_cpu_list_t *cpulist)
 int sigar_uptime_get(sigar_t *sigar,
                      sigar_uptime_t *uptime)
 {
-    uptime->idletime = 0; /*XXX*/
-
     if (sigar->boot_time) {
         uptime->uptime = time(NULL) - sigar->boot_time;
     }

@@ -135,7 +135,6 @@ sigar_cpu_info_list_destroy(sigar_t *sigar,
 
 typedef struct {
     double uptime;
-    double idletime;
 } sigar_uptime_t;
 
 SIGAR_DECLARE(int) sigar_uptime_get(sigar_t *sigar,

@@ -346,7 +346,6 @@ int sigar_uptime_get(sigar_t *sigar,
     }
 
     uptime->uptime   = strtod(buffer, &ptr);
-    uptime->idletime = strtod(ptr, &ptr);
 
     return SIGAR_OK;
 }

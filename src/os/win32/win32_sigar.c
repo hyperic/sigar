@@ -407,7 +407,6 @@ SIGAR_DECLARE(int) sigar_cpu_list_get(sigar_t *sigar, sigar_cpu_list_t *cpulist)
 SIGAR_DECLARE(int) sigar_uptime_get(sigar_t *sigar,
                                     sigar_uptime_t *uptime)
 {
-    uptime->idletime = 0;
     uptime->uptime = GetTickCount() / 1000;
     return SIGAR_OK;
 }

@@ -200,11 +200,6 @@ my %classes = (
          desc => 'Time since machine started in seconds',
          plat => '*'
       },
-      {
-         name => 'idletime', type => 'Double',
-         desc => 'Time machine spent idle since start',
-         plat => 'L'
-      },
     ],
     ProcMem => [
       {
