@@ -344,7 +344,10 @@ typedef struct {
         files,
         free_files,
         disk_reads,
-        disk_writes;
+        disk_writes,
+        disk_write_bytes,
+        disk_read_bytes,
+        disk_queue;
     double use_percent;
 } sigar_file_system_usage_t;
 
