@@ -17,14 +17,15 @@ import net.hyperic.sigar.util.GetlineCompleter;
 public class Iostat extends SigarCommandBase {
 
     private static final String OUTPUT_FORMAT =
-        "%-15s %-15s %-10s %-10s";
+        "%-15s %-15s %-10s %-10s %-10s %-10s";
 
-    //like df -h -a
     private static final String[] HEADER = new String[] {
         "Filesystem",
         "Mounted on",
         "Reads",
         "Writes",
+        "Bytes Read",
+        "Bytes Written",
     };
 
     private GetlineCompleter completer;
@@ -96,6 +97,8 @@ public class Iostat extends SigarCommandBase {
         items.add(fs.getDirName());
         items.add(String.valueOf(usage.getDiskReads()));
         items.add(String.valueOf(usage.getDiskWrites()));
+        items.add(Sigar.formatSize(usage.getDiskReadBytes()));
+        items.add(Sigar.formatSize(usage.getDiskWriteBytes()));
 
         printf(items);
     }
