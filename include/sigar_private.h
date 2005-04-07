@@ -205,6 +205,8 @@ int sigar_group_name_get(sigar_t *sigar, int gid, char *buf, int buflen);
     }
 
 #define SIGAR_DISK_STATS_NOTIMPL(fsusage) \
-    fsusage->disk_reads = fsusage->disk_writes = SIGAR_FIELD_NOTIMPL
+    fsusage->disk_reads = fsusage->disk_writes = \
+    fsusage->disk_read_bytes = fsusage->disk_write_bytes = \
+    fsusage->disk_queue = SIGAR_FIELD_NOTIMPL;
 
 #endif
