@@ -1320,9 +1320,9 @@ static int fs_kstat_read(sigar_t *sigar,
     kstat_read(sigar->kc, ksp, &io);
     fsusage->disk_reads  = io.reads;
     fsusage->disk_writes = io.writes;
-    fsusage->disk_read_bytes  = SIGAR_FIELD_NOTIMPL;
-    fsusage->disk_write_bytes = SIGAR_FIELD_NOTIMPL;
-    fsusage->disk_queue       = SIGAR_FIELD_NOTIMPL;
+    fsusage->disk_read_bytes  = io.nread;
+    fsusage->disk_write_bytes = io.nwritten;
+    fsusage->disk_queue       = io.wcnt; /* XXX ? */
 
     return SIGAR_OK;
 }
