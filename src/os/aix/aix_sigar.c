@@ -1643,12 +1643,26 @@ static int get_perfstat_disk_metrics(sigar_t *sigar,
 
     fsusage->disk_reads = disk.rblks;
     fsusage->disk_writes = disk.wblks;
-
-    fsusage->disk_read_bytes  = SIGAR_FIELD_NOTIMPL;
-    fsusage->disk_write_bytes = SIGAR_FIELD_NOTIMPL;
-    fsusage->disk_queue       = SIGAR_FIELD_NOTIMPL;
+    fsusage->disk_read_bytes  = disk.rblks * disk.bsize;
+    fsusage->disk_write_bytes = disk.wblks * disk.bsize;
+    fsusage->disk_queue       = disk.qdepth;
 
     return SIGAR_OK;
+}
+
+static void set_disk_metrics(struct dkstat *dkstat,
+                             sigar_file_system_usage_t *fsusage)
+{
+    fsusage->disk_reads = dkstat->dk_rblks;
+    fsusage->disk_writes = dkstat->dk_wblks;
+    fsusage->disk_read_bytes  = dkstat->dk_rblks * dkstat->dk_bsize;
+    fsusage->disk_write_bytes = dkstat->dk_wblks * dkstat->dk_bsize;
+    if (dkstat->dk_qd_magic == dk_q_depth_magic) {
+        fsusage->disk_queue = dkstat->dk_q_depth;
+    }
+    else {
+        fsusage->disk_queue = SIGAR_FIELD_NOTIMPL;
+    }
 }
 
 static int get_disk_metrics(sigar_t *sigar,
@@ -1681,11 +1695,7 @@ static int get_disk_metrics(sigar_t *sigar,
         read(fd, &dkstat, sizeof(dkstat));
 
         if (strEQ(diskio->name, dkstat.diskname)) {
-            fsusage->disk_reads = dkstat.dk_rblks;
-            fsusage->disk_writes = dkstat.dk_wblks;
-            fsusage->disk_read_bytes  = SIGAR_FIELD_NOTIMPL;
-            fsusage->disk_write_bytes = SIGAR_FIELD_NOTIMPL;
-            fsusage->disk_queue       = SIGAR_FIELD_NOTIMPL;
+            set_disk_metrics(&dkstat, fsusage);
             status = SIGAR_OK;
         }
         else {
@@ -1715,11 +1725,7 @@ static int get_disk_metrics(sigar_t *sigar,
         read(fd, &dkstat, sizeof(dkstat));
 
         if (strEQ(diskio->name, dkstat.diskname)) {
-            fsusage->disk_reads = dkstat.dk_rblks;
-            fsusage->disk_writes = dkstat.dk_wblks;
-            fsusage->disk_read_bytes  = SIGAR_FIELD_NOTIMPL;
-            fsusage->disk_write_bytes = SIGAR_FIELD_NOTIMPL;
-            fsusage->disk_queue       = SIGAR_FIELD_NOTIMPL;
+            set_disk_metrics(&dkstat, fsusage);
             diskio->addr = (long)dp;
             break;
         }

@@ -627,8 +627,8 @@ int sigar_file_system_usage_get(sigar_t *sigar,
         if (retval == 1) {
             fsusage->disk_reads  = lv.psl_rxfer;
             fsusage->disk_writes = lv.psl_wxfer;
-            fsusage->disk_read_bytes  = SIGAR_FIELD_NOTIMPL;
-            fsusage->disk_write_bytes = SIGAR_FIELD_NOTIMPL;
+            fsusage->disk_read_bytes  = lv.psl_rcount;
+            fsusage->disk_write_bytes = lv.psl_wcount;
             fsusage->disk_queue       = SIGAR_FIELD_NOTIMPL;
         }
     }
