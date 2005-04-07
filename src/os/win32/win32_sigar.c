@@ -54,11 +54,17 @@ typedef enum {
 typedef enum {
     PERF_IX_DISK_READ,
     PERF_IX_DISK_WRITE,
+    PERF_IX_DISK_READ_BYTES,
+    PERF_IX_DISK_WRITE_BYTES,
+    PERF_IX_DISK_QUEUE,
     PERF_IX_DISK_MAX
 } perf_disk_offsets_t;
 
 #define PERF_TITLE_DISK_READ  208
 #define PERF_TITLE_DISK_WRITE 210
+#define PERF_TITLE_DISK_READ_BYTES  220
+#define PERF_TITLE_DISK_WRITE_BYTES 222
+#define PERF_TITLE_DISK_QUEUE 1400
 
 /* 
  * diff is:
@@ -1471,6 +1477,15 @@ static PERF_INSTANCE_DEFINITION *get_disk_instance(sigar_t *sigar,
           case PERF_TITLE_DISK_WRITE:
             perf_offsets[PERF_IX_DISK_WRITE] = offset;
             break;
+          case PERF_TITLE_DISK_READ_BYTES:
+            perf_offsets[PERF_IX_DISK_READ_BYTES] = offset;
+            break;
+          case PERF_TITLE_DISK_WRITE_BYTES:
+            perf_offsets[PERF_IX_DISK_WRITE_BYTES] = offset;
+            break;
+          case PERF_TITLE_DISK_QUEUE:
+            perf_offsets[PERF_IX_DISK_QUEUE] = offset;
+            break;
         }
     }
 
@@ -1516,6 +1531,9 @@ static int get_disk_metrics(sigar_t *sigar,
         if (strnEQ(drive, dirname, 2)) {
             fsusage->disk_reads  = PERF_VAL(PERF_IX_DISK_READ);
             fsusage->disk_writes = PERF_VAL(PERF_IX_DISK_WRITE);
+            fsusage->disk_read_bytes  = PERF_VAL(PERF_IX_DISK_READ_BYTES);
+            fsusage->disk_write_bytes = PERF_VAL(PERF_IX_DISK_WRITE_BYTES);
+            fsusage->disk_queue = PERF_VAL(PERF_IX_DISK_QUEUE);
             return SIGAR_OK;
         }
     }
