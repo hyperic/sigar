@@ -479,6 +479,21 @@ my %classes = (
          plat => 'AFHLSW'
       },
       {
+         name => 'disk_read_bytes', type => 'Long',
+         desc => 'Number of physical disk bytes read',
+         plat => ''
+      },
+      {
+         name => 'disk_write_bytes', type => 'Long',
+         desc => 'Number of physical disk bytes written',
+         plat => ''
+      },
+      {
+         name => 'disk_queue', type => 'Long',
+         desc => '',
+         plat => ''
+      },
+      {
          name => 'use_percent', type => 'Double',
          desc => 'Percent of disk used',
          plat => '*'
