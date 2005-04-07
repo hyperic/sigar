@@ -1644,6 +1644,10 @@ static int get_perfstat_disk_metrics(sigar_t *sigar,
     fsusage->disk_reads = disk.rblks;
     fsusage->disk_writes = disk.wblks;
 
+    fsusage->disk_read_bytes  = SIGAR_FIELD_NOTIMPL;
+    fsusage->disk_write_bytes = SIGAR_FIELD_NOTIMPL;
+    fsusage->disk_queue       = SIGAR_FIELD_NOTIMPL;
+
     return SIGAR_OK;
 }
 
@@ -1679,6 +1683,9 @@ static int get_disk_metrics(sigar_t *sigar,
         if (strEQ(diskio->name, dkstat.diskname)) {
             fsusage->disk_reads = dkstat.dk_rblks;
             fsusage->disk_writes = dkstat.dk_wblks;
+            fsusage->disk_read_bytes  = SIGAR_FIELD_NOTIMPL;
+            fsusage->disk_write_bytes = SIGAR_FIELD_NOTIMPL;
+            fsusage->disk_queue       = SIGAR_FIELD_NOTIMPL;
             status = SIGAR_OK;
         }
         else {
@@ -1710,6 +1717,9 @@ static int get_disk_metrics(sigar_t *sigar,
         if (strEQ(diskio->name, dkstat.diskname)) {
             fsusage->disk_reads = dkstat.dk_rblks;
             fsusage->disk_writes = dkstat.dk_wblks;
+            fsusage->disk_read_bytes  = SIGAR_FIELD_NOTIMPL;
+            fsusage->disk_write_bytes = SIGAR_FIELD_NOTIMPL;
+            fsusage->disk_queue       = SIGAR_FIELD_NOTIMPL;
             diskio->addr = (long)dp;
             break;
         }

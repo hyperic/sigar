@@ -1083,6 +1083,9 @@ int sigar_file_system_usage_get(sigar_t *sigar,
 #else
     fsusage->disk_reads  = buf.f_syncreads + buf.f_asyncreads;
     fsusage->disk_writes = buf.f_syncwrites + buf.f_asyncwrites;
+    fsusage->disk_read_bytes  = SIGAR_FIELD_NOTIMPL;
+    fsusage->disk_write_bytes = SIGAR_FIELD_NOTIMPL;
+    fsusage->disk_queue       = SIGAR_FIELD_NOTIMPL;
 #endif
 
     return SIGAR_OK;

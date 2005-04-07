@@ -1076,6 +1076,10 @@ static int get_iostat_sys(sigar_t *sigar,
     ptr = sigar_skip_token(ptr);
     fsusage->disk_writes = sigar_strtoul(ptr);
 
+    fsusage->disk_read_bytes  = SIGAR_FIELD_NOTIMPL;
+    fsusage->disk_write_bytes = SIGAR_FIELD_NOTIMPL;
+    fsusage->disk_queue       = SIGAR_FIELD_NOTIMPL;
+
     return SIGAR_OK;
 }
 
@@ -1112,6 +1116,9 @@ static int get_iostat_procp(sigar_t *sigar,
             /* rmerge, rsect, ruse */
             ptr = sigar_skip_multiple_token(ptr, 3);
             fsusage->disk_writes = sigar_strtoul(ptr); /* wio */
+            fsusage->disk_read_bytes  = SIGAR_FIELD_NOTIMPL;
+            fsusage->disk_write_bytes = SIGAR_FIELD_NOTIMPL;
+            fsusage->disk_queue       = SIGAR_FIELD_NOTIMPL;
             fclose(fp);
             return SIGAR_OK;
         }
