@@ -167,7 +167,7 @@ JNIEXPORT jobjectArray SIGAR_JNI(win32_Pdh_pdhGetInstances)
 
     status = PdhEnumObjectItems(NULL, NULL, counter_path, NULL,
                                 &counter_list_size, instance_list_buf,
-                                &instance_list_size, PERF_DETAIL_NOVICE,
+                                &instance_list_size, PERF_DETAIL_WIZARD,
                                 FALSE);
     
     if (status == PDH_MORE_DATA && instance_list_size > 0) {
@@ -182,7 +182,7 @@ JNIEXPORT jobjectArray SIGAR_JNI(win32_Pdh_pdhGetInstances)
                                       NULL, &counter_list_size,
                                       instance_list_buf,
                                       &instance_list_size,
-                                      PERF_DETAIL_NOVICE, FALSE);
+                                      PERF_DETAIL_WIZARD, FALSE);
     }
 
     JENV->ReleaseStringUTFChars(env, cp, counter_path);
