@@ -49,8 +49,9 @@ public class TestFileSystem extends SigarTestCase {
                 //possible machines have full filesystems
                 assertGtEqZeroTrace("  Free", usage.getFree());
                 assertGtEqZeroTrace("  Avail", usage.getAvail());
+                assertGtEqZeroTrace("   Used", usage.getUsed());
                 double usePercent = usage.getUsePercent() * 100;
-                traceln("  Used=" + usePercent + "%");
+                traceln("  Usage=" + usePercent + "%");
                 assertTrue(usePercent <= 100.0);
               default:
                 traceln("  DiskReads=" + usage.getDiskReads());

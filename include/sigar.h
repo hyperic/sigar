@@ -340,6 +340,7 @@ typedef struct {
     sigar_uint64_t
         total,
         free,
+        used,
         avail,
         files,
         free_files,

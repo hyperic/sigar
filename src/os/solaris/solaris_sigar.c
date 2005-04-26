@@ -1384,6 +1384,7 @@ int sigar_file_system_usage_get(sigar_t *sigar,
     fsusage->total = SIGAR_FS_BLOCKS_TO_BYTES(buf, f_blocks);
     fsusage->free  = SIGAR_FS_BLOCKS_TO_BYTES(buf, f_bfree);
     fsusage->avail = SIGAR_FS_BLOCKS_TO_BYTES(buf, f_bavail);
+    fsusage->used  = fsusage->total - fsusage->free;
     fsusage->files = buf.f_files;
     fsusage->free_files = buf.f_files;
     fsusage->use_percent = sigar_file_system_usage_calc_used(sigar, fsusage);

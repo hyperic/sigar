@@ -356,6 +356,7 @@ namespace Hyperic.Sigar {
         public readonly ulong Total;
         public readonly ulong Free;
         public readonly ulong Avail;
+        public readonly ulong Used;
         private readonly ulong NA_Files; //XXX not implemented
         private readonly ulong NA_FreeFiles;
         private readonly ulong DiskReads;

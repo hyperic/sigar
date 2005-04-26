@@ -454,6 +454,11 @@ my %classes = (
          plat => '*'
       },
       {
+         name => 'used', type => 'Long',
+         desc => 'Total used bytes on filesystem',
+         plat => '*'
+      },
+      {
          name => 'avail', type => 'Long',
          desc => 'Total free bytes on filesytem available to caller',
          plat => '*'

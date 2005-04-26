@@ -1566,7 +1566,7 @@ sigar_file_system_usage_get(sigar_t *sigar,
     fsusage->total = total.QuadPart / 1024;
     fsusage->free  = free.QuadPart / 1024;
     fsusage->avail = avail.QuadPart / 1024;
-
+    fsusage->used  = fsusage->total - fsusage->free;
     fsusage->use_percent = sigar_file_system_usage_calc_used(sigar, fsusage);
 
     /* N/A */
