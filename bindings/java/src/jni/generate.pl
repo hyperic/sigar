@@ -450,7 +450,7 @@ my %classes = (
       },
       {
          name => 'free', type => 'Long',
-         desc => 'Total free bytes on filesytem',
+         desc => 'Total free bytes on filesystem',
          plat => '*'
       },
       {
@@ -460,7 +460,7 @@ my %classes = (
       },
       {
          name => 'avail', type => 'Long',
-         desc => 'Total free bytes on filesytem available to caller',
+         desc => 'Total free bytes on filesystem available to caller',
          plat => '*'
       },
       {
