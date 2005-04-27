@@ -2,13 +2,28 @@
 
         * Add disk i/o metrics for Windows 2000
 
+        * Add file_system_usage_t.used field
+        
+2005-04-06  Doug MacEachern  <dougm@hyperic.net>
+
+        * Add new disk i/o metrics (disk_write_bytes, disk_read_bytes,
+        disk_queue) for Win32, Solaris, AIX and HPUX.
+
+2005-03-19  Doug MacEachern  <dougm@hyperic.net>
+
+        * Add udp support to sigar_proc_port_get win32 impl
+
+        * Implement sigar_proc_port_get for FreeBSD 5.x
+        
 2005-03-15  Doug MacEachern  <dougm@hyperic.net>
 
         * Change Sigar.getMountedFileSystemUsage to throw
         NfsUnreachableException if FileSystem is Nfs and nfs ping fails
 
         * Implement sigar_net_connection for FreeBSD
-        
+
+        * Implement sigar_proc_port_get for AIX
+
 2005-03-11  Doug MacEachern  <dougm@hyperic.net>
 
         * Add NetPortMap class
