@@ -1,3 +1,7 @@
+2005-04-27  Doug MacEachern  <dougm@hyperic.net>
+
+        * Add disk i/o metrics for Windows 2000
+
 2005-03-15  Doug MacEachern  <dougm@hyperic.net>
 
         * Change Sigar.getMountedFileSystemUsage to throw

@@ -1528,6 +1528,18 @@ static int get_disk_metrics(sigar_t *sigar,
 
         SIGAR_W2A(name, drive, sizeof(drive));
 
+        if (sigar_isdigit(*name)) {
+            char *ptr = strchr(drive, ' '); /* 2000 Server "0 C:" */
+
+            if (ptr) {
+                ++ptr;
+                SIGAR_SSTRCPY(drive, ptr);
+            }
+            else {
+                /* XXX NT is a number only "0", how to map? */
+            }
+        }
+
         if (strnEQ(drive, dirname, 2)) {
             fsusage->disk_reads  = PERF_VAL(PERF_IX_DISK_READ);
             fsusage->disk_writes = PERF_VAL(PERF_IX_DISK_WRITE);
