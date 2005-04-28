@@ -74,7 +74,7 @@ public class ProcessFinder {
         ProcessFinder finder = new ProcessFinder(sigar);
 
         try {
-            return finder.find(ProcessQueryFactory.getInstance(query, sigar));
+            return finder.find(ProcessQueryFactory.getInstance(query));
         } catch (QueryLoadException e) {
             throw new SigarException(e.getMessage());
         } catch (MalformedQueryException e) {

@@ -5,7 +5,6 @@ import java.util.Comparator;
 import java.util.Map;
 import java.util.StringTokenizer;
 
-import net.hyperic.sigar.SigarProxy;
 import net.hyperic.sigar.util.ReferenceMap;
 
 public class ProcessQueryFactory implements Comparator {
@@ -13,13 +12,7 @@ public class ProcessQueryFactory implements Comparator {
     private static Map cache =
         ReferenceMap.synchronizedMap();
 
-    private SigarProxy sigar = null;
-
     public ProcessQueryFactory() {}
-
-    public ProcessQueryFactory(SigarProxy sigar) {
-        this.sigar = sigar;
-    }
 
     //sort what will become instruction branches.
     //so the cheapest are executed first.
@@ -127,13 +120,6 @@ public class ProcessQueryFactory implements Comparator {
         throws MalformedQueryException,
                QueryLoadException {
 
-        return getInstance(query, null);
-    }
-
-    public static ProcessQuery getInstance(String query, SigarProxy sigar)
-        throws MalformedQueryException,
-               QueryLoadException {
-
         if (query == null) {
             throw new MalformedQueryException("null query");
         }
@@ -165,7 +151,7 @@ public class ProcessQueryFactory implements Comparator {
             queries.put(vals[0], vals[1]);
         }
 
-        ProcessQueryFactory factory = new ProcessQueryFactory(sigar);
+        ProcessQueryFactory factory = new ProcessQueryFactory();
 
         pQuery = factory.prepare(queries);
 
