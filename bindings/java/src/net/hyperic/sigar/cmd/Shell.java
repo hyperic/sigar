@@ -33,7 +33,6 @@ public class Shell extends ShellBase {
 
     private Sigar sigar = new Sigar();
     private SigarProxy proxy = SigarProxyCache.newInstance(this.sigar);
-    private ProcessFinder finder = new ProcessFinder(this.proxy);
     private long[] foundPids = new long[0];
     private ArrayList completions = new ArrayList();
     private boolean isInteractive = false;
