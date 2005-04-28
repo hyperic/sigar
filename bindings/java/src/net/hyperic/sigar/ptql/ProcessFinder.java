@@ -9,6 +9,8 @@ import net.hyperic.sigar.SigarProxyCache;
 public class ProcessFinder {
 
     private SigarProxy proxy;
+    private static final long[] NO_MATCHES = new long[0];
+    private static final long[] ONE_MATCH = new long[1];
 
     public ProcessFinder(SigarProxy proxy) {
         this.proxy = proxy;
@@ -126,17 +128,19 @@ public class ProcessFinder {
             }
             else {
                 pids[i] = -1;
-                continue;
             }
         }
 
-        long[] matched = new long[matches];
-
         if (matches == 1) {
             /* avoid loop below */
-            matched[0] = pids[lastMatch];
-            return matched;
+            ONE_MATCH[0] = pids[lastMatch];
+            return ONE_MATCH;
         }
+        else if (matches == 0) {
+            return NO_MATCHES;
+        }
+
+        long[] matched = new long[matches];
 
         //XXX this is clunky
         for (int i=0, j=0; i<=lastMatch; i++) {
