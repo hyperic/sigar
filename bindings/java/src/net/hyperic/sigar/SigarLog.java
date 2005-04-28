@@ -26,7 +26,11 @@ public class SigarLog {
     }
 
     private static Logger getLogger() {
-        Logger log = Logger.getLogger("Sigar");
+        return getLogger("Sigar");
+    }
+
+    public static Logger getLogger(String name) {
+        Logger log = Logger.getLogger(name);
         if (!isLogConfigured()) {
             BasicConfigurator.configure();
         }
