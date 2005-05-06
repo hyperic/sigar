@@ -43,6 +43,9 @@ public class CpuInfo extends SigarCommandBase {
             println("Sys Time......" + CpuPerc.format(cpu.getSys()));
             println("Idle Time....." + CpuPerc.format(cpu.getIdle()));
             println("Wait Time....." + CpuPerc.format(cpu.getWait()));
+            println("Nice Time....." + CpuPerc.format(cpu.getNice()));
+            println("Combined......" + CpuPerc.format(cpu.getCombined()));
+            
             println("");
         }
     }
