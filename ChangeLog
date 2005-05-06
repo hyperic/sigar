@@ -7,7 +7,7 @@
 2005-04-06  Doug MacEachern  <dougm@hyperic.net>
 
         * Add new disk i/o metrics (disk_write_bytes, disk_read_bytes,
-        disk_queue) for Win32, Solaris, AIX and HPUX.
+        disk_queue) for Win32, Linux, Solaris, AIX and HPUX.
 
 2005-03-19  Doug MacEachern  <dougm@hyperic.net>
 
