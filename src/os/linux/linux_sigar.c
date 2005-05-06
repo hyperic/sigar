@@ -25,6 +25,7 @@
 
 #define SYS_BLOCK "/sys/block"
 #define PROC_PARTITIONS "/proc/partitions"
+#define PROC_DISKSTATS "/proc/diskstats"
 
 /*
  * /proc/self/stat fields:
@@ -128,7 +129,10 @@ int sigar_os_open(sigar_t **sigar)
 
     (*sigar)->ht_enabled = -1;
 
-    if (stat(SYS_BLOCK, &sb) == 0) {
+    if (stat(PROC_DISKSTATS, &sb) == 0) {
+        (*sigar)->iostat = IOSTAT_DISKSTATS;
+    }
+    else if (stat(SYS_BLOCK, &sb) == 0) {
         (*sigar)->iostat = IOSTAT_SYS;
     }
     else if (stat(PROC_PARTITIONS, &sb) == 0) {
@@ -1083,6 +1087,78 @@ static int get_iostat_sys(sigar_t *sigar,
     return SIGAR_OK;
 }
 
+static int get_iostat_proc_dstat(sigar_t *sigar,
+                                 const char *dirname,
+                                 sigar_file_system_usage_t *fsusage)
+{
+    FILE *fp;
+    char buffer[1025], dev[1025];
+    char *name, *ptr;
+    int len;
+
+    name = get_fsdev(sigar, dirname, dev);
+
+    if (!name) {
+        return ENOENT;
+    }
+
+    len = strlen(name);
+
+    if (!(fp = fopen(PROC_DISKSTATS, "r"))) {
+        return errno;
+    }
+
+    while ((ptr = fgets(buffer, sizeof(buffer), fp))) {
+        /* major, minor */
+        ptr = sigar_skip_multiple_token(ptr, 2);        
+        SIGAR_SKIP_SPACE(ptr);
+
+        if (strnEQ(ptr, name, len)) {
+            int num, status=SIGAR_OK;
+            unsigned long
+                rio, rmerge, rsect, ruse,
+                wio, wmerge, wsect, wuse,
+                running, use, aveq;
+
+            ptr += len; /* name */
+            SIGAR_SKIP_SPACE(ptr);
+
+            num = sscanf(ptr,
+                         "%lu %lu %lu %lu "
+                         "%lu %lu %lu %lu "
+                         "%lu %lu %lu",
+                         &rio, &rmerge, &rsect, &ruse,
+                         &wio, &wmerge, &wsect, &wuse,
+                         &running, &use, &aveq);
+
+            if (num == 11) {
+                fsusage->disk_queue  = aveq / 1000;
+            }
+            else if (num == 4) {
+                wio = rsect;
+                rsect = rmerge;
+                wsect = ruse;
+                fsusage->disk_queue = SIGAR_FIELD_NOTIMPL;
+            }
+            else {
+                status = ENOENT;
+            }
+
+            fsusage->disk_reads = rio;
+            fsusage->disk_writes = wio;
+            fsusage->disk_read_bytes  = rsect;
+            fsusage->disk_write_bytes = wsect;
+
+            fclose(fp);
+            return status;
+        }
+    }
+
+    fclose(fp);
+
+    return ENOENT;
+}
+
 static int get_iostat_procp(sigar_t *sigar,
                             const char *dirname,
                             sigar_file_system_usage_t *fsusage)
@@ -1114,7 +1190,7 @@ static int get_iostat_procp(sigar_t *sigar,
             ptr = sigar_skip_token(ptr); /* name */
             fsusage->disk_reads = sigar_strtoul(ptr); /* rio */
             ptr = sigar_skip_token(ptr);  /* rmerge */ 
-            fsusage->disk_read_bytes  = sigar_strtoul(ptr); /* rect */
+            fsusage->disk_read_bytes  = sigar_strtoul(ptr); /* rsect */
             ptr = sigar_skip_token(ptr);  /* ruse */ 
 
             ptr = sigar_skip_token(ptr);  /* wmerge */ 
@@ -1168,6 +1244,11 @@ int sigar_file_system_usage_get(sigar_t *sigar,
     switch (sigar->iostat) {
       case IOSTAT_SYS:
         if (get_iostat_sys(sigar, dirname, fsusage) == SIGAR_OK) {
+            return SIGAR_OK;
+        }
+        break;
+      case IOSTAT_DISKSTATS:
+        if (get_iostat_proc_dstat(sigar, dirname, fsusage) == SIGAR_OK) {
             return SIGAR_OK;
         }
         break;
