@@ -61,7 +61,7 @@ public class CpuPerc {
     }
 
     public double getCombined() {
-        return this.user + this.sys;
+        return this.user + this.sys + this.nice + this.wait;
     }
 
     public static String format(double val) {
