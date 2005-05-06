@@ -1113,12 +1113,18 @@ static int get_iostat_procp(sigar_t *sigar,
         if (strnEQ(ptr, name, len)) {
             ptr = sigar_skip_token(ptr); /* name */
             fsusage->disk_reads = sigar_strtoul(ptr); /* rio */
-            /* rmerge, rsect, ruse */
-            ptr = sigar_skip_multiple_token(ptr, 3);
+            ptr = sigar_skip_token(ptr);  /* rmerge */ 
+            fsusage->disk_read_bytes  = sigar_strtoul(ptr); /* rect */
+            ptr = sigar_skip_token(ptr);  /* ruse */ 
+
+            ptr = sigar_skip_token(ptr);  /* wmerge */ 
+            fsusage->disk_write_bytes = sigar_strtoul(ptr); /* wsect */
             fsusage->disk_writes = sigar_strtoul(ptr); /* wio */
-            fsusage->disk_read_bytes  = SIGAR_FIELD_NOTIMPL;
-            fsusage->disk_write_bytes = SIGAR_FIELD_NOTIMPL;
-            fsusage->disk_queue       = SIGAR_FIELD_NOTIMPL;
+            /* wuse, running, use */
+            ptr = sigar_skip_multiple_token(ptr, 3);
+            fsusage->disk_queue       = sigar_strtoul(ptr); /* aveq */
+            fsusage->disk_queue /= 1000;
+
             fclose(fp);
             return SIGAR_OK;
         }
