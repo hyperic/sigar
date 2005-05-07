@@ -2005,6 +2005,12 @@ static void ip_format(char *buffer, int buflen, UINT addr)
             ((ip) & 0xFF));
 }
 
+#define IS_TCP_SERVER(state, flags) \
+    ((flags & SIGAR_NETCONN_SERVER) && (state == MIB_TCP_STATE_LISTEN))
+
+#define IS_TCP_CLIENT(state, flags) \
+    ((flags & SIGAR_NETCONN_CLIENT) && (state != MIB_TCP_STATE_LISTEN))
+
 static int net_conn_get_tcp(sigar_t *sigar,
                             sigar_net_connection_list_t *connlist,
                             int flags)
@@ -2029,15 +2035,10 @@ static int net_conn_get_tcp(sigar_t *sigar,
         sigar_net_connection_t conn;
         DWORD state = tcp->table[i].dwState;
 
-        if (flags & SIGAR_NETCONN_SERVER) {
-            if (state != MIB_TCP_STATE_LISTEN) {
-                continue;
-            }
-        }
-        else if (flags & SIGAR_NETCONN_CLIENT) {
-            if (state == MIB_TCP_STATE_LISTEN) {
-                continue;
-            }
+        if (!(IS_TCP_SERVER(state, flags) ||
+              IS_TCP_CLIENT(state, flags)))
+        {
+            continue;
         }
 
         conn.local_port  = htons((WORD)tcp->table[i].dwLocalPort);
@@ -2104,6 +2105,12 @@ static int net_conn_get_tcp(sigar_t *sigar,
     return SIGAR_OK;
 }
 
+#define IS_UDP_SERVER(conn, flags) \
+    ((flags & SIGAR_NETCONN_SERVER) && !conn.remote_port)
+
+#define IS_UDP_CLIENT(state, flags) \
+    ((flags & SIGAR_NETCONN_CLIENT) && conn.remote_port)
+
 static int net_conn_get_udp(sigar_t *sigar,
                             sigar_net_connection_list_t *connlist,
                             int flags)
@@ -2127,8 +2134,8 @@ static int net_conn_get_udp(sigar_t *sigar,
     for (i = 0; i < udp->dwNumEntries; i++) {
         sigar_net_connection_t conn;
 
-        if (!((conn.remote_port && (flags & SIGAR_NETCONN_CLIENT)) ||
-              (!conn.remote_port && (flags & SIGAR_NETCONN_SERVER))))
+        if (!(IS_UDP_SERVER(conn, flags) ||
+              IS_UDP_CLIENT(conn, flags)))
         {
             continue;
         }
