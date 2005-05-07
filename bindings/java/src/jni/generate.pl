@@ -985,18 +985,18 @@ my $cfile = 'javasigar_generated.c';
 my $hfile = 'javasigar_generated.h';
 my $pfile = 'Sigar_generated.xs';
 
-if ((stat $0)[9] < (stat "src/jni/$cfile")[9]) {
-    print "$cfile unchanged\n";
-    exit;
-}
-
-print "generating $cfile\n";
-
 my $build_src = $ARGV[0] or die "usage: $0 build_directory";
 
 if (! -d $build_src) {
     die "$build_src: $!";
 }
+
+if ((stat $0)[9] < (stat "$build_src/$cfile")[9]) {
+    print "$cfile unchanged\n";
+    exit;
+}
+
+print "generating $cfile\n";
 
 chdir $build_src;
 
