@@ -765,13 +765,10 @@ JNIEXPORT jstring SIGAR_JNI(NetConnection_getTypeString)
 }
 
 JNIEXPORT jstring SIGAR_JNI(NetConnection_getStateString)
-(JNIEnv *env, jobject obj)
+(JNIEnv *env, jobject cls, jint state)
 {
-    jclass cls = JENV->GetObjectClass(env, obj);
-    jfieldID field = JENV->GetFieldID(env, cls, "state", "I");
-    jint type = JENV->GetIntField(env, obj, field);
     return JENV->NewStringUTF(env,
-                              sigar_net_connection_state_get(type));
+                              sigar_net_connection_state_get(state));
 }
 
 JNIEXPORT jobjectArray SIGAR_JNI(Sigar_getWhoList)

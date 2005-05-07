@@ -1038,7 +1038,11 @@ EOF
     NetConnection => <<'EOF',
     public native String getTypeString();
 
-    public native String getStateString();
+    public native static String getStateString(int state);
+
+    public String getStateString() {
+        return getStateString(this.state);
+    }
 EOF
     Mem => <<'EOF',
     public String toString() {
