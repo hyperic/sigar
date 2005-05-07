@@ -12,6 +12,10 @@ import java.util.StringTokenizer;
 
 public class NetPortMap {
 
+    private Sigar sigar;
+    private Map clients;
+    private int[] states;
+
     private static final String SERVICE_FILE;
 
     private static Map udpServices = null;
@@ -29,6 +33,10 @@ public class NetPortMap {
 
         SERVICE_FILE =
             System.getProperty("sigar.net.services.file", defaultFile);
+    }
+
+    public NetPortMap() {
+        this.sigar = new Sigar();
     }
 
     public static class IpEntry {
@@ -114,43 +122,52 @@ public class NetPortMap {
         return (String)udpServices.get(new Long(port));
     }
 
-    /**
-     * Map listening tcp ports to connected remote addresses.
-     * key == Listening tcp port on the local machine.
-     * value == List of connected remote addresses.
-     */
-    public static Map getTcpConnections(Sigar sigar)
-        throws SigarException {
-
+    public void stat() throws SigarException {
         int flags =
-            NetFlags.CONN_SERVER | NetFlags.CONN_TCP;
-
-        Map map = new HashMap();
+            NetFlags.CONN_SERVER | NetFlags.CONN_CLIENT |
+            NetFlags.CONN_TCP;
+        stat(flags);
+    }
+    
+    public void stat(int flags) throws SigarException {
+        this.clients = new HashMap();
+        this.states = new int[NetFlags.TCP_UNKNOWN];
+        for (int i=0; i<this.states.length; i++) {
+            this.states[i] = 0;
+        }
 
         NetConnection[] connections =
-            sigar.getNetConnectionList(flags);
+            this.sigar.getNetConnectionList(flags);
 
-        //first pass, get listening port numbers
         for (int i=0; i<connections.length; i++) {
             NetConnection conn = connections[i];
-            Long port = new Long(conn.getLocalPort());
-            Map addresses = (Map)map.get(port);
+            int state = conn.getState();
 
-            if (addresses == null) {
-                addresses = new HashMap();
-                map.put(port, addresses);
+            this.states[state]++;
+
+            //first pass, get listening port numbers
+            if (state == NetFlags.TCP_LISTEN) {
+                Long port = new Long(conn.getLocalPort());
+                Map addresses = (Map)this.clients.get(port);
+
+                if (addresses == null) {
+                    addresses = new HashMap();
+                    this.clients.put(port, addresses);
+                }
             }
         }
 
         //second pass, get addresses connected to listening ports
-        flags = NetFlags.CONN_CLIENT | NetFlags.CONN_TCP;
-        connections = sigar.getNetConnectionList(flags);
-        IpEntry key = new IpEntry();
-
         for (int i=0; i<connections.length; i++) {
             NetConnection conn = connections[i];
+
+            if (conn.getState() == NetFlags.TCP_LISTEN) {
+                continue;
+            }
+
             Long port = new Long(conn.getLocalPort());
-            Map addresses = (Map)map.get(port);
+
+            Map addresses = (Map)this.clients.get(port);
 
             if (addresses == null) {
                 continue;
@@ -164,13 +181,27 @@ public class NetPortMap {
             }
             entry.count++;
         }
+    }
+    
+    /**
+     * Map listening tcp ports to connected remote addresses.
+     * key == Listening tcp port on the local machine.
+     * value == List of connected remote addresses.
+     */
+    public Map getTcpClientConnections() {
+        return this.clients;
+    }
 
-        return map;
+    public int[] getStates() {
+        return this.states;
     }
 
     public static void main(String[] args) throws Exception {
-        Sigar sigar = new Sigar();
-        Map ports = getTcpConnections(sigar);
+        NetPortMap map = new NetPortMap();
+        map.stat();
+
+        System.out.println("Client Connections...");
+        Map ports = map.getTcpClientConnections();
 
         for (Iterator it = ports.entrySet().iterator();
              it.hasNext();)
@@ -179,6 +210,13 @@ public class NetPortMap {
             Long port = (Long)entry.getKey();
             Map addresses = (Map)entry.getValue();
             System.out.println(port + "=" + addresses);
+        }
+
+        System.out.println("\nStates...");
+        int[] states = map.getStates();
+        for (int i=1; i<states.length; i++) {
+            System.out.println(NetConnection.getStateString(i) + "=" +
+                               states[i]);
         }
     }
 }
