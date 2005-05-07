@@ -90,7 +90,9 @@ public class NetFlags {
     public static final int TCP_LAST_ACK    = 9;
     public static final int TCP_LISTEN      = 10;
     public static final int TCP_CLOSING     = 11;
-    public static final int TCP_UNKNOWN     = 12;
+    public static final int TCP_IDLE        = 12;
+    public static final int TCP_BOUND       = 13;
+    public static final int TCP_UNKNOWN     = 14;
 
     public static int getConnectionProtocol(String protocol) 
         throws SigarException {
