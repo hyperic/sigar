@@ -489,11 +489,20 @@ public class Sigar implements SigarProxy {
         return ThreadCpu.fetch(this, 0);
     }
 
+
+    private native FileSystem[] getFileSystemListNative() throws SigarException;
+
     /**
      * Get list of file systems.
      * @exception SigarException on failure.
      */
-    public native FileSystem[] getFileSystemList() throws SigarException;
+    public FileSystem[] getFileSystemList() throws SigarException {
+        FileSystem[] fslist = getFileSystemListNative();
+        if (this.mounts != null) {
+            this.mounts.init(fslist);
+        }
+        return fslist;
+    }
 
     /**
      * Get file system usage.
@@ -547,7 +556,7 @@ public class Sigar implements SigarProxy {
             this.mounts = new FileSystemMap();
         }
 
-        this.mounts.init(getFileSystemList());
+        getFileSystemList(); //this.mounts.init()
 
         return this.mounts;
     }

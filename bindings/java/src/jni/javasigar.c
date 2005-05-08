@@ -268,7 +268,7 @@ enum {
 
 #define STRING_SIG "Ljava/lang/String;"
 
-JNIEXPORT jobjectArray SIGAR_JNI(Sigar_getFileSystemList)
+JNIEXPORT jobjectArray SIGAR_JNI(Sigar_getFileSystemListNative)
 (JNIEnv *env, jobject sigar_obj)
 {
     int status;
