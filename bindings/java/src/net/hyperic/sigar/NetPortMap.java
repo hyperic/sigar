@@ -77,13 +77,12 @@ public class NetPortMap {
             String ip = conn.getRemoteAddress();
 
             if (addresses == null) {
-                ip = conn.getLocalAddress();
-                String key =
-                    conn.getRemoteAddress() + ":" + conn.getRemotePort();
-                addresses = (Map)this.outbound.get(key);
+                ip = conn.getRemoteAddress();
+                port = new Long(conn.getRemotePort());
+                addresses = (Map)this.outbound.get(port);
                 if (addresses == null) {
                     addresses = new HashMap();
-                    this.outbound.put(key, addresses);
+                    this.outbound.put(port, addresses);
                 }
             }
 
@@ -113,14 +112,8 @@ public class NetPortMap {
         return this.states;
     }
 
-    public static void main(String[] args) throws Exception {
-        NetPortMap map = new NetPortMap();
-        map.stat();
-
-        System.out.println("Inbound Connections...");
-        Map ports = map.getInboundConnections();
-
-        for (Iterator it = ports.entrySet().iterator();
+    private static void dumpConnections(Map map) {
+        for (Iterator it = map.entrySet().iterator();
              it.hasNext();)
         {
             Map.Entry entry = (Map.Entry)it.next();
@@ -128,18 +121,17 @@ public class NetPortMap {
             Map addresses = (Map)entry.getValue();
             System.out.println(port + "=" + addresses);
         }
+    }
+    
+    public static void main(String[] args) throws Exception {
+        NetPortMap map = new NetPortMap();
+        map.stat();
+
+        System.out.println("Inbound Connections...");
+        dumpConnections(map.getInboundConnections());
 
         System.out.println("\nOutbound Connections...");
-        Map outbound = map.getOutboundConnections();
-
-        for (Iterator it = outbound.entrySet().iterator();
-             it.hasNext();)
-        {
-            Map.Entry entry = (Map.Entry)it.next();
-            String server = (String)entry.getKey();
-            Map addresses = (Map)entry.getValue();
-            System.out.println(server + "=" + addresses);
-        }
+        dumpConnections(map.getOutboundConnections());
 
         System.out.println("\nStates...");
         int[] states = map.getStates();
