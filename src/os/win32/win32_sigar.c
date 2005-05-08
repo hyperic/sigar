@@ -2141,7 +2141,7 @@ static int net_conn_get_udp(sigar_t *sigar,
         }
 
         conn.local_port  = htons((WORD)udp->table[i].dwLocalPort);
-        conn.remote_port = conn.local_port;
+        conn.remote_port = 0;
 
         conn.type = SIGAR_NETCONN_UDP;
 
@@ -2151,7 +2151,7 @@ static int net_conn_get_udp(sigar_t *sigar,
 
         ip_format(conn.remote_address,
                   sizeof(conn.remote_address),
-                  udp->table[i].dwLocalAddr);
+                  0);
 
         conn.send_queue = conn.receive_queue = SIGAR_FIELD_NOTIMPL;
 
