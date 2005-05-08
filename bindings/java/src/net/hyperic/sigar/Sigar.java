@@ -489,7 +489,6 @@ public class Sigar implements SigarProxy {
         return ThreadCpu.fetch(this, 0);
     }
 
-
     private native FileSystem[] getFileSystemListNative() throws SigarException;
 
     /**

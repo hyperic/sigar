@@ -15,7 +15,7 @@ public class FileSystemMap extends HashMap {
      * @see #init
      */
     public Object put(Object key, Object value) {
-	throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException();
     }
 
     /**
