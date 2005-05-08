@@ -4,10 +4,10 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 
+import net.hyperic.sigar.NetServices;
 import net.hyperic.sigar.SigarException;
 import net.hyperic.sigar.NetConnection;
 import net.hyperic.sigar.NetFlags;
-import net.hyperic.sigar.NetPortMap;
 
 /**
  * Display network connections.
@@ -101,7 +101,7 @@ public class Netstat extends SigarCommandBase {
             return "*";
         }
         if (!isNumeric) {
-            String service = NetPortMap.getServiceName(proto, port);
+            String service = NetServices.getName(proto, port);
             if (service != null) {
                 return service;
             }
