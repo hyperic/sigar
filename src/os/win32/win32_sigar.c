@@ -2149,9 +2149,7 @@ static int net_conn_get_udp(sigar_t *sigar,
                   sizeof(conn.local_address),
                   udp->table[i].dwLocalAddr);
 
-        ip_format(conn.remote_address,
-                  sizeof(conn.remote_address),
-                  0);
+        SIGAR_SSTRCPY(conn.remote_address, "0.0.0.0");
 
         conn.send_queue = conn.receive_queue = SIGAR_FIELD_NOTIMPL;
 
