@@ -1184,7 +1184,7 @@ gl_fixup(char *prompt, int change, int cursor)
     static int   gl_shift;      /* index of first on screen character */
     static int   off_right;     /* true if more text right of screen */
     static int   off_left;      /* true if more text left of screen */
-    static char  last_prompt[80] = "";
+    static char  last_prompt[BUF_SIZE] = "";
     int          left = 0, right = -1;          /* bounds for redraw */
     int          padl;          /* how much to erase at end of line */
     int          backup;        /* how far to backup before fixing */
