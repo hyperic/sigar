@@ -251,7 +251,7 @@ static void    sigar_getline_config(const char *which, int value); /* set some o
 
 static void sigar_getline_clear_screen(void);
 
-#define BUF_SIZE 1024
+#define BUF_SIZE 8096
 
 static int      gl_init_done = -1;      /* terminal mode flag  */
 static int      gl_notty = 0;           /* 1 when not a tty */
