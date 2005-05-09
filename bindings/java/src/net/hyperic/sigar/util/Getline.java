@@ -52,7 +52,7 @@ public class Getline {
         //XXX provide pure-java fallback
         String line = getline(prompt);
         if (addToHistory) {
-            histadd(line);
+            addToHistory(line);
         }
         return line;
     }
@@ -64,6 +64,11 @@ public class Getline {
     }
 
     public void addToHistory(String line) {
+        if ((line == null) ||
+            (line.length() == 0))
+        {
+            return;
+        }
         histadd(line);
     }
 }
