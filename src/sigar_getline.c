@@ -277,6 +277,7 @@ static int      gl_savehist = 0;        /* # of lines to save in hist file */
 static char     gl_histfile[256];       /* name of history file */
 
 static void     gl_init();              /* prepare to edit a line */
+static void     gl_bell();              /* ring bell */
 static void     gl_cleanup();           /* to undo gl_init */
 static void     gl_char_init();         /* get ready for no echo input */
 static void     gl_char_cleanup();      /* undo gl_char_init */
@@ -720,6 +721,12 @@ gl_init()
 }
 
 static void
+gl_bell()
+{
+    gl_putc('\007');
+}
+
+static void
 gl_cleanup()
 /* undo effects of gl_init, as necessary */
 {
@@ -937,12 +944,12 @@ sigar_getlinem(int mode, char *prompt)
                       case 'D': gl_fixup(gl_prompt, -1, gl_pos-1);  /* left */
                            break;
                       default:                                 /* who knows */
-                           gl_putc('\007');
+                           gl_bell();
                            break;
                       }
                       break;
                  default:
-                      gl_putc('\007');
+                      gl_bell();
                  }
                  break;
             default:          /* check for a terminal signal */
@@ -978,7 +985,7 @@ sigar_getlinem(int mode, char *prompt)
                 }
 #endif /* unix */
                 if (c > 0)
-                    gl_putc('\007');
+                    gl_bell();
                 break;
             }
         }
@@ -1055,7 +1062,7 @@ gl_yank()
             gl_fixup(gl_prompt, gl_pos, gl_pos+len);
         }
     } else
-        gl_putc('\007');
+        gl_bell();
 }
 
 static void
@@ -1071,7 +1078,7 @@ gl_transpose()
         gl_extent = 2;
         gl_fixup(gl_prompt, gl_pos-1, gl_pos);
     } else
-        gl_putc('\007');
+        gl_bell();
 }
 
 static void
@@ -1125,7 +1132,7 @@ gl_del(int loc)
             gl_buf[i] = gl_buf[i+1];
         gl_fixup(gl_prompt, gl_pos+loc, gl_pos+loc);
     } else
-        gl_putc('\007');
+        gl_bell();
 }
 
 static void
@@ -1137,7 +1144,7 @@ gl_kill()
         gl_buf[gl_pos] = '\0';
         gl_fixup(gl_prompt, gl_pos, gl_pos);
     } else
-        gl_putc('\007');
+        gl_bell();
 }
 
 SIGAR_DECLARE(void) sigar_getline_redraw(void)
@@ -1226,11 +1233,11 @@ gl_fixup(char *prompt, int change, int cursor)
     }
     if (cursor > gl_cnt) {
         if (cursor != BUF_SIZE)         /* BUF_SIZE means end of line */
-            gl_putc('\007');
+            gl_bell();
         cursor = gl_cnt;
     }
     if (cursor < 0) {
-        gl_putc('\007');
+        gl_bell();
         cursor = 0;
     }
     if (off_right || (off_left && cursor < gl_shift + gl_width - gl_scroll / 2))
@@ -1456,7 +1463,7 @@ hist_prev()
     }
     if (p == 0) {
         p = "";
-        gl_putc('\007');
+        gl_bell();
     }
     return p;
 }
@@ -1473,7 +1480,7 @@ hist_next()
     }
     if (p == 0) {
         p = "";
-        gl_putc('\007');
+        gl_bell();
     }
     return p;
 }
@@ -1534,7 +1541,7 @@ search_update(int c)
             search_prompt[search_pos+1] = ' ';
             search_prompt[search_pos+2] = 0;
         } else {
-            gl_putc('\007');
+            gl_bell();
             hist_pos = hist_last;
         }
     }
@@ -1608,7 +1615,7 @@ search_back(int new_search)
             }
         }
     } else {
-        gl_putc('\007');
+        gl_bell();
     }
 }
 
@@ -1641,7 +1648,7 @@ search_forw(int new_search)
             }
         }
     } else {
-        gl_putc('\007');
+        gl_bell();
     }
 }
 #if 0
