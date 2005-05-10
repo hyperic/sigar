@@ -183,7 +183,7 @@ public class SigarInvoker {
     }
 
     public Object invoke(Object arg, String attr)
-        throws SigarException {
+        throws SigarException, SigarNotImplementedException {
 
         Object[] args = null;
 
@@ -200,7 +200,7 @@ public class SigarInvoker {
     }
 
     public Object invoke(Object[] args, String attr)
-        throws SigarException {
+        throws SigarException, SigarNotImplementedException {
 
         Method typeGetter, attrGetter;
         Object typeObject, attrObject;
@@ -219,6 +219,9 @@ public class SigarInvoker {
             String msg = "Failed to invoke " + 
                 typeGetter.getName() + parms +
                 ": " + t.getMessage();
+            if (t instanceof SigarNotImplementedException) {
+                throw (SigarNotImplementedException)t;
+            }
             throw new SigarException(msg);
         }
 

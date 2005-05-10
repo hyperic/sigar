@@ -5,6 +5,7 @@ import java.util.StringTokenizer;
 
 import net.hyperic.sigar.SigarException;
 import net.hyperic.sigar.SigarInvoker;
+import net.hyperic.sigar.SigarNotImplementedException;
 import net.hyperic.sigar.SigarProxy;
 import net.hyperic.sigar.util.ReferenceMap;
 
@@ -171,7 +172,7 @@ public class SigarInvokerJMX extends SigarInvoker {
      * @exception SigarException If invocation fails.
      */
     public Object invoke(String attr)
-        throws SigarException {
+        throws SigarException, SigarNotImplementedException {
 
         return super.invoke(getArg(), attr);
     }
