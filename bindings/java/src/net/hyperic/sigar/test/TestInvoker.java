@@ -2,7 +2,6 @@ package net.hyperic.sigar.test;
 
 import net.hyperic.sigar.Sigar;
 import net.hyperic.sigar.SigarException;
-import net.hyperic.sigar.SigarLoader;
 import net.hyperic.sigar.SigarNotImplementedException;
 import net.hyperic.sigar.SigarProxy;
 import net.hyperic.sigar.SigarProxyCache;
@@ -64,20 +63,13 @@ public class TestInvoker extends SigarTestCase {
             String[] query = OK_QUERIES[i];
             SigarInvokerJMX invoker =
                 SigarInvokerJMX.getInstance(proxy, query[0]);
-            if (SigarLoader.IS_WIN32 &&
-                invoker.getType().equals("LoadAverage"))
-            {
-                /* XXX not implemented on win32
-                 * invoke should throw SigarNotImplementedException
-                 */
-                continue;
-            }
+
             try {
                 Object o = invoker.invoke(query[1]);
                 traceln(query[0] + ":" + query[1] + "=" + o);
                 assertTrue(true);
             } catch (SigarNotImplementedException e) {
-                trace(query[0] + " NotImplemented");
+                traceln(query[0] + " NotImplemented");
             } catch (SigarException e) {
                 assertTrue(false);
             }
