@@ -33,6 +33,7 @@ public class SigarTestRunner extends SigarCommandBase {
         TestLoadAverage.class,
         TestMem.class,
         TestNetIf.class,
+        TestNetStat.class,
         TestProcArgs.class,
         TestProcEnv.class,
         TestProcExe.class,
