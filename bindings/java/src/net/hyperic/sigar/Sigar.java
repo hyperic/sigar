@@ -602,7 +602,7 @@ public class Sigar implements SigarProxy {
      * @exception SigarException on failure.
      */
     public native NetConnection[] getNetConnectionList(int flags)
-    throws SigarException;
+        throws SigarException;
 
     public NetStat getNetStat()
         throws SigarException {
