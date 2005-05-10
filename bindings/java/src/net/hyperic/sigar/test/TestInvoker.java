@@ -3,6 +3,7 @@ package net.hyperic.sigar.test;
 import net.hyperic.sigar.Sigar;
 import net.hyperic.sigar.SigarException;
 import net.hyperic.sigar.SigarLoader;
+import net.hyperic.sigar.SigarNotImplementedException;
 import net.hyperic.sigar.SigarProxy;
 import net.hyperic.sigar.SigarProxyCache;
 import net.hyperic.sigar.jmx.SigarInvokerJMX;
@@ -75,6 +76,8 @@ public class TestInvoker extends SigarTestCase {
                 Object o = invoker.invoke(query[1]);
                 traceln(query[0] + ":" + query[1] + "=" + o);
                 assertTrue(true);
+            } catch (SigarNotImplementedException e) {
+                trace(query[0] + " NotImplemented");
             } catch (SigarException e) {
                 assertTrue(false);
             }
