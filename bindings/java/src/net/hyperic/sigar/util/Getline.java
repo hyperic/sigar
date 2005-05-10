@@ -76,7 +76,9 @@ public class Getline {
     public void initHistoryFile(File file)
         throws IOException {
 
-        histinit(file.getCanonicalPath());
+        if (useNative) {
+            histinit(file.getCanonicalPath());
+        }
     }
 
     public void addToHistory(String line) {
@@ -85,6 +87,8 @@ public class Getline {
         {
             return;
         }
-        histadd(line);
+        if (useNative) {
+            histadd(line);
+        }
     }
 }
