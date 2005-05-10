@@ -1,6 +1,8 @@
 package net.hyperic.sigar.util;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.EOFException;
 import java.io.File;
 
@@ -12,6 +14,11 @@ import java.io.File;
  * Copyright (C) 1991, 1992 by Chris Thewalt (thewalt@ce.berkeley.edu)
  */
 public class Getline {
+
+    private static boolean useNative =
+        ! "false".equals(System.getProperty("sigar.getline.native"));
+
+    private BufferedReader in = null;
 
     private String prompt = "> ";
 
@@ -49,12 +56,21 @@ public class Getline {
     public String getLine(String prompt, boolean addToHistory)
         throws IOException, EOFException {
 
-        //XXX provide pure-java fallback
-        String line = getline(prompt);
-        if (addToHistory) {
-            addToHistory(line);
+        if (useNative) {
+            String line = getline(prompt);
+            if (addToHistory) {
+                addToHistory(line);
+            }
+            return line;
         }
-        return line;
+        else {
+            if (this.in == null) {
+                this.in =
+                    new BufferedReader(new InputStreamReader(System.in));
+            }
+            System.out.print(prompt);
+            return this.in.readLine();
+        }
     }
 
     public void initHistoryFile(File file)
