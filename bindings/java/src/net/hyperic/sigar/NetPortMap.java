@@ -126,6 +126,59 @@ public class NetPortMap {
         return this.states;
     }
 
+    //state counters
+    public int getTcpEstablished() {
+        return this.states[NetFlags.TCP_ESTABLISHED];
+    }
+
+    public int getTcpSynSent() {
+        return this.states[NetFlags.TCP_SYN_SENT];
+    }
+
+    public int getTcpSynRecv() {
+        return this.states[NetFlags.TCP_SYN_RECV];
+    }
+
+    public int getTcpFinWait1() {
+        return this.states[NetFlags.TCP_FIN_WAIT1];
+    }
+
+    public int getTcpFinWait2() {
+        return this.states[NetFlags.TCP_FIN_WAIT2];
+    }
+
+    public int getTcpTimeWait() {
+        return this.states[NetFlags.TCP_TIME_WAIT];
+    }
+
+    public int getTcpClose() {
+        return this.states[NetFlags.TCP_CLOSE];
+    }
+
+    public int getTcpCloseWait() {
+        return this.states[NetFlags.TCP_CLOSE_WAIT];
+    }
+
+    public int getTcpLastAck() {
+        return this.states[NetFlags.TCP_LAST_ACK];
+    }
+
+    public int getTcpListen() {
+        return this.states[NetFlags.TCP_LISTEN];
+    }
+
+    public int getTcpClosing() {
+        return this.states[NetFlags.TCP_CLOSING];
+    }
+
+    public int getTcpIdle() {
+        return this.states[NetFlags.TCP_IDLE];
+    }
+
+    public int getTcpBound() {
+        return this.states[NetFlags.TCP_BOUND];
+    }
+
     private static void dumpConnections(Map map) {
         for (Iterator it = map.entrySet().iterator();
              it.hasNext();)
