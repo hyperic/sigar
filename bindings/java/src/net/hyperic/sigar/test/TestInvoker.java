@@ -33,6 +33,8 @@ public class TestInvoker extends SigarTestCase {
         { "sigar:Type=ProcTime,Arg=$$", "Stime" },
         { "sigar:Type=ProcTime,Arg=$$", "Utime" },
         { "sigar:Type=CpuPercList,Arg=0", "Idle" },
+        { "sigar:Type=NetStat", "TcpOutboundTotal" },
+        { "sigar:Type=NetStat", "TcpListen" },
     };
 
     private static final String[][] BROKEN_QUERIES = {
