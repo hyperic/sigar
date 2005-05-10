@@ -1,3 +1,7 @@
+2005-05-10  Doug MacEachern  <dougm@hyperic.net>
+
+        *  1.1.19 released
+
 2005-04-27  Doug MacEachern  <dougm@hyperic.net>
 
         * Add disk i/o metrics for Windows 2000
