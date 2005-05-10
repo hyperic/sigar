@@ -10,7 +10,8 @@ public class NetPortMap {
     private Map inbound;
     private Map outbound;
     private int[] states;
-
+    private int inboundTotal, outboundTotal;
+    
     public NetPortMap() {
         this.sigar = new Sigar();
     }
@@ -37,6 +38,7 @@ public class NetPortMap {
     public void stat(int flags) throws SigarException {
         this.inbound = new HashMap();
         this.outbound = new HashMap();
+        this.inboundTotal = this.outboundTotal = 0;
         this.states = new int[NetFlags.TCP_UNKNOWN];
         for (int i=0; i<this.states.length; i++) {
             this.states[i] = 0;
@@ -77,6 +79,7 @@ public class NetPortMap {
             String ip = conn.getRemoteAddress();
 
             if (addresses == null) {
+                this.outboundTotal++;
                 ip = conn.getRemoteAddress();
                 port = new Long(conn.getRemotePort());
                 addresses = (Map)this.outbound.get(port);
@@ -84,6 +87,9 @@ public class NetPortMap {
                     addresses = new HashMap();
                     this.outbound.put(port, addresses);
                 }
+            }
+            else {
+                this.inboundTotal++;
             }
 
             IpEntry entry = (IpEntry)addresses.get(ip);
@@ -108,6 +114,14 @@ public class NetPortMap {
         return this.outbound;
     }
 
+    public int getInboundConnectionsTotal() {
+        return this.inboundTotal;
+    }
+
+    public int getOutboundConnectionsTotal() {
+        return this.outboundTotal;
+    }
+
     public int[] getStates() {
         return this.states;
     }
@@ -127,10 +141,12 @@ public class NetPortMap {
         NetPortMap map = new NetPortMap();
         map.stat();
 
-        System.out.println("Inbound Connections...");
+        System.out.println(map.inboundTotal +
+                           " Inbound Connections...");
         dumpConnections(map.getInboundConnections());
 
-        System.out.println("\nOutbound Connections...");
+        System.out.println("\n" + map.outboundTotal +
+                           " Outbound Connections...");
         dumpConnections(map.getOutboundConnections());
 
         System.out.println("\nStates...");
