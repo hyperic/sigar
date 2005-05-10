@@ -361,6 +361,9 @@ namespace Hyperic.Sigar {
         private readonly ulong NA_FreeFiles;
         private readonly ulong DiskReads;
         private readonly ulong DiskWrites;
+        private readonly ulong DiskWriteBytes;
+        private readonly ulong DiskReadBytes;
+        private readonly ulong DiskQueue;
         public readonly double UsePercent;
 
         [DllImport(Sigar.LIBSIGAR)]
