@@ -7,10 +7,10 @@ import java.util.Map;
 public class NetPortMap {
 
     private Sigar sigar;
-    private Map inbound;
-    private Map outbound;
-    private int[] states;
-    private int inboundTotal, outboundTotal;
+    private Map tcpInbound;
+    private Map tcpOutbound;
+    private int[] tcpStates;
+    private int tcpInboundTotal, tcpOutboundTotal;
     
     public NetPortMap() {
         this.sigar = new Sigar();
@@ -36,12 +36,12 @@ public class NetPortMap {
     }
     
     public void stat(int flags) throws SigarException {
-        this.inbound = new HashMap();
-        this.outbound = new HashMap();
-        this.inboundTotal = this.outboundTotal = 0;
-        this.states = new int[NetFlags.TCP_UNKNOWN];
-        for (int i=0; i<this.states.length; i++) {
-            this.states[i] = 0;
+        this.tcpInbound = new HashMap();
+        this.tcpOutbound = new HashMap();
+        this.tcpInboundTotal = this.tcpOutboundTotal = 0;
+        this.tcpStates = new int[NetFlags.TCP_UNKNOWN];
+        for (int i=0; i<this.tcpStates.length; i++) {
+            this.tcpStates[i] = 0;
         }
 
         NetConnection[] connections =
@@ -51,16 +51,16 @@ public class NetPortMap {
             NetConnection conn = connections[i];
             int state = conn.getState();
 
-            this.states[state]++;
+            this.tcpStates[state]++;
 
             //first pass, get listening port numbers
             if (state == NetFlags.TCP_LISTEN) {
                 Long port = new Long(conn.getLocalPort());
-                Map addresses = (Map)this.inbound.get(port);
+                Map addresses = (Map)this.tcpInbound.get(port);
 
                 if (addresses == null) {
                     addresses = new HashMap();
-                    this.inbound.put(port, addresses);
+                    this.tcpInbound.put(port, addresses);
                 }
             }
         }
@@ -75,21 +75,21 @@ public class NetPortMap {
 
             Long port = new Long(conn.getLocalPort());
 
-            Map addresses = (Map)this.inbound.get(port);
+            Map addresses = (Map)this.tcpInbound.get(port);
             String ip = conn.getRemoteAddress();
 
             if (addresses == null) {
-                this.outboundTotal++;
+                this.tcpOutboundTotal++;
                 ip = conn.getRemoteAddress();
                 port = new Long(conn.getRemotePort());
-                addresses = (Map)this.outbound.get(port);
+                addresses = (Map)this.tcpOutbound.get(port);
                 if (addresses == null) {
                     addresses = new HashMap();
-                    this.outbound.put(port, addresses);
+                    this.tcpOutbound.put(port, addresses);
                 }
             }
             else {
-                this.inboundTotal++;
+                this.tcpInboundTotal++;
             }
 
             IpEntry entry = (IpEntry)addresses.get(ip);
@@ -106,77 +106,77 @@ public class NetPortMap {
      * key == Listening tcp port on the local machine.
      * value == List of connected remote addresses.
      */
-    public Map getInboundConnections() {
-        return this.inbound;
+    public Map getTcpInboundConnections() {
+        return this.tcpInbound;
     }
 
-    public Map getOutboundConnections() {
-        return this.outbound;
+    public Map getTcpOutboundConnections() {
+        return this.tcpOutbound;
     }
 
-    public int getInboundConnectionsTotal() {
-        return this.inboundTotal;
+    public int getTcpInboundConnectionsTotal() {
+        return this.tcpInboundTotal;
     }
 
-    public int getOutboundConnectionsTotal() {
-        return this.outboundTotal;
+    public int getTcpOutboundConnectionsTotal() {
+        return this.tcpOutboundTotal;
     }
 
-    public int[] getStates() {
-        return this.states;
+    public int[] getTcpStates() {
+        return this.tcpStates;
     }
 
     //state counters
     public int getTcpEstablished() {
-        return this.states[NetFlags.TCP_ESTABLISHED];
+        return this.tcpStates[NetFlags.TCP_ESTABLISHED];
     }
 
     public int getTcpSynSent() {
-        return this.states[NetFlags.TCP_SYN_SENT];
+        return this.tcpStates[NetFlags.TCP_SYN_SENT];
     }
 
     public int getTcpSynRecv() {
-        return this.states[NetFlags.TCP_SYN_RECV];
+        return this.tcpStates[NetFlags.TCP_SYN_RECV];
     }
 
     public int getTcpFinWait1() {
-        return this.states[NetFlags.TCP_FIN_WAIT1];
+        return this.tcpStates[NetFlags.TCP_FIN_WAIT1];
     }
 
     public int getTcpFinWait2() {
-        return this.states[NetFlags.TCP_FIN_WAIT2];
+        return this.tcpStates[NetFlags.TCP_FIN_WAIT2];
     }
 
     public int getTcpTimeWait() {
-        return this.states[NetFlags.TCP_TIME_WAIT];
+        return this.tcpStates[NetFlags.TCP_TIME_WAIT];
     }
 
     public int getTcpClose() {
-        return this.states[NetFlags.TCP_CLOSE];
+        return this.tcpStates[NetFlags.TCP_CLOSE];
     }
 
     public int getTcpCloseWait() {
-        return this.states[NetFlags.TCP_CLOSE_WAIT];
+        return this.tcpStates[NetFlags.TCP_CLOSE_WAIT];
     }
 
     public int getTcpLastAck() {
-        return this.states[NetFlags.TCP_LAST_ACK];
+        return this.tcpStates[NetFlags.TCP_LAST_ACK];
     }
 
     public int getTcpListen() {
-        return this.states[NetFlags.TCP_LISTEN];
+        return this.tcpStates[NetFlags.TCP_LISTEN];
     }
 
     public int getTcpClosing() {
-        return this.states[NetFlags.TCP_CLOSING];
+        return this.tcpStates[NetFlags.TCP_CLOSING];
     }
 
     public int getTcpIdle() {
-        return this.states[NetFlags.TCP_IDLE];
+        return this.tcpStates[NetFlags.TCP_IDLE];
     }
 
     public int getTcpBound() {
-        return this.states[NetFlags.TCP_BOUND];
+        return this.tcpStates[NetFlags.TCP_BOUND];
     }
 
     private static void dumpConnections(Map map) {
@@ -194,16 +194,16 @@ public class NetPortMap {
         NetPortMap map = new NetPortMap();
         map.stat();
 
-        System.out.println(map.inboundTotal +
-                           " Inbound Connections...");
-        dumpConnections(map.getInboundConnections());
+        System.out.println(map.tcpInboundTotal +
+                           " Inbound TCP Connections...");
+        dumpConnections(map.getTcpInboundConnections());
 
-        System.out.println("\n" + map.outboundTotal +
-                           " Outbound Connections...");
-        dumpConnections(map.getOutboundConnections());
+        System.out.println("\n" + map.tcpOutboundTotal +
+                           " Outbound TCP Connections...");
+        dumpConnections(map.getTcpOutboundConnections());
 
-        System.out.println("\nStates...");
-        int[] states = map.getStates();
+        System.out.println("\nTCP States...");
+        int[] states = map.getTcpStates();
         for (int i=1; i<states.length; i++) {
             System.out.println(NetConnection.getStateString(i) + "=" +
                                states[i]);
