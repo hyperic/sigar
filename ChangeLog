@@ -26,7 +26,7 @@
 
 2005-03-11  Doug MacEachern  <dougm@hyperic.net>
 
-        * Add NetPortMap class
+        * Add sigar.NetStat class
 
         * Add sigar_net_connection_t.state field
 
