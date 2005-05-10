@@ -310,8 +310,11 @@ public class Proxy {
                     if (type.startsWith("Proc")) {
                         arg = this.pids.getName(iter);
                     }
-                    else if (type.startsWith("NetIf")) {
+                    else if (type.startsWith("Net")) {
                         arg = this.netif.getName(iter);
+                    }
+                    else if (type.startsWith("MultiProc")) {
+                        arg = "State.Name.eq=java";
                     }
                     else if (type.equals("FileSystemUsage") ||
                              type.equals("MountedFileSystemUsage"))
@@ -323,7 +326,7 @@ public class Proxy {
                     {
                         arg = this.files.getName(iter);
                     }
-                    else if (type.equals("DirStats")) {
+                    else if (type.equals("DirStat")) {
                         arg = this.dirs.getName(iter);
                     }
                     else {
