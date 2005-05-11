@@ -89,6 +89,9 @@ typedef enum {
 /* 1/100ns units to seconds */
 #define NS100_2SEC(t) ((t) / 10000000)
 
+#define PERF_VAL_CPU(ix) \
+    NS100_2SEC(PERF_VAL(ix))
+
 static PERF_OBJECT_TYPE *get_perf_object(sigar_t *sigar, char *counter_key,
                                          DWORD *err)
 {
@@ -385,7 +388,7 @@ static int get_idle_cpu(sigar_t *sigar, sigar_cpu_t *cpu,
     cpu->idle = 0;
 
     if (perf_offsets[PERF_IX_CPU_IDLE]) {
-        cpu->idle = PERF_VAL(PERF_IX_CPU_IDLE);
+        cpu->idle = PERF_VAL_CPU(PERF_IX_CPU_IDLE);
     }
     else {
         /* windows NT and 2000 do not have an Idle counter */
@@ -443,8 +446,8 @@ static int sigar_cpu_perflib_get(sigar_t *sigar, sigar_cpu_t *cpu)
     /* first instance is total, rest are per-cpu */
     counter_block = PdhGetCounterBlock(inst);
 
-    cpu->sys  = PERF_VAL(PERF_IX_CPU_SYS);
-    cpu->user = PERF_VAL(PERF_IX_CPU_USER);
+    cpu->sys  = PERF_VAL_CPU(PERF_IX_CPU_SYS);
+    cpu->user = PERF_VAL_CPU(PERF_IX_CPU_USER);
     status = get_idle_cpu(sigar, cpu, -1, counter_block, perf_offsets);
     cpu->nice = 0; /* no nice here */
     cpu->wait = 0; /*N/A?*/
@@ -547,8 +550,8 @@ static int sigar_cpu_list_perflib_get(sigar_t *sigar,
 
         counter_block = PdhGetCounterBlock(inst);
 
-        cpu->sys  += PERF_VAL(PERF_IX_CPU_SYS);
-        cpu->user += PERF_VAL(PERF_IX_CPU_USER);
+        cpu->sys  += PERF_VAL_CPU(PERF_IX_CPU_SYS);
+        cpu->user += PERF_VAL_CPU(PERF_IX_CPU_USER);
         get_idle_cpu(sigar, cpu, i, counter_block, perf_offsets);
         cpu->nice = cpu->wait = 0; /*N/A*/
 
