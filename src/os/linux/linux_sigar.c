@@ -308,17 +308,17 @@ int sigar_swap_get(sigar_t *sigar, sigar_swap_t *swap)
     return SIGAR_OK;
 }
 
-static void get_cpu_metrics(sigar_cpu_t *cpu, char *line)
+static void get_cpu_metrics(sigar_t *sigar, sigar_cpu_t *cpu, char *line)
 {
     char *ptr = sigar_skip_token(line); /* "cpu%d" */
 
-    cpu->user += sigar_strtoul(ptr);
-    cpu->nice += sigar_strtoul(ptr);
-    cpu->sys  += sigar_strtoul(ptr);
-    cpu->idle += sigar_strtoul(ptr);
+    cpu->user += sigar_strtoul(ptr) / sigar->ticks;
+    cpu->nice += sigar_strtoul(ptr) / sigar->ticks;
+    cpu->sys  += sigar_strtoul(ptr) / sigar->ticks;
+    cpu->idle += sigar_strtoul(ptr) / sigar->ticks;
     if (*ptr == ' ') {
         /* 2.6+ kernels only */
-        cpu->wait += sigar_strtoul(ptr);
+        cpu->wait += sigar_strtoul(ptr) / sigar->ticks;
     }
     cpu->total += cpu->user + cpu->nice + cpu->sys + cpu->idle + cpu->wait;
 }
@@ -333,7 +333,7 @@ int sigar_cpu_get(sigar_t *sigar, sigar_cpu_t *cpu)
     }
 
     SIGAR_ZERO(cpu);
-    get_cpu_metrics(cpu, buffer);
+    get_cpu_metrics(sigar, cpu, buffer);
 
     return SIGAR_OK;
 }
@@ -370,7 +370,7 @@ int sigar_cpu_list_get(sigar_t *sigar, sigar_cpu_list_t *cpulist)
             SIGAR_ZERO(cpu);
         }
 
-        get_cpu_metrics(cpu, ptr);
+        get_cpu_metrics(sigar, cpu, ptr);
 
         i++;
     }
@@ -381,7 +381,7 @@ int sigar_cpu_list_get(sigar_t *sigar, sigar_cpu_list_t *cpulist)
         /* likely older kernel where cpu\d is not present */
         cpu = &cpulist->data[cpulist->number++];
         SIGAR_ZERO(cpu);
-        get_cpu_metrics(cpu, cpu_total);
+        get_cpu_metrics(sigar, cpu, cpu_total);
     }
 
     return SIGAR_OK;

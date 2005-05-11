@@ -86,6 +86,9 @@ typedef enum {
     perf_offsets[ix] ? \
         *((DWORD *)((BYTE *)counter_block + perf_offsets[ix])) : 0
 
+/* 1/100ns units to seconds */
+#define NS100_2SEC(t) ((t) / 10000000)
+
 static PERF_OBJECT_TYPE *get_perf_object(sigar_t *sigar, char *counter_key,
                                          DWORD *err)
 {
@@ -403,11 +406,11 @@ static int get_idle_cpu(sigar_t *sigar, sigar_cpu_t *cpu,
             if (idx == -1) {
                 int i;
                 for (i=0; i<num; i++) {
-                    cpu->idle += info[i].IdleTime.QuadPart;
+                    cpu->idle += NS100_2SEC(info[i].IdleTime.QuadPart);
                 }
             }
             else if (idx < num) {
-                cpu->idle = info[idx].IdleTime.QuadPart;
+                cpu->idle = NS100_2SEC(info[idx].IdleTime.QuadPart);
             }
             else {
                 return ERROR_INVALID_DATA;
@@ -473,9 +476,11 @@ static int sigar_cpu_ntsys_get(sigar_t *sigar, sigar_cpu_t *cpu)
     SIGAR_ZERO(cpu);
 
     for (i=0; i<num; i++) {
-        cpu->idle += info[i].IdleTime.QuadPart;
-        cpu->user += info[i].UserTime.QuadPart;
-        cpu->sys  += info[i].KernelTime.QuadPart - info[i].IdleTime.QuadPart;
+        cpu->idle += NS100_2SEC(info[i].IdleTime.QuadPart);
+        cpu->user += NS100_2SEC(info[i].UserTime.QuadPart);
+        cpu->sys  += NS100_2SEC(info[i].KernelTime.QuadPart -
+                                info[i].IdleTime.QuadPart);
+        cpu->total += cpu->idle + cpu->user + cpu->sys;
     }
 
     return SIGAR_OK;
@@ -599,9 +604,10 @@ static int sigar_cpu_list_ntsys_get(sigar_t *sigar,
             SIGAR_ZERO(cpu);
         }
 
-        idle = info[i].IdleTime.QuadPart;
-        user = info[i].UserTime.QuadPart;
-        sys  = info[i].KernelTime.QuadPart - info[i].IdleTime.QuadPart;
+        idle = NS100_2SEC(info[i].IdleTime.QuadPart);
+        user = NS100_2SEC(info[i].UserTime.QuadPart);
+        sys  = NS100_2SEC(info[i].KernelTime.QuadPart -
+                          info[i].IdleTime.QuadPart);
         cpu->idle += idle;
         cpu->user += user;
         cpu->sys  += sys;
@@ -823,7 +829,7 @@ SIGAR_DECLARE(int) sigar_proc_cred_get(sigar_t *sigar, sigar_pid_t pid,
 }
 
 #define FILETIME2SEC(ft) \
-    (((ft.dwHighDateTime << 32) | ft.dwLowDateTime) / 10000000)
+    NS100_2SEC(((ft.dwHighDateTime << 32) | ft.dwLowDateTime))
 
 SIGAR_DECLARE(int) sigar_proc_time_get(sigar_t *sigar, sigar_pid_t pid,
                                        sigar_proc_time_t *proctime)
