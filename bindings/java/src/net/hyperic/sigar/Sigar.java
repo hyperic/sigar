@@ -532,7 +532,7 @@ public class Sigar implements SigarProxy {
     public FileSystemUsage getMountedFileSystemUsage(String name)
         throws SigarException, NfsUnreachableException {
 
-        FileSystem fs = getFileSystemMap().getMountPoint(name);
+        FileSystem fs = getFileSystemMap().getFileSystem(name);
 
         if (fs == null) {
             throw new SigarException(name + " is not a mounted filesystem");
