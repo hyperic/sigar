@@ -64,7 +64,7 @@
     ((sigar_uint64_t)(s) * (sigar_uint64_t)1000000000)
 
 /* cpu ticks to seconds */
-#define SIGAR_TICK2SEC(s) (s / sigar->ticks)
+#define SIGAR_TICK2SEC(s) ((s) / sigar->ticks)
 
 #define SIGAR_LAST_PROC_EXPIRE 2
 
