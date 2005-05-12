@@ -170,7 +170,9 @@ int sigar_os_open(sigar_t **sigar)
     (*sigar)->boot_time = boottime.tv_sec; /* XXX seems off a bit */
 
     (*sigar)->pagesize = getpagesize();
-
+#ifdef __FreeBSD__
+    (*sigar)->ticks = 100; /* sysconf(_SC_CLK_TCK) == 128 !? */
+#endif
     (*sigar)->last_pid = -1;
 
     (*sigar)->pinfo = NULL;
@@ -474,10 +476,10 @@ int sigar_cpu_get(sigar_t *sigar, sigar_cpu_t *cpu)
         return status;
     }
 
-    cpu->user = cp_time[CP_USER];
-    cpu->nice = cp_time[CP_NICE];
-    cpu->sys  = cp_time[CP_SYS] + cp_time[CP_INTR];
-    cpu->idle = cp_time[CP_IDLE];
+    cpu->user = SIGAR_TICK2SEC(cp_time[CP_USER]);
+    cpu->nice = SIGAR_TICK2SEC(cp_time[CP_NICE]);
+    cpu->sys  = SIGAR_TICK2SEC(cp_time[CP_SYS] + cp_time[CP_INTR]);
+    cpu->idle = SIGAR_TICK2SEC(cp_time[CP_IDLE]);
     cpu->wait = 0; /*N/A*/
     cpu->total = cpu->user + cpu->nice + cpu->sys + cpu->idle;
 #endif
