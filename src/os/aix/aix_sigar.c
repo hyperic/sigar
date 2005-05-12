@@ -661,6 +661,7 @@ int sigar_cpu_get(sigar_t *sigar, sigar_cpu_t *cpu)
     cpu->nice = SIGAR_FIELD_NOTIMPL; /* N/A */
     cpu->sys  = SIGAR_TICK2SEC(data.cpu[CPU_KERNEL]);
     cpu->idle = SIGAR_TICK2SEC(data.cpu[CPU_IDLE]);
+    cpu->wait = SIGAR_TICK2SEC(data.cpu[CPU_WAIT]);
     cpu->total = 0;
 
     for (i=0; i<CPU_NTIMES; i++) {
