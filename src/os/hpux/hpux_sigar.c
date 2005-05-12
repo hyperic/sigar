@@ -677,7 +677,7 @@ int sigar_net_route_list_get(sigar_t *sigar,
     mib_ipRouteEnt *routes;
     sigar_net_route_t *route;
 
-    if ((fd = open_mib("/dev/ip", O_RDWR, 0, 0)) < 0) {
+    if ((fd = open_mib("/dev/ip", O_RDONLY, 0, 0)) < 0) {
         return errno;
     }
 
@@ -687,6 +687,7 @@ int sigar_net_route_list_get(sigar_t *sigar,
     parms.len = &len;
 
     if (get_mib_info(fd, &parms) < 0) {
+        close_mib(fd);
         return errno;
     }
 
@@ -734,7 +735,7 @@ static int get_mib_ifstat(sigar_t *sigar,
     nmapi_phystat *stat;
     struct nmparms parms;
 
-    if ((fd = open_mib("/dev/ip", O_RDWR, 0, 0)) < 0) {
+    if ((fd = open_mib("/dev/ip", O_RDONLY, 0, 0)) < 0) {
         return errno;
     }
 
@@ -744,6 +745,7 @@ static int get_mib_ifstat(sigar_t *sigar,
     parms.len = &len;
 
     if (get_mib_info(fd, &parms) < 0) {
+        close_mib(fd);
         return errno;
     }
 
