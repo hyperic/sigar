@@ -92,21 +92,22 @@ int sigar_swap_get(sigar_t *sigar, sigar_swap_t *swap)
     return SIGAR_OK;
 }
 
-static void get_cpu_metrics(sigar_cpu_t *cpu, int32_t *cpu_time)
+static void get_cpu_metrics(sigar_t *sigar,
+                            sigar_cpu_t *cpu, int32_t *cpu_time)
 {
     int i;
 
-    cpu->user = cpu_time[CP_USER];
-    cpu->sys  = cpu_time[CP_SYS] + cpu_time[CP_SSYS];
-    cpu->nice = cpu_time[CP_NICE];
-    cpu->idle = cpu_time[CP_IDLE];
-    cpu->wait = cpu_time[CP_WAIT];
+    cpu->user = SIGAR_TICK2SEC(cpu_time[CP_USER]);
+    cpu->sys  = SIGAR_TICK2SEC(cpu_time[CP_SYS] + cpu_time[CP_SSYS]);
+    cpu->nice = SIGAR_TICK2SEC(cpu_time[CP_NICE]);
+    cpu->idle = SIGAR_TICK2SEC(cpu_time[CP_IDLE]);
+    cpu->wait = SIGAR_TICK2SEC(cpu_time[CP_WAIT]);
     
     cpu->total = 0;
     
     /* states above plus CP_BLOCK, CP_SWAIT, etc. (see sys/dk.h) */
     for (i=0; i<CPUSTATES; i++) {
-        cpu->total += cpu_time[i];
+        cpu->total += SIGAR_TICK2SEC(cpu_time[i]);
     }
 }
 
@@ -117,7 +118,7 @@ int sigar_cpu_get(sigar_t *sigar, sigar_cpu_t *cpu)
     pstat_getdynamic(&stats, sizeof(stats), 1, 0);
     sigar->ncpu = stats.psd_proc_cnt;
 
-    get_cpu_metrics(cpu, stats.psd_cpu_time);
+    get_cpu_metrics(sigar, cpu, stats.psd_cpu_time);
 
     return SIGAR_OK;
 }
@@ -144,7 +145,7 @@ int sigar_cpu_list_get(sigar_t *sigar, sigar_cpu_list_t *cpulist)
 
         cpu = &cpulist->data[cpulist->number++];
 
-        get_cpu_metrics(cpu, proc.psp_cpu_time);
+        get_cpu_metrics(sigar, cpu, proc.psp_cpu_time);
     }
 
     return SIGAR_OK;
