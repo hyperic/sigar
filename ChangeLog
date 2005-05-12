@@ -1,3 +1,7 @@
+2005-05-11  Doug MacEachern  <dougm@hyperic.net>
+
+        * Convert Cpu times to seconds
+
 2005-05-10  Doug MacEachern  <dougm@hyperic.net>
 
         *  1.1.19 released
