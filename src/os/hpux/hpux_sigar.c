@@ -804,11 +804,161 @@ int sigar_net_interface_stat_get(sigar_t *sigar, const char *name,
     return SIGAR_OK;
 }
 
+static void ip_format(char *buffer, int buflen, ip_addr ip)
+{
+    sprintf(buffer, "%d.%d.%d.%d",
+            ((ip >> 24) & 0xFF),
+            ((ip >> 16) & 0xFF),
+            ((ip >> 8) & 0xFF), 
+            ((ip) & 0xFF));
+}
+
+#define IS_TCP_SERVER(state, flags) \
+    ((flags & SIGAR_NETCONN_SERVER) && (state == TCLISTEN))
+
+#define IS_TCP_CLIENT(state, flags) \
+    ((flags & SIGAR_NETCONN_CLIENT) && (state != TCLISTEN))
+
+static int net_conn_get_tcp(sigar_t *sigar,
+                            sigar_net_connection_list_t *connlist,
+                            int flags)
+{
+    int fd, count, i;
+    unsigned int len;
+    mib_tcpConnEnt *entries;
+    struct nmparms parms;
+
+    if ((fd = open_mib("/dev/ip", O_RDONLY, 0, 0)) < 0) {
+        return errno;
+    }
+
+    len = sizeof(count);
+    parms.objid = ID_tcpConnNumEnt;
+    parms.buffer = &count;
+    parms.len = &len;
+
+    if (get_mib_info(fd, &parms) < 0) {
+        close_mib(fd);
+        return errno;
+    }
+
+    if (count <= 0) {
+        return ENOENT;
+    }
+
+    len =  count * sizeof(*entries);
+    entries = malloc(len);
+    parms.objid = ID_tcpConnTable;
+    parms.buffer = entries;
+    parms.len = &len;
+
+    if (get_mib_info(fd, &parms) < 0) {
+        close_mib(fd);
+        return errno;
+    }
+
+    close_mib(fd);
+
+    for (i=0; i<count; i++) {
+        mib_tcpConnEnt *entry = &entries[i];
+        sigar_net_connection_t conn;
+        int state = entry->State;
+
+        if (!(IS_TCP_SERVER(state, flags) ||
+              IS_TCP_CLIENT(state, flags)))
+        {
+            continue;
+        }
+
+        switch (state) {
+          case TCCLOSED:
+            conn.state = SIGAR_TCP_CLOSE;
+            break;
+          case TCLISTEN:
+            conn.state = SIGAR_TCP_LISTEN;
+            break;
+          case TCSYNSENT:
+            conn.state = SIGAR_TCP_SYN_SENT;
+            break;
+          case TCSYNRECEIVE:
+            conn.state = SIGAR_TCP_SYN_RECV;
+            break;
+          case TCESTABLISED:
+            conn.state = SIGAR_TCP_ESTABLISHED;
+            break;
+          case TCFINWAIT1:
+            conn.state = SIGAR_TCP_FIN_WAIT1;
+            break;
+          case TCFINWAIT2:
+            conn.state = SIGAR_TCP_FIN_WAIT2;
+            break;
+          case TCCLOSEWAIT:
+            conn.state = SIGAR_TCP_CLOSE_WAIT;
+            break;
+          case TCCLOSING:
+            conn.state = SIGAR_TCP_CLOSING;
+            break;
+          case TCLASTACK:
+            conn.state = SIGAR_TCP_LAST_ACK;
+            break;
+          case TCTIMEWAIT:
+            conn.state = SIGAR_TCP_TIME_WAIT;
+            break;
+          case TCDELETETCB:
+          default:
+            conn.state = SIGAR_TCP_UNKNOWN;
+            break;
+        }
+
+        conn.local_port  = entry->LocalPort;
+        conn.remote_port = entry->RemPort;
+        conn.type = SIGAR_NETCONN_TCP;
+
+        ip_format(conn.local_address,
+                  sizeof(conn.local_address),
+                  entry->LocalAddress);
+
+        ip_format(conn.remote_address,
+                  sizeof(conn.remote_address),
+                  entry->RemAddress);
+
+        conn.send_queue = conn.receive_queue = SIGAR_FIELD_NOTIMPL;
+
+        SIGAR_NET_CONNLIST_GROW(connlist);
+        memcpy(&connlist->data[connlist->number++],
+               &conn, sizeof(conn));
+    }
+
+    free(entries);
+
+    return SIGAR_OK;
+}
+
 int sigar_net_connection_list_get(sigar_t *sigar,
                                   sigar_net_connection_list_t *connlist,
                                   int flags)
 {
-    return SIGAR_ENOTIMPL;
+    int status;
+
+    sigar_net_connection_list_create(connlist);
+
+    if (flags & SIGAR_NETCONN_TCP) {
+        status = net_conn_get_tcp(sigar, connlist, flags);
+
+        if (status != SIGAR_OK) {
+            return status;
+        }
+    }
+#if 0
+    if (flags & SIGAR_NETCONN_UDP) {
+        status = net_conn_get_udp(sigar, connlist, flags);
+
+        if (status != SIGAR_OK) {
+            return status;
+        }
+    }
+#endif
+    return SIGAR_OK;
 }
 
 int sigar_proc_port_get(sigar_t *sigar, int protocol,
