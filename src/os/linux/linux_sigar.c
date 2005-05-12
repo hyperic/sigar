@@ -304,7 +304,6 @@ int sigar_swap_get(sigar_t *sigar, sigar_swap_t *swap)
     swap->free   = sigar_meminfo(buffer, MEMINFO_PARAM("SwapFree"));
     swap->used   = swap->total - swap->free;
 
-
     return SIGAR_OK;
 }
 
@@ -312,13 +311,13 @@ static void get_cpu_metrics(sigar_t *sigar, sigar_cpu_t *cpu, char *line)
 {
     char *ptr = sigar_skip_token(line); /* "cpu%d" */
 
-    cpu->user += sigar_strtoul(ptr) / sigar->ticks;
-    cpu->nice += sigar_strtoul(ptr) / sigar->ticks;
-    cpu->sys  += sigar_strtoul(ptr) / sigar->ticks;
-    cpu->idle += sigar_strtoul(ptr) / sigar->ticks;
+    cpu->user += SIGAR_TICK2SEC(sigar_strtoul(ptr));
+    cpu->nice += SIGAR_TICK2SEC(sigar_strtoul(ptr));
+    cpu->sys  += SIGAR_TICK2SEC(sigar_strtoul(ptr));
+    cpu->idle += SIGAR_TICK2SEC(sigar_strtoul(ptr));
     if (*ptr == ' ') {
         /* 2.6+ kernels only */
-        cpu->wait += sigar_strtoul(ptr) / sigar->ticks;
+        cpu->wait += SIGAR_TICK2SEC(sigar_strtoul(ptr));
     }
     cpu->total += cpu->user + cpu->nice + cpu->sys + cpu->idle + cpu->wait;
 }
@@ -876,7 +875,7 @@ int sigar_proc_modules_get(sigar_t *sigar, sigar_pid_t pid,
 }
 
 #define TIME_NSEC(t) \
-    SIGAR_SEC2NANO(((sigar_uint64_t)(t) / sigar->ticks))
+    SIGAR_SEC2NANO(SIGAR_TICK2SEC(((sigar_uint64_t)(t))))
 
 int sigar_thread_cpu_get(sigar_t *sigar,
                          sigar_uint64_t id,
