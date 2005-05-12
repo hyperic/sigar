@@ -35,6 +35,12 @@
 #include <sys/protosw.h>
 #include <sys/socketvar.h>
 
+/* for net_connection_list */
+#include <netinet/ip_var.h>
+#include <netinet/tcp_timer.h>
+#include <netinet/tcp_var.h>
+#include <netinet/tcp_fsm.h>
+
 /* for odm api */
 #include <sys/cfgodm.h>
 #include <sys/cfgdb.h>
@@ -75,6 +81,7 @@ static int get_koffsets(sigar_t *sigar)
         {"ifnet", 0, 0, 0, 0, 0}, /* KOFFSET_IFNET */
         {"vmminfo", 0, 0, 0, 0, 0}, /* KOFFSET_VMINFO */
         {"cpuinfo", 0, 0, 0, 0, 0}, /* KOFFSET_CPUINFO */
+        {"tcb", 0, 0, 0, 0, 0}, /* KOFFSET_TCB */
         {NULL, 0, 0, 0, 0, 0}
     };
 
@@ -2032,11 +2039,134 @@ int sigar_net_interface_stat_get(sigar_t *sigar, const char *name,
     return ENXIO;
 }
 
+#define IS_TCP_SERVER(state, flags) \
+    ((flags & SIGAR_NETCONN_SERVER) && (state == TCPS_LISTEN))
+
+#define IS_TCP_CLIENT(state, flags) \
+    ((flags & SIGAR_NETCONN_CLIENT) && (state != TCPS_LISTEN))
+
+static int net_conn_get_tcp(sigar_t *sigar,
+                            sigar_net_connection_list_t *connlist,
+                            int flags)
+{
+    int status;
+    struct inpcb tcp_inpcb;
+    struct tcpcb tcpcb;
+    struct inpcb *entry;
+
+    status = kread(sigar, &tcp_inpcb, sizeof(tcp_inpcb),
+                   sigar->koffsets[KOFFSET_TCB]);
+
+    if (status != SIGAR_OK) {
+        return status;
+    }
+
+    entry = tcp_inpcb.inp_next;
+    while (entry) {
+        struct inpcb pcb;
+        int state;
+
+        status = kread(sigar, &pcb, sizeof(pcb), (long)entry);
+        if (status != SIGAR_OK) {
+            return status;
+        }
+        status = kread(sigar, &tcpcb, sizeof(tcpcb), (long)pcb.inp_ppcb);
+        if (status != SIGAR_OK) {
+            return status;
+        }
+
+        state = tcpcb.t_state;
+        if ((IS_TCP_SERVER(state, flags) ||
+             IS_TCP_CLIENT(state, flags)))
+        {
+            sigar_net_connection_t *conn;
+
+            SIGAR_NET_CONNLIST_GROW(connlist);
+            conn = &connlist->data[connlist->number++];
+
+            conn->type = SIGAR_NETCONN_TCP;
+
+            sigar_inet_ntoa(sigar, pcb.inp_laddr.s_addr,
+                            conn->local_address);
+            sigar_inet_ntoa(sigar, pcb.inp_faddr.s_addr,
+                            conn->remote_address);
+            conn->local_port  = ntohs(pcb.inp_lport);
+            conn->remote_port = ntohs(pcb.inp_fport);
+
+            switch (state) {
+              case TCPS_CLOSED:
+                conn->state = SIGAR_TCP_CLOSE;
+                break;
+              case TCPS_LISTEN:
+                conn->state = SIGAR_TCP_LISTEN;
+                break;
+              case TCPS_SYN_SENT:
+                conn->state = SIGAR_TCP_SYN_SENT;
+                break;
+              case TCPS_SYN_RECEIVED:
+                conn->state = SIGAR_TCP_SYN_RECV;
+                break;
+              case TCPS_ESTABLISHED:
+                conn->state = SIGAR_TCP_ESTABLISHED;
+                break;
+              case TCPS_CLOSE_WAIT:
+                conn->state = SIGAR_TCP_CLOSE_WAIT;
+                break;
+              case TCPS_FIN_WAIT_1:
+                conn->state = SIGAR_TCP_FIN_WAIT1;
+                break;
+              case TCPS_CLOSING:
+                conn->state = SIGAR_TCP_CLOSING;
+                break;
+              case TCPS_LAST_ACK:
+                conn->state = SIGAR_TCP_LAST_ACK;
+                break;
+              case TCPS_FIN_WAIT_2:
+                conn->state = SIGAR_TCP_FIN_WAIT2;
+                break;
+              case TCPS_TIME_WAIT:
+                conn->state = SIGAR_TCP_TIME_WAIT;
+                break;
+              default:
+                conn->state = SIGAR_TCP_UNKNOWN;
+                break;
+            }
+        }
+
+        entry = pcb.inp_next;
+        if (entry == tcp_inpcb.inp_next) {
+            break;
+        }
+    }
+
+    return SIGAR_OK;
+}
+
 int sigar_net_connection_list_get(sigar_t *sigar,
                                   sigar_net_connection_list_t *connlist,
                                   int flags)
 {
-    return SIGAR_ENOTIMPL;
+    int status;
+
+    sigar_net_connection_list_create(connlist);
+
+    if (flags & SIGAR_NETCONN_TCP) {
+        status = net_conn_get_tcp(sigar, connlist, flags);
+
+        if (status != SIGAR_OK) {
+            return status;
+        }
+    }
+#if 0
+    if (flags & SIGAR_NETCONN_UDP) {
+        status = net_conn_get_udp(sigar, connlist, flags);
+
+        if (status != SIGAR_OK) {
+            return status;
+        }
+    }
+#endif
+    return SIGAR_OK;
 }
 
 /* derived from pidentd's k_aix432.c */
