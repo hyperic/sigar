@@ -92,26 +92,32 @@ int sigar_swap_get(sigar_t *sigar, sigar_swap_t *swap)
     return SIGAR_OK;
 }
 
-int sigar_cpu_get(sigar_t *sigar, sigar_cpu_t *cpu)
+static void get_cpu_metrics(sigar_cpu_t *cpu, int32_t *cpu_time)
 {
     int i;
-    struct pst_dynamic stats;
 
-    pstat_getdynamic(&stats, sizeof(stats), 1, 0);
-    sigar->ncpu = stats.psd_proc_cnt;
-
-    cpu->user = stats.psd_cpu_time[CP_USER];
-    cpu->sys  = stats.psd_cpu_time[CP_SYS] + stats.psd_cpu_time[CP_SSYS];
-    cpu->nice = stats.psd_cpu_time[CP_NICE];
-    cpu->idle = stats.psd_cpu_time[CP_IDLE];
-    cpu->wait = stats.psd_cpu_time[CP_WAIT];
+    cpu->user = cpu_time[CP_USER];
+    cpu->sys  = cpu_time[CP_SYS] + cpu_time[CP_SSYS];
+    cpu->nice = cpu_time[CP_NICE];
+    cpu->idle = cpu_time[CP_IDLE];
+    cpu->wait = cpu_time[CP_WAIT];
     
     cpu->total = 0;
     
     /* states above plus CP_BLOCK, CP_SWAIT, etc. (see sys/dk.h) */
     for (i=0; i<CPUSTATES; i++) {
-        cpu->total += stats.psd_cpu_time[i];
+        cpu->total += cpu_time[i];
     }
+}
+
+int sigar_cpu_get(sigar_t *sigar, sigar_cpu_t *cpu)
+{
+    struct pst_dynamic stats;
+
+    pstat_getdynamic(&stats, sizeof(stats), 1, 0);
+    sigar->ncpu = stats.psd_proc_cnt;
+
+    get_cpu_metrics(cpu, stats.psd_cpu_time);
 
     return SIGAR_OK;
 }
@@ -127,7 +133,6 @@ int sigar_cpu_list_get(sigar_t *sigar, sigar_cpu_list_t *cpulist)
     sigar_cpu_list_create(cpulist);
 
     for (i=0; i<sigar->ncpu; i++) {
-        int j;
         sigar_cpu_t *cpu;
         struct pst_processor proc;
 
@@ -139,17 +144,7 @@ int sigar_cpu_list_get(sigar_t *sigar, sigar_cpu_list_t *cpulist)
 
         cpu = &cpulist->data[cpulist->number++];
 
-        cpu->user = proc.psp_cpu_time[CP_USER];
-        cpu->sys  = proc.psp_cpu_time[CP_SYS] + proc.psp_cpu_time[CP_SSYS];
-        cpu->nice = proc.psp_cpu_time[CP_NICE];
-        cpu->idle = proc.psp_cpu_time[CP_IDLE];
-        cpu->wait = proc.psp_cpu_time[CP_WAIT];
-
-        cpu->total = 0;
-
-        for (j=0; j<CPUSTATES; j++) {
-            cpu->total += proc.psp_cpu_time[j];
-        }
+        get_cpu_metrics(cpu, proc.psp_cpu_time);
     }
 
     return SIGAR_OK;
