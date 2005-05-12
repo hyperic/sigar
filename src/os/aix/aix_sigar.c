@@ -662,11 +662,7 @@ int sigar_cpu_get(sigar_t *sigar, sigar_cpu_t *cpu)
     cpu->sys  = SIGAR_TICK2SEC(data.cpu[CPU_KERNEL]);
     cpu->idle = SIGAR_TICK2SEC(data.cpu[CPU_IDLE]);
     cpu->wait = SIGAR_TICK2SEC(data.cpu[CPU_WAIT]);
-    cpu->total = 0;
-
-    for (i=0; i<CPU_NTIMES; i++) {
-        cpu->total += SIGAR_TICK2SEC(data.cpu[i]);
-    }
+    cpu->total = cpu->user + cpu->sys + cpu->idle + cpu->wait;
 
     return SIGAR_OK;
 }
@@ -729,11 +725,7 @@ static int sigar_cpu_list_get_kmem(sigar_t *sigar, sigar_cpu_list_t *cpulist)
         cpu->nice = 0; /* N/A */
         cpu->sys  = SIGAR_TICK2SEC(info->cpu[CPU_KERNEL]);
         cpu->idle = SIGAR_TICK2SEC(info->cpu[CPU_IDLE]);
-        cpu->total = 0;
-
-        for (j=0; j<CPU_NTIMES; j++) {
-            cpu->total += SIGAR_TICK2SEC(info->cpu[j]);
-        }
+        cpu->total = cpu->user + cpu->sys + cpu->idle + cpu->wait;
     }
 
     return SIGAR_OK;
