@@ -132,6 +132,7 @@ int sigar_os_open(sigar_t **sigar)
     (*sigar)->kmem = kmem;
     (*sigar)->dmem = -1;
     (*sigar)->pagesize = 0;
+    (*sigar)->ticks = sysconf(_SC_CLK_TCK);
     (*sigar)->boot_time = 0;
     (*sigar)->last_pid = -1;
     (*sigar)->pinfo = NULL;
@@ -637,11 +638,11 @@ int sigar_cpu_get(sigar_t *sigar, sigar_cpu_t *cpu)
         sigar_log(sigar, SIGAR_LOG_DEBUG, "[cpu] using libperfstat");
 
         if (sigar->perfstat.cpu_total(&cpu_data, sizeof(cpu_data)) == 1) {
-            cpu->user  = cpu_data.user;
+            cpu->user  = SIGAR_TICK2SEC(cpu_data.user);
             cpu->nice  = SIGAR_FIELD_NOTIMPL; /* N/A */
-            cpu->sys   = cpu_data.sys;
-            cpu->idle  = cpu_data.idle;
-            cpu->wait  = cpu_data.wait;
+            cpu->sys   = SIGAR_TICK2SEC(cpu_data.sys);
+            cpu->idle  = SIGAR_TICK2SEC(cpu_data.idle);
+            cpu->wait  = SIGAR_TICK2SEC(cpu_data.wait);
             cpu->total = cpu->user + cpu->sys + cpu->idle + cpu->wait;
             return SIGAR_OK;
         }
@@ -656,14 +657,14 @@ int sigar_cpu_get(sigar_t *sigar, sigar_cpu_t *cpu)
         return status;
     }
 
-    cpu->user = data.cpu[CPU_USER];
+    cpu->user = SIGAR_TICK2SEC(data.cpu[CPU_USER]);
     cpu->nice = SIGAR_FIELD_NOTIMPL; /* N/A */
-    cpu->sys  = data.cpu[CPU_KERNEL];
-    cpu->idle = data.cpu[CPU_IDLE];
+    cpu->sys  = SIGAR_TICK2SEC(data.cpu[CPU_KERNEL]);
+    cpu->idle = SIGAR_TICK2SEC(data.cpu[CPU_IDLE]);
     cpu->total = 0;
 
     for (i=0; i<CPU_NTIMES; i++) {
-        cpu->total += data.cpu[i];
+        cpu->total += SIGAR_TICK2SEC(data.cpu[i]);
     }
 
     return SIGAR_OK;
@@ -723,14 +724,14 @@ static int sigar_cpu_list_get_kmem(sigar_t *sigar, sigar_cpu_list_t *cpulist)
         cpu = &cpulist->data[cpulist->number++];
 
         info = &sigar->cpuinfo[i];
-        cpu->user = info->cpu[CPU_USER];
+        cpu->user = SIGAR_TICK2SEC(info->cpu[CPU_USER]);
         cpu->nice = 0; /* N/A */
-        cpu->sys  = info->cpu[CPU_KERNEL];
-        cpu->idle = info->cpu[CPU_IDLE];
+        cpu->sys  = SIGAR_TICK2SEC(info->cpu[CPU_KERNEL]);
+        cpu->idle = SIGAR_TICK2SEC(info->cpu[CPU_IDLE]);
         cpu->total = 0;
 
         for (j=0; j<CPU_NTIMES; j++) {
-            cpu->total += info->cpu[j];
+            cpu->total += SIGAR_TICK2SEC(info->cpu[j]);
         }
     }
 
@@ -761,11 +762,11 @@ static int sigar_cpu_list_get_pstat(sigar_t *sigar, sigar_cpu_list_t *cpulist)
         }
 
         if (sigar->perfstat.cpu(&id, &data, sizeof(data), 1) == 1) {
-            cpu->user  = data.user;
+            cpu->user  = SIGAR_TICK2SEC(data.user);
             cpu->nice  = SIGAR_FIELD_NOTIMPL; /* N/A */
-            cpu->sys   = data.sys;
-            cpu->idle  = data.idle;
-            cpu->wait  = data.wait;
+            cpu->sys   = SIGAR_TICK2SEC(data.sys);
+            cpu->idle  = SIGAR_TICK2SEC(data.idle);
+            cpu->wait  = SIGAR_TICK2SEC(data.wait);
             cpu->total = cpu->user + cpu->sys + cpu->idle + cpu->wait;
         }
         else {
