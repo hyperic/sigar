@@ -323,7 +323,7 @@ int sigar_cpu_list_get(sigar_t *sigar, sigar_cpu_list_t *cpulist)
     kstat_ctl_t *kc = sigar->kc; 
     kstat_t *ksp;
     ulong cpuinfo[CPU_STATES];
-    unsigned int i, n;
+    unsigned int i;
     sigar_kstat_update(sigar);
 
     if (cpulist == &sigar->cpulist) {
@@ -381,11 +381,7 @@ int sigar_cpu_list_get(sigar_t *sigar, sigar_cpu_list_t *cpulist)
         cpu->idle = SIGAR_TICK2SEC(cpuinfo[CPU_IDLE]);
         cpu->wait = SIGAR_TICK2SEC(cpuinfo[CPU_WAIT]);
         cpu->nice = 0; /* no cpu->nice */
-        cpu->total = 0;
-
-        for (n=0; n<CPU_STATES; n++) {
-            cpu->total += cpuinfo[n];
-        }
+        cpu->total = cpu->user + cpu->sys + cpu->idle + cpu->wait;
     }
     
     return SIGAR_OK;
