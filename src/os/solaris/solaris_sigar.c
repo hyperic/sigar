@@ -376,10 +376,10 @@ int sigar_cpu_list_get(sigar_t *sigar, sigar_cpu_list_t *cpulist)
 
         cpu = &cpulist->data[cpulist->number++];
 
-        cpu->user = cpuinfo[CPU_USER] / sigar->ticks;
-        cpu->sys  = cpuinfo[CPU_KERNEL] / sigar->ticks;
-        cpu->idle = cpuinfo[CPU_IDLE] / sigar->ticks;
-        cpu->wait = cpuinfo[CPU_WAIT] / sigar->ticks;
+        cpu->user = SIGAR_TICK2SEC(cpuinfo[CPU_USER]);
+        cpu->sys  = SIGAR_TICK2SEC(cpuinfo[CPU_KERNEL]);
+        cpu->idle = SIGAR_TICK2SEC(cpuinfo[CPU_IDLE]);
+        cpu->wait = SIGAR_TICK2SEC(cpuinfo[CPU_WAIT]);
         cpu->nice = 0; /* no cpu->nice */
         cpu->total = 0;
 
