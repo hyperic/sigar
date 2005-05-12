@@ -725,6 +725,7 @@ static int sigar_cpu_list_get_kmem(sigar_t *sigar, sigar_cpu_list_t *cpulist)
         cpu->nice = 0; /* N/A */
         cpu->sys  = SIGAR_TICK2SEC(info->cpu[CPU_KERNEL]);
         cpu->idle = SIGAR_TICK2SEC(info->cpu[CPU_IDLE]);
+        cpu->wait = SIGAR_TICK2SEC(info->cpu[CPU_WAIT]);
         cpu->total = cpu->user + cpu->sys + cpu->idle + cpu->wait;
     }
 
