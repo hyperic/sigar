@@ -1,7 +1,5 @@
 package net.hyperic.sigar.cmd;
 
-import net.hyperic.sigar.CpuInfo;
-import net.hyperic.sigar.OperatingSystem;
 import net.hyperic.sigar.SigarException;
 
 /**
@@ -21,60 +19,22 @@ public class SysInfo extends SigarCommandBase {
         return "Display system information";
     }
 
-    private String getJavaProp(String name) {
-        return System.getProperty("java." + name);
-    }
-
     public void output(String[] args) throws SigarException {
-        /**
-         * OS info
-         */
-        OperatingSystem os = OperatingSystem.getInstance();
-
-        println(os.getName() + " " +
-                os.getVersion() + " " +
-                os.getArch());
-
-        if (os.getName().equals("Linux")) {
-            println(os.getVendor() + " " + os.getVendorVersion());
-        }
-
-        /**
-         * JVM info
-         */
-        println(getJavaProp("vm.name") + " - " +
-                getJavaProp("vm.vendor") + " [" +
-                getJavaProp("vm.version") + "]");
-
-        println(getJavaProp("specification.vendor") + " " +
-                getJavaProp("specification.name") + " " +
-                getJavaProp("specification.version"));
-        println("JAVA_HOME=" + getJavaProp("home"));
+        //sigar/os info
+        Version.printInfo(this.out);
         println("");
 
-        /**
-         * uptime
-         */
+        //uptime
         new Uptime(this.shell).output(args);
         println("");
 
-        /**
-         * CPU info
-         */
-        CpuInfo[] infos = this.sigar.getCpuInfoList();
-        for (int i=0; i<infos.length; i++) {
-            CpuInfo info = infos[i];
-            println("CPU " + i + ":");
-            println("  Vendor........" + info.getVendor());
-            println("  Model........." + info.getModel());
-            println("  Mhz..........." + info.getMhz());
-            println("  Cache size...." + info.getCacheSize());
-        }
+        //cpu info
+        CpuInfo cpuinfo = new CpuInfo(this.shell);
+        cpuinfo.displayTimes = false;
+        cpuinfo.output(args);
         println("");
 
-        /**
-         * memory info
-         */
+        //memory info
         new Free(this.shell).output(args);
     }
 
