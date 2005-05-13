@@ -9,6 +9,8 @@ import net.hyperic.sigar.SigarException;
  */
 public class CpuInfo extends SigarCommandBase {
 
+    public boolean displayTimes = true;
+    
     public CpuInfo(Shell shell) {
         super(shell);
     }
@@ -25,13 +27,12 @@ public class CpuInfo extends SigarCommandBase {
         net.hyperic.sigar.CpuInfo[] infos =
             this.sigar.getCpuInfoList();
 
-        CpuPerc[] cpus = this.sigar.getCpuPercList();
+        CpuPerc[] cpus = null;
 
         println(infos.length + " total CPUs..");
 
         for (int i=0; i<infos.length; i++) {
             net.hyperic.sigar.CpuInfo info = infos[i];
-            CpuPerc cpu = cpus[i];
             long cacheSize = info.getCacheSize();
             println("Vendor........" + info.getVendor());
             println("Model........." + info.getModel());
@@ -39,6 +40,13 @@ public class CpuInfo extends SigarCommandBase {
             if (cacheSize != Sigar.FIELD_NOTIMPL) {
                 println("Cache size...." + cacheSize);
             }
+            if (!this.displayTimes) {
+                continue;
+            }
+            if (cpus == null) {
+                cpus = this.sigar.getCpuPercList();
+            }
+            CpuPerc cpu = cpus[i];
             println("User Time....." + CpuPerc.format(cpu.getUser()));
             println("Sys Time......" + CpuPerc.format(cpu.getSys()));
             println("Idle Time....." + CpuPerc.format(cpu.getIdle()));
