@@ -190,7 +190,14 @@ JNIEXPORT jobject SIGAR_JNI(win32_EventLog_read)
         char buf[MAX_ERROR_LENGTH];
         DWORD lastError = GetLastError();
         
-        sprintf(buf, "Error reading from the event log: %d", lastError);
+        if (lastError == ERROR_INSUFFICIENT_BUFFER) {
+            /* XXX need to handle this */
+            sprintf(buf, "Buffer size (%d) too small (%d needed)",
+                    sizeof(buffer), dwNeeded);
+        }
+        else {
+            sprintf(buf, "Error reading from the event log: %d", lastError);
+        }
         win32_throw_exception(env, buf);
         return NULL;
     }
