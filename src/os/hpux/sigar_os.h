@@ -14,6 +14,7 @@ struct sigar_t {
     struct pst_status *pinfo;
 
     sigar_cache_t *fsdev;
+    int mib;
 };
 
 int hpux_get_mib_ifentry(int ppa, mib_ifEntry *mib);

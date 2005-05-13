@@ -24,6 +24,8 @@ int sigar_os_open(sigar_t **sigar)
     (*sigar)->pinfo = NULL;
 
     (*sigar)->fsdev = NULL;
+
+    (*sigar)->mib = -1;
     
     return SIGAR_OK;
     
@@ -37,6 +39,9 @@ int sigar_os_close(sigar_t *sigar)
     if (sigar->fsdev) {
         sigar_cache_destroy(sigar->fsdev);
     }
+    if (sigar->mib >= 0) {
+        close_mib(sigar->mib);
+    } 
     free(sigar);
     return SIGAR_OK;
 }
@@ -668,27 +673,33 @@ int sigar_cpu_info_list_get(sigar_t *sigar,
     return SIGAR_OK;
 }
 
+static int sigar_get_mib_info(sigar_t *sigar,
+                              struct nmparms *parms)
+{
+    if (sigar->mib < 0) {
+        if ((sigar->mib = open_mib("/dev/ip", O_RDONLY, 0, 0)) < 0) {
+            return errno;
+        }
+    }
+    return get_mib_info(sigar->mib, parms);
+}
+
 int sigar_net_route_list_get(sigar_t *sigar,
                              sigar_net_route_list_t *routelist)
 {
-    int fd, count, i;
+    int status, count, i;
     unsigned int len;
     struct nmparms parms;
     mib_ipRouteEnt *routes;
     sigar_net_route_t *route;
-
-    if ((fd = open_mib("/dev/ip", O_RDONLY, 0, 0)) < 0) {
-        return errno;
-    }
 
     len = sizeof(count);
     parms.objid = ID_ipRouteNumEnt;
     parms.buffer = &count;
     parms.len = &len;
 
-    if (get_mib_info(fd, &parms) < 0) {
-        close_mib(fd);
-        return errno;
+    if ((status = sigar_get_mib_info(sigar, &parms)) != SIGAR_OK) {
+        return status;
     }
 
     len = count * sizeof(*routes);
@@ -698,9 +709,9 @@ int sigar_net_route_list_get(sigar_t *sigar,
     parms.buffer = routes;
     parms.len = &len;
 
-    if (get_mib_info(fd, &parms) < 0) {
+    if ((status = sigar_get_mib_info(sigar, &parms)) != SIGAR_OK) {
         free(routes);
-        return errno;
+        return status;
     }
 
     routelist->size = routelist->number = 0;
@@ -721,7 +732,6 @@ int sigar_net_route_list_get(sigar_t *sigar,
     }
 
     free(routes);
-    close_mib(fd);
     
     return SIGAR_OK;
 }
@@ -730,23 +740,18 @@ static int get_mib_ifstat(sigar_t *sigar,
                           const char *name,
                           mib_ifEntry *mib)
 {
-    int fd, count, i;
+    int status, count, i;
     unsigned int len;
     nmapi_phystat *stat;
     struct nmparms parms;
-
-    if ((fd = open_mib("/dev/ip", O_RDONLY, 0, 0)) < 0) {
-        return errno;
-    }
 
     len = sizeof(count);
     parms.objid = ID_ifNumber;
     parms.buffer = &count;
     parms.len = &len;
 
-    if (get_mib_info(fd, &parms) < 0) {
-        close_mib(fd);
-        return errno;
+    if ((status = sigar_get_mib_info(sigar, &parms)) != SIGAR_OK) {
+        return status;
     }
 
     len = sizeof(nmapi_phystat) * count;
@@ -757,7 +762,6 @@ static int get_mib_ifstat(sigar_t *sigar,
     }
 
     if (get_physical_stat(sigar->ifconf_buf, &len) < 0) {
-        close_mib(fd);
         return errno;
     }
 
@@ -767,12 +771,10 @@ static int get_mib_ifstat(sigar_t *sigar,
     {
         if (strEQ(stat->nm_device, name)) {
             memcpy(mib, &stat->if_entry, sizeof(*mib));
-            close_mib(fd);
             return SIGAR_OK;
         }
     }
 
-    close_mib(fd);
     return ENXIO;
 }
 
@@ -816,23 +818,18 @@ static int net_conn_get_tcp(sigar_t *sigar,
                             sigar_net_connection_list_t *connlist,
                             int flags)
 {
-    int fd, count, i;
+    int status, count, i;
     unsigned int len;
     mib_tcpConnEnt *entries;
     struct nmparms parms;
-
-    if ((fd = open_mib("/dev/ip", O_RDONLY, 0, 0)) < 0) {
-        return errno;
-    }
 
     len = sizeof(count);
     parms.objid = ID_tcpConnNumEnt;
     parms.buffer = &count;
     parms.len = &len;
 
-    if (get_mib_info(fd, &parms) < 0) {
-        close_mib(fd);
-        return errno;
+    if ((status = sigar_get_mib_info(sigar, &parms)) != SIGAR_OK) {
+        return status;
     }
 
     if (count <= 0) {
@@ -845,12 +842,10 @@ static int net_conn_get_tcp(sigar_t *sigar,
     parms.buffer = entries;
     parms.len = &len;
 
-    if (get_mib_info(fd, &parms) < 0) {
-        close_mib(fd);
-        return errno;
+    if ((status = sigar_get_mib_info(sigar, &parms)) != SIGAR_OK) {
+        free(entries);
+        return status;
     }
-
-    close_mib(fd);
 
     for (i=0; i<count; i++) {
         mib_tcpConnEnt *entry = &entries[i];
