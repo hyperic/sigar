@@ -1,4 +1,8 @@
 2005-05-11  Doug MacEachern  <dougm@hyperic.net>
+
+        * Use psapi instead of CreateTool32Snapshot in win32 sigar_proc_modules
+        It is possible for the latter to hang on win2k, the former also
+        works on NT.
         
         * Implement sigar_net_connection_list for AIX and HPUX
         
