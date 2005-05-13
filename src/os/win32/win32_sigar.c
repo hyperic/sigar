@@ -243,6 +243,17 @@ int sigar_os_open(sigar_t **sigar)
         (*sigar)->nt_handle = NULL;
     }
 
+    if ((h = LoadLibrary("psapi.dll"))) {
+        (*sigar)->enum_modules =
+            (LPENUMMODULES)GetProcAddress(h, "EnumProcessModules");
+        (*sigar)->get_module_name =
+            (LPGETMODULENAME)GetProcAddress(h, "GetModuleFileNameExA");
+        (*sigar)->ps_handle = h;
+    }
+    else {
+        (*sigar)->ps_handle = NULL;
+    }
+
     (*sigar)->pinfo.pid = -1;
     (*sigar)->ws_version = 0;
     (*sigar)->ncpu = 0;
@@ -267,6 +278,10 @@ int sigar_os_close(sigar_t *sigar)
 
     if (sigar->nt_handle) {
         FreeLibrary(sigar->nt_handle);
+    }
+
+    if (sigar->ps_handle) {
+        FreeLibrary(sigar->ps_handle);
     }
 
     if (sigar->ws_version != 0) {
@@ -1263,95 +1278,47 @@ SIGAR_DECLARE(int) sigar_proc_exe_get(sigar_t *sigar, sigar_pid_t pid,
     return status;
 }
 
-typedef HANDLE (CALLBACK *LPCREATESNAPSHOT)(DWORD, DWORD);
-typedef BOOL (CALLBACK *LPMODULEITER)(HANDLE, LPMODULEENTRY32);
-
-/* not available on NT */
-static int sigar_proc_modules_get_toolhelp(sigar_t *sigar,
-                                           sigar_pid_t pid,
-                                           sigar_proc_modules_t *procmods)
+SIGAR_DECLARE(int) sigar_proc_modules_get(sigar_t *sigar, sigar_pid_t pid,
+                                          sigar_proc_modules_t *procmods)
 {
-    HINSTANCE k32_handle;
-    HANDLE snap_shot;
-    MODULEENTRY32 module;
-    LPCREATESNAPSHOT create_snapshot;
-    LPMODULEITER module_first, module_next;
+    HANDLE proc; 
+    HMODULE modules[1024];
+    DWORD size = 0;
+    unsigned int i;
 
-    /* XXX: cache this stuff within sigar_t */
-    k32_handle = LoadLibrary("kernel32.dll");
-    if (!k32_handle) {
+    if (!sigar->ps_handle) {
+        return SIGAR_ENOTIMPL;
+    }
+
+    if (!(proc = open_process(pid))) {
         return GetLastError();
     }
 
-    create_snapshot =
-        (LPCREATESNAPSHOT)GetProcAddress(k32_handle,
-                                         "CreateToolhelp32Snapshot");
-
-    if (!create_snapshot) {
-        FreeLibrary(k32_handle);
+    if (!sigar->enum_modules(proc, modules, sizeof(modules), &size)) {
+        CloseHandle(proc);
         return GetLastError();
     }
 
-    module_first =
-        (LPMODULEITER)GetProcAddress(k32_handle, "Module32First");
+    for (i=0; i<(size/sizeof(HMODULE)); i++) {
+        int status;
+        char name[MAX_PATH];
 
-    if (!module_first) {
-        FreeLibrary(k32_handle);
-        return GetLastError();
-    }
+        if (!sigar->get_module_name(proc, modules[i], name, sizeof(name))) {
+            continue;
+        }
 
-    module_next =
-        (LPMODULEITER)GetProcAddress(k32_handle, "Module32Next");
-
-    if (!module_next) {
-        FreeLibrary(k32_handle);
-        return GetLastError();
-    }
-
-    snap_shot = create_snapshot(TH32CS_SNAPMODULE, (DWORD)pid);
-
-    if (snap_shot == INVALID_HANDLE_VALUE) {
-        FreeLibrary(k32_handle);
-        return GetLastError();
-    }
-
-    module.dwSize = sizeof(MODULEENTRY32);
-    if (!module_first(snap_shot, &module)) {
-        CloseHandle(snap_shot);
-        FreeLibrary(k32_handle);
-        return SIGAR_OK;
-    }
-
-    do {
-        int status =
-            procmods->module_getter(procmods->data,
-                                    module.szExePath,
-                                    strlen(module.szExePath));
+        status = procmods->module_getter(procmods->data,
+                                         name, strlen(name));
 
         if (status != SIGAR_OK) {
             /* not an error; just stop iterating */
             break;
         }
+    }
 
-        module.dwSize = sizeof(MODULEENTRY32);
-    } while (module_next(snap_shot, &module));
-
-    CloseHandle(snap_shot);
-    FreeLibrary(k32_handle);
+    CloseHandle(proc);
 
     return SIGAR_OK;
-}
-
-SIGAR_DECLARE(int) sigar_proc_modules_get(sigar_t *sigar, sigar_pid_t pid,
-                                          sigar_proc_modules_t *procmods)
-{
-    if (sigar->winnt) {
-        /* XXX need to use psapi.dll for NT */
-        return SIGAR_ENOTIMPL;
-    }
-    return sigar_proc_modules_get_toolhelp(sigar,
-                                           pid,
-                                           procmods);
 }
 
 #define FT2INT64(ft) \

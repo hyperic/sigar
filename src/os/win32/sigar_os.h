@@ -89,6 +89,12 @@ typedef DWORD (CALLBACK *LPGETUDPEXTABLE)(PMIB_UDPEXTABLE *, BOOL, HANDLE,
 
 typedef DWORD (CALLBACK *LPSYSINFO)(DWORD, PVOID, ULONG, PULONG);
 
+typedef BOOL (CALLBACK *LPENUMMODULES)(HANDLE, HMODULE*,
+                                       DWORD, LPDWORD);
+
+typedef DWORD (CALLBACK *LPGETMODULENAME)(HANDLE, HMODULE,
+                                          LPTSTR, DWORD);
+
 /* no longer in the standard header files */
 typedef struct {
     LARGE_INTEGER IdleTime;
@@ -122,6 +128,7 @@ struct sigar_t {
     DWORD perfbuf_size;
     HINSTANCE ip_handle;
     HINSTANCE nt_handle;
+    HINSTANCE ps_handle;
     LPGETIFTABLE get_if_table;
     LPGETIPFORWARDTABLE get_ipforward_table;
     LPGETTCPTABLE get_tcp_table;
@@ -129,6 +136,8 @@ struct sigar_t {
     LPGETUDPTABLE get_udp_table;
     LPGETUDPEXTABLE get_udpx_table;
     LPSYSINFO get_ntsys_info;
+    LPENUMMODULES enum_modules;
+    LPGETMODULENAME get_module_name;
     sigar_win32_pinfo_t pinfo;
     WORD ws_version;
     int ws_error;
