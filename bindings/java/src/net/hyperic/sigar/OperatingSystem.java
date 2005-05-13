@@ -20,7 +20,9 @@ public class OperatingSystem {
     private String patchLevel;
     private String vendor;
     private String vendorVersion;
-
+    private String dataModel;
+    private String cpuEndian;
+    
     private OperatingSystem() {
     }
 
@@ -32,7 +34,9 @@ public class OperatingSystem {
             os.version = props.getProperty("os.version");
             os.arch = props.getProperty("os.arch");
             os.patchLevel = props.getProperty("sun.os.patch.level");
-
+            os.dataModel = props.getProperty("sun.arch.data.model");
+            os.cpuEndian = props.getProperty("sun.cpu.endian");
+            
             if (os.name.equals("Linux")) {
                 os.getLinuxInfo();
             }
@@ -107,6 +111,14 @@ public class OperatingSystem {
 
     public String getVendorVersion() {
         return this.vendorVersion;
+    }
+
+    public String getDataModel() {
+        return this.dataModel;
+    }
+
+    public String getCpuEndian() {
+        return this.cpuEndian;
     }
 
     private void getLinuxInfo() {
