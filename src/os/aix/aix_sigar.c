@@ -2093,6 +2093,8 @@ static int net_conn_get_tcp(sigar_t *sigar,
             conn->local_port  = ntohs(pcb.inp_lport);
             conn->remote_port = ntohs(pcb.inp_fport);
 
+            conn->send_queue = conn->receive_queue = SIGAR_FIELD_NOTIMPL;
+
             switch (state) {
               case TCPS_CLOSED:
                 conn->state = SIGAR_TCP_CLOSE;
