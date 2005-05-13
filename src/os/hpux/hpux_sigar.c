@@ -806,15 +806,6 @@ int sigar_net_interface_stat_get(sigar_t *sigar, const char *name,
     return SIGAR_OK;
 }
 
-static void ip_format(char *buffer, int buflen, ip_addr ip)
-{
-    sprintf(buffer, "%d.%d.%d.%d",
-            ((ip >> 24) & 0xFF),
-            ((ip >> 16) & 0xFF),
-            ((ip >> 8) & 0xFF), 
-            ((ip) & 0xFF));
-}
-
 #define IS_TCP_SERVER(state, flags) \
     ((flags & SIGAR_NETCONN_SERVER) && (state == TCLISTEN))
 
@@ -916,13 +907,11 @@ static int net_conn_get_tcp(sigar_t *sigar,
         conn.remote_port = entry->RemPort;
         conn.type = SIGAR_NETCONN_TCP;
 
-        ip_format(conn.local_address,
-                  sizeof(conn.local_address),
-                  entry->LocalAddress);
+        sigar_inet_ntoa(sigar, entry->LocalAddress,
+                        conn.local_address);
 
-        ip_format(conn.remote_address,
-                  sizeof(conn.remote_address),
-                  entry->RemAddress);
+        sigar_inet_ntoa(sigar, entry->RemAddress,
+                        conn.remote_address);
 
         conn.send_queue = conn.receive_queue = SIGAR_FIELD_NOTIMPL;
 
