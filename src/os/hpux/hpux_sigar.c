@@ -903,8 +903,8 @@ static int net_conn_get_tcp(sigar_t *sigar,
             break;
         }
 
-        conn.local_port  = entry->LocalPort;
-        conn.remote_port = entry->RemPort;
+        conn.local_port  = (unsigned short)entry->LocalPort;
+        conn.remote_port = (unsigned short)entry->RemPort;
         conn.type = SIGAR_NETCONN_TCP;
 
         sigar_inet_ntoa(sigar, entry->LocalAddress,
