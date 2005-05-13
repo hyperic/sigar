@@ -842,8 +842,8 @@ static int net_conn_get_udp_listen(sigar_t *sigar,
     }
 
     for (i=0; i<count; i++) {
-        mib_udpLsnEnt *entry = &entries[i];
         sigar_net_connection_t *conn;
+        mib_udpLsnEnt *entry = &entries[i];
 
         SIGAR_NET_CONNLIST_GROW(connlist);
         conn = &connlist->data[connlist->number++];
@@ -918,8 +918,8 @@ static int net_conn_get_tcp(sigar_t *sigar,
     }
 
     for (i=0; i<count; i++) {
+        sigar_net_connection_t *conn;
         mib_tcpConnEnt *entry = &entries[i];
-        sigar_net_connection_t conn;
         int state = entry->State;
 
         if (!(IS_TCP_SERVER(state, flags) ||
@@ -928,61 +928,60 @@ static int net_conn_get_tcp(sigar_t *sigar,
             continue;
         }
 
+        SIGAR_NET_CONNLIST_GROW(connlist);
+        conn = &connlist->data[connlist->number++];
+
         switch (state) {
           case TCCLOSED:
-            conn.state = SIGAR_TCP_CLOSE;
+            conn->state = SIGAR_TCP_CLOSE;
             break;
           case TCLISTEN:
-            conn.state = SIGAR_TCP_LISTEN;
+            conn->state = SIGAR_TCP_LISTEN;
             break;
           case TCSYNSENT:
-            conn.state = SIGAR_TCP_SYN_SENT;
+            conn->state = SIGAR_TCP_SYN_SENT;
             break;
           case TCSYNRECEIVE:
-            conn.state = SIGAR_TCP_SYN_RECV;
+            conn->state = SIGAR_TCP_SYN_RECV;
             break;
           case TCESTABLISED:
-            conn.state = SIGAR_TCP_ESTABLISHED;
+            conn->state = SIGAR_TCP_ESTABLISHED;
             break;
           case TCFINWAIT1:
-            conn.state = SIGAR_TCP_FIN_WAIT1;
+            conn->state = SIGAR_TCP_FIN_WAIT1;
             break;
           case TCFINWAIT2:
-            conn.state = SIGAR_TCP_FIN_WAIT2;
+            conn->state = SIGAR_TCP_FIN_WAIT2;
             break;
           case TCCLOSEWAIT:
-            conn.state = SIGAR_TCP_CLOSE_WAIT;
+            conn->state = SIGAR_TCP_CLOSE_WAIT;
             break;
           case TCCLOSING:
-            conn.state = SIGAR_TCP_CLOSING;
+            conn->state = SIGAR_TCP_CLOSING;
             break;
           case TCLASTACK:
-            conn.state = SIGAR_TCP_LAST_ACK;
+            conn->state = SIGAR_TCP_LAST_ACK;
             break;
           case TCTIMEWAIT:
-            conn.state = SIGAR_TCP_TIME_WAIT;
+            conn->state = SIGAR_TCP_TIME_WAIT;
             break;
           case TCDELETETCB:
           default:
-            conn.state = SIGAR_TCP_UNKNOWN;
+            conn->state = SIGAR_TCP_UNKNOWN;
             break;
         }
 
-        conn.local_port  = (unsigned short)entry->LocalPort;
-        conn.remote_port = (unsigned short)entry->RemPort;
-        conn.type = SIGAR_NETCONN_TCP;
+        conn->local_port  = (unsigned short)entry->LocalPort;
+        conn->remote_port = (unsigned short)entry->RemPort;
+        conn->type = SIGAR_NETCONN_TCP;
 
         sigar_inet_ntoa(sigar, entry->LocalAddress,
-                        conn.local_address);
+                        conn->local_address);
 
         sigar_inet_ntoa(sigar, entry->RemAddress,
-                        conn.remote_address);
+                        conn->remote_address);
 
-        conn.send_queue = conn.receive_queue = SIGAR_FIELD_NOTIMPL;
-
-        SIGAR_NET_CONNLIST_GROW(connlist);
-        memcpy(&connlist->data[connlist->number++],
-               &conn, sizeof(conn));
+        conn->send_queue = conn->receive_queue = SIGAR_FIELD_NOTIMPL;
     }
 
     free(entries);
