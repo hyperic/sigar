@@ -12,20 +12,20 @@ public class TestCpu extends SigarTestCase {
     }
 
     private void checkCpu(Cpu cpu) {
-        traceln("User=" + cpu.getUser());
+        traceln("User..." + cpu.getUser());
         assertTrue(cpu.getUser() >= 0);
 
-        traceln("Sys=" + cpu.getSys());
+        traceln("Sys...." + cpu.getSys());
         assertTrue(cpu.getSys() >= 0);
 
-        traceln("Idle=" + cpu.getIdle());
+        traceln("Idle..." + cpu.getIdle());
         assertTrue(cpu.getIdle() >= 0);
 
-        traceln("Wait=" + cpu.getWait());
+        traceln("Wait..." + cpu.getWait());
         assertTrue(cpu.getWait() >= 0);
 
-        traceln("Total=" + cpu.getTotal());
-        assertTrue(cpu.getTotal() >= 0);
+        traceln("Total.." + cpu.getTotal());
+        assertTrue(cpu.getTotal() > 0);
     }
 
     public void testCreate() throws Exception {
