@@ -1852,12 +1852,6 @@ int sigar_net_interface_stat_get(sigar_t *sigar, const char *name,
     return ENXIO;
 }
 
-static void ip_format(char *buffer, IpAddress addr)
-{
-    unsigned char *ap = (unsigned char *)&addr;
-    sprintf(buffer, "%d.%d.%d.%d", ap[0], ap[1], ap[2], ap[3]);
-}
-
 #define TCPQ_SIZE(s) ((s) >= 0 ? (s) : 0)
 
 static int tcp_connection_list_get(sigar_t *sigar,
@@ -1879,8 +1873,12 @@ static int tcp_connection_list_get(sigar_t *sigar,
             SIGAR_NET_CONNLIST_GROW(connlist);
             conn = &connlist->data[connlist->number++];
 
-            ip_format(conn->local_address, entry->tcpConnLocalAddress);
-            ip_format(conn->remote_address, entry->tcpConnRemAddress);
+            sigar_inet_ntoa(sigar, entry->tcpConnLocalAddress,
+                            conn->local_address);
+
+            sigar_inet_ntoa(sigar, entry->tcpConnRemAddress,
+                            conn->remote_address);
+
             conn->local_port = entry->tcpConnLocalPort;
             conn->remote_port = entry->tcpConnRemPort;
             conn->type = SIGAR_NETCONN_TCP;
@@ -1962,7 +1960,8 @@ static int udp_connection_list_get(sigar_t *sigar,
             SIGAR_NET_CONNLIST_GROW(connlist);
             conn = &connlist->data[connlist->number++];
 
-            ip_format(conn->local_address, entry->udpLocalAddress);
+            sigar_inet_ntoa(sigar, entry->udpLocalAddress,
+                            conn->local_address);
             SIGAR_SSTRCPY(conn->remote_address, "0.0.0.0");
             conn->local_port = entry->udpLocalPort;
             conn->remote_port = 0;
