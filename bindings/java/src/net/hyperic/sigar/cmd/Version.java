@@ -4,6 +4,7 @@ import java.io.PrintStream;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
+import net.hyperic.sigar.OperatingSystem;
 import net.hyperic.sigar.Sigar;
 import net.hyperic.sigar.SigarException;
 
@@ -12,16 +13,6 @@ import net.hyperic.sigar.SigarLoader;
  * Display Sigar, java and system version information.
  */
 public class Version extends SigarCommandBase {
-    private static String[] SYS_PROPS = {
-        "os.name",
-        "os.version",
-        "os.arch",
-        "java.vm.version",
-        "java.vm.vendor",
-        "sun.arch.data.model",
-        "sun.cpu.endian",
-        "sun.os.patch.level",
-    };
 
     public Version(Shell shell) {
         super(shell);
@@ -32,7 +23,7 @@ public class Version extends SigarCommandBase {
     }
 
     public String getUsageShort() {
-        return "Display sigar version";
+        return "Display sigar and system version info";
     }
 
     private static String getHostName() {
@@ -54,21 +45,32 @@ public class Version extends SigarCommandBase {
     public static void printInfo(PrintStream os) {
         String fqdn = getFQDN();
         String host = getHostName();
-        os.println("Sigar version=" + Sigar.VERSION_STRING);
-        os.println("Sigar build date=" + Sigar.BUILD_DATE);
-        os.println("Sigar archlib=" +
+        os.println("Sigar version......." + Sigar.VERSION_STRING);
+        os.println("Build date.........." + Sigar.BUILD_DATE);
+        os.println("Archlib............." +
                    SigarLoader.getNativeLibraryName());
-        os.println("Current fqdn=" + fqdn);
+        os.println("Current fqdn........" + fqdn);
         if (!fqdn.equals(host)) {
-            os.println("Current host=" + host);
+            os.println("Hostname............" + host);
         }
         os.println("");
+        
+        OperatingSystem sys = OperatingSystem.getInstance();
+        os.println("OS name............." + sys.getName());
+        os.println("OS arch............." + sys.getArch());
+        os.println("OS version.........." + sys.getVersion());
+        os.println("OS patch level......" + sys.getPatchLevel());
+        os.println("OS vendor..........." + sys.getVendor());
+        os.println("OS vendor version..." + sys.getVendorVersion());
+        os.println("OS data model......." + sys.getDataModel());
+        os.println("OS cpu endian......." + sys.getCpuEndian());
 
-        for (int i=0; i<SYS_PROPS.length; i++) {
-            String prop = SYS_PROPS[i];
-            os.println(prop + "=" + 
-                       System.getProperty(prop));
-        }
+        os.println("Java vm version....." + 
+                   System.getProperty("java.vm.version"));
+        os.println("Java vm vendor......" + 
+                System.getProperty("java.vm.vendor"));
+        os.println("Java home..........." +
+                System.getProperty("java.home"));
     }
 
     public void output(String[] args) {
