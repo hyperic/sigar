@@ -65,6 +65,9 @@ public class OperatingSystem {
             }
             else if (os.name.equals("HP-UX")) {
                 os.vendor = "Hewlett-Packard";
+                if (os.version.indexOf(".11.") != -1) {
+                    os.vendorVersion = "11";
+                }
             }
             else if (os.name.equals("OSF1")) {
                 //HP acquired DEC
@@ -81,6 +84,10 @@ public class OperatingSystem {
             }
             else {
                 os.vendor = "Unknown";
+            }
+
+            if (os.vendorVersion == null) {
+                os.vendorVersion = os.version;
             }
 
             instance = os;
