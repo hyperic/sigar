@@ -1,5 +1,7 @@
 2005-05-11  Doug MacEachern  <dougm@hyperic.net>
-
+        
+        * Implement sigar_net_connection_list for AIX and HPUX
+        
         * Convert Cpu times to seconds
 
 2005-05-10  Doug MacEachern  <dougm@hyperic.net>
