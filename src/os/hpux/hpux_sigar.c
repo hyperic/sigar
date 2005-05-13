@@ -808,6 +808,76 @@ int sigar_net_interface_stat_get(sigar_t *sigar, const char *name,
     return SIGAR_OK;
 }
 
+static int net_conn_get_udp_listen(sigar_t *sigar,
+                                   sigar_net_connection_list_t *connlist,
+                                   int flags)
+{
+    int status, count, i;
+    unsigned int len;
+    mib_udpLsnEnt *entries;
+    struct nmparms parms;
+
+    len = sizeof(count);
+    parms.objid = ID_udpLsnNumEnt;
+    parms.buffer = &count;
+    parms.len = &len;
+
+    if ((status = sigar_get_mib_info(sigar, &parms)) != SIGAR_OK) {
+        return status;
+    }
+
+    if (count <= 0) {
+        return ENOENT;
+    }
+
+    len =  count * sizeof(*entries);
+    entries = malloc(len);
+    parms.objid = ID_udpLsnTable;
+    parms.buffer = entries;
+    parms.len = &len;
+
+    if ((status = sigar_get_mib_info(sigar, &parms)) != SIGAR_OK) {
+        free(entries);
+        return status;
+    }
+
+    for (i=0; i<count; i++) {
+        mib_udpLsnEnt *entry = &entries[i];
+        sigar_net_connection_t *conn;
+
+        SIGAR_NET_CONNLIST_GROW(connlist);
+        conn = &connlist->data[connlist->number++];
+
+        conn->type = SIGAR_NETCONN_UDP;
+
+        conn->local_port  = (unsigned short)entry->LocalPort;
+        conn->remote_port = 0;
+
+        sigar_inet_ntoa(sigar, entry->LocalAddress,
+                        conn->local_address);
+
+        SIGAR_SSTRCPY(conn->remote_address, "0.0.0.0");
+
+        conn->send_queue = conn->receive_queue = SIGAR_FIELD_NOTIMPL;
+    }
+
+    free(entries);
+    return SIGAR_OK;
+}
+
+static int net_conn_get_udp(sigar_t *sigar,
+                            sigar_net_connection_list_t *connlist,
+                            int flags)
+{
+    int status = SIGAR_OK;
+
+    if (flags & SIGAR_NETCONN_SERVER) {
+        status = net_conn_get_udp_listen(sigar, connlist, flags);
+    }
+
+    return status;
+}
+
 #define IS_TCP_SERVER(state, flags) \
     ((flags & SIGAR_NETCONN_SERVER) && (state == TCLISTEN))
 
@@ -935,7 +1005,7 @@ int sigar_net_connection_list_get(sigar_t *sigar,
             return status;
         }
     }
-#if 0
+
     if (flags & SIGAR_NETCONN_UDP) {
         status = net_conn_get_udp(sigar, connlist, flags);
 
@@ -943,7 +1013,7 @@ int sigar_net_connection_list_get(sigar_t *sigar,
             return status;
         }
     }
-#endif
+
     return SIGAR_OK;
 }
 
