@@ -1318,6 +1318,7 @@ static int sigar_proc_modules_get_toolhelp(sigar_t *sigar,
     module.dwSize = sizeof(MODULEENTRY32);
     if (!module_first(snap_shot, &module)) {
         CloseHandle(snap_shot);
+        FreeLibrary(k32_handle);
         return SIGAR_OK;
     }
 
