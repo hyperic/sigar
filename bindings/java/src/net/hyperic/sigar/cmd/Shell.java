@@ -146,7 +146,9 @@ public class Shell extends ShellBase {
         try {
             File rc = new File(dir, RCFILE_NAME);
             readRCFile(rc, false);
-            this.out.println("Loaded rc file: " + rc);
+            if (this.isInteractive) {
+                this.out.println("Loaded rc file: " + rc);
+            }
         } catch (IOException e) { }
     }
 
@@ -160,6 +162,10 @@ public class Shell extends ShellBase {
         Shell shell = new Shell();
 
         try {
+            if (args.length == 0) {
+                shell.isInteractive = true;
+            }
+
             shell.init("sigar", System.out, System.err);
             shell.registerCommands();
 
@@ -167,8 +173,7 @@ public class Shell extends ShellBase {
             shell.readCommandFile(".");
             shell.readCommandFile(SigarLoader.getLocation());
 
-            if (args.length == 0) {
-                shell.isInteractive = true;
+            if (shell.isInteractive) {
                 shell.initHistory();
                 Getline.setCompleter(shell);
                 shell.run();
