@@ -2003,17 +2003,6 @@ sigar_net_interface_list_get(sigar_t *sigar,
     return SIGAR_OK;
 }
 
-static void ip_format(char *buffer, int buflen, UINT addr)
-{
-    UINT ip = htonl(addr);
-
-    sprintf(buffer, "%d.%d.%d.%d",
-            ((ip >> 24) & 0xFF),
-            ((ip >> 16) & 0xFF),
-            ((ip >> 8) & 0xFF),
-            ((ip) & 0xFF));
-}
-
 #define IS_TCP_SERVER(state, flags) \
     ((flags & SIGAR_NETCONN_SERVER) && (state == MIB_TCP_STATE_LISTEN))
 
@@ -2055,13 +2044,11 @@ static int net_conn_get_tcp(sigar_t *sigar,
 
         conn.type = SIGAR_NETCONN_TCP;
 
-        ip_format(conn.local_address,
-                  sizeof(conn.local_address),
-                  tcp->table[i].dwLocalAddr);
+        sigar_inet_ntoa(sigar, tcp->table[i].dwLocalAddr,
+                        conn.local_address);
 
-        ip_format(conn.remote_address,
-                  sizeof(conn.remote_address),
-                  tcp->table[i].dwRemoteAddr);
+        sigar_inet_ntoa(sigar, tcp->table[i].dwRemoteAddr,
+                        conn.remote_address);
 
         conn.send_queue = conn.receive_queue = SIGAR_FIELD_NOTIMPL;
 
@@ -2154,9 +2141,8 @@ static int net_conn_get_udp(sigar_t *sigar,
 
         conn.type = SIGAR_NETCONN_UDP;
 
-        ip_format(conn.local_address,
-                  sizeof(conn.local_address),
-                  udp->table[i].dwLocalAddr);
+        sigar_inet_ntoa(sigar, udp->table[i].dwLocalAddr,
+                        conn.local_address);
 
         SIGAR_SSTRCPY(conn.remote_address, "0.0.0.0");
 
