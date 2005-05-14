@@ -1744,7 +1744,7 @@ sigar_net_interface_stat_get(sigar_t *sigar, const char *name,
     ifstat->rx_errors   = ifr->dwInErrors;
     ifstat->rx_dropped  = ifr->dwInDiscards;
     ifstat->rx_overruns = SIGAR_FIELD_NOTIMPL;
-    ifstat->rx_frame    = 
+    ifstat->rx_frame    = SIGAR_FIELD_NOTIMPL;
 
     ifstat->tx_bytes      = ifr->dwOutOctets;
     ifstat->tx_packets    = ifr->dwOutUcastPkts + ifr->dwOutNUcastPkts; 
