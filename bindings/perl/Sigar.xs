@@ -30,6 +30,8 @@ typedef sigar_file_system_usage_t * Sigar__FileSystemUsage;
 typedef sigar_proc_stat_t * Sigar__ProcStat;
 typedef sigar_net_route_t * Sigar__NetRoute;
 typedef sigar_net_interface_stat_t * Sigar__NetInterfaceStat;
+typedef sigar_who_t * Sigar__Who;
+typedef sigar_thread_cpu_t * Sigar__ThreadCpu;
 
 /* Perl < 5.6 */
 #ifndef aTHX_

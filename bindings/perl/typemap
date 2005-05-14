@@ -26,6 +26,8 @@ Sigar::FileSystemUsage T_PTROBJ
 Sigar::ProcStat T_PTROBJ
 Sigar::NetRoute T_PTROBJ
 Sigar::NetInterfaceStat T_PTROBJ
+Sigar::Who T_PTROBJ
+Sigar::ThreadCpu T_PTROBJ
 
 OUTPUT
 T_NETADDR
