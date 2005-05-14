@@ -262,7 +262,7 @@ proc_list(sigar)
     av_extend(av, proclist.number - 1);
 
     for (i=0; i<proclist.number; i++) {
-        av_push(av, newSViv(proclist.data[i]));
+        av_push(av, newSViv((IV)proclist.data[i]));
     }
 
     RETVAL = newRV_noinc((SV*)av);
