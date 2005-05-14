@@ -955,7 +955,7 @@ my %jfields = (
 );
 
 my %pfields = (
-    Long   => "UV",
+    Long   => "sigar_uint64_t",
     Double => "double",
     Int    => "IV",
     Char   => "char",

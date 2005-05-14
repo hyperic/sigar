@@ -1,7 +1,7 @@
 Sigar       T_PTROBJ
 sigar_pid_t T_UV
+sigar_uint64_t T_UV
 const char *	T_PV
-UV		T_UV
 Sigar::NetAddr	T_NETADDR
 
 #generated list
