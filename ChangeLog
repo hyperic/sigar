@@ -1,3 +1,7 @@
+2005-05-25  Doug MacEachern  <dougm@hyperic.net>
+
+        * Implement sigar_proc_args for Darwin
+
 2005-05-11  Doug MacEachern  <dougm@hyperic.net>
 
         *  1.1.20 released

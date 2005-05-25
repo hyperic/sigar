@@ -801,7 +801,63 @@ int sigar_proc_args_get(sigar_t *sigar, sigar_pid_t pid,
                         sigar_proc_args_t *procargs)
 {
 #if defined(DARWIN)
-    return SIGAR_ENOTIMPL;
+    /*
+     * derived from:
+     * http://darwinsource.opendarwin.org/10.4.1/adv_cmds-79.1/ps.tproj/print.c
+     */
+    int mib[3], nargs;
+    char buffer[8096], *args=buffer, *ptr, *end;
+    size_t size = sizeof(buffer);
+
+    mib[0] = CTL_KERN;
+    mib[1] = KERN_PROCARGS2;
+    mib[2] = pid;
+
+    if (sysctl(mib, NMIB(mib), buffer, &size, NULL, 0) < 0) {
+        return errno;
+    }
+
+    end = &args[size];
+
+    memcpy(&nargs, buffer, sizeof(nargs));
+    ptr = args + sizeof(nargs);
+
+    /* full exec path */
+    for (; ptr < end; ptr++) {
+        if (*ptr == '\0') {
+            break;
+        }
+    }
+
+    if (ptr == end) {
+        return ENOENT;
+    }
+
+    for (; ptr < end; ptr++) {
+        if (*ptr != '\0') {
+            break; /* start of argv[0] */
+        }
+    }
+
+    if (ptr == end) {
+        return ENOENT;
+    }
+
+    sigar_proc_args_create(procargs);
+
+    while (*ptr && (nargs-- > 0)) {
+        int alen = strlen(ptr)+1;
+        char *arg = malloc(alen);
+
+        SIGAR_PROC_ARGS_GROW(procargs);
+        memcpy(arg, ptr, alen);
+
+        procargs->data[procargs->number++] = arg;
+            
+        ptr += alen;
+    }
+
+    return SIGAR_OK;
 #elif defined (__FreeBSD__) && (__FreeBSD_version >= 500013)
     char buffer[8096], *ptr=buffer;
     size_t len = sizeof(buffer);
