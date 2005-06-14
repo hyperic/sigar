@@ -127,12 +127,13 @@ JNIEXPORT void SIGAR_JNI(win32_Pdh_pdhRemoveCounter)
 }
 
 JNIEXPORT jdouble SIGAR_JNI(win32_Pdh_pdhGetSingleValue)
-(JNIEnv *env, jclass cur, jlong query, jlong counter)
+(JNIEnv *env, jclass cur, jlong query, jlong counter, jboolean fmt)
 {
     HCOUNTER              h_counter      = (HCOUNTER)counter;
     HQUERY                h_query        = (HQUERY)query;
     PDH_STATUS            status;
     PDH_RAW_COUNTER raw_value;
+    PDH_FMT_COUNTERVALUE fmt_value;
     DWORD type;
 
     status = PdhCollectQueryData(h_query);
@@ -142,14 +143,27 @@ JNIEXPORT jdouble SIGAR_JNI(win32_Pdh_pdhGetSingleValue)
         return 0;
     }
 
-    status = PdhGetRawCounterValue(h_counter, &type, &raw_value);
+    if (fmt) {
+        status = PdhGetFormattedCounterValue(h_counter,
+                                             PDH_FMT_DOUBLE,
+                                             (LPDWORD)NULL,
+                                             &fmt_value);
+    }
+    else {
+        status = PdhGetRawCounterValue(h_counter, &type, &raw_value);
+    }
 
     if (status != ERROR_SUCCESS) {
         win32_throw_exception(env, get_error_message(status));
         return 0;
     }
 
-    return (jdouble)raw_value.FirstValue;
+    if (fmt) {
+        return fmt_value.doubleValue;
+    }
+    else {
+        return (jdouble)raw_value.FirstValue;
+    }
 }
 
 JNIEXPORT jobjectArray SIGAR_JNI(win32_Pdh_pdhGetInstances)

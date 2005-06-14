@@ -1,21 +1,31 @@
 package net.hyperic.sigar.win32.test;
 
-import junit.framework.TestCase;
+import net.hyperic.sigar.test.SigarTestCase;
 import net.hyperic.sigar.win32.Pdh;
 
-public class TestPdh extends TestCase {
+public class TestPdh extends SigarTestCase {
 
     public TestPdh(String name) {
         super(name);
     }
 
-    public void testPdhSingleValue() throws Exception {
-
+    private void getValue(String key) throws Exception {
         Pdh pdh = new Pdh();
-        String key = "\\Memory\\Available Bytes";
-        double val = pdh.getSingleValue(key);
 
-        assertTrue(val > 0);
+        assertGtZeroTrace("raw..." + key,
+                          (long)pdh.getSingleValue(key));
+        assertGtZeroTrace("fmt..." + key,
+                          (long)pdh.getFormattedValue(key));
+    }
+
+    public void testGetValue() throws Exception {
+        String[] keys = {
+            "\\Memory\\Available Bytes",
+            "\\Memory\\Pages/sec",
+        };
+        for (int i=0; i<keys.length; i++) {
+            getValue(keys[i]);
+        }
     }
 
     public void testPdh () throws Exception {

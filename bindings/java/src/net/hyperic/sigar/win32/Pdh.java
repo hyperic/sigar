@@ -40,15 +40,32 @@ public class Pdh extends Win32Bindings {
         }
     }
     
+    public double getSingleValue() throws Win32Exception {
+        return getSingleValue(false);
+    }
+
     public double getSingleValue(String cp) throws Win32Exception {
+        return getSingleValue(cp, false);
+    }
+
+    public double getFormattedValue() throws Win32Exception {
+        return getSingleValue(true);
+    }
+
+    public double getFormattedValue(String cp) throws Win32Exception {
+        return getSingleValue(cp, true);
+    }
+
+    private double getSingleValue(String cp, boolean format)
+        throws Win32Exception {
         if (this.hostname != null) {
             pdhConnectMachine(this.hostname);
         }
         setCounterPath(cp);
-        return getSingleValue();
+        return getSingleValue(format);
     }
 
-    public double getSingleValue() throws Win32Exception {
+    private double getSingleValue(boolean format) throws Win32Exception {
         if (h_counter != -1l) {
             pdhRemoveCounter(h_counter);
             h_counter = -1l;
@@ -56,7 +73,7 @@ public class Pdh extends Win32Bindings {
 
         h_counter = pdhAddCounter(h_query, getCounterPath());
 
-        return pdhGetSingleValue(h_query, h_counter);
+        return pdhGetSingleValue(h_query, h_counter, format);
     }
 
     public static String[] getInstances(String cp) throws Win32Exception {
@@ -89,7 +106,8 @@ public class Pdh extends Win32Bindings {
     private static final native void pdhRemoveCounter(long counter)
         throws Win32Exception;
     private static final native double pdhGetSingleValue(long query, 
-                                                         long counter)
+                                                         long counter,
+                                                         boolean fmt)
         throws Win32Exception;
     private static final native String[] pdhGetInstances(String cp)
         throws Win32Exception;
