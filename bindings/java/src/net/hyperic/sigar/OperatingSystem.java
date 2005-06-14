@@ -36,7 +36,7 @@ public class OperatingSystem {
             os.patchLevel = props.getProperty("sun.os.patch.level");
             os.dataModel = props.getProperty("sun.arch.data.model");
             os.cpuEndian = props.getProperty("sun.cpu.endian");
-            
+
             if (os.name.equals("Linux")) {
                 os.getLinuxInfo();
             }
@@ -197,10 +197,13 @@ public class OperatingSystem {
         public void parse(String line, OperatingSystem os) {
             super.parse(line, os);
 
-            String token = "Red Hat Enterprise Linux AS";
+            String token = "Red Hat Enterprise Linux ";
 
             if (line.startsWith(token)) {
-                os.vendorVersion = "AS " + os.vendorVersion;
+                line = line.substring(token.length());
+                int ix = line.indexOf(" "); //'AS' or 'ES'
+                os.vendorVersion =
+                    line.substring(0, ix) + " " + os.vendorVersion;
             }
         }
     }
