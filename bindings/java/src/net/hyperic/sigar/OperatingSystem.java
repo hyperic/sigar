@@ -205,6 +205,9 @@ public class OperatingSystem {
                 os.vendorVersion =
                     line.substring(0, ix) + " " + os.vendorVersion;
             }
+            else if (line.startsWith("CentOS")) {
+                os.vendor = "CentOS";
+            }
         }
     }
 
