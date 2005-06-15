@@ -5,11 +5,11 @@ import java.util.List;
 
 public class Pdh extends Win32Bindings {
 
-    private long   h_query;         // Handle to the query
+    private long   query = -1l; // Handle to the query
     private String hostname = null;
 
     public Pdh() throws Win32Exception {
-        h_query = pdhOpenQuery();
+        this.query = pdhOpenQuery();
     }
     
     public Pdh(String hostName) throws Win32Exception {
@@ -26,9 +26,9 @@ public class Pdh extends Win32Bindings {
     }
 
     public synchronized void close() throws Win32Exception {
-        if (h_query != -1l) {
-            pdhCloseQuery(h_query);
-            h_query = -1l;
+        if (this.query != -1l) {
+            pdhCloseQuery(this.query);
+            this.query = -1l;
         }
     }
 
@@ -55,9 +55,9 @@ public class Pdh extends Win32Bindings {
             pdhConnectMachine(this.hostname);
         }
 
-        long counter = pdhAddCounter(h_query, path);
+        long counter = pdhAddCounter(this.query, path);
         try {
-            return pdhGetValue(h_query, counter, format);
+            return pdhGetValue(this.query, counter, format);
         } finally {
             pdhRemoveCounter(counter);
         }
