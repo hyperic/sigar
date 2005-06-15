@@ -8,8 +8,6 @@ public class Pdh extends Win32Bindings {
     private long   h_query;         // Handle to the query
     private String hostname = null;
 
-    private   long   h_counter = -1l; // Handle to the counter
-
     public Pdh() throws Win32Exception {
         h_query = pdhOpenQuery();
     }
@@ -28,11 +26,6 @@ public class Pdh extends Win32Bindings {
     }
 
     public synchronized void close() throws Win32Exception {
-        if (h_counter != -1l) {
-            pdhRemoveCounter(h_counter);
-            h_counter = -1l;
-        }
-
         if (h_query != -1l) {
             pdhCloseQuery(h_query);
             h_query = -1l;
@@ -62,14 +55,12 @@ public class Pdh extends Win32Bindings {
             pdhConnectMachine(this.hostname);
         }
 
-        if (h_counter != -1l) {
-            pdhRemoveCounter(h_counter);
-            h_counter = -1l;
+        long counter = pdhAddCounter(h_query, path);
+        try {
+            return pdhGetValue(h_query, counter, format);
+        } finally {
+            pdhRemoveCounter(counter);
         }
-
-        h_counter = pdhAddCounter(h_query, path);
-
-        return pdhGetValue(h_query, h_counter, format);
     }
 
     public static String[] getInstances(String path) throws Win32Exception {
