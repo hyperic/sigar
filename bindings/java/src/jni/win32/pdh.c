@@ -126,7 +126,7 @@ JNIEXPORT void SIGAR_JNI(win32_Pdh_pdhRemoveCounter)
     }
 }
 
-JNIEXPORT jdouble SIGAR_JNI(win32_Pdh_pdhGetSingleValue)
+JNIEXPORT jdouble SIGAR_JNI(win32_Pdh_pdhGetValue)
 (JNIEnv *env, jclass cur, jlong query, jlong counter, jboolean fmt)
 {
     HCOUNTER              h_counter      = (HCOUNTER)counter;

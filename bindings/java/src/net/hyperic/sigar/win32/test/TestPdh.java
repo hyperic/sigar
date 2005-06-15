@@ -13,7 +13,7 @@ public class TestPdh extends SigarTestCase {
         Pdh pdh = new Pdh();
 
         assertGtZeroTrace("raw..." + key,
-                          (long)pdh.getSingleValue(key));
+                          (long)pdh.getRawValue(key));
         assertGtZeroTrace("fmt..." + key,
                           (long)pdh.getFormattedValue(key));
     }

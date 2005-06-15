@@ -38,16 +38,24 @@ public class Pdh extends Win32Bindings {
             h_query = -1l;
         }
     }
-    
+
+    /**
+     * @deprecated
+     * @see #getRawValue(String path)
+     */
     public double getSingleValue(String path) throws Win32Exception {
-        return getSingleValue(path, false);
+        return getRawValue(path);
+    }
+
+    public double getRawValue(String path) throws Win32Exception {
+        return getValue(path, false);
     }
 
     public double getFormattedValue(String path) throws Win32Exception {
-        return getSingleValue(path, true);
+        return getValue(path, true);
     }
 
-    private double getSingleValue(String path, boolean format)
+    private double getValue(String path, boolean format)
         throws Win32Exception {
 
         if (this.hostname != null) {
@@ -61,7 +69,7 @@ public class Pdh extends Win32Bindings {
 
         h_counter = pdhAddCounter(h_query, path);
 
-        return pdhGetSingleValue(h_query, h_counter, format);
+        return pdhGetValue(h_query, h_counter, format);
     }
 
     public static String[] getInstances(String path) throws Win32Exception {
@@ -85,9 +93,9 @@ public class Pdh extends Win32Bindings {
         throws Win32Exception;
     private static final native void pdhRemoveCounter(long counter)
         throws Win32Exception;
-    private static final native double pdhGetSingleValue(long query, 
-                                                         long counter,
-                                                         boolean fmt)
+    private static final native double pdhGetValue(long query, 
+                                                   long counter,
+                                                   boolean fmt)
         throws Win32Exception;
     private static final native String[] pdhGetInstances(String path)
         throws Win32Exception;
@@ -226,7 +234,7 @@ public class Pdh extends Win32Bindings {
                             double val;
 
                             try {
-                                val = pdh.getSingleValue(query);
+                                val = pdh.getRawValue(query);
                             } catch (Win32Exception e) {
                                 System.err.println("Unable to get value for " +
                                                    " key=" + query +
@@ -263,7 +271,7 @@ public class Pdh extends Win32Bindings {
                                 double val;
 
                                 try {
-                                    val = pdh.getSingleValue(query);
+                                    val = pdh.getRawValue(query);
                                 } catch (Win32Exception e) {
                                     System.err.println("Unable to get value " +
                                                        "for key=" + query +
