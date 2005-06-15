@@ -1,3 +1,9 @@
+2005-06-14  Doug MacEachern  <dougm@hyperic.net>
+
+        * Pdh.getSingleValue renamed to Pdh.getRawValue
+
+        * Added Pdh.getFormattedValue method
+
 2005-05-25  Doug MacEachern  <dougm@hyperic.net>
 
         * Implement sigar_proc_args for Darwin
