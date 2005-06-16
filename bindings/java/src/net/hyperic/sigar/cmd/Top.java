@@ -3,6 +3,7 @@ package net.hyperic.sigar.cmd;
 import java.util.List;
 
 import net.hyperic.sigar.Sigar;
+import net.hyperic.sigar.SigarException;
 import net.hyperic.sigar.SigarProxy;
 import net.hyperic.sigar.CpuPerc;
 import net.hyperic.sigar.SigarProxyCache;
@@ -56,11 +57,16 @@ public class Top {
             for (int i=0; i<pids.length; i++) {
                 long pid = pids[i];
 
-                ProcCpu cpu = sigar.getProcCpu(pid);
-                List info = Ps.getInfo(sigar, pid);
+                String cpuPerc = "?";
 
-                info.add(info.size()-1,
-                         CpuPerc.format(cpu.getPercent()));
+                List info = Ps.getInfo(sigar, pid);
+                try {
+                    ProcCpu cpu = sigar.getProcCpu(pid);
+                    cpuPerc = CpuPerc.format(cpu.getPercent());
+                } catch (SigarException e) {
+                }
+
+                info.add(info.size()-1, cpuPerc);
 
                 System.out.println(Ps.join(info));
             }
