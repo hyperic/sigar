@@ -1,3 +1,9 @@
+2005-06-16  Doug MacEachern  <dougm@hyperic.net>
+
+        * Implement proc_mem for Darwin
+
+        * Include darwin binary (OSX Tiger)
+
 2005-06-14  Doug MacEachern  <dougm@hyperic.net>
 
         * Pdh.getSingleValue renamed to Pdh.getRawValue
