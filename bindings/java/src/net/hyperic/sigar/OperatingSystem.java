@@ -9,11 +9,30 @@ import java.util.StringTokenizer;
 
 public class OperatingSystem {
 
+    public static final String NAME_LINUX   = "Linux";
+    public static final String NAME_SOLARIS = "Solaris";
+    public static final String NAME_HPUX    = "HPUX";
+    public static final String NAME_AIX     = "AIX";
+    public static final String NAME_MACOSX  = "MacOSX";
+    public static final String NAME_FREEBSD = "FreeBSD";
+    public static final String NAME_WIN32   = "Win32";
+    public static final String NAME_OSF1    = "OSF1";
+
+    private static final int TYPE_LINUX   = 0;
+    private static final int TYPE_SOLARIS = 1;
+    private static final int TYPE_HPUX    = 2;
+    private static final int TYPE_AIX     = 3;
+    private static final int TYPE_MACOSX  = 4;
+    private static final int TYPE_FREEBSD = 5;
+    private static final int TYPE_WIN32   = 6;
+    private static final int TYPE_OSF1    = 7;
+
     private static final String ETC =
         System.getProperty("sigar.etc.dir", "/etc") + "/";
 
     private static OperatingSystem instance = null;
 
+    private int type;
     private String name;
     private String version;
     private String arch;
@@ -39,10 +58,12 @@ public class OperatingSystem {
             os.dataModel = props.getProperty("sun.arch.data.model");
             os.cpuEndian = props.getProperty("sun.cpu.endian");
 
-            if (os.name.equals("Linux")) {
+            if (os.name.equals(NAME_LINUX)) {
+                os.type = TYPE_LINUX;
                 os.getLinuxInfo();
             }
             else if (os.name.indexOf("Windows") > -1) {
+                os.type = TYPE_WIN32;
                 os.vendor = "Microsoft";
                 if (os.name.endsWith("XP")) {
                     os.vendorVersion = "XP";
@@ -59,32 +80,38 @@ public class OperatingSystem {
                 os.name = "Win32";
             }
             else if (os.name.equals("SunOS")) {
+                os.type = TYPE_SOLARIS;
                 os.vendor = "Sun Microsystems";
                 int ix = os.version.indexOf(".");
                 //5.8 == solaris 8, etc.
                 os.vendorVersion = os.version.substring(ix);
-                os.name = "Solaris";
+                os.name = NAME_SOLARIS;
             }
             else if (os.name.equals("HP-UX")) {
-                os.name = "HPUX";
+                os.type = TYPE_HPUX;
+                os.name = NAME_HPUX;
                 os.vendor = "Hewlett-Packard";
                 if (os.version.indexOf(".11.") != -1) {
                     os.vendorVersion = "11";
                 }
             }
-            else if (os.name.equals("OSF1")) {
+            else if (os.name.equals(NAME_OSF1)) {
+                os.type = TYPE_OSF1;
                 //HP acquired DEC
                 os.vendor = "Hewlett-Packard";
             }
-            else if (os.name.equals("AIX")) {
+            else if (os.name.equals(NAME_AIX)) {
+                os.type = TYPE_AIX;
                 os.vendor = "IBM";
             }
             else if (os.name.equals("Mac OS X")) {
-                os.name = "Darwin";
+                os.type = TYPE_MACOSX;
+                os.name = NAME_MACOSX;
                 os.vendor = "Apple";
             }
-            else if (os.name.equals("FreeBSD")) {
-                os.vendor = "FreeBSD";
+            else if (os.name.equals(NAME_FREEBSD)) {
+                os.type = TYPE_FREEBSD;
+                os.vendor = NAME_FREEBSD;
             }
             else {
                 os.vendor = "Unknown";
@@ -98,6 +125,29 @@ public class OperatingSystem {
         }
 
         return instance;
+    }
+
+    public String getDescription() {
+        switch (this.type) {
+          case TYPE_LINUX:
+            //"Red Hat 8.0"
+            return this.vendor + " " + this.vendorVersion;
+          case TYPE_SOLARIS:
+            //"Solaris 8"
+            return this.name + " " + this.vendorVersion;
+          case TYPE_HPUX:
+            //"HP-UX 11"
+            return this.vendorName + " " + this.vendorVersion;
+          case TYPE_MACOSX:
+            //"Mac OS X 10.4"
+            return this.vendorName + " " + this.version;
+          case TYPE_WIN32:
+            //"Microsoft Windows 2003"
+            return this.vendor + " Windows " + this.vendorVersion;
+          default:
+            //"OSF1 5.x", "AIX 5.2", "FreeBSD 5.3"
+            return this.name + " " + this.version;
+        }
     }
 
     public String getName() {
@@ -255,6 +305,7 @@ public class OperatingSystem {
 
     public static void main(String[] args) {
         OperatingSystem os = OperatingSystem.getInstance();
+        System.out.println("description......" + os.getDescription());
         System.out.println("name............." + os.name);
         System.out.println("version.........." + os.version);
         System.out.println("arch............." + os.arch);
