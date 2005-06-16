@@ -272,11 +272,19 @@ public class OperatingSystem {
         public void parse(String line, OperatingSystem os) {
             super.parse(line, os);
 
+            int ix = line.indexOf("(");
+            if (ix != -1) {
+                String codeName = line.substring(ix+1);
+                ix = codeName.indexOf(")");
+                codeName = codeName.substring(0, ix);
+                os.vendorCodeName = codeName;
+            }
+
             String token = "Red Hat Enterprise Linux ";
 
             if (line.startsWith(token)) {
                 line = line.substring(token.length());
-                int ix = line.indexOf(" "); //'AS' or 'ES'
+                ix = line.indexOf(" "); //'AS' or 'ES'
                 os.vendorVersion =
                     line.substring(0, ix) + " " + os.vendorVersion;
             }
