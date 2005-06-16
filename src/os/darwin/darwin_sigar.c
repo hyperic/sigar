@@ -704,7 +704,11 @@ int sigar_proc_mem_get(sigar_t *sigar, sigar_pid_t pid,
         return errno;
     }
 
-    status = task_info(task, TASK_BASIC_INFO, (task_info_t)&info, &type);
+    count = TASK_BASIC_INFO_COUNT;
+    status = task_info(task, TASK_BASIC_INFO, (task_info_t)&info, &count);
+    if (status != KERN_SUCCESS) {
+        return errno;
+    }
 
     vsize = info.virtual_size;
     resident = info.resident_size;
@@ -721,7 +725,7 @@ int sigar_proc_mem_get(sigar_t *sigar, sigar_pid_t pid,
         count = VM_REGION_BASIC_INFO_COUNT_64;
         if (vm_region_64(task, &address, &size, VM_REGION_BASIC_INFO,
                          (vm_region_info_t)&basic,
-                         &type, &object_name))
+                         &count, &object_name))
         {
             break;
         }
@@ -729,7 +733,7 @@ int sigar_proc_mem_get(sigar_t *sigar, sigar_pid_t pid,
         count = VM_REGION_TOP_INFO_COUNT;
         if (vm_region_64(task, &address, &size, VM_REGION_TOP_INFO,
                          (vm_region_info_t)&top,
-                         &type, &object_name))
+                         &count, &object_name))
         {
             break;
         }
