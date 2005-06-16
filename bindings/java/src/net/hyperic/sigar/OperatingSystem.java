@@ -80,10 +80,10 @@ public class OperatingSystem {
                 }
                 os.name = "Win32";
                 if (os.vendorVersion.equals("XP")) {
-                    os.codeName = "Whistler";
+                    os.vendorCodeName = "Whistler";
                 }
                 else if (os.vendorVersion.equals("2003")) {
-                    os.codeName = "Whistler Server";
+                    os.vendorCodeName = "Whistler Server";
                 }
             }
             else if (os.name.equals("SunOS")) {
