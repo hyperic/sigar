@@ -56,6 +56,7 @@ public class Version extends SigarCommandBase {
         os.println("");
         
         OperatingSystem sys = OperatingSystem.getInstance();
+        os.println("OS description......" + sys.getDescription());
         os.println("OS name............." + sys.getName());
         os.println("OS arch............." + sys.getArch());
         os.println("OS version.........." + sys.getVersion());
