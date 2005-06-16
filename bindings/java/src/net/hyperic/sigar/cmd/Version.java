@@ -63,6 +63,9 @@ public class Version extends SigarCommandBase {
         os.println("OS patch level......" + sys.getPatchLevel());
         os.println("OS vendor..........." + sys.getVendor());
         os.println("OS vendor version..." + sys.getVendorVersion());
+        if (sys.getVendorCodeName() != null) {
+            os.println("OS code name........" + sys.getVendorCodeName());
+        }
         os.println("OS data model......." + sys.getDataModel());
         os.println("OS cpu endian......." + sys.getCpuEndian());
 

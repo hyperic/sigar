@@ -40,6 +40,7 @@ public class OperatingSystem {
     private String vendor;
     private String vendorVersion;
     private String vendorName;
+    private String vendorCodeName;
     private String dataModel;
     private String cpuEndian;
     
@@ -78,6 +79,12 @@ public class OperatingSystem {
                     os.vendorVersion = "NT";
                 }
                 os.name = "Win32";
+                if (os.vendorVersion.equals("XP")) {
+                    os.codeName = "Whistler";
+                }
+                else if (os.vendorVersion.equals("2003")) {
+                    os.codeName = "Whistler Server";
+                }
             }
             else if (os.name.equals("SunOS")) {
                 os.type = TYPE_SOLARIS;
@@ -108,6 +115,12 @@ public class OperatingSystem {
                 os.type = TYPE_MACOSX;
                 os.name = NAME_MACOSX;
                 os.vendor = "Apple";
+                if (os.version.equals("10.4")) {
+                    os.vendorCodeName = "Tiger";
+                }
+                else if (os.version.equals("10.3")) {
+                    os.vendorCodeName = "Panther";
+                }
             }
             else if (os.name.equals(NAME_FREEBSD)) {
                 os.type = TYPE_FREEBSD;
@@ -140,7 +153,7 @@ public class OperatingSystem {
             return this.vendorName + " " + this.vendorVersion;
           case TYPE_MACOSX:
             //"Mac OS X 10.4"
-            return this.vendorName + " " + this.version;
+            return this.vendorName + " " + this.vendorCodeName;
           case TYPE_WIN32:
             //"Microsoft Windows 2003"
             return this.vendor + " Windows " + this.vendorVersion;
@@ -176,6 +189,10 @@ public class OperatingSystem {
 
     public String getVendorName() {
         return this.vendorName;
+    }
+
+    public String getVendorCodeName() {
+        return this.vendorCodeName;
     }
 
     public String getDataModel() {
