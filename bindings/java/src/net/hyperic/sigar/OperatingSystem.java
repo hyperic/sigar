@@ -20,6 +20,7 @@ public class OperatingSystem {
     private String patchLevel;
     private String vendor;
     private String vendorVersion;
+    private String vendorName;
     private String dataModel;
     private String cpuEndian;
     
@@ -31,6 +32,7 @@ public class OperatingSystem {
             OperatingSystem os = new OperatingSystem();
             Properties props = System.getProperties();
             os.name = props.getProperty("os.name");
+            os.vendorName = os.name;
             os.version = props.getProperty("os.version");
             os.arch = props.getProperty("os.arch");
             os.patchLevel = props.getProperty("sun.os.patch.level");
@@ -64,6 +66,7 @@ public class OperatingSystem {
                 os.name = "Solaris";
             }
             else if (os.name.equals("HP-UX")) {
+                os.name = "HPUX";
                 os.vendor = "Hewlett-Packard";
                 if (os.version.indexOf(".11.") != -1) {
                     os.vendorVersion = "11";
@@ -77,6 +80,7 @@ public class OperatingSystem {
                 os.vendor = "IBM";
             }
             else if (os.name.equals("Mac OS X")) {
+                os.name = "Darwin";
                 os.vendor = "Apple";
             }
             else if (os.name.equals("FreeBSD")) {
@@ -118,6 +122,10 @@ public class OperatingSystem {
 
     public String getVendorVersion() {
         return this.vendorVersion;
+    }
+
+    public String getVendorName() {
+        return this.vendorName;
     }
 
     public String getDataModel() {
@@ -252,6 +260,7 @@ public class OperatingSystem {
         System.out.println("arch............." + os.arch);
         System.out.println("patch level......" + os.patchLevel);
         System.out.println("vendor..........." + os.vendor);
+        System.out.println("vendor name......" + os.vendorName);
         System.out.println("vendor version..." + os.vendorVersion);
     }
 }
