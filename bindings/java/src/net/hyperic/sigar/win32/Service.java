@@ -13,13 +13,6 @@ public class Service extends Win32Bindings implements java.io.Serializable
     public static final int SERVICE_PAUSE_PENDING    = 0x00000006;
     public static final int SERVICE_PAUSED           = 0x00000007;
 
-    // Start Type
-    public static final int SERVICE_BOOT_START   = 0x00000000;
-    public static final int SERVICE_SYSTEM_START = 0x00000001;
-    public static final int SERVICE_AUTO_START   = 0x00000002;
-    public static final int SERVICE_DEMAND_START = 0x00000003;
-    public static final int SERVICE_DISABLED     = 0x00000004;
-
     // Service Controls
     private static final int SERVICE_CONTROL_STOP             = 0x00000001;
     private static final int SERVICE_CONTROL_PAUSE            = 0x00000002;
@@ -79,21 +72,6 @@ public class Service extends Win32Bindings implements java.io.Serializable
          SERVICE_INTERROGATE            |
          SERVICE_USER_DEFINED_CONTROL);
     
-    // Service Types (Bit Mask)
-    private static final int SERVICE_KERNEL_DRIVER       = 0x00000001;
-    private static final int SERVICE_FILE_SYSTEM_DRIVER  = 0x00000002;
-    private static final int SERVICE_ADAPTER             = 0x00000004;
-    private static final int SERVICE_RECOGNIZER_DRIVER   = 0x00000008;
-    private static final int SERVICE_WIN32_OWN_PROCESS   = 0x00000010;
-    private static final int SERVICE_WIN32_SHARE_PROCESS = 0x00000020;
-    private static final int SERVICE_INTERACTIVE_PROCESS = 0x00000100;
-
-    // Error control type
-    private static final int SERVICE_ERROR_IGNORE   = 0x00000000;
-    private static final int SERVICE_ERROR_NORMAL   = 0x00000001;
-    private static final int SERVICE_ERROR_SEVERE   = 0x00000002;
-    private static final int SERVICE_ERROR_CRITICAL = 0x00000003;
-
     ///////////////////////////////////////////////////////
     // Object Variables
     private long  m_hMgr;
@@ -144,9 +122,10 @@ public class Service extends Win32Bindings implements java.io.Serializable
                                  String path) 
         throws Win32Exception
     {
-        return Service.create(serviceName, displayName, 
-                              description, SERVICE_WIN32_OWN_PROCESS,
-                              SERVICE_AUTO_START, SERVICE_ERROR_NORMAL,
+        return Service.create(serviceName, displayName, description,
+                              ServiceConfig.TYPE_WIN32_OWN_PROCESS,
+                              ServiceConfig.START_AUTO,
+                              ServiceConfig.ERROR_NORMAL,
                               path, null, null, "");
     }
     
