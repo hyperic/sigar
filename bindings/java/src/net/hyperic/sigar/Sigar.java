@@ -50,12 +50,12 @@ public class Sigar implements SigarProxy {
         try {
             loadLibrary();
         } catch (SigarException e) {
-            String msg = "Sigar.load: " + e.getMessage();
+            loadError = "Sigar.load: " + e.getMessage();
             try {
-                SigarLog.debug(msg, e);
+                SigarLog.debug(loadError, e);
             } catch (NoClassDefFoundError ne) {
                 //no log4j.jar
-                System.err.println(msg);
+                System.err.println(loadError);
                 e.printStackTrace();
             }
         }
