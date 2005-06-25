@@ -3,7 +3,6 @@ package net.hyperic.sigar.cmd;
 import java.util.Date;
 import java.text.SimpleDateFormat;
 
-import net.hyperic.sigar.Sigar;
 import net.hyperic.sigar.SigarException;
 
 public class Who extends SigarCommandBase {
