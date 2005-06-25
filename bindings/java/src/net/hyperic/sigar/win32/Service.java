@@ -206,11 +206,6 @@ public class Service extends Win32Bindings implements java.io.Serializable
         return QueryServiceStatus(this.m_hService);
     }
 
-    public int startType()
-    {
-        return QueryServiceStartType(this.m_hService);
-    }
-
     public void stop() throws Win32Exception
     {
         if(StopService(this.m_hService) == false)
@@ -320,7 +315,6 @@ public class Service extends Win32Bindings implements java.io.Serializable
                                                     String service,
                                                     int access);
     private static final native int     QueryServiceStatus(long handle);
-    private static final native int     QueryServiceStartType(long handle);
     private static final native boolean StartService(long handle);
     private static final native boolean StopService(long handle);
 

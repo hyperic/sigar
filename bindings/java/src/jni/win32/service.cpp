@@ -318,29 +318,6 @@ SIGAR_JNI(win32_Service_QueryServiceStatus)
     return iResult;
 }
 
-JNIEXPORT jint SIGAR_JNI(win32_Service_QueryServiceStartType)
-(JNIEnv *, jclass, jlong handle)
-{
-    LPQUERY_SERVICE_CONFIG config;
-    int                    iResult;
-    DWORD                  dwBytesNeeded; 
-
-    config = (LPQUERY_SERVICE_CONFIG) LocalAlloc(LPTR, 4096); 
-    if (config == NULL) 
-        return -1;
-
-    /* Get the configuration information. */
- 
-    if (QueryServiceConfig((SC_HANDLE)handle, config, 4096, 
-                           &dwBytesNeeded) == 0) {
-        iResult = -1;
-    }
-    else
-        iResult = config->dwStartType;
-
-    return iResult;
-}
-
 JNIEXPORT jboolean SIGAR_JNI(win32_Service_StartService)
 (JNIEnv *, jclass, jlong handle)
 {
