@@ -9,6 +9,17 @@
 extern "C" {
 #endif
 
+#define STRING_SIG "Ljava/lang/String;"
+
+#define SERVICE_SetStringField(field, str) \
+    id = env->GetFieldID(cls, field, STRING_SIG); \
+    value = env->NewString((const jchar *)str, lstrlen(str)); \
+    env->SetObjectField(obj, id, value)
+
+#define SERVICE_SetIntField(field, val) \
+    id = env->GetFieldID(cls, field, "I"); \
+    env->SetIntField(obj, id, val)
+
 /**
  * This code is stolen from misc/win32/misc.c and apr_private.h
  * This helper code resolves late bound entry points 
@@ -380,6 +391,43 @@ JNIEXPORT jobject SIGAR_JNI(win32_Service_getServiceNames)
     delete services;
 
     return listobj;
+}
+
+JNIEXPORT jboolean SIGAR_JNI(win32_Service_QueryServiceConfig)
+(JNIEnv *env, jclass, jlong handle, jobject obj)
+{
+    char buffer[8096]; /* 8k is max size from mdsn docs */
+    LPQUERY_SERVICE_CONFIG config = (LPQUERY_SERVICE_CONFIG)buffer;
+    DWORD bytes;
+    jfieldID id;
+    jclass cls = env->GetObjectClass(obj);
+    jstring value;
+
+    if (!QueryServiceConfig((SC_HANDLE)handle, config,
+                            sizeof(buffer), &bytes))
+    {
+        return JNI_FALSE;
+    }
+
+    SERVICE_SetIntField("type", config->dwServiceType);
+
+    SERVICE_SetIntField("startType", config->dwStartType);
+
+    SERVICE_SetIntField("errorControl", config->dwErrorControl);
+
+    SERVICE_SetStringField("binaryPathName", config->lpBinaryPathName);
+
+    SERVICE_SetStringField("loadOrderGroup", config->lpLoadOrderGroup);
+
+    SERVICE_SetIntField("tagId", config->dwTagId);
+
+    SERVICE_SetStringField("dependencies", config->lpDependencies);
+
+    SERVICE_SetStringField("serviceStartName", config->lpServiceStartName);
+
+    SERVICE_SetStringField("displayName", config->lpDisplayName);
+
+    return JNI_TRUE;
 }
 
 #ifdef __cplusplus
