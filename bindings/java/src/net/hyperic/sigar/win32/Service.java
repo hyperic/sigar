@@ -282,6 +282,14 @@ public class Service extends Win32Bindings implements java.io.Serializable
             Service.throwLastErrorException();
     }
 
+    public ServiceConfig getConfig() throws Win32Exception {
+        ServiceConfig config = new ServiceConfig();
+        if (!QueryServiceConfig(this.m_hService, config)) {
+            Service.throwLastErrorException();
+        }
+        return config;
+    }
+    
     private static final void throwLastErrorException() 
         throws Win32Exception
     {
@@ -318,10 +326,18 @@ public class Service extends Win32Bindings implements java.io.Serializable
     private static final native boolean StartService(long handle);
     private static final native boolean StopService(long handle);
 
+    private static native boolean QueryServiceConfig(long handle,
+                                                     ServiceConfig config);
+
     public static void main(String[] args) throws Exception {
         List services = getServiceNames();
         for (int i=0; i<services.size(); i++) {
-            System.out.println("'" + services.get(i) + "'");
+            String name = (String)services.get(i);
+            Service service = new Service(name);
+            ServiceConfig config = service.getConfig();
+            System.out.println("[" + name + "]" +
+                               "=" +
+                               "[" + config.getBinaryPathName() + "]");
         }
     }
 }
