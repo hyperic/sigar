@@ -79,7 +79,7 @@ public class Service extends Win32Bindings {
         this.manager = OpenSCManager("", SC_MANAGER_ALL_ACCESS);
         
         if (this.manager == 0) {
-            Service.throwLastErrorException();
+            throw getLastErrorException();
         }
     }
 
@@ -93,7 +93,7 @@ public class Service extends Win32Bindings {
                                    SERVICE_ALL_ACCESS);
 
         if (this.service == 0) {
-            Service.throwLastErrorException();
+            throw getLastErrorException();
         }
     }
 
@@ -163,7 +163,7 @@ public class Service extends Win32Bindings {
                                         password);
         
         if (service.service == 0) {
-            Service.throwLastErrorException();
+            throw getLastErrorException();
         }
         
         service.setDescription(description);
@@ -180,7 +180,7 @@ public class Service extends Win32Bindings {
         throws Win32Exception
     {
         if (!ControlService(this.service, control)) {
-            Service.throwLastErrorException();
+            throw getLastErrorException();
         }
     }
 
@@ -192,7 +192,7 @@ public class Service extends Win32Bindings {
     public void start() throws Win32Exception
     {
         if (StartService(this.service) == false) {
-            Service.throwLastErrorException();
+            throw getLastErrorException();
         }
     }
 
@@ -216,7 +216,7 @@ public class Service extends Win32Bindings {
     public void stop() throws Win32Exception
     {
         if (StopService(this.service) == false) {
-            Service.throwLastErrorException();
+            throw getLastErrorException();
         }
     }
 
@@ -253,7 +253,7 @@ public class Service extends Win32Bindings {
         }
 
         if (status != SERVICE_STOPPED) {
-            Service.throwLastErrorException();
+            throw getLastErrorException();
         }
     }
     
@@ -290,24 +290,23 @@ public class Service extends Win32Bindings {
         }
 
         if (result == false) {
-            Service.throwLastErrorException();
+            throw getLastErrorException();
         }
     }
 
     public ServiceConfig getConfig() throws Win32Exception {
         ServiceConfig config = new ServiceConfig();
         if (!QueryServiceConfig(this.service, config)) {
-            Service.throwLastErrorException();
+            throw getLastErrorException();
         }
         return config;
     }
     
-    private static final void throwLastErrorException() 
-        throws Win32Exception
+    private static Win32Exception getLastErrorException() 
     {
-        int err = Service.GetLastError();
-        throw new Win32Exception(err, "Win32 Error Code: " + 
-                                 err + ": " + GetErrorMessage(err));
+        int err = GetLastError();
+        return new Win32Exception(err, "Win32 Error Code: " + 
+                                  err + ": " + GetErrorMessage(err));
     }
     
     private static native boolean ChangeServiceDescription(long handle,
