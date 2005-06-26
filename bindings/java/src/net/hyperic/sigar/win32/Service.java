@@ -202,14 +202,23 @@ public class Service extends Win32 {
         waitForStart(timeout);
     }
 
+    /**
+     * @deprecated
+     * @see #getStatus()
+     */    
     public int status()
+    {
+        return getStatus();
+    }
+    
+    public int getStatus()
     {
         return QueryServiceStatus(this.service);
     }
 
     public String getStatusString()
     {
-        return STATUS[status()];
+        return STATUS[getStatus()];
     }
     
     public void stop() throws Win32Exception
@@ -233,7 +242,7 @@ public class Service extends Win32 {
 
         long start = System.currentTimeMillis();
 
-        while ((status = status()) != SERVICE_STOPPED) {
+        while ((status = getStatus()) != SERVICE_STOPPED) {
             if (status == SERVICE_STOP_PENDING) {
                 // The start hasn't completed yet. Keep trying up to 
                 // the timeout.
@@ -262,7 +271,7 @@ public class Service extends Win32 {
         boolean result = true;
         long    start  = System.currentTimeMillis();
             
-        while ((status = status()) != SERVICE_RUNNING) {
+        while ((status = getStatus()) != SERVICE_RUNNING) {
             if (status == SERVICE_START_PENDING) {
                 // The start hasn't completed yet. Keep trying up to 
                 // the timeout.
