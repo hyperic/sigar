@@ -4,6 +4,7 @@ import net.hyperic.sigar.test.SigarTestCase;
 
 import net.hyperic.sigar.win32.Service;
 import net.hyperic.sigar.win32.ServiceConfig;
+import net.hyperic.sigar.win32.Win32Exception;
 
 public class TestService extends SigarTestCase {
     private static final String TEST_NAME = "MyTestService";
@@ -25,6 +26,15 @@ public class TestService extends SigarTestCase {
         Service service = new Service("Eventlog");
         service.getConfig();
         service.close();
+        
+        String dummyName = "DOESNOTEXIST"; 
+        try {
+            new Service(dummyName);
+            assertTrue(false);
+        } catch (Win32Exception e) {
+            traceln(dummyName + ": " + e.getMessage());
+            assertTrue(true);
+        }
     }
 
     public void testServiceCreateDelete() throws Exception {
