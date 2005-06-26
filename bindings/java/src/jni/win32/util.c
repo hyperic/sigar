@@ -32,6 +32,7 @@ JNIEXPORT jstring SIGAR_JNI(win32_Win32_GetErrorMessage)
 (JNIEnv *env, jclass cls, jint error)
 {
     LPTSTR msg;
+    jstring str;
 
     FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER|
                   FORMAT_MESSAGE_IGNORE_INSERTS|
@@ -39,7 +40,9 @@ JNIEXPORT jstring SIGAR_JNI(win32_Win32_GetErrorMessage)
                   NULL, error, 
                   MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US),
                   (LPTSTR)&msg, 0, NULL);
-    return JENV->NewString(env, (const jchar *)msg, lstrlen(msg));
+    str = JENV->NewString(env, (const jchar *)msg, lstrlen(msg));
+    LocalFree(msg);
+    return str;
 }
 
 #ifdef __cplusplus
