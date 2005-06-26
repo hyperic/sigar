@@ -31,6 +31,8 @@ The following platforms are currently supported:
 
 - FreeBSD (5.3)
 
+- Mac OS X (10.4)
+
 To test drive run the following command:
 
 % java -jar sigar-bin/lib/sigar.jar
