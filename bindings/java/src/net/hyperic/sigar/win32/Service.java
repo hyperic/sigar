@@ -280,7 +280,7 @@ public class Service extends Win32 {
     private static native void ControlService(long handle,
                                               int control) throws Win32Exception;
 
-    private static native boolean DeleteService(long handle);
+    private static native void DeleteService(long handle) throws Win32Exception;
 
     private static native long OpenSCManager(String machine,
                                              int access) throws Win32Exception;
