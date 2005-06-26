@@ -2,6 +2,7 @@ package net.hyperic.sigar.win32.test;
 
 import junit.framework.TestCase;
 import net.hyperic.sigar.win32.Service;
+import net.hyperic.sigar.win32.ServiceConfig;
 
 public class TestService extends TestCase {
 
@@ -20,11 +21,12 @@ public class TestService extends TestCase {
         if (!TEST_CREATE) {
             return;
         }
-        Service service =
-            Service.create("MyTestService", 
-                           "My Test Service",
-                           "This is a great service.", 
-                           "C:\\oracle\\ora90\\bin\\agntsrvc.exe");
+        ServiceConfig config = new ServiceConfig("MyTestService");
+        config.setDisplayName("My Test Service");
+        config.setDescription("A Description of " + config.getDisplayName());
+        config.setPath("C:\\Program Files\\My Test 1.0\\mytest.exe");
+
+        Service.create(config);
     }
 
     public void testDeleteService() throws Exception {

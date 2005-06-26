@@ -119,55 +119,37 @@ public class Service extends Win32 {
         }
     }
     
-    public static Service create(String serviceName, 
-                                 String displayName, 
-                                 String description, 
-                                 String path) 
+    public static Service create(ServiceConfig config)
         throws Win32Exception
     {
-        return create(serviceName, displayName, description,
-                      ServiceConfig.TYPE_WIN32_OWN_PROCESS,
-                      ServiceConfig.START_AUTO,
-                      ServiceConfig.ERROR_NORMAL,
-                      path, null, null, "");
-    }
-    
-    public static Service create(String serviceName, String displayName,
-                                 String description, int serviceType,
-                                 int startType, int errorControl, 
-                                 String path, String[] dependencies,
-                                 String startName, String password)
-        throws Win32Exception
-    {
-        if (serviceName == null) {
-            throw new IllegalArgumentException("serviceName=null");
+        if (config.getName() == null) {
+            throw new IllegalArgumentException("name=null");
         }
 
-        if (path == null) {
+        if (config.getPath() == null) {
             throw new IllegalArgumentException("path=null");
         }
 
-        if (displayName == null) {
-            displayName = serviceName;
-        }
-
         Service service = new Service();
-        service.service = CreateService(service.manager,
-                                        serviceName,
-                                        displayName,
-                                        serviceType,
-                                        startType,
-                                        errorControl,
-                                        path,
-                                        dependencies,
-                                        startName,
-                                        password);
-        
+        service.service =
+            CreateService(service.manager,
+                          config.getName(),
+                          config.getDisplayName(),
+                          config.getType(),
+                          config.getStartType(),
+                          config.getErrorControl(),
+                          config.getPath(),
+                          config.getDependencies(),
+                          config.getServiceStartName(),
+                          config.getPassword());
+
         if (service.service == 0) {
             throw getLastErrorException();
         }
-        
-        service.setDescription(description);
+
+        if (config.getDescription() != null) {
+            service.setDescription(config.getDescription());
+        }
         
         return service;
     }
