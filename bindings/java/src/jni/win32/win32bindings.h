@@ -23,6 +23,13 @@
 #define SetStringField(env, obj, fieldID, val) \
     JENV->SetObjectField(env, obj, fieldID, JENV->NewStringUTF(env, val))
 
-void win32_throw_exception(JNIEnv *env, char *msg);
+#ifdef __cplusplus
+extern "C" {
+#endif
+    void win32_throw_exception(JNIEnv *env, char *msg);
 
+    void win32_throw_last_error(JNIEnv *env);
+#ifdef __cplusplus
+}
+#endif
 #endif
