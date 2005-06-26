@@ -1,7 +1,9 @@
 package net.hyperic.sigar.win32;
 
 import java.io.PrintStream;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 public class ServiceConfig {
 
@@ -74,6 +76,14 @@ public class ServiceConfig {
      * Otherwise, the system is restarted with the last-known good configuration.
      */
     public static final int ERROR_CRITICAL = 0x00000003;
+
+    private static final String[] START_TYPES = {
+        "Boot", "System", "Auto", "Manual", "Disabled"      
+    };
+    
+    private static final String[] ERROR_TYPES = {
+        "Ignore", "Normal", "Severe", "Critical"
+    };
 
     int type;
     int startType;
@@ -153,6 +163,11 @@ public class ServiceConfig {
     public void setErrorControl(int errorControl) {
         this.errorControl = errorControl;
     }
+    
+    public String getErrorControlString() {
+        return ERROR_TYPES[getErrorControl()];
+    }
+
     /**
      * @return Returns the loadOrderGroup.
      */
@@ -189,6 +204,11 @@ public class ServiceConfig {
     public void setStartType(int startType) {
         this.startType = startType;
     }
+    
+    public String getStartTypeString() {
+        return START_TYPES[getStartType()];
+    }
+
     /**
      * @return Returns the tagId.
      */
@@ -207,6 +227,35 @@ public class ServiceConfig {
     public int getType() {
         return type;
     }
+
+    public List getTypeList() {
+        ArrayList types = new ArrayList();
+
+        if ((this.type & TYPE_KERNEL_DRIVER) != 0) {
+            types.add("Kernel Driver");
+        }
+        if ((this.type & TYPE_FILE_SYSTEM_DRIVER) != 0) {
+            types.add("File System Driver");
+        }
+        if ((this.type & TYPE_ADAPTER) != 0) {
+            types.add("Adapter");
+        }
+        if ((this.type & TYPE_RECOGNIZER_DRIVER) != 0) {
+            types.add("Recognizer Driver");
+        }
+        if ((this.type & TYPE_WIN32_OWN_PROCESS) != 0) {
+            types.add("Own Process");
+        }
+        if ((this.type & TYPE_WIN32_SHARE_PROCESS) != 0) {
+            types.add("Share Process");
+        }
+        if ((this.type & TYPE_INTERACTIVE_PROCESS) != 0) {
+            types.add("Interactive Process");
+        }
+        
+        return types;
+    }
+
     /**
      * @param type The type to set, one of TYPE_* constants.
      */
@@ -255,8 +304,9 @@ public class ServiceConfig {
         out.println("display.......[" + getDisplayName() + "]");
         out.println("description...[" + getDescription() + "]");
         out.println("path..........[" + getPath() + "]");
-        out.println("deps.........." + Arrays.asList(getDependencies()));
-        out.println("type..........[" + getType() + "]");
-        out.println("start type....[" + getStartType() + "]");
+        out.println("deps.........."  + Arrays.asList(getDependencies()));
+        out.println("type.........."  + getTypeList());
+        out.println("start type....[" + getStartTypeString() + "]");
+        out.println("error ctl.....[" + getErrorControlString() + "]");
     }
 }
