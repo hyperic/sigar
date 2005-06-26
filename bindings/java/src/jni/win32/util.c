@@ -1,6 +1,4 @@
 #ifdef WIN32
-#define UNICODE
-#define _UNICODE
 
 #include <pdh.h>
 #include <pdhmsg.h>
@@ -20,6 +18,22 @@ void win32_throw_exception(JNIEnv *env, char *msg)
 {
     jclass exceptionClass = WIN32_FIND_CLASS("Win32Exception");
     JENV->ThrowNew(env, exceptionClass, msg);
+}
+
+void win32_throw_last_error(JNIEnv *env)
+{
+    char msg[8192];
+
+    FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM |
+                  FORMAT_MESSAGE_IGNORE_INSERTS,
+                  NULL,
+                  GetLastError(),
+                  0, /* default language */
+                  (LPTSTR)msg,
+                  (DWORD)sizeof(msg),
+                  NULL);
+
+    win32_throw_exception(env, msg);
 }
 
 JNIEXPORT jint SIGAR_JNI(win32_Win32_GetLastError)
