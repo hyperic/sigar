@@ -71,17 +71,16 @@ public class Service extends Win32Bindings {
          SERVICE_INTERROGATE            |
          SERVICE_USER_DEFINED_CONTROL);
     
-    ///////////////////////////////////////////////////////
-    // Object Variables
-    private long  m_hMgr;
-    private long  m_hService;
+    private long manager;
+    private long service;
 
     private Service() throws Win32Exception
     {
-        this.m_hMgr = OpenSCManager("", SC_MANAGER_ALL_ACCESS);
+        this.manager = OpenSCManager("", SC_MANAGER_ALL_ACCESS);
         
-        if(this.m_hMgr == 0)
+        if (this.manager == 0) {
             Service.throwLastErrorException();
+        }
     }
 
     public static native List getServiceNames() throws Win32Exception;
@@ -90,28 +89,29 @@ public class Service extends Win32Bindings {
     {
         this();
         
-        this.m_hService = OpenService(this.m_hMgr, serviceName, 
-                                      SERVICE_ALL_ACCESS);
+        this.service = OpenService(this.manager, serviceName, 
+                                   SERVICE_ALL_ACCESS);
 
-        if(this.m_hService == 0)
+        if (this.service == 0) {
             Service.throwLastErrorException();
+        }
     }
 
     protected void finalize()
     {
-        this.close();
+        close();
     }
 
     public synchronized void close()
     {
-        if(this.m_hService != 0) {
-            CloseServiceHandle(this.m_hService);
-            this.m_hService = 0;
+        if (this.service != 0) {
+            CloseServiceHandle(this.service);
+            this.service = 0;
         }
 
-        if(this.m_hMgr != 0) {
-            CloseServiceHandle(this.m_hMgr);
-            this.m_hMgr = 0;
+        if (this.manager != 0) {
+            CloseServiceHandle(this.manager);
+            this.manager = 0;
         }
     }
     
@@ -121,44 +121,51 @@ public class Service extends Win32Bindings {
                                  String path) 
         throws Win32Exception
     {
-        return Service.create(serviceName, displayName, description,
-                              ServiceConfig.TYPE_WIN32_OWN_PROCESS,
-                              ServiceConfig.START_AUTO,
-                              ServiceConfig.ERROR_NORMAL,
-                              path, null, null, "");
+        return create(serviceName, displayName, description,
+                      ServiceConfig.TYPE_WIN32_OWN_PROCESS,
+                      ServiceConfig.START_AUTO,
+                      ServiceConfig.ERROR_NORMAL,
+                      path, null, null, "");
     }
     
     public static Service create(String serviceName, String displayName,
                                  String description, int serviceType,
                                  int startType, int errorControl, 
-                                 String path, String[] dependicies,
+                                 String path, String[] dependencies,
                                  String startName, String password)
         throws Win32Exception
     {
-        if(serviceName == null)
+        if (serviceName == null) {
             throw new IllegalArgumentException("The serviceName argument " +
                                                "cannot be null.");
-        if(displayName == null)
-            throw new IllegalArgumentException("The displayName argument " +
-                                               "cannot be null.");
-        if(path == null)
-            throw new IllegalArgumentException("The displayName argument " +
-                                               "cannot be null.");
-                
-        Service service = new Service();
-        service.m_hService = Service.CreateService(service.m_hMgr,
-                                                   serviceName,
-                                                   displayName,
-                                                   serviceType,
-                                                   startType,
-                                                   errorControl,
-                                                   path,
-                                                   dependicies,
-                                                   startName,
-                                                   password);
-        if(service.m_hService == 0)
-            Service.throwLastErrorException();
+        }
 
+        if (displayName == null) {
+            throw new IllegalArgumentException("The displayName argument " +
+                                               "cannot be null.");
+        }
+
+        if (path == null) {
+            throw new IllegalArgumentException("The displayName argument " +
+                                               "cannot be null.");
+        }
+        
+        Service service = new Service();
+        service.service = CreateService(service.manager,
+                                        serviceName,
+                                        displayName,
+                                        serviceType,
+                                        startType,
+                                        errorControl,
+                                        path,
+                                        dependencies,
+                                        startName,
+                                        password);
+        
+        if (service.service == 0) {
+            Service.throwLastErrorException();
+        }
+        
         service.setDescription(description);
         
         return service;
@@ -166,124 +173,130 @@ public class Service extends Win32Bindings {
 
     public void delete() throws Win32Exception
     {
-        DeleteService(this.m_hService);
+        DeleteService(this.service);
     }
 
     public void control(int control)
         throws Win32Exception
     {
-        if (!ControlService(this.m_hService, control)) {
+        if (!ControlService(this.service, control)) {
             Service.throwLastErrorException();
         }
     }
 
     public void setDescription(String description)
     {
-        Service.ChangeServiceDescription(this.m_hService, description);
+        ChangeServiceDescription(this.service, description);
     }
             
     public void start() throws Win32Exception
     {
-        if(Service.StartService(this.m_hService) == false)
-            Service.throwLastErrorException(); 
+        if (StartService(this.service) == false) {
+            Service.throwLastErrorException();
+        }
     }
 
     public void startAndWait() throws Win32Exception
     {
         // Wait indefinitely
-        this.startAndWait(0);
+        startAndWait(0);
     }
 
     public void startAndWait(long timeout) throws Win32Exception
     {
-        this.start();
-        this.waitForStart(timeout);
+        start();
+        waitForStart(timeout);
     }
 
     public int status()
     {
-        return QueryServiceStatus(this.m_hService);
+        return QueryServiceStatus(this.service);
     }
 
     public void stop() throws Win32Exception
     {
-        if(StopService(this.m_hService) == false)
-            Service.throwLastErrorException(); 
+        if (StopService(this.service) == false) {
+            Service.throwLastErrorException();
+        }
     }
 
     public void stopAndWait() throws Win32Exception
     {
         // Wait indefinitely
-        this.stopAndWait(0);
+        stopAndWait(0);
     }
 
     public void stopAndWait(long timeout) throws Win32Exception
     {
-        long lStatus;
+        long status;
         
-        this.stop();
+        stop();
 
-        long lStart = System.currentTimeMillis();
+        long start = System.currentTimeMillis();
 
-        while((lStatus = this.status()) != SERVICE_STOPPED) {
-            if(lStatus == SERVICE_STOP_PENDING) {
+        while ((status = status()) != SERVICE_STOPPED) {
+            if (status == SERVICE_STOP_PENDING) {
                 // The start hasn't completed yet. Keep trying up to 
                 // the timeout.
-                if((System.currentTimeMillis() - lStart) < 
-                   timeout || timeout <= 0) {
+                if (((System.currentTimeMillis() - start) < timeout) || 
+                    (timeout <= 0))
+                {
                     try {
                         Thread.sleep(100);
                     } catch(InterruptedException e) {
                     }
                 }
             }
-            else
+            else {
                 break;
+            }
         }
 
-        if(lStatus != SERVICE_STOPPED)
+        if (status != SERVICE_STOPPED) {
             Service.throwLastErrorException();
+        }
     }
     
     public void waitForStart(long timeout) throws Win32Exception
     {
-        long    lStatus;
-        boolean bResult = true;
-        long    lStart  = System.currentTimeMillis();
+        long    status;
+        boolean result = true;
+        long    start  = System.currentTimeMillis();
             
-        while((lStatus = this.status()) != SERVICE_RUNNING)
-        {
-            if(lStatus == SERVICE_START_PENDING)
-            {
+        while ((status = status()) != SERVICE_RUNNING) {
+            if (status == SERVICE_START_PENDING) {
                 // The start hasn't completed yet. Keep trying up to 
                 // the timeout.
-                if((System.currentTimeMillis() - lStart) < 
-                   timeout || timeout <= 0) {
+                if (((System.currentTimeMillis() - start) < timeout) ||
+                    (timeout <= 0))
+                {
                     try {
                         Thread.sleep(100);
                     } catch(InterruptedException e) {
                     }
                 }
-                else
-                    bResult = false;
-            } else if(lStatus == SERVICE_STOPPED) {
+                else {
+                    result = false;
+                }
+            } else if (status == SERVICE_STOPPED) {
                 // Start failed
-                bResult = false;
+                result = false;
                 break;
             } else {
                 // Hrm.
-                bResult = false;
+                result = false;
                 break;
             }
         }
 
-        if(bResult == false)
+        if (result == false) {
             Service.throwLastErrorException();
+        }
     }
 
     public ServiceConfig getConfig() throws Win32Exception {
         ServiceConfig config = new ServiceConfig();
-        if (!QueryServiceConfig(this.m_hService, config)) {
+        if (!QueryServiceConfig(this.service, config)) {
             Service.throwLastErrorException();
         }
         return config;
@@ -292,38 +305,48 @@ public class Service extends Win32Bindings {
     private static final void throwLastErrorException() 
         throws Win32Exception
     {
-        int iErr = Service.GetLastError();
-        throw new Win32Exception(iErr, "Win32 Error Code: " + 
-                                 iErr + ": " + Service.GetErrorMessage(iErr));
+        int err = Service.GetLastError();
+        throw new Win32Exception(err, "Win32 Error Code: " + 
+                                 err + ": " + GetErrorMessage(err));
     }
     
-    private static final native boolean 
-        ChangeServiceDescription(long handle,
-                                 String description);
-    private static final native boolean CloseServiceHandle(long handle);
-    private static final native long    CreateService(long handle,
-                                                      String serviceName,
-                                                      String displayName,
-                                                      int serviceType,
-                                                      int startType,
-                                                      int errorControl,
-                                                      String path,
-                                                      String[] dependicies,
-                                                      String startName,
-                                                      String password);
-    private static final native boolean ControlService(long handle,
-                                                       int control);
-    private static final native boolean DeleteService(long handle);
-    private static final native String  GetErrorMessage(int error);
-    private static final native int     GetLastError();
-    private static final native long    OpenSCManager(String machine,
-                                                      int access);
-    private static final native long    OpenService(long handle,
-                                                    String service,
-                                                    int access);
-    private static final native int     QueryServiceStatus(long handle);
-    private static final native boolean StartService(long handle);
-    private static final native boolean StopService(long handle);
+    private static native boolean ChangeServiceDescription(long handle,
+                                                           String description);
+
+    private static native boolean CloseServiceHandle(long handle);
+
+    private static native long CreateService(long handle,
+                                             String serviceName,
+                                             String displayName,
+                                             int serviceType,
+                                             int startType,
+                                             int errorControl,
+                                             String path,
+                                             String[] dependencies,
+                                             String startName,
+                                             String password);
+
+    private static native boolean ControlService(long handle,
+                                                 int control);
+
+    private static native boolean DeleteService(long handle);
+
+    private static native String GetErrorMessage(int error);
+
+    private static native int GetLastError();
+
+    private static native long OpenSCManager(String machine,
+                                             int access);
+
+    private static native long OpenService(long handle,
+                                           String service,
+                                           int access);
+
+    private static native int QueryServiceStatus(long handle);
+
+    private static native boolean StartService(long handle);
+
+    private static native boolean StopService(long handle);
 
     private static native boolean QueryServiceConfig(long handle,
                                                      ServiceConfig config);
