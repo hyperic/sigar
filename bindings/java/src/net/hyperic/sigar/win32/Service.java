@@ -137,20 +137,17 @@ public class Service extends Win32 {
         throws Win32Exception
     {
         if (serviceName == null) {
-            throw new IllegalArgumentException("The serviceName argument " +
-                                               "cannot be null.");
-        }
-
-        if (displayName == null) {
-            throw new IllegalArgumentException("The displayName argument " +
-                                               "cannot be null.");
+            throw new IllegalArgumentException("serviceName=null");
         }
 
         if (path == null) {
-            throw new IllegalArgumentException("The displayName argument " +
-                                               "cannot be null.");
+            throw new IllegalArgumentException("path=null");
         }
-        
+
+        if (displayName == null) {
+            displayName = serviceName;
+        }
+
         Service service = new Service();
         service.service = CreateService(service.manager,
                                         serviceName,
