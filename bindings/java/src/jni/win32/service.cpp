@@ -262,29 +262,6 @@ JNIEXPORT jboolean SIGAR_JNI(win32_Service_DeleteService)
     return DeleteService((SC_HANDLE)handle);
 }
 
-JNIEXPORT jstring SIGAR_JNI(win32_Service_GetErrorMessage)
-(JNIEnv *env, jclass, jint error)
-{
-    LPTSTR  lpMsg;
-
-    FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER|
-                  FORMAT_MESSAGE_IGNORE_INSERTS|
-                  FORMAT_MESSAGE_FROM_SYSTEM,
-                  NULL, error, 
-                  MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US),
-                  (LPTSTR)&lpMsg, 0, NULL);
-    return env->NewString((const jchar *)lpMsg, lstrlen(lpMsg));
-}
-
-/**
- * XXX: this should probablly be moved into a util class
- */
-JNIEXPORT jint SIGAR_JNI(win32_Service_GetLastError)
-(JNIEnv *, jclass)
-{
-    return GetLastError();
-}
-
 JNIEXPORT jlong SIGAR_JNI(win32_Service_OpenSCManager)
 (JNIEnv *env, jclass, jstring machine, jint access)
 {

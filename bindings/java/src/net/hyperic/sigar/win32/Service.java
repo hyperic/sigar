@@ -330,10 +330,6 @@ public class Service extends Win32 {
 
     private static native boolean DeleteService(long handle);
 
-    private static native String GetErrorMessage(int error);
-
-    private static native int GetLastError();
-
     private static native long OpenSCManager(String machine,
                                              int access);
 

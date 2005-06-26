@@ -12,4 +12,9 @@ abstract class Win32 {
             
         }
     }
+    
+    static native String GetErrorMessage(int error);
+
+    static native int GetLastError();
+
 }
