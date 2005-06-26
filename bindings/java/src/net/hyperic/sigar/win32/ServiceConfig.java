@@ -78,11 +78,27 @@ public class ServiceConfig {
     String binaryPathName;
     String loadOrderGroup;
     int tagId;
-    String[] dependencies = null;
+    String[] dependencies;
     String serviceStartName;
     String displayName;
     String description;
+    String password;
+    String name;
 
+    ServiceConfig() {}
+
+    public ServiceConfig(String name) {
+        this.name = name;
+        this.type = TYPE_WIN32_OWN_PROCESS;
+        this.startType = START_AUTO;
+        this.errorControl = ERROR_NORMAL;
+        //msdn docs:
+        //"Specify an empty string if the account has no password
+        //or if the service runs in the LocalService, NetworkService,
+        //or LocalSystem account"
+        this.password = "";
+    }
+    
     /**
      * @return Returns the binaryPathName.
      */
@@ -205,5 +221,29 @@ public class ServiceConfig {
      */
     public void setDescription(String description) {
         this.description = description;
+    }
+    /**
+     * @return Returns the password.
+     */
+    public String getPassword() {
+        return password;
+    }
+    /**
+     * @param password The password to set.
+     */
+    public void setPassword(String password) {
+        this.password = password;
+    }
+    /**
+     * @return Returns the name.
+     */
+    public String getName() {
+        return name;
+    }
+    /**
+     * @param name The name to set.
+     */
+    public void setName(String name) {
+        this.name = name;
     }
 }

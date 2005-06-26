@@ -74,6 +74,7 @@ public class Service extends Win32 {
     
     private long manager;
     private long service;
+    private String name;
 
     private Service() throws Win32Exception
     {
@@ -96,6 +97,8 @@ public class Service extends Win32 {
         if (this.service == 0) {
             throw getLastErrorException();
         }
+        
+        this.name = serviceName;
     }
 
     protected void finalize()
@@ -297,6 +300,7 @@ public class Service extends Win32 {
         if (!QueryServiceConfig(this.service, config)) {
             throw getLastErrorException();
         }
+        config.setName(this.name);
         return config;
     }
     
