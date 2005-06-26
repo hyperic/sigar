@@ -13,6 +13,17 @@ public class Service extends Win32 {
     public static final int SERVICE_PAUSE_PENDING    = 0x00000006;
     public static final int SERVICE_PAUSED           = 0x00000007;
 
+    private static final String[] STATUS = {
+        "Unknown",
+        "Stopped",
+        "Start Pending",
+        "Stop Pending",
+        "Running",
+        "Continue Pending",
+        "Pause Pending",
+        "Paused"
+    };
+    
     // Service Controls
     private static final int SERVICE_CONTROL_STOP             = 0x00000001;
     private static final int SERVICE_CONTROL_PAUSE            = 0x00000002;
@@ -196,6 +207,11 @@ public class Service extends Win32 {
         return QueryServiceStatus(this.service);
     }
 
+    public String getStatusString()
+    {
+        return STATUS[status()];
+    }
+    
     public void stop() throws Win32Exception
     {
         if (StopService(this.service) == false) {
@@ -343,6 +359,9 @@ public class Service extends Win32 {
             String name = (String)services.get(i);
             Service service = new Service(name);
             service.getConfig().list(System.out);
+            System.out.println("status........[" +
+                               service.getStatusString() + "]");
+            System.out.println("");
         }
     }
 }
