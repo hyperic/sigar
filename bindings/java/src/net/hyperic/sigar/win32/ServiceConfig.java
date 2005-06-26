@@ -81,6 +81,7 @@ public class ServiceConfig {
     String[] dependencies = null;
     String serviceStartName;
     String displayName;
+    String description;
 
     /**
      * @return Returns the binaryPathName.
@@ -192,5 +193,17 @@ public class ServiceConfig {
      */
     public void setType(int type) {
         this.type = type;
+    }
+    /**
+     * @return Returns the description.
+     */
+    public String getDescription() {
+        return description;
+    }
+    /**
+     * @param description The description to set.
+     */
+    public void setDescription(String description) {
+        this.description = description;
     }
 }

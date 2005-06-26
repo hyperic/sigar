@@ -23,6 +23,12 @@ extern "C" {
 typedef DWORD (CALLBACK *ChangeServiceConfig2_func_t)(SC_HANDLE,
                                                       DWORD, LPVOID);
 
+typedef DWORD (CALLBACK *QueryServiceConfig2_func_t)(SC_HANDLE,
+                                                     DWORD,
+                                                     LPSERVICE_DESCRIPTION,
+                                                     DWORD,
+                                                     LPDWORD);
+
 JNIEXPORT jboolean SIGAR_JNI(win32_Service_ChangeServiceDescription)
 (JNIEnv *env, jclass, jlong handle, jstring description)
 {
@@ -293,6 +299,7 @@ JNIEXPORT jboolean SIGAR_JNI(win32_Service_QueryServiceConfig)
     jfieldID id;
     jclass cls = env->GetObjectClass(obj);
     jstring value;
+    HINSTANCE lib;
 
     if (!QueryServiceConfig((SC_HANDLE)handle, config,
                             sizeof(buffer), &bytes))
@@ -331,6 +338,27 @@ JNIEXPORT jboolean SIGAR_JNI(win32_Service_QueryServiceConfig)
     SERVICE_SetStringField("serviceStartName", config->lpServiceStartName);
 
     SERVICE_SetStringField("displayName", config->lpDisplayName);
+
+    if ((lib = LoadLibrary(L"advapi32"))) {
+        LPSERVICE_DESCRIPTION desc = 
+            (LPSERVICE_DESCRIPTION)buffer;
+        QueryServiceConfig2_func_t query_config =
+            (QueryServiceConfig2_func_t)
+                GetProcAddress(lib, "QueryServiceConfig2W");
+
+        if (query_config) {
+            BOOL retval =
+                query_config((SC_HANDLE)handle, 
+                             SERVICE_CONFIG_DESCRIPTION,
+                             desc, sizeof(buffer), &bytes);
+            if (retval && (desc->lpDescription != NULL)) {
+                SERVICE_SetStringField("description",
+                                       desc->lpDescription);
+            }
+        }
+
+        FreeLibrary(lib);
+    }
 
     return JNI_TRUE;
 }

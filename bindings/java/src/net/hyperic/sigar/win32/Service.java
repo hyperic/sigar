@@ -360,6 +360,8 @@ public class Service extends Win32 {
             if (deps.length != 0) {
                 System.out.println("   deps..." + Arrays.asList(deps));
             }
+            System.out.println("   desc..." + config.getDescription());
+            System.out.println("");
         }
     }
 }
