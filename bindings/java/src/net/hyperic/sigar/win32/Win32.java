@@ -5,8 +5,6 @@ import net.hyperic.sigar.SigarException;
 
 abstract class Win32 {
 
-    static int SUCCESS = 0;
-    
     static {
         try {
             Sigar.load();
@@ -14,9 +12,4 @@ abstract class Win32 {
             
         }
     }
-    
-    static native String GetErrorMessage(int error);
-
-    static native int GetLastError();
-
 }
