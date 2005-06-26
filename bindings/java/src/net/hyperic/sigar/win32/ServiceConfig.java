@@ -121,8 +121,8 @@ public class ServiceConfig {
     /**
      * @param path The path to set.
      */
-    public void setPath(String binaryPathName) {
-        this.path = binaryPathName;
+    public void setPath(String path) {
+        this.path = path;
     }
     /**
      * @return Returns the dependencies.
