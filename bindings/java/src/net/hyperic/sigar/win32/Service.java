@@ -331,20 +331,18 @@ public class Service extends Win32 {
                                                      ServiceConfig config);
 
     public static void main(String[] args) throws Exception {
-        List services = getServiceNames();
+        List services;
+        if (args.length == 0) {
+            services = getServiceNames();
+        }
+        else {
+            services = Arrays.asList(args);
+        }
+
         for (int i=0; i<services.size(); i++) {
             String name = (String)services.get(i);
             Service service = new Service(name);
-            ServiceConfig config = service.getConfig();
-            System.out.println("[" + name + "]" +
-                               "=" +
-                               "[" + config.getPath() + "]");
-            String[] deps = config.getDependencies();
-            if (deps.length != 0) {
-                System.out.println("   deps..." + Arrays.asList(deps));
-            }
-            System.out.println("   desc..." + config.getDescription());
-            System.out.println("");
+            service.getConfig().list(System.out);
         }
     }
 }
