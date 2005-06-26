@@ -209,34 +209,58 @@ public class Service extends Win32 {
         }
     }
 
+    private static class Waiter {
+        long start = System.currentTimeMillis();
+        Service service;
+        long timeout;
+        int wantedState;
+        int pendingState;
+        
+        Waiter(Service service, 
+               long timeout,
+               int wantedState,
+               int pendingState)
+        {
+            this.service = service;
+            this.timeout = timeout;
+            this.wantedState = wantedState;
+            this.pendingState = pendingState;
+        }
+        
+        boolean sleep() {
+            int status;
+            while ((status = service.getStatus()) != this.wantedState) {
+                if (status != this.pendingState) {
+                    return false;
+                }
+
+                if ((timeout <= 0) ||
+                    ((System.currentTimeMillis() - this.start) < this.timeout))
+                {
+                    try {
+                        Thread.sleep(100);
+                    } catch(InterruptedException e) {}
+                }
+                else {
+                    break;
+                }
+            }
+
+            return status == this.wantedState;
+        }
+    }
+    
     public void stop(long timeout) throws Win32Exception
     {
         long status;
         
         stop();
 
-        long start = System.currentTimeMillis();
+        Waiter waiter =
+            new Waiter(this, timeout, SERVICE_STOPPED, SERVICE_STOP_PENDING);
 
-        while ((status = getStatus()) != SERVICE_STOPPED) {
-            if (status == SERVICE_STOP_PENDING) {
-                // The start hasn't completed yet. Keep trying up to 
-                // the timeout.
-                if (((System.currentTimeMillis() - start) < timeout) || 
-                    (timeout <= 0))
-                {
-                    try {
-                        Thread.sleep(100);
-                    } catch(InterruptedException e) {
-                    }
-                }
-            }
-            else {
-                break;
-            }
-        }
-
-        if (status != SERVICE_STOPPED) {
-            throw getLastErrorException();
+        if (!waiter.sleep()) {
+            throw new Win32Exception("Failed to stop service");
         }
     }
     
@@ -249,38 +273,15 @@ public class Service extends Win32 {
 
     public void start(long timeout) throws Win32Exception
     {
-        long    status;
-        boolean result = true;
-        long    start  = System.currentTimeMillis();
-            
-        while ((status = getStatus()) != SERVICE_RUNNING) {
-            if (status == SERVICE_START_PENDING) {
-                // The start hasn't completed yet. Keep trying up to 
-                // the timeout.
-                if (((System.currentTimeMillis() - start) < timeout) ||
-                    (timeout <= 0))
-                {
-                    try {
-                        Thread.sleep(100);
-                    } catch(InterruptedException e) {
-                    }
-                }
-                else {
-                    result = false;
-                }
-            } else if (status == SERVICE_STOPPED) {
-                // Start failed
-                result = false;
-                break;
-            } else {
-                // Hrm.
-                result = false;
-                break;
-            }
-        }
+        long status;
 
-        if (result == false) {
-            throw getLastErrorException();
+        start();
+
+        Waiter waiter =
+            new Waiter(this, timeout, SERVICE_RUNNING, SERVICE_START_PENDING);
+
+        if (!waiter.sleep()) {
+            throw new Win32Exception("Failed to start service");
         }
     }
 
@@ -341,6 +342,20 @@ public class Service extends Win32 {
         List services;
         if (args.length == 0) {
             services = getServiceNames();
+        }
+        else if ((args.length == 2) && (args[0].equals("-toggle"))) {
+            long timeout = 5 * 1000; //5 seconds
+            Service service = new Service(args[1]);
+            if (service.getStatus() == SERVICE_RUNNING) {
+                System.out.println("Stopping service...");
+                service.stop(timeout);
+            }
+            else {
+                System.out.println("Starting service...");
+                service.start(timeout);
+            }
+            System.out.println(service.getStatusString());
+            return;
         }
         else {
             services = Arrays.asList(args);
