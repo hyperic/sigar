@@ -3,7 +3,7 @@ package net.hyperic.sigar.win32;
 import java.util.Collection;
 import java.util.Vector;
 
-public class MetaBase extends Win32Bindings
+public class MetaBase extends Win32
 {
     private static int IIS_MD_SERVER_BASE             = 1000;
     private static int IIS_MD_HTTP_BASE               = 2000;

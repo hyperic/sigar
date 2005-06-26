@@ -3,7 +3,7 @@ package net.hyperic.sigar.win32;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Pdh extends Win32Bindings {
+public class Pdh extends Win32 {
 
     private long   query = -1l; // Handle to the query
     private String hostname = null;

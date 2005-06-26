@@ -3,7 +3,7 @@ package net.hyperic.sigar.win32;
 import java.util.Collection;
 import java.util.Vector;
 
-public class RegistryKey extends Win32Bindings
+public class RegistryKey extends Win32
 {
     private static final int HKEY_CLASSES_ROOT     = 0x80000000;
     private static final int HKEY_CURRENT_USER     = 0x80000001;

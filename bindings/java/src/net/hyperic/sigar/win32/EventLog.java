@@ -1,6 +1,6 @@
 package net.hyperic.sigar.win32;
 
-public class EventLog extends Win32Bindings {
+public class EventLog extends Win32 {
 
     int eventLogHandle = 0;  // holds the event log HANDLE
 

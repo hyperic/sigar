@@ -2,7 +2,7 @@ package net.hyperic.sigar.win32;
 
 import java.util.List;
 
-public class Service extends Win32Bindings {
+public class Service extends Win32 {
     // Service State
     public static final int SERVICE_STOPPED          = 0x00000001;
     public static final int SERVICE_START_PENDING    = 0x00000002;
