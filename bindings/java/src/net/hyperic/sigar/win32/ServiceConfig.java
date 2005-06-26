@@ -1,5 +1,8 @@
 package net.hyperic.sigar.win32;
 
+import java.io.PrintStream;
+import java.util.Arrays;
+
 public class ServiceConfig {
 
     // Start type
@@ -245,5 +248,15 @@ public class ServiceConfig {
      */
     public void setName(String name) {
         this.name = name;
+    }
+    
+    public void list(PrintStream out) {
+        out.println("name..........[" + getName() + "]");
+        out.println("display.......[" + getDisplayName() + "]");
+        out.println("description...[" + getDescription() + "]");
+        out.println("path..........[" + getPath() + "]");
+        out.println("deps.........." + Arrays.asList(getDependencies()));
+        out.println("type..........[" + getType() + "]");
+        out.println("start type....[" + getStartType() + "]");
     }
 }
