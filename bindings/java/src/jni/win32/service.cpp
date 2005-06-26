@@ -163,7 +163,7 @@ JNIEXPORT jlong SIGAR_JNI(win32_Service_CreateService)
     return lResult;
 }
 
-JNIEXPORT jboolean SIGAR_JNI(win32_Service_DeleteService)
+JNIEXPORT void SIGAR_JNI(win32_Service_DeleteService)
 (JNIEnv *env, jclass, jlong handle)
 {
     if (!DeleteService((SC_HANDLE)handle)) {
