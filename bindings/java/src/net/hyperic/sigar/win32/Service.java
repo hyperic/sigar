@@ -79,10 +79,6 @@ public class Service extends Win32 {
     private Service() throws Win32Exception
     {
         this.manager = OpenSCManager("", SC_MANAGER_ALL_ACCESS);
-        
-        if (this.manager == 0) {
-            throw getLastErrorException();
-        }
     }
 
     public static native List getServiceNames() throws Win32Exception;
@@ -94,10 +90,6 @@ public class Service extends Win32 {
         this.service = OpenService(this.manager, serviceName, 
                                    SERVICE_ALL_ACCESS);
 
-        if (this.service == 0) {
-            throw getLastErrorException();
-        }
-        
         this.name = serviceName;
     }
 
@@ -142,10 +134,6 @@ public class Service extends Win32 {
                           config.getDependencies(),
                           config.getServiceStartName(),
                           config.getPassword());
-
-        if (service.service == 0) {
-            throw getLastErrorException();
-        }
 
         if (config.getDescription() != null) {
             service.setDescription(config.getDescription());
@@ -270,18 +258,9 @@ public class Service extends Win32 {
 
     public ServiceConfig getConfig() throws Win32Exception {
         ServiceConfig config = new ServiceConfig();
-        if (!QueryServiceConfig(this.service, config)) {
-            throw getLastErrorException();
-        }
+        QueryServiceConfig(this.service, config);
         config.setName(this.name);
         return config;
-    }
-    
-    private static Win32Exception getLastErrorException() 
-    {
-        int err = GetLastError();
-        return new Win32Exception(err, "Win32 Error Code: " + 
-                                  err + ": " + GetErrorMessage(err));
     }
     
     private static native boolean ChangeServiceDescription(long handle,
@@ -298,7 +277,7 @@ public class Service extends Win32 {
                                              String path,
                                              String[] dependencies,
                                              String startName,
-                                             String password);
+                                             String password) throws Win32Exception;
 
     private static native int ControlService(long handle,
                                              int control);
@@ -306,16 +285,16 @@ public class Service extends Win32 {
     private static native boolean DeleteService(long handle);
 
     private static native long OpenSCManager(String machine,
-                                             int access);
+                                             int access) throws Win32Exception;
 
     private static native long OpenService(long handle,
                                            String service,
-                                           int access);
+                                           int access) throws Win32Exception;
 
     private static native int QueryServiceStatus(long handle);
 
     private static native boolean QueryServiceConfig(long handle,
-                                                     ServiceConfig config);
+                                                     ServiceConfig config) throws Win32Exception;
 
     public static void main(String[] args) throws Exception {
         List services;
