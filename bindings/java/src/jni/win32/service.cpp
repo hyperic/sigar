@@ -67,6 +67,9 @@ JNIEXPORT jboolean SIGAR_JNI(win32_Service_ControlService)
 (JNIEnv *, jclass, jlong handle, jint control)
 {
     SERVICE_STATUS  status;
+    if (control == 0) {
+        return StartService((SC_HANDLE)handle, 0, NULL);
+    }
     return ControlService((SC_HANDLE)handle, control, &status);
 }
 
@@ -198,20 +201,6 @@ SIGAR_JNI(win32_Service_QueryServiceStatus)
         iResult = -1;
 
     return iResult;
-}
-
-JNIEXPORT jboolean SIGAR_JNI(win32_Service_StartService)
-(JNIEnv *, jclass, jlong handle)
-{
-    return StartService((SC_HANDLE)handle, 0, NULL);
-}
-
-JNIEXPORT jboolean SIGAR_JNI(win32_Service_StopService)
-(JNIEnv *, jclass, jlong handle)
-{
-    SERVICE_STATUS  status;
-
-    return ControlService((SC_HANDLE)handle, SERVICE_CONTROL_STOP, &status);
 }
 
 JNIEXPORT jobject SIGAR_JNI(win32_Service_getServiceNames)

@@ -25,21 +25,10 @@ public class Service extends Win32 {
     };
     
     // Service Controls
-    private static final int SERVICE_CONTROL_STOP             = 0x00000001;
-    private static final int SERVICE_CONTROL_PAUSE            = 0x00000002;
-    private static final int SERVICE_CONTROL_CONTINUE         = 0x00000003;
-    private static final int SERVICE_CONTROL_INTERROGATE      = 0x00000004;
-    private static final int SERVICE_CONTROL_SHUTDOWN         = 0x00000005;
-    private static final int SERVICE_CONTROL_PARAMCHANGE      = 0x00000006;
-    private static final int SERVICE_CONTROL_NETBINDADD       = 0x00000007;
-    private static final int SERVICE_CONTROL_NETBINDREMOVE    = 0x00000008;
-    private static final int SERVICE_CONTROL_NETBINDENABLE    = 0x00000009;
-    private static final int SERVICE_CONTROL_NETBINDDISABLE   = 0x0000000A;
-    private static final int SERVICE_CONTROL_DEVICEEVENT      = 0x0000000B;
-    private static final int SERVICE_CONTROL_HARDWAREPROFILECHANGE 
-        = 0x0000000C;
-    private static final int SERVICE_CONTROL_POWEREVENT       = 0x0000000D;
-    private static final int SERVICE_CONTROL_SESSIONCHANGE    = 0x0000000E;
+    private static final int CONTROL_START  = 0x00000000;
+    private static final int CONTROL_STOP   = 0x00000001;
+    private static final int CONTROL_PAUSE  = 0x00000002;
+    private static final int CONTROL_RESUME = 0x00000003;
 
     // Service Control Manager object specific access types
     private static final int STANDARD_RIGHTS_REQUIRED = (int)0x000F0000L;
@@ -170,14 +159,6 @@ public class Service extends Win32 {
         DeleteService(this.service);
     }
 
-    public void control(int control)
-        throws Win32Exception
-    {
-        if (!ControlService(this.service, control)) {
-            throw getLastErrorException();
-        }
-    }
-
     public void setDescription(String description)
     {
         ChangeServiceDescription(this.service, description);
@@ -202,13 +183,6 @@ public class Service extends Win32 {
         return STATUS[getStatus()];
     }
     
-    public void stop() throws Win32Exception
-    {
-        if (StopService(this.service) == false) {
-            throw getLastErrorException();
-        }
-    }
-
     private static class Waiter {
         long start = System.currentTimeMillis();
         Service service;
@@ -250,6 +224,13 @@ public class Service extends Win32 {
         }
     }
     
+    public void stop() throws Win32Exception
+    {
+        if (ControlService(this.service, CONTROL_STOP) == false) {
+            throw getLastErrorException();
+        }
+    }
+
     public void stop(long timeout) throws Win32Exception
     {
         long status;
@@ -266,7 +247,7 @@ public class Service extends Win32 {
     
     public void start() throws Win32Exception
     {
-        if (StartService(this.service) == false) {
+        if (ControlService(this.service, CONTROL_START) == false) {
             throw getLastErrorException();
         }
     }
@@ -330,10 +311,6 @@ public class Service extends Win32 {
                                            int access);
 
     private static native int QueryServiceStatus(long handle);
-
-    private static native boolean StartService(long handle);
-
-    private static native boolean StopService(long handle);
 
     private static native boolean QueryServiceConfig(long handle,
                                                      ServiceConfig config);
