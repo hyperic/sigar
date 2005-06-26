@@ -172,9 +172,7 @@ public class Service extends Win32 {
     }
     
     private void control(int ctl) throws Win32Exception {
-        if (ControlService(this.service, ctl) != SUCCESS) {
-            throw new Win32Exception(GetErrorMessage(ctl));            
-        }
+        ControlService(this.service, ctl);
     }
 
     private static class Waiter {
@@ -279,8 +277,8 @@ public class Service extends Win32 {
                                              String startName,
                                              String password) throws Win32Exception;
 
-    private static native int ControlService(long handle,
-                                             int control);
+    private static native void ControlService(long handle,
+                                              int control) throws Win32Exception;
 
     private static native boolean DeleteService(long handle);
 

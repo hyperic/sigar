@@ -63,8 +63,8 @@ JNIEXPORT jboolean SIGAR_JNI(win32_Service_CloseServiceHandle)
     return CloseServiceHandle((SC_HANDLE)handle);
 }
 
-JNIEXPORT jint SIGAR_JNI(win32_Service_ControlService)
-(JNIEnv *, jclass, jlong handle, jint control)
+JNIEXPORT void SIGAR_JNI(win32_Service_ControlService)
+(JNIEnv *env, jclass, jlong handle, jint control)
 {
     BOOL retval;
     SERVICE_STATUS  status;
@@ -74,11 +74,8 @@ JNIEXPORT jint SIGAR_JNI(win32_Service_ControlService)
     else {
         retval = ControlService((SC_HANDLE)handle, control, &status);
     }
-    if (retval) {
-        return ERROR_SUCCESS;
-    }
-    else {
-        return GetLastError();
+    if (!retval) {
+        win32_throw_last_error(env);
     }
 }
 
