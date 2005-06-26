@@ -78,7 +78,7 @@ public class ServiceConfig {
     String binaryPathName;
     String loadOrderGroup;
     int tagId;
-    String dependencies;
+    String[] dependencies = null;
     String serviceStartName;
     String displayName;
 
@@ -97,13 +97,16 @@ public class ServiceConfig {
     /**
      * @return Returns the dependencies.
      */
-    public String getDependencies() {
+    public String[] getDependencies() {
+        if (this.dependencies == null) {
+            return new String[0];
+        }
         return dependencies;
     }
     /**
      * @param dependencies The dependencies to set.
      */
-    public void setDependencies(String dependencies) {
+    public void setDependencies(String[] dependencies) {
         this.dependencies = dependencies;
     }
     /**

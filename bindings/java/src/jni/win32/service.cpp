@@ -258,6 +258,32 @@ JNIEXPORT jobject SIGAR_JNI(win32_Service_getServiceNames)
     return listobj;
 }
 
+/*
+ * convert:
+ *   "RPCSS\0Tcpip\0IPSec\0\0"
+ * to:
+ *   ["RPCSS", "Tcpip", "IPSec"]
+ */
+static int to_array(JNIEnv *env, LPTSTR str, jobjectArray array)
+{
+    TCHAR *ptr = &str[0];
+    int offset=0, i=0;
+
+    while (*ptr != 0) {
+        int slen = _tcslen(ptr);
+        if (array) {
+            jstring jstr =
+                env->NewString((const jchar *)ptr, slen);
+            env->SetObjectArrayElement(array, i, jstr);
+        }
+        offset += slen + 1;
+        ptr = &str[offset];
+        i++;
+    }
+
+    return i;
+}
+
 JNIEXPORT jboolean SIGAR_JNI(win32_Service_QueryServiceConfig)
 (JNIEnv *env, jclass, jlong handle, jobject obj)
 {
@@ -286,7 +312,21 @@ JNIEXPORT jboolean SIGAR_JNI(win32_Service_QueryServiceConfig)
 
     SERVICE_SetIntField("tagId", config->dwTagId);
 
-    SERVICE_SetStringField("dependencies", config->lpDependencies);
+    if (config->lpDependencies) {
+        /* first pass just get num for NewObjectArray */
+        int num = to_array(env, config->lpDependencies, NULL);
+        jclass stringclass =
+            env->FindClass("java/lang/String");
+        jobjectArray dependencies =
+            env->NewObjectArray(num, stringclass, 0);
+
+        to_array(env, config->lpDependencies, dependencies);
+
+        id = env->GetFieldID(cls, "dependencies",
+                             "[" STRING_SIG);
+
+        env->SetObjectField(obj, id, dependencies);
+    }
 
     SERVICE_SetStringField("serviceStartName", config->lpServiceStartName);
 

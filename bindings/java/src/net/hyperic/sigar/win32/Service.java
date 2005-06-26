@@ -1,5 +1,6 @@
 package net.hyperic.sigar.win32;
 
+import java.util.Arrays;
 import java.util.List;
 
 public class Service extends Win32 {
@@ -355,6 +356,10 @@ public class Service extends Win32 {
             System.out.println("[" + name + "]" +
                                "=" +
                                "[" + config.getBinaryPathName() + "]");
+            String[] deps = config.getDependencies();
+            if (deps.length != 0) {
+                System.out.println("   deps..." + Arrays.asList(deps));
+            }
         }
     }
 }
