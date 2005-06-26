@@ -5,6 +5,8 @@ import net.hyperic.sigar.SigarException;
 
 abstract class Win32 {
 
+    static int SUCCESS = 0;
+    
     static {
         try {
             Sigar.load();

@@ -183,6 +183,12 @@ public class Service extends Win32 {
         return STATUS[getStatus()];
     }
     
+    private void control(int ctl) throws Win32Exception {
+        if (ControlService(this.service, ctl) != SUCCESS) {
+            throw new Win32Exception(GetErrorMessage(ctl));            
+        }
+    }
+
     private static class Waiter {
         long start = System.currentTimeMillis();
         Service service;
@@ -226,9 +232,7 @@ public class Service extends Win32 {
     
     public void stop() throws Win32Exception
     {
-        if (ControlService(this.service, CONTROL_STOP) == false) {
-            throw getLastErrorException();
-        }
+        control(CONTROL_STOP);
     }
 
     public void stop(long timeout) throws Win32Exception
@@ -247,9 +251,7 @@ public class Service extends Win32 {
     
     public void start() throws Win32Exception
     {
-        if (ControlService(this.service, CONTROL_START) == false) {
-            throw getLastErrorException();
-        }
+        control(CONTROL_START);
     }
 
     public void start(long timeout) throws Win32Exception
@@ -298,8 +300,8 @@ public class Service extends Win32 {
                                              String startName,
                                              String password);
 
-    private static native boolean ControlService(long handle,
-                                                 int control);
+    private static native int ControlService(long handle,
+                                             int control);
 
     private static native boolean DeleteService(long handle);
 
