@@ -75,7 +75,7 @@ public class ServiceConfig {
     int type;
     int startType;
     int errorControl;
-    String binaryPathName;
+    String path;
     String loadOrderGroup;
     int tagId;
     String[] dependencies;
@@ -100,16 +100,16 @@ public class ServiceConfig {
     }
     
     /**
-     * @return Returns the binaryPathName.
+     * @return Returns the path.
      */
-    public String getBinaryPathName() {
-        return binaryPathName;
+    public String getPath() {
+        return path;
     }
     /**
-     * @param binaryPathName The binaryPathName to set.
+     * @param path The path to set.
      */
-    public void setBinaryPathName(String binaryPathName) {
-        this.binaryPathName = binaryPathName;
+    public void setPath(String binaryPathName) {
+        this.path = binaryPathName;
     }
     /**
      * @return Returns the dependencies.

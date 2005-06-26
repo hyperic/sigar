@@ -356,7 +356,7 @@ public class Service extends Win32 {
             ServiceConfig config = service.getConfig();
             System.out.println("[" + name + "]" +
                                "=" +
-                               "[" + config.getBinaryPathName() + "]");
+                               "[" + config.getPath() + "]");
             String[] deps = config.getDependencies();
             if (deps.length != 0) {
                 System.out.println("   deps..." + Arrays.asList(deps));

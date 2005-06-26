@@ -313,7 +313,7 @@ JNIEXPORT jboolean SIGAR_JNI(win32_Service_QueryServiceConfig)
 
     SERVICE_SetIntField("errorControl", config->dwErrorControl);
 
-    SERVICE_SetStringField("binaryPathName", config->lpBinaryPathName);
+    SERVICE_SetStringField("path", config->lpBinaryPathName);
 
     SERVICE_SetStringField("loadOrderGroup", config->lpLoadOrderGroup);
 
