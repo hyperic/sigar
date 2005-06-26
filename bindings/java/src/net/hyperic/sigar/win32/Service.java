@@ -183,25 +183,6 @@ public class Service extends Win32 {
         ChangeServiceDescription(this.service, description);
     }
             
-    public void start() throws Win32Exception
-    {
-        if (StartService(this.service) == false) {
-            throw getLastErrorException();
-        }
-    }
-
-    public void startAndWait() throws Win32Exception
-    {
-        // Wait indefinitely
-        startAndWait(0);
-    }
-
-    public void startAndWait(long timeout) throws Win32Exception
-    {
-        start();
-        waitForStart(timeout);
-    }
-
     /**
      * @deprecated
      * @see #getStatus()
@@ -228,13 +209,7 @@ public class Service extends Win32 {
         }
     }
 
-    public void stopAndWait() throws Win32Exception
-    {
-        // Wait indefinitely
-        stopAndWait(0);
-    }
-
-    public void stopAndWait(long timeout) throws Win32Exception
+    public void stop(long timeout) throws Win32Exception
     {
         long status;
         
@@ -265,7 +240,14 @@ public class Service extends Win32 {
         }
     }
     
-    public void waitForStart(long timeout) throws Win32Exception
+    public void start() throws Win32Exception
+    {
+        if (StartService(this.service) == false) {
+            throw getLastErrorException();
+        }
+    }
+
+    public void start(long timeout) throws Win32Exception
     {
         long    status;
         boolean result = true;
