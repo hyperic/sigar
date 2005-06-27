@@ -90,7 +90,7 @@ public class ServiceConfig {
     String loadOrderGroup;
     int tagId;
     String[] dependencies;
-    String serviceStartName;
+    String startName;
     String displayName;
     String description;
     String password;
@@ -179,16 +179,16 @@ public class ServiceConfig {
         this.loadOrderGroup = loadOrderGroup;
     }
     /**
-     * @return Returns the serviceStartName.
+     * @return Returns the startName.
      */
-    public String getServiceStartName() {
-        return serviceStartName;
+    public String getStartName() {
+        return startName;
     }
     /**
-     * @param serviceStartName The serviceStartName to set.
+     * @param startName The startName to set.
      */
-    public void setServiceStartName(String serviceStartName) {
-        this.serviceStartName = serviceStartName;
+    public void setStartName(String startName) {
+        this.startName = startName;
     }
     /**
      * @return Returns the startType, one of START_* constants.

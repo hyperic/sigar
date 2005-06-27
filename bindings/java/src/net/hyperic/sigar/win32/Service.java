@@ -133,7 +133,7 @@ public class Service extends Win32 {
                           config.getErrorControl(),
                           config.getPath(),
                           config.getDependencies(),
-                          config.getServiceStartName(),
+                          config.getStartName(),
                           config.getPassword());
 
         if (config.getDescription() != null) {
@@ -301,7 +301,7 @@ public class Service extends Win32 {
         out.println("description...[" + config.getDescription() + "]");
         out.println("status........[" + getStatusString() + "]");
         out.println("start type....[" + config.getStartTypeString() + "]");
-        out.println("start name....[" + config.getServiceStartName() + "]"); 
+        out.println("start name....[" + config.getStartName() + "]"); 
 
         out.println("type.........."  + config.getTypeList());
         out.println("path..........[" + config.getPath() + "]");
