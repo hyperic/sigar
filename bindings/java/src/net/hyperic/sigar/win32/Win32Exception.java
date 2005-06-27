@@ -1,6 +1,8 @@
 package net.hyperic.sigar.win32;
 
-public class Win32Exception extends Exception {
+import net.hyperic.sigar.SigarException;
+
+public class Win32Exception extends SigarException {
 
     private int errorCode;
 
