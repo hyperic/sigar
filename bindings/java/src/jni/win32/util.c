@@ -22,12 +22,17 @@ void win32_throw_exception(JNIEnv *env, char *msg)
 
 void win32_throw_last_error(JNIEnv *env)
 {
+    win32_throw_error(env, GetLastError());
+}
+
+void win32_throw_error(JNIEnv *env, LONG err)
+{
     char msg[8192];
 
     FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM |
                   FORMAT_MESSAGE_IGNORE_INSERTS,
                   NULL,
-                  GetLastError(),
+                  err,
                   0, /* default language */
                   (LPTSTR)msg,
                   (DWORD)sizeof(msg),

@@ -28,6 +28,8 @@ extern "C" {
 #endif
     void win32_throw_exception(JNIEnv *env, char *msg);
 
+    void win32_throw_error(JNIEnv *env, LONG err);
+
     void win32_throw_last_error(JNIEnv *env);
 #ifdef __cplusplus
 }
