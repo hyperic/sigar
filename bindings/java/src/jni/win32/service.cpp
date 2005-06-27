@@ -344,7 +344,7 @@ JNIEXPORT jboolean SIGAR_JNI(win32_Service_QueryServiceConfig)
         env->SetObjectField(obj, id, dependencies);
     }
 
-    SERVICE_SetStringField("serviceStartName", config->lpServiceStartName);
+    SERVICE_SetStringField("startName", config->lpServiceStartName);
 
     SERVICE_SetStringField("displayName", config->lpDisplayName);
 
