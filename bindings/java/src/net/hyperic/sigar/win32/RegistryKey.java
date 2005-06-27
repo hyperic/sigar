@@ -229,32 +229,45 @@ public class RegistryKey extends Win32
         close();
     }
 
-    private static final native int    RegCloseKey(long hkey);
-    private static final native long   RegCreateKey(long hkey, 
-                                                    String subkey);
-    private static final native int    RegDeleteKey(long hkey, 
-                                                    String subkey);
-    private static final native int    RegDeleteValue(long hkey, 
-                                                      String valueName);
-    private static final native String RegEnumKey(long hkey, 
+    private static native int    RegCloseKey(long hkey);
+
+    private static native long   RegCreateKey(long hkey, 
+                                              String subkey);
+
+    private static native int    RegDeleteKey(long hkey, 
+                                              String subkey);
+
+    private static native int    RegDeleteValue(long hkey, 
+                                                String valueName);
+
+    private static native String RegEnumKey(long hkey, 
+                                            int index);
+
+    private static native String RegEnumValueName(long hkey, 
                                                   int index);
-    private static final native String RegEnumValueName(long hkey, 
-                                                        int index);
-    private static final native int    RegFlushKey(long hkey);
-    private static final native int    RegLoadKey(long hkey, 
-                                                  String subkey, 
-                                                  String filename);
-    private static final native long   RegOpenKey(long hkey, String subkey);
-    private static final native byte[] RegQueryBufferValue(long hkey, 
-                                                           String valueName);
-    private static final native int    RegQueryIntValue(long hkey,
-                                                        String valueName);
-    private static final native String RegQueryStringValue(long hkey, 
-                                                           String valueName);
-    private static final native int    RegSetIntValue(long hkey, 
-                                                      String valueName,
-                                                      int value);
-    private static final native int    RegSetStringValue(long hkey, 
-                                                         String valueName, 
-                                                         String value);
+
+    private static native int    RegFlushKey(long hkey);
+
+    private static native int    RegLoadKey(long hkey, 
+                                            String subkey, 
+                                            String filename);
+
+    private static native long   RegOpenKey(long hkey, String subkey);
+
+    private static native byte[] RegQueryBufferValue(long hkey, 
+                                                     String valueName);
+
+    private static native int    RegQueryIntValue(long hkey,
+                                                  String valueName);
+
+    private static native String RegQueryStringValue(long hkey, 
+                                                     String valueName);
+
+    private static native int    RegSetIntValue(long hkey, 
+                                                String valueName,
+                                                int value);
+
+    private static native int    RegSetStringValue(long hkey, 
+                                                   String valueName, 
+                                                   String value);
 }
