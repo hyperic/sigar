@@ -1,5 +1,6 @@
 package net.hyperic.sigar.win32;
 
+import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.List;
 
@@ -294,6 +295,20 @@ public class Service extends Win32 {
     private static native boolean QueryServiceConfig(long handle,
                                                      ServiceConfig config) throws Win32Exception;
 
+    public void list(PrintStream out) throws Win32Exception {
+        ServiceConfig config = getConfig();
+        out.println("display.......[" + config.getDisplayName() + "]");
+        out.println("description...[" + config.getDescription() + "]");
+        out.println("status........[" + getStatusString() + "]");
+        out.println("start type....[" + config.getStartTypeString() + "]");
+        out.println("start name....[" + config.getServiceStartName() + "]"); 
+
+        out.println("type.........."  + config.getTypeList());
+        out.println("path..........[" + config.getPath() + "]");
+        out.println("deps.........."  + Arrays.asList(config.getDependencies()));
+        out.println("error ctl.....[" + config.getErrorControlString() + "]");
+    }
+    
     public static void main(String[] args) throws Exception {
         List services;
         if (args.length == 0) {
@@ -320,9 +335,7 @@ public class Service extends Win32 {
         for (int i=0; i<services.size(); i++) {
             String name = (String)services.get(i);
             Service service = new Service(name);
-            service.getConfig().list(System.out);
-            System.out.println("status........[" +
-                               service.getStatusString() + "]");
+            service.list(System.out);
             System.out.println("");
         }
     }

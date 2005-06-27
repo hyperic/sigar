@@ -1,8 +1,6 @@
 package net.hyperic.sigar.win32;
 
-import java.io.PrintStream;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class ServiceConfig {
@@ -297,16 +295,5 @@ public class ServiceConfig {
      */
     public void setName(String name) {
         this.name = name;
-    }
-    
-    public void list(PrintStream out) {
-        out.println("name..........[" + getName() + "]");
-        out.println("display.......[" + getDisplayName() + "]");
-        out.println("description...[" + getDescription() + "]");
-        out.println("path..........[" + getPath() + "]");
-        out.println("deps.........."  + Arrays.asList(getDependencies()));
-        out.println("type.........."  + getTypeList());
-        out.println("start type....[" + getStartTypeString() + "]");
-        out.println("error ctl.....[" + getErrorControlString() + "]");
     }
 }
