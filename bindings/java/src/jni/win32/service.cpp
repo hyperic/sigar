@@ -143,6 +143,10 @@ JNIEXPORT jlong SIGAR_JNI(win32_Service_CreateService)
                                   NULL, NULL, depend, startName,
                                   password);
 
+    if (result == 0) {
+        win32_throw_last_error(env);
+    }
+
     if (startName != NULL) {
         env->ReleaseStringChars(j_startName, (const jchar *)startName);
     }
@@ -150,10 +154,6 @@ JNIEXPORT jlong SIGAR_JNI(win32_Service_CreateService)
     env->ReleaseStringChars(j_path, (const jchar *)path);
     env->ReleaseStringChars(j_display, (const jchar *)display);
     env->ReleaseStringChars(j_name, (const jchar *)name);
-
-    if (result == 0) {
-        win32_throw_last_error(env);
-    }
 
     return result;
 }
@@ -172,11 +172,11 @@ JNIEXPORT jlong SIGAR_JNI(win32_Service_OpenSCManager)
     LPCTSTR machine = (LPCTSTR)env->GetStringChars(jmachine, NULL);
     jlong result = (jlong)OpenSCManager(machine, NULL, access);
 
-    env->ReleaseStringChars(jmachine, (const jchar *)machine);
-
     if (!result) {
         win32_throw_last_error(env);
     }
+
+    env->ReleaseStringChars(jmachine, (const jchar *)machine);
 
     return result;
 }
@@ -189,11 +189,11 @@ JNIEXPORT jlong SIGAR_JNI(win32_Service_OpenService)
     jlong result =
         (jlong)OpenService((SC_HANDLE)handle, service, access);
 
-    env->ReleaseStringChars(jservice, (const jchar *)service);
-
     if (!result) {
         win32_throw_last_error(env);
     }
+
+    env->ReleaseStringChars(jservice, (const jchar *)service);
 
     return result;
 }
