@@ -33,7 +33,7 @@ JNIEXPORT jboolean SIGAR_JNI(win32_Service_ChangeServiceDescription)
 (JNIEnv *env, jclass, jlong handle, jstring description)
 {
     jboolean result = FALSE;
-    SERVICE_DESCRIPTION servdesc;
+    SERVICE_DESCRIPTION desc;
     HINSTANCE lib;
     ChangeServiceConfig2_func_t change_config;
     
@@ -42,13 +42,13 @@ JNIEXPORT jboolean SIGAR_JNI(win32_Service_ChangeServiceDescription)
             GetProcAddress(lib, "ChangeServiceConfig2W");
 
         if (change_config) {
-            servdesc.lpDescription =
+            desc.lpDescription =
                 (LPTSTR)env->GetStringChars(description, NULL);
 
             result = change_config((SC_HANDLE)handle, 
-                                   SERVICE_CONFIG_DESCRIPTION, &servdesc);
+                                   SERVICE_CONFIG_DESCRIPTION, &desc);
             env->ReleaseStringChars(description, 
-                                    (const jchar *)servdesc.lpDescription);
+                                    (const jchar *)desc.lpDescription);
         }
 
         FreeLibrary(lib);
@@ -67,100 +67,95 @@ JNIEXPORT void SIGAR_JNI(win32_Service_ControlService)
 (JNIEnv *env, jclass, jlong handle, jint control)
 {
     BOOL retval;
-    SERVICE_STATUS  status;
+    SERVICE_STATUS status;
+
     if (control == 0) {
         retval = StartService((SC_HANDLE)handle, 0, NULL);
     }
     else {
         retval = ControlService((SC_HANDLE)handle, control, &status);
     }
+
     if (!retval) {
         win32_throw_last_error(env);
     }
 }
 
 JNIEXPORT jlong SIGAR_JNI(win32_Service_CreateService)
-(JNIEnv *env,
- jclass,
- jlong handle,
- jstring serviceName,
- jstring displayName,
- jint serviceType,
- jint startType,
- jint errorControl,
- jstring path,
- jobjectArray dependencies, 
- jstring startName, 
- jstring password)
+(JNIEnv *env, jclass, jlong handle,
+ jstring j_name, jstring j_display, jint type,
+ jint startType, jint errorControl, jstring j_path,
+ jobjectArray dependencies,
+ jstring j_startName, 
+ jstring j_password)
 {
-    TCHAR   szBuf[4048];
-    LPCTSTR lpDepend = NULL;
-    jlong   lResult;
-    LPCTSTR lpStartName;
+    TCHAR buffer[8192];
+    LPCTSTR depend = NULL;
+    jlong   result;
+    LPCTSTR startName;
+    LPCTSTR name     = (LPCTSTR)env->GetStringChars(j_name, NULL);
+    LPCTSTR display  = (LPCTSTR)env->GetStringChars(j_display, NULL);
+    LPCTSTR path     = (LPCTSTR)env->GetStringChars(j_path, NULL);
+    LPCTSTR password = (LPCTSTR)env->GetStringChars(j_password, NULL);
 
-    LPCTSTR lpServiceName = (LPCTSTR)env->GetStringChars(serviceName, NULL);
-    LPCTSTR lpDisplayName = (LPCTSTR)env->GetStringChars(displayName, NULL);
-    LPCTSTR lpPath        = (LPCTSTR)env->GetStringChars(path, NULL);
-    LPCTSTR lpPassword    = (LPCTSTR)env->GetStringChars(password, NULL);
+    if (j_startName != NULL) {
+        startName = (LPCTSTR)env->GetStringChars(j_startName, NULL);
+    }
+    else {
+        startName = NULL;
+    }
 
-    if(startName != NULL)
-        lpStartName = (LPCTSTR)env->GetStringChars(path, NULL);
-    else
-        lpStartName = NULL;
-
-    if(dependencies != NULL)
-    {
+    if (dependencies != NULL) {
         // Build a buffer of a double null terminated array of 
         // null terminated service names
-        lpDepend             = szBuf;
+        LPTSTR ptr = buffer;
+        jsize alen = env->GetArrayLength(dependencies);
+        depend = buffer;
 
-        LPTSTR  lpBuf = szBuf;
-        size_t  cbLen = 0;
-        jsize   cSize = env->GetArrayLength(dependencies);
-
-        for(int i = 0;i < cSize;i ++)
-        {
+        for (int i=0; i<alen; i++) {
             jstring str = (jstring)env->GetObjectArrayElement(dependencies, i);
-
-            LPCTSTR lpStr = (LPCTSTR)env->GetStringChars(str, NULL);
-            cbLen         = lstrlen(lpStr);
+            LPCTSTR chars = (LPCTSTR)env->GetStringChars(str, NULL);
+            size_t len = lstrlen(chars);
 
             // If we're going to overrun the buffer then break out of the loop
-            if((lpBuf + cbLen + 1) >= (szBuf + sizeof(szBuf) / sizeof(TCHAR)))
+            if ((ptr + len + 1) >=
+                (buffer + sizeof(buffer) / sizeof(TCHAR)))
+            {
                 break;
+            }
 
-            lstrcpy(lpBuf, lpStr);
-            env->ReleaseStringChars(str, (const jchar *)lpStr);
+            lstrcpy(ptr, chars);
+            env->ReleaseStringChars(str, (const jchar *)chars);
 
             // Move the buffer to the byte beyond the current string 
             // null terminator
-            lpBuf = lpBuf + cbLen + 1;
+            ptr = ptr + len + 1;
         }
 
-        *lpBuf = 0;  // Double null terminate the string
+        *ptr = 0;  // Double null terminate the string
     }
 
     // Create the Service
-    lResult = (jlong)CreateService((SC_HANDLE)handle, lpServiceName,
-                                   lpDisplayName, SERVICE_ALL_ACCESS,
-                                   serviceType,
-                                   startType, errorControl, lpPath, 
-                                   NULL, NULL, lpDepend, lpStartName,
-                                   lpPassword);
+    result = (jlong)CreateService((SC_HANDLE)handle, name,
+                                  display, SERVICE_ALL_ACCESS,
+                                  type,
+                                  startType, errorControl, path, 
+                                  NULL, NULL, depend, startName,
+                                  password);
 
-    if(lpStartName != NULL)
-        env->ReleaseStringChars(path, (const jchar *)lpStartName);
+    if (startName != NULL) {
+        env->ReleaseStringChars(j_startName, (const jchar *)startName);
+    }
+    env->ReleaseStringChars(j_password, (const jchar *)password);
+    env->ReleaseStringChars(j_path, (const jchar *)path);
+    env->ReleaseStringChars(j_display, (const jchar *)display);
+    env->ReleaseStringChars(j_name, (const jchar *)name);
 
-    env->ReleaseStringChars(password, (const jchar *)lpPassword);
-    env->ReleaseStringChars(path, (const jchar *)lpPath);
-    env->ReleaseStringChars(displayName, (const jchar *)lpDisplayName);
-    env->ReleaseStringChars(serviceName, (const jchar *)lpServiceName);
-
-    if (lResult == 0) {
+    if (result == 0) {
         win32_throw_last_error(env);
     }
 
-    return lResult;
+    return result;
 }
 
 JNIEXPORT void SIGAR_JNI(win32_Service_DeleteService)
@@ -172,39 +167,35 @@ JNIEXPORT void SIGAR_JNI(win32_Service_DeleteService)
 }
 
 JNIEXPORT jlong SIGAR_JNI(win32_Service_OpenSCManager)
-(JNIEnv *env, jclass, jstring machine, jint access)
+(JNIEnv *env, jclass, jstring jmachine, jint access)
 {
-    jlong   lResult;
+    LPCTSTR machine = (LPCTSTR)env->GetStringChars(jmachine, NULL);
+    jlong result = (jlong)OpenSCManager(machine, NULL, access);
 
-    LPCTSTR lpMachine  = (LPCTSTR)env->GetStringChars(machine, NULL);
-    lResult            = (jlong)OpenSCManager(lpMachine, NULL, access);
-    env->ReleaseStringChars(machine, (const jchar *)lpMachine);
+    env->ReleaseStringChars(jmachine, (const jchar *)machine);
 
-    if (!lResult) {
+    if (!result) {
         win32_throw_last_error(env);
     }
 
-    return lResult;
+    return result;
 }
 
 JNIEXPORT jlong SIGAR_JNI(win32_Service_OpenService)
-(JNIEnv *env, 
- jclass,
- jlong handle,
- jstring service,
- jint access)
+(JNIEnv *env, jclass, jlong handle,
+ jstring jservice, jint access)
 {
-    jlong   lResult;
-    LPCTSTR lpService = (LPCTSTR)env->GetStringChars(service, NULL);
-    lResult           = (jlong)OpenService((SC_HANDLE)handle, 
-                                           lpService, access);
-    env->ReleaseStringChars(service, (const jchar *)lpService);
+    LPCTSTR service = (LPCTSTR)env->GetStringChars(jservice, NULL);
+    jlong result =
+        (jlong)OpenService((SC_HANDLE)handle, service, access);
 
-    if (!lResult) {
+    env->ReleaseStringChars(jservice, (const jchar *)service);
+
+    if (!result) {
         win32_throw_last_error(env);
     }
 
-    return lResult;
+    return result;
 }
 
 JNIEXPORT jint
@@ -212,14 +203,16 @@ SIGAR_JNI(win32_Service_QueryServiceStatus)
 (JNIEnv *, jclass, jlong handle)
 {
     SERVICE_STATUS status;
-    int            iResult;
+    int result;
 
-    if(QueryServiceStatus((SC_HANDLE)handle, &status) == TRUE) {
-        iResult = status.dwCurrentState;
-    } else
-        iResult = -1;
+    if (QueryServiceStatus((SC_HANDLE)handle, &status) == TRUE) {
+        result = status.dwCurrentState;
+    }
+    else {
+        result = -1;
+    }
 
-    return iResult;
+    return result;
 }
 
 JNIEXPORT jobject SIGAR_JNI(win32_Service_getServiceNames)
@@ -251,7 +244,7 @@ JNIEXPORT jobject SIGAR_JNI(win32_Service_getServiceNames)
 
     DWORD err = GetLastError();
 
-    if ((retval == FALSE) || err == ERROR_MORE_DATA) {
+    if ((retval == FALSE) || (err == ERROR_MORE_DATA)) {
         DWORD size = bytes + sizeof(ENUM_SERVICE_STATUS);
         services = new ENUM_SERVICE_STATUS[size];
         EnumServicesStatus(handle, type, state, services,
@@ -301,7 +294,7 @@ static int to_array(JNIEnv *env, LPTSTR str, jobjectArray array)
 JNIEXPORT jboolean SIGAR_JNI(win32_Service_QueryServiceConfig)
 (JNIEnv *env, jclass, jlong handle, jobject obj)
 {
-    char buffer[8096]; /* 8k is max size from mdsn docs */
+    char buffer[8192]; /* 8k is max size from mdsn docs */
     LPQUERY_SERVICE_CONFIG config = (LPQUERY_SERVICE_CONFIG)buffer;
     DWORD bytes;
     jfieldID id;
