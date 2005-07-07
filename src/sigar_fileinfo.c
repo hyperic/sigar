@@ -150,9 +150,9 @@ static void fillin_fileattrs(sigar_file_attrs_t *finfo,
 {
     DWORD *sizes = &wininfo->nFileSizeHigh;
 
-    finfo->atime = FileTimeToTime(&wininfo->ftLastAccessTime);
-    finfo->ctime = FileTimeToTime(&wininfo->ftCreationTime);
-    finfo->mtime = FileTimeToTime(&wininfo->ftLastWriteTime);
+    finfo->atime = FileTimeToTime(&wininfo->ftLastAccessTime) / 1000;
+    finfo->ctime = FileTimeToTime(&wininfo->ftCreationTime) / 1000;
+    finfo->mtime = FileTimeToTime(&wininfo->ftLastWriteTime) / 1000;
 
     finfo->size = (sigar_uint64_t)sizes[1];
     if (finfo->size < 0 || sizes[0]) {
