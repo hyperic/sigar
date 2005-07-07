@@ -1,3 +1,7 @@
+2005-07-07  Doug MacEachern  <dougm@hyperic.net>
+
+        * Fix sigar_file_attrs_get times on win32
+
 2005-06-25  Doug MacEachern  <dougm@hyperic.net>
 
         * Add win32 ServiceConfig class and Service.getConfig method
