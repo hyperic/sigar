@@ -36,6 +36,11 @@ public class SysInfo extends SigarCommandBase {
 
         //memory info
         new Free(this.shell).output(args);
+        println("");
+
+        //system resource limits
+        println("System resource limits:");
+        new Ulimit(this.shell).output(args);
     }
 
     public static void main(String[] args) throws Exception {
