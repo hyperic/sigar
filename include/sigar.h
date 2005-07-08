@@ -175,13 +175,13 @@ typedef struct {
     /* RLIMIT_CORE */
     sigar_uint64_t core_cur, core_max;
     /* RLIMIT_RSS */
-    sigar_uint64_t rss_cur, rss_max;
+    sigar_uint64_t memory_cur, memory_max;
     /* RLIMIT_NPROC */
     sigar_uint64_t processes_cur, processes_max;
     /* RLIMIT_NOFILE */
     sigar_uint64_t open_files_cur, open_files_max;
     /* RLIMIT_AS */
-    sigar_uint64_t address_space_cur, address_space_max;
+    sigar_uint64_t virtual_memory_cur, virtual_memory_max;
     /* RLIM_INFINITY */
     sigar_uint64_t unlimited;
 } sigar_resource_limit_t;

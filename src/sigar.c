@@ -852,10 +852,10 @@ static rlimit_field_t sigar_rlimits[] = {
     { RLIMIT_DATA, RlimitOffsets(data) },
     { RLIMIT_STACK, RlimitOffsets(stack) },
     { RLIMIT_CORE, RlimitOffsets(core) },
-    { RLIMIT_RSS, RlimitOffsets(rss) },
+    { RLIMIT_RSS, RlimitOffsets(memory) },
     { RLIMIT_NPROC, RlimitOffsets(processes) },
     { RLIMIT_NOFILE, RlimitOffsets(open_files) },
-    { RLIMIT_AS, RlimitOffsets(address_space) },
+    { RLIMIT_AS, RlimitOffsets(virtual_memory) },
     { -1 }
 };
 
