@@ -163,6 +163,32 @@ typedef struct {
     sigar_pid_t *data;
 } sigar_proc_list_t;
 
+typedef struct {
+    /* RLIMIT_CPU */
+    sigar_uint64_t cpu_cur, cpu_max;
+    /* RLIMIT_FSIZE */
+    sigar_uint64_t file_size_cur, file_size_max;
+    /* RLIMIT_DATA */
+    sigar_uint64_t data_cur, data_max;
+    /* RLIMIT_STACK */
+    sigar_uint64_t stack_cur, stack_max;
+    /* RLIMIT_CORE */
+    sigar_uint64_t core_cur, core_max;
+    /* RLIMIT_RSS */
+    sigar_uint64_t rss_cur, rss_max;
+    /* RLIMIT_NPROC */
+    sigar_uint64_t processes_cur, processes_max;
+    /* RLIMIT_NOFILE */
+    sigar_uint64_t open_files_cur, open_files_max;
+    /* RLIMIT_AS */
+    sigar_uint64_t address_space_cur, address_space_max;
+    /* RLIM_INFINITY */
+    sigar_uint64_t unlimited;
+} sigar_resource_limit_t;
+
+SIGAR_DECLARE(int) sigar_resource_limit_get(sigar_t *sigar,
+                                            sigar_resource_limit_t *rlimit);
+
 SIGAR_DECLARE(int) sigar_proc_list_get(sigar_t *sigar,
                                        sigar_proc_list_t *proclist);
 
