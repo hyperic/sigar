@@ -860,6 +860,10 @@ typedef struct {
 #define RLIMIT_RSS RLIMIT_UNSUPPORTED
 #endif
 
+#ifndef RLIMIT_NPROC
+#define RLIMIT_NPROC RLIMIT_UNSUPPORTED
+#endif
+
 static rlimit_field_t sigar_rlimits[] = {
     { RLIMIT_CPU, RlimitOffsets(cpu) },
     { RLIMIT_FSIZE, RlimitOffsets(file_size) },
