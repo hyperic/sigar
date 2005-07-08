@@ -91,7 +91,7 @@ public class OperatingSystem {
                 os.vendor = "Sun Microsystems";
                 int ix = os.version.indexOf(".");
                 //5.8 == solaris 8, etc.
-                os.vendorVersion = os.version.substring(ix);
+                os.vendorVersion = os.version.substring(ix+1);
                 os.name = NAME_SOLARIS;
             }
             else if (os.name.equals("HP-UX")) {
