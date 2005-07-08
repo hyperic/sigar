@@ -749,6 +749,12 @@ SIGAR_DECLARE(int) sigar_who_list_get(sigar_t *sigar,
 {
     return SIGAR_ENOTIMPL;
 }
+
+SIGAR_DECLARE(int) sigar_resource_limit_get(sigar_t *sigar,
+                                            sigar_resource_limit_t *rlimit)
+{
+    return SIGAR_ENOTIMPL;
+}
 #else
 
 #ifdef __sun
@@ -812,6 +818,68 @@ int sigar_who_list_get(sigar_t *sigar,
     }
 
     fclose(fp);
+
+    return SIGAR_OK;
+}
+
+#include <sys/resource.h>
+
+#define OffsetOf(structure, field) \
+   (size_t)(&((structure *)NULL)->field)
+
+#define RlimitOffsets(field) \
+    OffsetOf(sigar_resource_limit_t, field##_cur), \
+    OffsetOf(sigar_resource_limit_t, field##_max)
+
+#define RlimitSet(structure, ptr, val) \
+    *(sigar_uint64_t *)((char *)structure + (int)(long)ptr) = val
+
+typedef struct {
+    int resource;
+    size_t cur;
+    size_t max;
+} rlimit_field_t;
+
+#define RLIMIT_UNSUPPORTED (RLIM_NLIMITS+1)
+
+#ifndef RLIMIT_RSS
+#define RLIMIT_RSS RLIMIT_UNSUPPORTED
+#endif
+
+static rlimit_field_t sigar_rlimits[] = {
+    { RLIMIT_CPU, RlimitOffsets(cpu) },
+    { RLIMIT_FSIZE, RlimitOffsets(file_size) },
+    { RLIMIT_DATA, RlimitOffsets(data) },
+    { RLIMIT_STACK, RlimitOffsets(stack) },
+    { RLIMIT_CORE, RlimitOffsets(core) },
+    { RLIMIT_RSS, RlimitOffsets(rss) },
+    { RLIMIT_NPROC, RlimitOffsets(processes) },
+    { RLIMIT_NOFILE, RlimitOffsets(open_files) },
+    { RLIMIT_AS, RlimitOffsets(address_space) },
+    { -1 }
+};
+
+int sigar_resource_limit_get(sigar_t *sigar,
+                             sigar_resource_limit_t *rlimit)
+{
+    int i;
+
+    rlimit->unlimited = RLIM_INFINITY;
+
+    for (i=0; sigar_rlimits[i].resource != -1; i++) {
+        struct rlimit rl;
+        rlimit_field_t *r = &sigar_rlimits[i];
+
+        if ((r->resource == RLIMIT_UNSUPPORTED) ||
+            (getrlimit(r->resource, &rl) != 0))
+        {
+            rl.rlim_cur = SIGAR_FIELD_NOTIMPL;
+            rl.rlim_max = SIGAR_FIELD_NOTIMPL;
+        }
+
+        RlimitSet(rlimit, r->cur, rl.rlim_cur);
+        RlimitSet(rlimit, r->max, rl.rlim_max);
+    }
 
     return SIGAR_OK;
 }
