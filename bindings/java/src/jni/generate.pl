@@ -775,6 +775,65 @@ my %classes = (
          plat => 'LFS'
       },
     ],
+    ResourceLimit => [
+      {
+         name => 'unlimited',
+      },
+      {
+         name => 'cpu_cur',
+      },
+      {
+         name => 'cpu_max',
+      },
+      {
+         name => 'file_size_cur',
+      },
+      {
+         name => 'file_size_max',
+      },
+      {
+         name => 'data_cur',
+      },
+      {
+         name => 'data_max',
+      },
+      {
+         name => 'stack_cur',
+      },
+      {
+         name => 'stack_max',
+      },
+      {
+         name => 'core_cur',
+      },
+      {
+         name => 'core_max',
+      },
+      {
+         name => 'memory_cur',
+      },
+      {
+         name => 'memory_max',
+      },
+      {
+         name => 'processes_cur',
+      },
+      {
+         name => 'processes_max',
+      },
+      {
+         name => 'open_files_cur',
+      },
+      {
+         name => 'open_files_max',
+      },
+      {
+         name => 'virtual_memory_cur',
+      },
+      {
+         name => 'virtual_memory_max',
+      },
+    ],
     Who => [
       {
          name => 'user', type => 'String',
@@ -1291,7 +1350,7 @@ DESTROY(obj)
 EOF
 
     for my $field (@$fields) {
-        my $type = $field->{type};
+        my $type = $field->{type} || 'Long';
         my $name = $field->{name};
         my $desc = $field->{desc} || $name;
         (my $jname = $name) =~ s/_(\w)/\u$1/g;
