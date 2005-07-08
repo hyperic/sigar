@@ -248,6 +248,14 @@ public class Sigar implements SigarProxy {
     }
 
     /**
+     * Get system resource limits.
+     * @exception SigarException on failure.
+     */
+    public ResourceLimit getResourceLimit() throws SigarException {
+        return ResourceLimit.fetch(this);
+    }
+
+    /**
      * Get system uptime info.
      * @exception SigarException on failure.
      */

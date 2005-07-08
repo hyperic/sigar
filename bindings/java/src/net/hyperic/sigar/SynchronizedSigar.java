@@ -59,6 +59,12 @@ public class SynchronizedSigar implements SigarProxy {
         return this.sigar.getUptime();
     }
 
+    public synchronized ResourceLimit getResourceLimit()
+        throws SigarException
+    {
+        return this.sigar.getResourceLimit();
+    }
+
     public synchronized double[] getLoadAverage()
         throws SigarException
     {

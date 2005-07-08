@@ -25,6 +25,8 @@ public interface SigarProxy {
 
     public Uptime getUptime() throws SigarException;
 
+    public ResourceLimit getResourceLimit() throws SigarException;
+
     public double[] getLoadAverage() throws SigarException;
 
     public long[] getProcList() throws SigarException;
