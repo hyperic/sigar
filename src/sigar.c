@@ -753,7 +753,21 @@ SIGAR_DECLARE(int) sigar_who_list_get(sigar_t *sigar,
 SIGAR_DECLARE(int) sigar_resource_limit_get(sigar_t *sigar,
                                             sigar_resource_limit_t *rlimit)
 {
-    return SIGAR_ENOTIMPL;
+    MEMORY_BASIC_INFORMATION meminfo;
+    memset(rlimit, -1, sizeof(*rlimit));
+
+    if (VirtualQuery((LPCVOID)&meminfo, &meminfo, sizeof(meminfo))) {
+        rlimit->stack_cur =
+            (DWORD)&meminfo - (DWORD)meminfo.AllocationBase;
+        rlimit->stack_max =
+            ((DWORD)meminfo.BaseAddress + meminfo.RegionSize) -
+            (DWORD)meminfo.AllocationBase;
+    }
+
+    rlimit->virtual_memory_max = rlimit->virtual_memory_cur =
+        0x80000000UL;
+
+    return SIGAR_OK;
 }
 #else
 
