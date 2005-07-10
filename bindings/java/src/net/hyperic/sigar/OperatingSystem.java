@@ -19,7 +19,6 @@ public class OperatingSystem {
     public static final String NAME_MACOSX  = "MacOSX";
     public static final String NAME_FREEBSD = "FreeBSD";
     public static final String NAME_WIN32   = "Win32";
-    public static final String NAME_OSF1    = "OSF1";
     
     public static String[] UNIX_NAMES = {
         OperatingSystem.NAME_LINUX,
@@ -65,7 +64,6 @@ public class OperatingSystem {
     private static final int TYPE_MACOSX  = 4;
     private static final int TYPE_FREEBSD = 5;
     private static final int TYPE_WIN32   = 6;
-    private static final int TYPE_OSF1    = 7;
 
     private static final String ETC =
         System.getProperty("sigar.etc.dir", "/etc") + "/";
@@ -142,11 +140,6 @@ public class OperatingSystem {
                     os.vendorVersion = "11";
                 }
             }
-            else if (os.name.equals(NAME_OSF1)) {
-                os.type = TYPE_OSF1;
-                //HP acquired DEC
-                os.vendor = "Hewlett-Packard";
-            }
             else if (os.name.equals(NAME_AIX)) {
                 os.type = TYPE_AIX;
                 os.vendor = "IBM";
@@ -198,7 +191,7 @@ public class OperatingSystem {
             //"Microsoft Windows 2003"
             return this.vendor + " Windows " + this.vendorVersion;
           default:
-            //"OSF1 5.x", "AIX 5.2", "FreeBSD 5.3"
+            //"AIX 5.2", "FreeBSD 5.3"
             return this.name + " " + this.version;
         }
     }
