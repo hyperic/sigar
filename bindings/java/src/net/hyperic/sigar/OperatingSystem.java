@@ -4,6 +4,9 @@ import java.io.IOException;
 import java.io.File;
 import java.io.FileReader;
 
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 import java.util.StringTokenizer;
 
@@ -17,7 +20,44 @@ public class OperatingSystem {
     public static final String NAME_FREEBSD = "FreeBSD";
     public static final String NAME_WIN32   = "Win32";
     public static final String NAME_OSF1    = "OSF1";
+    
+    public static String[] UNIX_NAMES = {
+        OperatingSystem.NAME_LINUX,
+        OperatingSystem.NAME_SOLARIS,
+        OperatingSystem.NAME_HPUX,
+        OperatingSystem.NAME_AIX,
+        OperatingSystem.NAME_MACOSX,
+        OperatingSystem.NAME_FREEBSD,
+    };
+        
+    public static String[] WIN32_NAMES = {
+        OperatingSystem.NAME_WIN32,
+    };
 
+    public static final String[] NAMES;
+
+    private static Map supportedPlatforms = new HashMap();
+    
+    static {
+        int len = UNIX_NAMES.length + WIN32_NAMES.length;
+        String[] all = new String[len];
+        System.arraycopy(UNIX_NAMES, 0, all, 0, UNIX_NAMES.length);
+        all[len-1] = NAME_WIN32;
+        NAMES = all;
+        
+        for (int i=0; i<NAMES.length; i++) {
+            supportedPlatforms.put(NAMES[i], Boolean.TRUE);
+        }
+    }
+
+    public static boolean isSupported(String name) {
+        return supportedPlatforms.get(name) == Boolean.TRUE;
+    }
+
+    public static boolean isWin32(String name) {
+        return OperatingSystem.NAME_WIN32.equals(name);
+    }
+    
     private static final int TYPE_LINUX   = 0;
     private static final int TYPE_SOLARIS = 1;
     private static final int TYPE_HPUX    = 2;
@@ -329,6 +369,7 @@ public class OperatingSystem {
     }
 
     public static void main(String[] args) {
+        System.out.println("all.............." + Arrays.asList(NAMES));
         OperatingSystem os = OperatingSystem.getInstance();
         System.out.println("description......" + os.getDescription());
         System.out.println("name............." + os.name);
