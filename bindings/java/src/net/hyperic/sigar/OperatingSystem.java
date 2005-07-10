@@ -34,7 +34,10 @@ public class OperatingSystem {
     };
 
     public static final String[] NAMES;
-
+    
+    public static final boolean IS_WIN32 =
+        System.getProperty("os.name").indexOf("Windows") != -1;
+    
     private static Map supportedPlatforms = new HashMap();
     
     static {
@@ -101,7 +104,7 @@ public class OperatingSystem {
                 os.type = TYPE_LINUX;
                 os.getLinuxInfo();
             }
-            else if (os.name.indexOf("Windows") > -1) {
+            else if (IS_WIN32) {
                 os.type = TYPE_WIN32;
                 os.vendor = "Microsoft";
                 if (os.name.endsWith("XP")) {
