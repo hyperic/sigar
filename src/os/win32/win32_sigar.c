@@ -1609,35 +1609,43 @@ SIGAR_DECLARE(int) sigar_cpu_info_list_get(sigar_t *sigar,
 SIGAR_DECLARE(int) sigar_net_info_get(sigar_t *sigar,
                                       sigar_net_info_t *netinfo)
 {
-    FIXED_INFO info;
-    ULONG len;
+    FIXED_INFO *info;
+    ULONG len = 0;
     IP_ADDR_STRING *ip;
-
+    DWORD rc;
+    
     if (!sigar->get_net_params) {
         return SIGAR_ENOTIMPL;
     }
 
     SIGAR_ZERO(netinfo);
 
-    len = sizeof(info);
-
-    if (sigar->get_net_params(&info, &len) != ERROR_SUCCESS) {
-        return GetLastError();
+    rc = sigar->get_net_params(NULL, &len);
+    if (rc != ERROR_BUFFER_OVERFLOW) {
+        return rc;
     }
 
-    SIGAR_SSTRCPY(netinfo->host_name, info.HostName);
-    SIGAR_SSTRCPY(netinfo->domain_name, info.DomainName);
-    SIGAR_SSTRCPY(netinfo->primary_dns,
-                  info.DnsServerList.IpAddress.String);
+    info = malloc(len);
+    rc = sigar->get_net_params(info, &len);
+    if (rc != NO_ERROR) {
+        free(info);
+        return rc;
+    }
 
-    if ((ip = info.DnsServerList.Next)) {
+    SIGAR_SSTRCPY(netinfo->host_name, info->HostName);
+    SIGAR_SSTRCPY(netinfo->domain_name, info->DomainName);
+    SIGAR_SSTRCPY(netinfo->primary_dns,
+                  info->DnsServerList.IpAddress.String);
+
+    if ((ip = info->DnsServerList.Next)) {
         SIGAR_SSTRCPY(netinfo->secondary_dns,
                       ip->IpAddress.String);
     }
+    
+    free(info);
 
     if (sigar->get_adapters_info) {
         PIP_ADAPTER_INFO buffer, info;
-        DWORD rc;
         len = 0;
         rc = sigar->get_adapters_info(NULL, &len);
 
@@ -1670,7 +1678,6 @@ SIGAR_DECLARE(int) sigar_net_info_get(sigar_t *sigar,
 
         free(buffer);
     }
-    
 
     return SIGAR_OK;
 }
