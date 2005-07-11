@@ -1623,6 +1623,7 @@ SIGAR_DECLARE(int) sigar_net_info_get(sigar_t *sigar,
         return GetLastError();
     }
 
+    SIGAR_SSTRCPY(netinfo->host_name, info.HostName);
     SIGAR_SSTRCPY(netinfo->domain_name, info.DomainName);
     SIGAR_SSTRCPY(netinfo->primary_dns,
                   info.DnsServerList.IpAddress.String);
