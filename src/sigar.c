@@ -880,6 +880,9 @@ int sigar_net_info_get(sigar_t *sigar,
 
     fclose(fp);
 
+    getdomainname(netinfo->domain, sizeof(netinfo->domain));
+    netinfo->domain[sizeof(netinfo->domain)-1] = '\0';
+
     return SIGAR_OK;
 }
 
