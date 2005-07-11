@@ -383,6 +383,24 @@ sigar_file_system_usage_get(sigar_t *sigar,
                             const char *dirname,
                             sigar_file_system_usage_t *fsusage);
 
+#ifndef INET6_ADDRSTRLEN
+#   define INET6_ADDRSTRLEN 46
+#endif
+
+#define SIGAR_MAXDOMAINNAMELEN 256
+
+typedef struct {
+    char default_gateway[INET6_ADDRSTRLEN];
+    char domain[SIGAR_MAXDOMAINNAMELEN];
+    char dhcp_server[INET6_ADDRSTRLEN];
+    char primary_dns[INET6_ADDRSTRLEN];
+    char secondary_dns[INET6_ADDRSTRLEN];
+} sigar_net_info_t;
+
+SIGAR_DECLARE(int)
+sigar_net_info_get(sigar_t *sigar,
+                   sigar_net_info_t *netinfo);
+
 typedef struct {
     sigar_uint64_t
         destination,
@@ -491,10 +509,6 @@ sigar_net_interface_list_destroy(sigar_t *sigar,
 #define SIGAR_NETCONN_UDP  0x20
 #define SIGAR_NETCONN_RAW  0x40
 #define SIGAR_NETCONN_UNIX 0x80
-
-#ifndef INET6_ADDRSTRLEN
-#   define INET6_ADDRSTRLEN 46
-#endif
 
 enum {
     SIGAR_TCP_ESTABLISHED = 1,
