@@ -875,6 +875,14 @@ int sigar_net_info_get(sigar_t *sigar,
 
     fclose(fp);
 
+    size = sizeof(netinfo->host_name)-1;
+    if (gethostname(netinfo->host_name, size) == 0) {
+        netinfo->host_name[size] = '\0';
+    }
+    else {
+        netinfo->host_name[0] = '\0';
+    }
+
     size = sizeof(netinfo->domain_name)-1;
     if (getdomainname(netinfo->domain_name, size) == 0) {
         netinfo->domain_name[size] = '\0';
