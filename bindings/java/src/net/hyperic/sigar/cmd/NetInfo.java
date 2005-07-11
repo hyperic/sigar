@@ -23,6 +23,9 @@ public class NetInfo extends SigarCommandBase {
         net.hyperic.sigar.NetInfo info =
             this.sigar.getNetInfo();
 
+        println("host name............." +
+                info.getHostName());
+
         println("domain name..........." +
                 info.getDomainName());
 
