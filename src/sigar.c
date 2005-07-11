@@ -750,6 +750,12 @@ SIGAR_DECLARE(int) sigar_who_list_get(sigar_t *sigar,
     return SIGAR_ENOTIMPL;
 }
 
+SIGAR_DECLARE(int) sigar_net_info_get(sigar_t *sigar,
+                                      sigar_net_info_t *netinfo)
+{
+    return SIGAR_ENOTIMPL;
+}
+
 SIGAR_DECLARE(int) sigar_resource_limit_get(sigar_t *sigar,
                                             sigar_resource_limit_t *rlimit)
 {
@@ -829,6 +835,47 @@ int sigar_who_list_get(sigar_t *sigar,
         WHOCPY(who->host, ut.ut_host);
 
         who->time = ut.ut_time;
+    }
+
+    fclose(fp);
+
+    return SIGAR_OK;
+}
+
+int sigar_net_info_get(sigar_t *sigar,
+                       sigar_net_info_t *netinfo)
+{
+    char buffer[BUFSIZ], *ptr;
+    FILE *fp;
+
+    if (!(fp = fopen("/etc/resolv.conf", "r"))) {
+        return errno;
+    }
+
+    SIGAR_ZERO(netinfo);
+
+    while ((ptr = fgets(buffer, sizeof(buffer), fp))) {
+        int len;
+
+        SIGAR_SKIP_SPACE(ptr);
+        if (!(ptr = strstr(ptr, "nameserver "))) {
+            continue;
+        }
+        ptr += 11;
+        SIGAR_SKIP_SPACE(ptr);
+
+        len = strlen(ptr);
+        ptr[len-1] = '\0'; /* chop \n */
+
+        if (!netinfo->primary_dns[0]) {
+            SIGAR_SSTRCPY(netinfo->primary_dns, ptr);
+        }
+        else if (!netinfo->secondary_dns[0]) {
+            SIGAR_SSTRCPY(netinfo->secondary_dns, ptr);
+        }
+        else {
+            break;
+        }
     }
 
     fclose(fp);
