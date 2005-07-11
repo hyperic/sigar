@@ -621,6 +621,15 @@ public class Sigar implements SigarProxy {
         throws SigarException;
 
     /**
+     * Get general network info.
+     * @exception SigarException on failure.
+     */
+    public NetInfo getNetInfo()
+        throws SigarException {
+        return NetInfo.fetch(this);
+    }
+
+    /**
      * Get network interface configuration info.
      * @exception SigarException on failure.
      */

@@ -347,6 +347,12 @@ public class SynchronizedSigar implements SigarProxy {
         return this.sigar.getWhoList();
     }
 
+    public synchronized NetInfo getNetInfo()
+        throws SigarException
+    {
+        return this.sigar.getNetInfo();
+    }
+
     public synchronized String getFQDN()
         throws SigarException
     {
