@@ -569,7 +569,7 @@ my %classes = (
          plat => ''
       },
       {
-         name => 'domain', type => 'String',
+         name => 'domain_name', type => 'String',
          desc => '',
          plat => ''
       },

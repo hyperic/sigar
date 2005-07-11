@@ -391,7 +391,7 @@ sigar_file_system_usage_get(sigar_t *sigar,
 
 typedef struct {
     char default_gateway[INET6_ADDRSTRLEN];
-    char domain[SIGAR_MAXDOMAINNAMELEN];
+    char domain_name[SIGAR_MAXDOMAINNAMELEN];
     char dhcp_server[INET6_ADDRSTRLEN];
     char primary_dns[INET6_ADDRSTRLEN];
     char secondary_dns[INET6_ADDRSTRLEN];

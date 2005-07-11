@@ -845,6 +845,7 @@ int sigar_who_list_get(sigar_t *sigar,
 int sigar_net_info_get(sigar_t *sigar,
                        sigar_net_info_t *netinfo)
 {
+    int size;
     char buffer[BUFSIZ], *ptr;
     FILE *fp;
 
@@ -880,11 +881,12 @@ int sigar_net_info_get(sigar_t *sigar,
 
     fclose(fp);
 
-    if (getdomainname(netinfo->domain, sizeof(netinfo->domain)) == 0) {
-        netinfo->domain[sizeof(netinfo->domain)-1] = '\0';
+    size = sizeof(netinfo->domain_name)-1;
+    if (getdomainname(netinfo->domain_name, size) == 0) {
+        netinfo->domain_name[size] = '\0';
     }
     else {
-        netinfo->domain[0] = '\0';
+        netinfo->domain_name[0] = '\0';
     }
 
     return SIGAR_OK;
