@@ -227,6 +227,8 @@ int sigar_os_open(sigar_t **sigar)
                                             "UdpExTableFromStack");
         (*sigar)->get_net_params =
             (LPNETPARAMS)GetProcAddress(h, "GetNetworkParams");
+        (*sigar)->get_adapters_info =
+            (LPADAPTERSINFO)GetProcAddress(h, "GetAdaptersInfo");
         (*sigar)->ip_handle = h;
     }
     else {
@@ -1632,6 +1634,43 @@ SIGAR_DECLARE(int) sigar_net_info_get(sigar_t *sigar,
         SIGAR_SSTRCPY(netinfo->secondary_dns,
                       ip->IpAddress.String);
     }
+
+    if (sigar->get_adapters_info) {
+        PIP_ADAPTER_INFO buffer, info;
+        DWORD rc;
+        len = 0;
+        rc = sigar->get_adapters_info(NULL, &len);
+
+        if (rc != ERROR_BUFFER_OVERFLOW) {
+            return rc;
+        }
+        buffer = malloc(len);
+
+        rc = sigar->get_adapters_info(buffer, &len);
+        if (rc != NO_ERROR) {
+            free(buffer);
+            return rc;
+        }
+
+        info = buffer;
+
+        while (info) {
+            /* should only be 1 */
+            if (info->GatewayList.IpAddress.String[0]) {
+                SIGAR_SSTRCPY(netinfo->default_gateway,
+                              info->GatewayList.IpAddress.String);
+            }
+            if (info->DhcpEnabled) {
+                SIGAR_SSTRCPY(netinfo->dhcp_server,
+                              info->DhcpServer.IpAddress.String);
+            }
+
+            info = info->Next;
+        }
+
+        free(buffer);
+    }
+    
 
     return SIGAR_OK;
 }

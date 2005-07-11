@@ -74,6 +74,27 @@ typedef struct {
     UINT EnableDns;
 } FIXED_INFO, *PFIXED_INFO;
 
+typedef struct _IP_ADAPTER_INFO {
+    struct _IP_ADAPTER_INFO* Next;
+    DWORD ComboIndex;
+    char AdapterName[MAX_ADAPTER_NAME_LENGTH + 4];
+    char Description[MAX_ADAPTER_DESCRIPTION_LENGTH + 4];
+    UINT AddressLength;
+    BYTE Address[MAX_ADAPTER_ADDRESS_LENGTH];
+    DWORD Index;
+    UINT Type;
+    UINT DhcpEnabled;
+    PIP_ADDR_STRING CurrentIpAddress;
+    IP_ADDR_STRING IpAddressList;
+    IP_ADDR_STRING GatewayList;
+    IP_ADDR_STRING DhcpServer;
+    BOOL HaveWins;
+    IP_ADDR_STRING PrimaryWinsServer;
+    IP_ADDR_STRING SecondaryWinsServer;
+    time_t LeaseObtained;
+    time_t LeaseExpires;
+} IP_ADAPTER_INFO, *PIP_ADAPTER_INFO;
+
 /* end iptypes.h */
 
 #include <iprtrmib.h>
@@ -121,6 +142,8 @@ typedef DWORD (CALLBACK *LPGETUDPEXTABLE)(PMIB_UDPEXTABLE *, BOOL, HANDLE,
                                           DWORD, DWORD);
 
 typedef DWORD (CALLBACK *LPNETPARAMS)(PFIXED_INFO, PULONG);
+
+typedef DWORD (CALLBACK *LPADAPTERSINFO)(PIP_ADAPTER_INFO, PULONG);
 
 typedef DWORD (CALLBACK *LPSYSINFO)(DWORD, PVOID, ULONG, PULONG);
 
@@ -171,6 +194,7 @@ struct sigar_t {
     LPGETUDPTABLE get_udp_table;
     LPGETUDPEXTABLE get_udpx_table;
     LPNETPARAMS get_net_params;
+    LPADAPTERSINFO get_adapters_info;
     LPSYSINFO get_ntsys_info;
     LPENUMMODULES enum_modules;
     LPGETMODULENAME get_module_name;
