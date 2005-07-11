@@ -562,6 +562,33 @@ my %classes = (
          name => 'sockets', type => 'Long',
       },
     ],
+    NetInfo => [
+      {
+         name => 'default_gateway', type => 'String',
+         desc => '',
+         plat => ''
+      },
+      {
+         name => 'domain', type => 'String',
+         desc => '',
+         plat => ''
+      },
+      {
+         name => 'dhcp_server', type => 'String',
+         desc => '',
+         plat => ''
+      },
+      {
+         name => 'primary_dns', type => 'String',
+         desc => '',
+         plat => ''
+      },
+      {
+         name => 'secondary_dns', type => 'String',
+         desc => '',
+         plat => ''
+      },
+    ],
     NetRoute => [
       {
          name => 'destination', type => 'NetAddr',
