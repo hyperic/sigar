@@ -43,6 +43,39 @@ static __inline sigar_uint64_t FileTimeToTime(FILETIME *ft)
                                         lpw, -1, (LPSTR)lpa, chars, \
                                         NULL, NULL))
 
+/* from iptypes.h not in vs6.0 */
+#define MAX_ADAPTER_DESCRIPTION_LENGTH  128
+#define MAX_ADAPTER_NAME_LENGTH         256
+#define MAX_ADAPTER_ADDRESS_LENGTH      8
+#define MAX_HOSTNAME_LEN                128
+#define MAX_DOMAIN_NAME_LEN             128
+#define MAX_SCOPE_ID_LEN                256
+
+typedef struct {
+    char String[4 * 4];
+} IP_ADDRESS_STRING, *PIP_ADDRESS_STRING, IP_MASK_STRING, *PIP_MASK_STRING;
+
+typedef struct _IP_ADDR_STRING {
+    struct _IP_ADDR_STRING* Next;
+    IP_ADDRESS_STRING IpAddress;
+    IP_MASK_STRING IpMask;
+    DWORD Context;
+} IP_ADDR_STRING, *PIP_ADDR_STRING;
+
+typedef struct {
+    char HostName[MAX_HOSTNAME_LEN + 4];
+    char DomainName[MAX_DOMAIN_NAME_LEN + 4];
+    PIP_ADDR_STRING CurrentDnsServer;
+    IP_ADDR_STRING DnsServerList;
+    UINT NodeType;
+    char ScopeId[MAX_SCOPE_ID_LEN + 4];
+    UINT EnableRouting;
+    UINT EnableProxy;
+    UINT EnableDns;
+} FIXED_INFO, *PFIXED_INFO;
+
+/* end iptypes.h */
+
 #include <iprtrmib.h>
 
 /* undocumented structures */
@@ -86,6 +119,8 @@ typedef DWORD (CALLBACK *LPGETTCPEXTABLE)(PMIB_TCPEXTABLE *, BOOL, HANDLE,
 
 typedef DWORD (CALLBACK *LPGETUDPEXTABLE)(PMIB_UDPEXTABLE *, BOOL, HANDLE,
                                           DWORD, DWORD);
+
+typedef DWORD (CALLBACK *LPNETPARAMS)(PFIXED_INFO, PULONG);
 
 typedef DWORD (CALLBACK *LPSYSINFO)(DWORD, PVOID, ULONG, PULONG);
 
@@ -135,6 +170,7 @@ struct sigar_t {
     LPGETTCPEXTABLE get_tcpx_table;
     LPGETUDPTABLE get_udp_table;
     LPGETUDPEXTABLE get_udpx_table;
+    LPNETPARAMS get_net_params;
     LPSYSINFO get_ntsys_info;
     LPENUMMODULES enum_modules;
     LPGETMODULENAME get_module_name;

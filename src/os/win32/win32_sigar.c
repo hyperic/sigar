@@ -225,6 +225,8 @@ int sigar_os_open(sigar_t **sigar)
             (LPGETUDPEXTABLE)GetProcAddress(h,
                                             "AllocateAndGet"
                                             "UdpExTableFromStack");
+        (*sigar)->get_net_params =
+            (LPNETPARAMS)GetProcAddress(h, "GetNetworkParams");
         (*sigar)->ip_handle = h;
     }
     else {
@@ -1597,6 +1599,37 @@ SIGAR_DECLARE(int) sigar_cpu_info_list_get(sigar_t *sigar,
             memcpy(&cpu_infos->data[cpu_infos->number++],
                    info, sizeof(*info));
         }
+    }
+
+    return SIGAR_OK;
+}
+
+SIGAR_DECLARE(int) sigar_net_info_get(sigar_t *sigar,
+                                      sigar_net_info_t *netinfo)
+{
+    FIXED_INFO info;
+    ULONG len;
+    IP_ADDR_STRING *ip;
+
+    if (!sigar->get_net_params) {
+        return SIGAR_ENOTIMPL;
+    }
+
+    SIGAR_ZERO(netinfo);
+
+    len = sizeof(info);
+
+    if (sigar->get_net_params(&info, &len) != ERROR_SUCCESS) {
+        return GetLastError();
+    }
+
+    SIGAR_SSTRCPY(netinfo->domain_name, info.DomainName);
+    SIGAR_SSTRCPY(netinfo->primary_dns,
+                  info.DnsServerList.IpAddress.String);
+
+    if ((ip = info.DnsServerList.Next)) {
+        SIGAR_SSTRCPY(netinfo->secondary_dns,
+                      ip->IpAddress.String);
     }
 
     return SIGAR_OK;

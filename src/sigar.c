@@ -750,12 +750,6 @@ SIGAR_DECLARE(int) sigar_who_list_get(sigar_t *sigar,
     return SIGAR_ENOTIMPL;
 }
 
-SIGAR_DECLARE(int) sigar_net_info_get(sigar_t *sigar,
-                                      sigar_net_info_t *netinfo)
-{
-    return SIGAR_ENOTIMPL;
-}
-
 SIGAR_DECLARE(int) sigar_resource_limit_get(sigar_t *sigar,
                                             sigar_resource_limit_t *rlimit)
 {
