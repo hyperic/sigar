@@ -569,6 +569,11 @@ my %classes = (
          plat => ''
       },
       {
+         name => 'host_name', type => 'String',
+         desc => '',
+         plat => ''
+      },
+      {
          name => 'domain_name', type => 'String',
          desc => '',
          plat => ''

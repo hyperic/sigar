@@ -388,9 +388,11 @@ sigar_file_system_usage_get(sigar_t *sigar,
 #endif
 
 #define SIGAR_MAXDOMAINNAMELEN 256
+#define SIGAR_MAXHOSTNAMELEN 256
 
 typedef struct {
     char default_gateway[INET6_ADDRSTRLEN];
+    char host_name[SIGAR_MAXHOSTNAMELEN];
     char domain_name[SIGAR_MAXDOMAINNAMELEN];
     char dhcp_server[INET6_ADDRSTRLEN];
     char primary_dns[INET6_ADDRSTRLEN];
