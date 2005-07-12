@@ -1725,6 +1725,13 @@ SIGAR_DECLARE(int) sigar_net_route_list_get(sigar_t *sigar,
         route->destination = ipr->dwForwardDest;
         route->mask        = ipr->dwForwardMask;
         route->gateway     = ipr->dwForwardNextHop;
+
+        route->flags = SIGAR_RTF_UP;
+        if ((route->destination == 0) &&
+            (route->mask == 0))
+        {
+            route->flags |= SIGAR_RTF_GATEWAY;
+        }
     }
 
     free(buffer);

@@ -729,6 +729,13 @@ int sigar_net_route_list_get(sigar_t *sigar,
         route->destination = ent->Dest;
         route->mask        = ent->Mask;
         route->gateway     = ent->NextHop;
+
+        route->flags = SIGAR_RTF_UP;
+        if ((route->destination == 0) &&
+            (route->mask == 0))
+        {
+            route->flags |= SIGAR_RTF_GATEWAY;
+        }
     }
 
     free(routes);
