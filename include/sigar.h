@@ -403,6 +403,10 @@ SIGAR_DECLARE(int)
 sigar_net_info_get(sigar_t *sigar,
                    sigar_net_info_t *netinfo);
 
+#define SIGAR_RTF_UP      0x1
+#define SIGAR_RTF_GATEWAY 0x2
+#define SIGAR_RTF_HOST    0x4
+
 typedef struct {
     sigar_uint64_t
         destination,
