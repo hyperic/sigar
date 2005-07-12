@@ -5,6 +5,7 @@
 
 #include <inet/ip.h>
 #include <inet/tcp.h>
+#include <net/route.h>
 #include <sys/link.h>
 #include <sys/lwp.h>
 #include <sys/proc.h>
@@ -1502,7 +1503,14 @@ int sigar_net_route_list_get(sigar_t *sigar,
 
             SIGAR_SSTRCPY(route->ifname, entry->ipRouteIfIndex.o_bytes);
 
-            route->flags = route->use = route->window = route->mtu = 
+            route->flags = RTF_UP;
+            if ((route->destination == 0) &&
+                (route->mask == 0))
+            {
+                route->flags |= RTF_GATEWAY;
+            }
+
+            route->use = route->window = route->mtu = 
                 SIGAR_FIELD_NOTIMPL; /*XXX*/
         }
     }
