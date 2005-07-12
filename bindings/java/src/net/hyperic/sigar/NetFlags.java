@@ -67,6 +67,12 @@ public class NetFlags {
      */
     public final static int IFF_MULTICAST = 0x800;
 
+    public static final int RTF_UP = 0x1;
+
+    public static final int RTF_GATEWAY = 0x2;
+
+    public static final int RTF_HOST = 0x4;
+
     public final static int CONN_CLIENT = 0x01;
     public final static int CONN_SERVER = 0x02;
 
