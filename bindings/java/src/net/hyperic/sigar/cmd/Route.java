@@ -1,9 +1,21 @@
 package net.hyperic.sigar.cmd;
 
 import net.hyperic.sigar.Sigar;
+import net.hyperic.sigar.NetFlags;
 import net.hyperic.sigar.NetRoute;
 
 public class Route {
+
+    private static String flags(long flags) {
+        StringBuffer sb = new StringBuffer();
+        if ((flags & NetFlags.RTF_UP) != 0) {
+            sb.append('U');
+        }
+        if ((flags & NetFlags.RTF_GATEWAY) != 0) {
+            sb.append('G');
+        }
+        return sb.toString();
+    }
 
     //netstat -r
     public static void main(String[] args) throws Exception {
@@ -20,7 +32,7 @@ public class Route {
             System.out.println(route.getDestination() + "\t" +
                                route.getGateway() + "\t" +
                                route.getMask() + "\t" +
-                               route.getFlags() + "\t" +
+                               flags(route.getFlags()) + "\t" +
                                route.getMtu() + "\t" +
                                route.getWindow() + "\t" +
                                route.getIrtt() + "\t" +
