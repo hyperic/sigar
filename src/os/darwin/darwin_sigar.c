@@ -1382,9 +1382,57 @@ int sigar_cpu_info_list_get(sigar_t *sigar,
 int sigar_net_route_list_get(sigar_t *sigar,
                              sigar_net_route_list_t *routelist)
 {
+#if 0 /*defined(SIGAR_FREEBSD5)*/
+    size_t needed;
+    int mib[6];
+    char *buf, *next, *lim;
+    struct rt_msghdr *rtm;
+
+    mib[0] = CTL_NET;
+    mib[1] = PF_ROUTE;
+    mib[2] = 0; /* protocol */
+    mib[3] = 0; /* wildcard address family */
+    mib[4] = NET_RT_DUMP;
+    mib[5] = 0; /* no flags */
+
+    if (sysctl(mib, 6, NULL, &needed, NULL, 0) < 0) {
+        return errno;
+    }
+
+    buf = malloc(needed);
+
+    if (sysctl(mib, 6, buf, &needed, NULL, 0) < 0) {
+        free(buf);
+        return errno;
+    }
+
     sigar_net_route_list_create(routelist);
 
+    lim = buf + needed;
+    for (next = buf; next < lim; next += rtm->rtm_msglen) {
+        struct sockaddr *sa;
+        sigar_net_route_t *route;
+        rtm = (struct rt_msghdr *)next;
+
+        sa = (struct sockaddr *)(rtm + 1);
+
+        if (sa->sa_family != AF_INET) {
+            continue;
+        }
+
+        SIGAR_NET_ROUTE_LIST_GROW(routelist);
+        route = &routelist->data[routelist->number++];
+        SIGAR_ZERO(route);
+
+        route->flags = rtm->rtm_flags;
+    }
+
+    free(buf);
+
     return SIGAR_OK;
+#else
+    return SIGAR_ENOTIMPL;
+#endif
 }
 
 typedef enum {
