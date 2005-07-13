@@ -975,12 +975,14 @@ static int sigar_pgrab_modules(sigar_t *sigar, sigar_pid_t pid,
     }
 
     if ((pstatus = sigar_init_libproc(sigar)) != SIGAR_OK) {
+        close(fd);
         return pstatus;
     }
 
     pstatus = sigar_pgrab(sigar, pid, SIGAR_FUNC, &phandle);
 
     if (pstatus != SIGAR_OK) {
+        close(fd);
         return pstatus;
     }
 
