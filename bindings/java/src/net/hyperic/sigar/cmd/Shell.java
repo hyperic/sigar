@@ -71,6 +71,7 @@ public class Shell extends ShellBase {
         registerCommandHandler("kill", new Kill(this));
         registerCommandHandler("netstat", new Netstat(this));
         registerCommandHandler("netinfo", new NetInfo(this));
+        registerCommandHandler("route", new Route(this));
         registerCommandHandler("version", new Version(this));
         registerCommandHandler("mps", new MultiPs(this));
         registerCommandHandler("sysinfo", new SysInfo(this));
