@@ -1379,29 +1379,25 @@ int sigar_cpu_info_list_get(sigar_t *sigar,
     return SIGAR_OK;
 }
 
+#define rt_s_addr(sa) ((struct sockaddr_in *)(sa))->sin_addr.s_addr
+
 int sigar_net_route_list_get(sigar_t *sigar,
                              sigar_net_route_list_t *routelist)
 {
-#if 0 /*defined(SIGAR_FREEBSD5)*/
+#if defined(SIGAR_FREEBSD5)
     size_t needed;
-    int mib[6];
+    int bit;
     char *buf, *next, *lim;
     struct rt_msghdr *rtm;
+    int mib[6] = { CTL_NET, PF_ROUTE, 0, 0, NET_RT_DUMP, 0 };
 
-    mib[0] = CTL_NET;
-    mib[1] = PF_ROUTE;
-    mib[2] = 0; /* protocol */
-    mib[3] = 0; /* wildcard address family */
-    mib[4] = NET_RT_DUMP;
-    mib[5] = 0; /* no flags */
-
-    if (sysctl(mib, 6, NULL, &needed, NULL, 0) < 0) {
+    if (sysctl(mib, NMIB(mib), NULL, &needed, NULL, 0) < 0) {
         return errno;
     }
 
     buf = malloc(needed);
 
-    if (sysctl(mib, 6, buf, &needed, NULL, 0) < 0) {
+    if (sysctl(mib, NMIB(mib), buf, &needed, NULL, 0) < 0) {
         free(buf);
         return errno;
     }
@@ -1414,6 +1410,10 @@ int sigar_net_route_list_get(sigar_t *sigar,
         sigar_net_route_t *route;
         rtm = (struct rt_msghdr *)next;
 
+        if (rtm->rtm_type != RTM_GET) {
+            continue;
+        }
+
         sa = (struct sockaddr *)(rtm + 1);
 
         if (sa->sa_family != AF_INET) {
@@ -1425,6 +1425,32 @@ int sigar_net_route_list_get(sigar_t *sigar,
         SIGAR_ZERO(route);
 
         route->flags = rtm->rtm_flags;
+
+        for (bit=RTA_DST;
+             bit && ((char *)sa < lim);
+             bit <<= 1)
+        {
+            if ((rtm->rtm_addrs & bit) == 0) {
+                continue;
+            }
+            switch (bit) {
+              case RTA_DST:
+                route->destination = rt_s_addr(sa);
+                break;
+              case RTA_GATEWAY:
+                if (sa->sa_family == AF_INET) {
+                    route->gateway = rt_s_addr(sa);
+                }
+                break;
+              case RTA_NETMASK:
+                route->mask = rt_s_addr(sa);
+                break;
+              case RTA_IFA:
+                break;
+            }
+
+            sa = (struct sockaddr *)((char *)sa + SA_SIZE(sa));
+        }
     }
 
     free(buf);
