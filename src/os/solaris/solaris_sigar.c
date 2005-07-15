@@ -1492,6 +1492,15 @@ int sigar_net_route_list_get(sigar_t *sigar,
              (char *)entry < end; entry++)
         {
             sigar_net_route_t *route;
+            int type = entry->ipRouteInfo.re_ire_type;
+
+            /* filter same as netstat -r */
+            if ((type == IRE_CACHE) ||
+                (type == IRE_BROADCAST) ||
+                (type == IRE_LOCAL))
+            {
+                continue;
+            }
 
             SIGAR_NET_ROUTE_LIST_GROW(routelist);
             route = &routelist->data[routelist->number++];
