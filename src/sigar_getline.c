@@ -273,6 +273,7 @@ static char     gl_quitc = 0;           /* keyboard SIGQUIT char */
 static char     gl_suspc = 0;           /* keyboard SIGTSTP char */
 static char     gl_dsuspc = 0;          /* delayed SIGTSTP char */
 static int      gl_search_mode = 0;     /* search mode flag */
+static int      gl_bell_enabled = 0;    /* bell mode */
 static int      gl_savehist = 0;        /* # of lines to save in hist file */
 static char     gl_histfile[256];       /* name of history file */
 
@@ -723,7 +724,9 @@ gl_init()
 static void
 gl_bell()
 {
-    gl_putc('\007');
+    if (gl_bell_enabled) {
+        gl_putc('\007');
+    }
 }
 
 static void
