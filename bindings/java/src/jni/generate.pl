@@ -579,11 +579,6 @@ my %classes = (
          plat => ''
       },
       {
-         name => 'dhcp_server', type => 'String',
-         desc => '',
-         plat => ''
-      },
-      {
          name => 'primary_dns', type => 'String',
          desc => '',
          plat => ''

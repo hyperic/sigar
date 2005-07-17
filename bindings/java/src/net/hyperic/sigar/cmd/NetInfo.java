@@ -37,9 +37,6 @@ public class NetInfo extends SigarCommandBase {
 
         println("secondary dns........." +
                 info.getSecondaryDns());
-
-        println("dhcp server..........." +
-                info.getDhcpServer());
     }
 
     public static void main(String[] args) throws Exception {

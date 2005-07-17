@@ -394,7 +394,6 @@ typedef struct {
     char default_gateway[INET6_ADDRSTRLEN];
     char host_name[SIGAR_MAXHOSTNAMELEN];
     char domain_name[SIGAR_MAXDOMAINNAMELEN];
-    char dhcp_server[INET6_ADDRSTRLEN];
     char primary_dns[INET6_ADDRSTRLEN];
     char secondary_dns[INET6_ADDRSTRLEN];
 } sigar_net_info_t;

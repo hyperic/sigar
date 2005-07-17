@@ -1668,11 +1668,12 @@ SIGAR_DECLARE(int) sigar_net_info_get(sigar_t *sigar,
                 SIGAR_SSTRCPY(netinfo->default_gateway,
                               info->GatewayList.IpAddress.String);
             }
+#if 0
             if (info->DhcpEnabled) {
                 SIGAR_SSTRCPY(netinfo->dhcp_server,
                               info->DhcpServer.IpAddress.String);
             }
-
+#endif
             info = info->Next;
         }
 
