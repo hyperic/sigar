@@ -33,6 +33,8 @@ public class SigarTestRunner extends SigarCommandBase {
         TestLoadAverage.class,
         TestMem.class,
         TestNetIf.class,
+        TestNetInfo.class,
+        TestNetRoute.class,
         TestNetStat.class,
         TestProcArgs.class,
         TestProcEnv.class,
@@ -44,9 +46,11 @@ public class SigarTestRunner extends SigarCommandBase {
         TestProcState.class,
         TestProcStat.class,
         TestProcTime.class,
+        TestResourceLimit.class,
         TestSwap.class,
         TestThreadCpu.class,
         TestUptime.class,
+        TestWho.class,
     };
 
     private static final Class[] WIN32_TESTS = {
