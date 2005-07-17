@@ -20,8 +20,8 @@ public class TestLoadAverage extends SigarTestCase {
             traceln("1min=" + loadavg[0]);
             traceln("5min=" + loadavg[1]);
             traceln("15min=" + loadavg[2]);
-	} catch (SigarNotImplementedException e) {
+        } catch (SigarNotImplementedException e) {
             //win32
-	}
+        }
     }
 }
