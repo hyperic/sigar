@@ -4,10 +4,10 @@ import java.util.ArrayList;
 
 import net.hyperic.sigar.NetFlags;
 import net.hyperic.sigar.NetRoute;
-import net.hyperic.sigar.Sigar;
 import net.hyperic.sigar.SigarException;
 
 public class Route extends SigarCommandBase {
+
     private static final String OUTPUT_FORMAT =
         "%-15s %-15s %-15s %-5s %-6s %-3s %-s";
 
