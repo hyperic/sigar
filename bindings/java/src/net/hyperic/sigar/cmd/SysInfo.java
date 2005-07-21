@@ -1,5 +1,7 @@
 package net.hyperic.sigar.cmd;
 
+import java.util.Arrays;
+
 import net.hyperic.sigar.SigarException;
 
 /**
@@ -36,6 +38,14 @@ public class SysInfo extends SigarCommandBase {
 
         //memory info
         new Free(this.shell).output(args);
+        println("");
+
+        println("File Systems........." +
+                Arrays.asList(this.sigar.getFileSystemList()));
+        println("");
+
+        println("Network Interfaces..." +
+                Arrays.asList(this.sigar.getNetInterfaceList()));
         println("");
 
         //system resource limits
