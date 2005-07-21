@@ -14,7 +14,7 @@ import net.hyperic.sigar.Sigar;
 //helper to add optional tracing.
 public abstract class SigarTestCase extends TestCase {
 
-    private Sigar sigar = null;
+    private static Sigar sigar = null;
     private Properties props = new Properties();
 
     private static boolean verbose = false;
@@ -43,13 +43,13 @@ public abstract class SigarTestCase extends TestCase {
     }
 
     public Sigar getSigar() {
-        if (this.sigar == null) {
-            this.sigar = new Sigar();
+        if (sigar == null) {
+            sigar = new Sigar();
             if (getVerbose()) {
-                this.sigar.enableLogging(true);
+                sigar.enableLogging(true);
             }
         }
-        return this.sigar;
+        return sigar;
     }
 
     public Properties getProperties() {
