@@ -30,10 +30,25 @@ public class Time extends SigarCommandBase {
         //turn off paging.
         this.shell.setInteractive(false);
         CpuTimer cpu = new CpuTimer(this.sigar);
+
+        int num;
+        
+        if (Character.isDigit(args[0].charAt(0))) {
+            num = Integer.parseInt(args[0]);
+            String[] xargs = new String[args.length-1];
+            System.arraycopy(args, 1, xargs, 0, xargs.length);
+            args = xargs;
+        }
+        else {
+            num = 1;
+        }
+
         cpu.start();
 
         try {
-            this.shell.handleCommand("time " + args[0], args);
+            for (int i=0; i<num; i++) {
+                this.shell.handleCommand("time " + args[0], args);
+            }
         } finally {
             this.shell.setInteractive(isInteractive);
         }
