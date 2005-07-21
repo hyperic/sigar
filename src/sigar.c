@@ -979,12 +979,14 @@ int sigar_resource_limit_get(sigar_t *sigar,
         if ((r->resource == RLIMIT_UNSUPPORTED) ||
             (getrlimit(r->resource, &rl) != 0))
         {
-            rl.rlim_cur = SIGAR_FIELD_NOTIMPL;
-            rl.rlim_max = SIGAR_FIELD_NOTIMPL;
+            rl.rlim_cur = RLIM_INFINITY;
+            rl.rlim_max = RLIM_INFINITY;
+        }
+        else {
+            RlimitScale(rl.rlim_cur);
+            RlimitScale(rl.rlim_max);
         }
 
-        RlimitScale(rl.rlim_cur);
-        RlimitScale(rl.rlim_max);
         RlimitSet(rlimit, r->cur, rl.rlim_cur);
         RlimitSet(rlimit, r->max, rl.rlim_max);
     }
