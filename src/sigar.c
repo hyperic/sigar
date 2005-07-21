@@ -939,14 +939,12 @@ typedef struct {
     size_t max;
 } rlimit_field_t;
 
-#define RLIMIT_UNSUPPORTED (RLIM_NLIMITS+1)
-
 #ifndef RLIMIT_RSS
-#define RLIMIT_RSS RLIMIT_UNSUPPORTED
+#define RLIMIT_RSS (RLIM_NLIMITS+1)
 #endif
 
 #ifndef RLIMIT_NPROC
-#define RLIMIT_NPROC RLIMIT_UNSUPPORTED
+#define RLIMIT_NPROC (RLIM_NLIMITS+2)
 #endif
 
 static rlimit_field_t sigar_rlimits[] = {
@@ -965,6 +963,9 @@ static rlimit_field_t sigar_rlimits[] = {
 #define RlimitScale(val) \
     if (val != RLIM_INFINITY) val /= r->factor
 
+#define RlimitHS(val) \
+    rl.rlim_cur = rl.rlim_max = (val)
+
 int sigar_resource_limit_get(sigar_t *sigar,
                              sigar_resource_limit_t *rlimit)
 {
@@ -976,11 +977,18 @@ int sigar_resource_limit_get(sigar_t *sigar,
         struct rlimit rl;
         rlimit_field_t *r = &sigar_rlimits[i];
 
-        if ((r->resource == RLIMIT_UNSUPPORTED) ||
-            (getrlimit(r->resource, &rl) != 0))
-        {
-            rl.rlim_cur = RLIM_INFINITY;
-            rl.rlim_max = RLIM_INFINITY;
+        if (r->resource > RLIM_NLIMITS) {
+            switch (r->resource) {
+              case RLIMIT_NPROC:
+                RlimitHS(sysconf(_SC_CHILD_MAX));
+                break;
+              default:
+                RlimitHS(RLIM_INFINITY);
+                break;
+            }
+        }
+        else if (getrlimit(r->resource, &rl) != 0) {
+            RlimitHS(RLIM_INFINITY);
         }
         else {
             RlimitScale(rl.rlim_cur);
