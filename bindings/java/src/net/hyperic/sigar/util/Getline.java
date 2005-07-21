@@ -15,8 +15,11 @@ import java.io.File;
  */
 public class Getline {
 
+    private static final boolean isatty = isatty();
+
     private static boolean useNative =
-        ! "false".equals(System.getProperty("sigar.getline.native"));
+        ! "false".equals(System.getProperty("sigar.getline.native")) &&
+        isatty;
 
     private BufferedReader in = null;
 
@@ -27,6 +30,8 @@ public class Getline {
     public Getline(String prompt) {
         this.prompt = prompt;
     }
+
+    private native static boolean isatty();
 
     public native static void setCompleter(GetlineCompleter completer);
 
@@ -40,6 +45,10 @@ public class Getline {
 
     private native String getline(String prompt)
         throws IOException, EOFException;
+
+    public static boolean isTTY() {
+        return isatty;
+    }
 
     public String getLine()
         throws IOException, EOFException {
