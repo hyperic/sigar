@@ -57,9 +57,6 @@ public class SigarTestPrinter extends ResultPrinter {
         for (int i=0; i<n; i++) {
             writer.print('.');
         }
-        if (SigarTestCase.getVerbose()) {
-            writer.println("");
-        }
     }
 
     public void addFailure(Test test, AssertionFailedError t) {
