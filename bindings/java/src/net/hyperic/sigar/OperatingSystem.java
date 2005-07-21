@@ -130,9 +130,14 @@ public class OperatingSystem {
             else if (os.name.equals("SunOS")) {
                 os.type = TYPE_SOLARIS;
                 os.vendor = "Sun Microsystems";
-                int ix = os.version.indexOf(".");
-                //5.8 == solaris 8, etc.
-                os.vendorVersion = os.version.substring(ix+1);
+                if (os.version.equals("5.6")) {
+                    os.vendorVersion = "2.6";
+                }
+                else {
+                    int ix = os.version.indexOf(".");
+                    //5.8 == solaris 8, etc.
+                    os.vendorVersion = os.version.substring(ix+1);
+                }
                 os.name = NAME_SOLARIS;
             }
             else if (os.name.equals("HP-UX")) {
