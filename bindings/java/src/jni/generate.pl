@@ -1120,6 +1120,10 @@ my %extra_code = (
     public static final int TYPE_RAM_DISK   = 4;
     public static final int TYPE_CDROM      = 5;
     public static final int TYPE_SWAP       = 6;
+
+    public String toString() {
+        return this.getDirName();
+    }
 EOF
     NetConnection => <<'EOF',
     public native String getTypeString();
