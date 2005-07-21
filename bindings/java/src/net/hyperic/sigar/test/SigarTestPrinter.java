@@ -20,6 +20,8 @@ public class SigarTestPrinter extends ResultPrinter {
 
     private HashMap failures = new HashMap();
     private int maxNameLen = 0;
+    //just print once if we're run w/ "time 10 test"
+    private static boolean printedVersion;
 
     private static final String[][] LOG_PROPS = {
         {
@@ -82,6 +84,13 @@ public class SigarTestPrinter extends ResultPrinter {
     }
 
     public void printVersionInfo() {
+        if (printedVersion) {
+            return;
+        }
+        else {
+            printedVersion = true;
+        }
+
         PrintStream writer = getWriter();
 
         Version.printInfo(writer);
