@@ -934,6 +934,7 @@ int sigar_net_info_get(sigar_t *sigar,
 
 typedef struct {
     int resource;
+    int factor;
     size_t cur;
     size_t max;
 } rlimit_field_t;
@@ -949,17 +950,20 @@ typedef struct {
 #endif
 
 static rlimit_field_t sigar_rlimits[] = {
-    { RLIMIT_CPU, RlimitOffsets(cpu) },
-    { RLIMIT_FSIZE, RlimitOffsets(file_size) },
-    { RLIMIT_DATA, RlimitOffsets(data) },
-    { RLIMIT_STACK, RlimitOffsets(stack) },
-    { RLIMIT_CORE, RlimitOffsets(core) },
-    { RLIMIT_RSS, RlimitOffsets(memory) },
-    { RLIMIT_NPROC, RlimitOffsets(processes) },
-    { RLIMIT_NOFILE, RlimitOffsets(open_files) },
-    { RLIMIT_AS, RlimitOffsets(virtual_memory) },
+    { RLIMIT_CPU,    1,    RlimitOffsets(cpu) },
+    { RLIMIT_FSIZE,  1024, RlimitOffsets(file_size) },
+    { RLIMIT_DATA,   1024, RlimitOffsets(data) },
+    { RLIMIT_STACK,  1024, RlimitOffsets(stack) },
+    { RLIMIT_CORE,   1024, RlimitOffsets(core) },
+    { RLIMIT_RSS,    1024, RlimitOffsets(memory) },
+    { RLIMIT_NPROC,  1,    RlimitOffsets(processes) },
+    { RLIMIT_NOFILE, 1,    RlimitOffsets(open_files) },
+    { RLIMIT_AS,     1024, RlimitOffsets(virtual_memory) },
     { -1 }
 };
+
+#define RlimitScale(val) \
+    if (val != RLIM_INFINITY) val /= r->factor
 
 int sigar_resource_limit_get(sigar_t *sigar,
                              sigar_resource_limit_t *rlimit)
@@ -979,6 +983,8 @@ int sigar_resource_limit_get(sigar_t *sigar,
             rl.rlim_max = SIGAR_FIELD_NOTIMPL;
         }
 
+        RlimitScale(rl.rlim_cur);
+        RlimitScale(rl.rlim_max);
         RlimitSet(rlimit, r->cur, rl.rlim_cur);
         RlimitSet(rlimit, r->max, rl.rlim_max);
     }
