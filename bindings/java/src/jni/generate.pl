@@ -804,9 +804,6 @@ my %classes = (
     ],
     ResourceLimit => [
       {
-         name => 'unlimited',
-      },
-      {
          name => 'cpu_cur',
       },
       {
@@ -1143,6 +1140,9 @@ EOF
             (this.free / 1024) + "K free, " +
             (this.shared / 1024) + "K shrd";
     }
+EOF
+    ResourceLimit => <<'EOF',
+    public static native long INFINITY();
 EOF
     Swap => <<'EOF',
     public String toString() {

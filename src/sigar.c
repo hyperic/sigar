@@ -754,7 +754,7 @@ SIGAR_DECLARE(int) sigar_resource_limit_get(sigar_t *sigar,
                                             sigar_resource_limit_t *rlimit)
 {
     MEMORY_BASIC_INFORMATION meminfo;
-    memset(rlimit, -1, sizeof(*rlimit));
+    memset(rlimit, 0x7fffffff, sizeof(*rlimit));
 
     if (VirtualQuery((LPCVOID)&meminfo, &meminfo, sizeof(meminfo))) {
         rlimit->stack_cur =
@@ -970,8 +970,6 @@ int sigar_resource_limit_get(sigar_t *sigar,
                              sigar_resource_limit_t *rlimit)
 {
     int i;
-
-    rlimit->unlimited = RLIM_INFINITY;
 
     for (i=0; sigar_rlimits[i].resource != -1; i++) {
         struct rlimit rl;

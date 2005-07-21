@@ -20,8 +20,8 @@ public class Ulimit extends SigarCommandBase {
         return "Display system resource limits";
     }
 
-    private static String format(ResourceLimit rlimit, long val) {
-        if (val == rlimit.getUnlimited()) {
+    private static String format(long val) {
+        if (val == ResourceLimit.INFINITY()) {
             return "unlimited";
         }
         else {
@@ -33,23 +33,23 @@ public class Ulimit extends SigarCommandBase {
         ResourceLimit rlimit = this.sigar.getResourceLimit();
 
         println("core file size......." +
-                format(rlimit, rlimit.getCoreCur()));
+                format(rlimit.getCoreCur()));
         println("data seg size........" +
-                format(rlimit, rlimit.getDataCur()));
+                format(rlimit.getDataCur()));
         println("file size............" +
-                format(rlimit, rlimit.getFileSizeCur()));
+                format(rlimit.getFileSizeCur()));
         println("max memory size......" +
-                format(rlimit, rlimit.getMemoryCur()));
+                format(rlimit.getMemoryCur()));
         println("open files..........." +
-                format(rlimit, rlimit.getOpenFilesCur()));
+                format(rlimit.getOpenFilesCur()));
         println("stack size..........." +
-                format(rlimit, rlimit.getStackCur()));
+                format(rlimit.getStackCur()));
         println("cpu time............." +
-                format(rlimit, rlimit.getCpuCur()));
+                format(rlimit.getCpuCur()));
         println("max user processes..." +
-                format(rlimit, rlimit.getProcessesCur()));
+                format(rlimit.getProcessesCur()));
         println("virual memory........" +
-                format(rlimit, rlimit.getVirtualMemoryCur()));
+                format(rlimit.getVirtualMemoryCur()));
     }
 
     public static void main(String[] args) throws Exception {

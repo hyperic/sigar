@@ -1248,3 +1248,14 @@ JNIEXPORT jlong SIGAR_JNI(Sigar_getServicePid)
     return 0;
 #endif
 }
+
+JNIEXPORT jlong SIGAR_JNI(ResourceLimit_INFINITY)
+(JNIEnv *env, jclass cls)
+{
+#ifdef WIN32
+    return 0x7fffffff;
+#else
+#include <sys/resource.h>
+    return RLIM_INFINITY;
+#endif
+}
