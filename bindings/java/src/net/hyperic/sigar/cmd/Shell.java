@@ -152,7 +152,7 @@ public class Shell extends ShellBase {
         try {
             File rc = new File(dir, RCFILE_NAME);
             readRCFile(rc, false);
-            if (this.isInteractive) {
+            if (this.isInteractive && Getline.isTTY()) {
                 this.out.println("Loaded rc file: " + rc);
             }
         } catch (IOException e) { }
