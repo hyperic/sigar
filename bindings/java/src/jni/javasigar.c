@@ -939,6 +939,12 @@ JNIEXPORT jstring SIGAR_JNI(Sigar_getFQDN)
 
 #include "sigar_getline.h"
 
+JNIEXPORT jboolean SIGAR_JNI(util_Getline_isatty)
+(JNIEnv *env, jclass cls)
+{
+    return isatty(fileno(stdin)) ? JNI_TRUE : JNI_FALSE;
+}
+
 JNIEXPORT jstring SIGAR_JNI(util_Getline_getline)
 (JNIEnv *env, jobject sigar_obj, jstring prompt)
 {
