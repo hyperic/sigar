@@ -259,7 +259,12 @@ public abstract class ShellBase
                 return;
             }
             if (input == null || input.trim().length() == 0) {
-                continue;
+                if (!Getline.isTTY()) {
+                    break;
+                }
+                else {
+                    continue;
+                }
             }
 
             try {
@@ -268,7 +273,9 @@ public abstract class ShellBase
                 break;
             }
         }
-        out.println("Goodbye.");
+        if (Getline.isTTY()) {
+            out.println("Goodbye.");
+        }
     }
 
     public void handleCommand(String line) {
