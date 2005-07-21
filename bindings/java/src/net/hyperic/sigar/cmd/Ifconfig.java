@@ -57,7 +57,11 @@ public class Ifconfig extends SigarCommandBase {
         }
 
         for (int i=0; i<ifNames.length; i++) {
-            output(ifNames[i]);
+            try {
+                output(ifNames[i]);
+            } catch (SigarException e) {
+                println(ifNames[i] + "\t" + e.getMessage());
+            }
         }
     }
 
