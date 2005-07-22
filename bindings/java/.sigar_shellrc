@@ -18,8 +18,8 @@ alias ws5find ptql State.Name.eq=java,Args.*.eq=com.ibm.ws.runtime.WsServer
 #find websphere 4.x and 5.x nodes
 alias wsfind ptql State.Name.eq=java,Args.*.eq=com.ibm.ws.bootstrap.WSLauncher
 
-#find jboss
-alias jbfind ptql State.Name.eq=java,Args.*.eq=org.jboss.Main
+#find jboss (use .sw=java to match 'java' or 'javaw')
+alias jbfind ptql State.Name.sw=java,Args.*.eq=org.jboss.Main
 
 #find tomcat
 alias tcfind ptql State.Name.eq=java,Args.*.eq=org.apache.catalina.startup.Bootstrap
@@ -36,7 +36,7 @@ alias hant ptql State.Name.eq=java,Args.*.eq=org.apache.tools.ant.Main
 
 #my HQ agent
 #(user.name is in System.getProperties)
-alias myag ptql CredName.User.eq=$user.name,State.Name.eq=java,Args.-1.ew=SpiderAgent
+alias myag ptql CredName.User.eq=$user.name,State.Name.sw=java,Args.-1.ew=AgentClient
 
 #find all java procs except the shell itself
 #($$ is the current process id)
