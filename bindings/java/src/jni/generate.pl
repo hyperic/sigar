@@ -816,6 +816,12 @@ my %classes = (
          name => 'file_size_max',
       },
       {
+         name => 'pipe_size_max',
+      },
+      {
+         name => 'pipe_size_cur',
+      },
+      {
          name => 'data_cur',
       },
       {

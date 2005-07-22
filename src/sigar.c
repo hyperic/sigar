@@ -947,11 +947,14 @@ typedef struct {
 #define RLIMIT_NPROC (RLIM_NLIMITS+2)
 #endif
 
+#define RLIMIT_PSIZE (RLIM_NLIMITS+3)
+
 static rlimit_field_t sigar_rlimits[] = {
     { RLIMIT_CPU,    1,    RlimitOffsets(cpu) },
     { RLIMIT_FSIZE,  1024, RlimitOffsets(file_size) },
     { RLIMIT_DATA,   1024, RlimitOffsets(data) },
     { RLIMIT_STACK,  1024, RlimitOffsets(stack) },
+    { RLIMIT_PSIZE,   512, RlimitOffsets(pipe_size) },
     { RLIMIT_CORE,   1024, RlimitOffsets(core) },
     { RLIMIT_RSS,    1024, RlimitOffsets(memory) },
     { RLIMIT_NPROC,  1,    RlimitOffsets(processes) },
@@ -979,6 +982,9 @@ int sigar_resource_limit_get(sigar_t *sigar,
             switch (r->resource) {
               case RLIMIT_NPROC:
                 RlimitHS(sysconf(_SC_CHILD_MAX));
+                break;
+              case RLIMIT_PSIZE:
+                RlimitHS(PIPE_BUF/512);
                 break;
               default:
                 RlimitHS(RLIM_INFINITY);

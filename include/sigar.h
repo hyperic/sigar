@@ -168,6 +168,8 @@ typedef struct {
     sigar_uint64_t cpu_cur, cpu_max;
     /* RLIMIT_FSIZE */
     sigar_uint64_t file_size_cur, file_size_max;
+    /* PIPE_BUF */
+    sigar_uint64_t pipe_size_cur, pipe_size_max;
     /* RLIMIT_DATA */
     sigar_uint64_t data_cur, data_max;
     /* RLIMIT_STACK */

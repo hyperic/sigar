@@ -65,6 +65,7 @@ public class Ulimit extends SigarCommandBase {
         println("core file size......." + getValue("Core"));
         println("data seg size........" + getValue("Data"));
         println("file size............" + getValue("FileSize"));
+        println("pipe size............" + getValue("PipeSize"));
         println("max memory size......" + getValue("Memory"));
         println("open files..........." + getValue("OpenFiles"));
         println("stack size..........." + getValue("Stack"));
