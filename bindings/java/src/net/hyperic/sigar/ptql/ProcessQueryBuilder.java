@@ -66,7 +66,8 @@ public class ProcessQueryBuilder {
 
     //set true during development to dump generated
     //.class files to disk.
-    private static final boolean dumpClasses = false;
+    private static final boolean dumpClasses =
+        "true".equals(System.getProperty("sigar.ptql.dumpClasses"));
 
     private static int generation = 0;
 
