@@ -2,12 +2,16 @@ package net.hyperic.sigar.cmd;
 
 import net.hyperic.sigar.ResourceLimit;
 import net.hyperic.sigar.SigarException;
+import net.hyperic.sigar.jmx.SigarInvokerJMX;
 
 /**
  * Display system resource limits.
  */
 public class Ulimit extends SigarCommandBase {
 
+    private SigarInvokerJMX invoker;
+    private String mode;
+    
     public Ulimit(Shell shell) {
         super(shell);
     }
@@ -29,27 +33,28 @@ public class Ulimit extends SigarCommandBase {
         }
     }
 
+    private String getValue(String attr)
+        throws SigarException {
+        Long val = (Long)this.invoker.invoke(attr + this.mode);
+        return format(val.longValue());
+    }
+    
     public void output(String[] args) throws SigarException {
-        ResourceLimit rlimit = this.sigar.getResourceLimit();
 
-        println("core file size......." +
-                format(rlimit.getCoreCur()));
-        println("data seg size........" +
-                format(rlimit.getDataCur()));
-        println("file size............" +
-                format(rlimit.getFileSizeCur()));
-        println("max memory size......" +
-                format(rlimit.getMemoryCur()));
-        println("open files..........." +
-                format(rlimit.getOpenFilesCur()));
-        println("stack size..........." +
-                format(rlimit.getStackCur()));
-        println("cpu time............." +
-                format(rlimit.getCpuCur()));
-        println("max user processes..." +
-                format(rlimit.getProcessesCur()));
-        println("virual memory........" +
-                format(rlimit.getVirtualMemoryCur()));
+        this.invoker =
+            SigarInvokerJMX.getInstance(this.proxy, "Type=ResourceLimit");
+
+        this.mode = "Cur";
+        
+        println("core file size......." + getValue("Core"));
+        println("data seg size........" + getValue("Data"));
+        println("file size............" + getValue("FileSize"));
+        println("max memory size......" + getValue("Memory"));
+        println("open files..........." + getValue("OpenFiles"));
+        println("stack size..........." + getValue("Stack"));
+        println("cpu time............." + getValue("Cpu"));
+        println("max user processes..." + getValue("Processes"));
+        println("virual memory........" + getValue("VirtualMemory"));
     }
 
     public static void main(String[] args) throws Exception {
