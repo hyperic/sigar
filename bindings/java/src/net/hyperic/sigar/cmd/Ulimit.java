@@ -24,6 +24,10 @@ public class Ulimit extends SigarCommandBase {
         return "Display system resource limits";
     }
 
+    protected boolean validateArgs(String[] args) {
+        return true;
+    }
+
     private static String format(long val) {
         if (val == ResourceLimit.INFINITY()) {
             return "unlimited";
@@ -41,10 +45,22 @@ public class Ulimit extends SigarCommandBase {
     
     public void output(String[] args) throws SigarException {
 
+        this.mode = "Cur";
         this.invoker =
             SigarInvokerJMX.getInstance(this.proxy, "Type=ResourceLimit");
 
-        this.mode = "Cur";
+        for (int i=0; i<args.length; i++) {
+            String arg = args[i];
+            if (arg.equals("-H")) {
+                this.mode = "Max";
+            }
+            else if (arg.equals("-S")) {
+                this.mode = "Cur";
+            }
+            else {
+                throw new SigarException("Unknown argument: " + arg);
+            }
+        }
         
         println("core file size......." + getValue("Core"));
         println("data seg size........" + getValue("Data"));
