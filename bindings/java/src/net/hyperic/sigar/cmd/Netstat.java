@@ -17,9 +17,6 @@ public class Netstat extends SigarCommandBase {
     private static final int LADDR_LEN = 20;
     private static final int RADDR_LEN = 35;
 
-    private static final String OUTPUT_FORMAT =
-        "%-5s %-" + LADDR_LEN + "s %-" + RADDR_LEN + "s %s";
-
     private static final String[] HEADER = new String[] {
         "Proto",
         "Local Address",
@@ -31,12 +28,10 @@ public class Netstat extends SigarCommandBase {
 
     public Netstat(Shell shell) {
         super(shell);
-        setOutputFormat(OUTPUT_FORMAT);
     }
 
     public Netstat() {
         super();
-        setOutputFormat(OUTPUT_FORMAT);
     }
 
     protected boolean validateArgs(String[] args) {
