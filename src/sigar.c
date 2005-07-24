@@ -806,18 +806,21 @@ static int sigar_who_net_sessions(sigar_t *sigar,
     return SIGAR_OK;
 }
 
-static sigar_uint64_t get_logon_time(HKEY users,
-                                     char *username)
+static int get_logon_info(HKEY users,
+                          char *username,
+                          sigar_who_t *who)
 {
-    DWORD status;
+    DWORD status, size, type;
     HKEY key;
     char key_name[MAX_PATH];
+    char host[256];
     FILETIME wtime;
-    sigar_uint64_t time=0;
+
+    who->time = 0;
 
     sprintf(key_name, "%s\\Volatile Environment", username);
     if (RegOpenKey(users, key_name, &key) != ERROR_SUCCESS) {
-        return 0;
+        return ENOENT;
     }
 
     status = RegQueryInfoKey(key,
@@ -827,12 +830,21 @@ static sigar_uint64_t get_logon_time(HKEY users,
     
     if (status == ERROR_SUCCESS) {
         FileTimeToLocalFileTime(&wtime, &wtime);
-        time = FileTimeToTime(&wtime) / 1000000;
+        who->time = FileTimeToTime(&wtime) / 1000000;
+    }
+
+    size = sizeof(host);
+    status = RegQueryValueEx(key, "CLIENTNAME",
+                             NULL, &type, host, &size);
+    if (status == ERROR_SUCCESS) {
+        if ((host[0] != '\0') && !strEQ(host, "Console")) {
+            SIGAR_SSTRCPY(who->host, host);
+        }
     }
 
     RegCloseKey(key);
 
-    return time;
+    return SIGAR_OK;
 }
 
 /*XXX dlload, not in NT */
@@ -883,10 +895,10 @@ static int sigar_who_registry(sigar_t *sigar,
             SIGAR_WHO_LIST_GROW(wholist);
             who = &wholist->data[wholist->number++];
             
-            who->time = get_logon_time(users, subkey);
             SIGAR_SSTRCPY(who->user, username);
             SIGAR_SSTRCPY(who->host, domain);
             SIGAR_SSTRCPY(who->device, "console");
+            get_logon_info(users, subkey, who);
         }               
 
         LocalFree(sid);
