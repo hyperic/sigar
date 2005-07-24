@@ -744,10 +744,76 @@ SIGAR_DECLARE(int) sigar_who_list_destroy(sigar_t *sigar,
 }
 
 #ifdef WIN32
+
+#include <lm.h>
+
+static int sigar_who_net_sessions(sigar_t *sigar,
+                                  sigar_who_list_t *wholist)
+{
+    NET_API_STATUS status;
+    LPSESSION_INFO_10 buffer=NULL, ptr;
+    DWORD entries=0, total_entries=0;
+    DWORD resume_handle=0;
+    DWORD i;
+
+    do {
+        status = NetSessionEnum(NULL, /* server name */
+                                NULL, /* client name */
+                                NULL, /* user name */
+                                10,   /* level */
+                                (LPBYTE*)&buffer,
+                                MAX_PREFERRED_LENGTH,
+                                &entries,
+                                &total_entries,
+                                &resume_handle);
+
+        if ((status == NERR_Success) || (status == ERROR_MORE_DATA)) {
+            if ((ptr = buffer)) {
+                for (i=0; i<entries; i++) {
+                    sigar_who_t *who;
+
+                    if (!ptr) {
+                        break;
+                    }
+
+                    SIGAR_WHO_LIST_GROW(wholist);
+                    who = &wholist->data[wholist->number++];
+
+                    who->time = (time() - ptr->sesi10_time);
+                    SIGAR_W2A((LPCWSTR)ptr->sesi10_cname,
+                              who->user, sizeof(who->user));
+                    SIGAR_W2A((LPCWSTR)ptr->sesi10_username,
+                              who->host, sizeof(who->host));
+                    SIGAR_SSTRCPY(who->device, "network share");
+
+                    ptr++;
+                }
+            }
+        }
+        else {
+            break;
+        }
+
+        if (buffer) {
+            NetApiBufferFree(buffer);
+        }
+    } while (status == ERROR_MORE_DATA);
+
+    if (buffer) {
+        NetApiBufferFree(buffer);
+    }
+
+    return SIGAR_OK;
+}
+
 SIGAR_DECLARE(int) sigar_who_list_get(sigar_t *sigar,
                                       sigar_who_list_t *wholist)
 {
-    return SIGAR_ENOTIMPL;
+    sigar_who_list_create(wholist);
+
+    sigar_who_net_sessions(sigar, wholist);
+
+    return SIGAR_OK;
 }
 
 SIGAR_DECLARE(int) sigar_resource_limit_get(sigar_t *sigar,
