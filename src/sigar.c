@@ -813,7 +813,7 @@ static int get_logon_info(HKEY users,
     DWORD status, size, type;
     HKEY key;
     char key_name[MAX_PATH];
-    char host[256];
+    char value[256];
     FILETIME wtime;
 
     who->time = 0;
@@ -833,13 +833,20 @@ static int get_logon_info(HKEY users,
         who->time = FileTimeToTime(&wtime) / 1000000;
     }
 
-    size = sizeof(host);
+    size = sizeof(value);
     status = RegQueryValueEx(key, "CLIENTNAME",
-                             NULL, &type, host, &size);
+                             NULL, &type, value, &size);
     if (status == ERROR_SUCCESS) {
-        if ((host[0] != '\0') && !strEQ(host, "Console")) {
-            SIGAR_SSTRCPY(who->host, host);
+        if ((value[0] != '\0') && !strEQ(value, "Console")) {
+            SIGAR_SSTRCPY(who->host, value);
         }
+    }
+
+    size = sizeof(value);
+    status = RegQueryValueEx(key, "SESSIONNAME",
+                             NULL, &type, value, &size);
+    if (status == ERROR_SUCCESS) {
+        SIGAR_SSTRCPY(who->device, value);
     }
 
     RegCloseKey(key);
