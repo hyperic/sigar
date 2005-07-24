@@ -758,7 +758,7 @@ SIGAR_DECLARE(int) sigar_who_list_destroy(sigar_t *sigar,
 
 struct utmp {
     short ut_type;	
-    sigar_pid_t ut_pid;		
+    int ut_pid;		
     char ut_line[UT_LINESIZE];
     char ut_id[UT_IDLEN];
     time_t ut_time;	
