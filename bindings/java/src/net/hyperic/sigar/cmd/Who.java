@@ -34,10 +34,12 @@ public class Who extends SigarCommandBase {
             if (host.length() != 0) {
                 host = "(" + host + ")";
             }
-            println(who[i].getUser() + "\t" +
-                    who[i].getDevice() + "\t" +
-                    getTime(who[i].getTime() * 1000) + "\t" +
-                    host);
+            printf(new String[] {
+                who[i].getUser(),
+                who[i].getDevice(),
+                getTime(who[i].getTime() * 1000),
+                host            
+            });
         }
     }
 
