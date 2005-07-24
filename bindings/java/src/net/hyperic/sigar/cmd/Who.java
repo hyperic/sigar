@@ -20,6 +20,9 @@ public class Who extends SigarCommandBase {
     }
 
     private String getTime(long time) {
+        if (time == 0) {
+            return "unknown";
+        }
         String fmt = "MMM dd HH:mm";
         return new SimpleDateFormat(fmt).format(new Date(time));
     }
