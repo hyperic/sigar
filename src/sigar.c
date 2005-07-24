@@ -780,9 +780,9 @@ static int sigar_who_net_sessions(sigar_t *sigar,
                     who = &wholist->data[wholist->number++];
 
                     who->time = (time() - ptr->sesi10_time);
-                    SIGAR_W2A((LPCWSTR)ptr->sesi10_cname,
-                              who->user, sizeof(who->user));
                     SIGAR_W2A((LPCWSTR)ptr->sesi10_username,
+                              who->user, sizeof(who->user));
+                    SIGAR_W2A((LPCWSTR)ptr->sesi10_cname,
                               who->host, sizeof(who->host));
                     SIGAR_SSTRCPY(who->device, "network share");
 
