@@ -743,6 +743,88 @@ SIGAR_DECLARE(int) sigar_who_list_destroy(sigar_t *sigar,
     return SIGAR_OK;
 }
 
+#if defined(__sun)
+#  include <utmpx.h>
+#  define SIGAR_UTMP_FILE _UTMPX_FILE
+#  define ut_time ut_tv.tv_sec
+#elif defined(WIN32)
+/* XXX may not be the default */
+#define SIGAR_UTMP_FILE "C:\\cygwin\\var\\run\\utmp"
+#define UT_LINESIZE	16
+#define UT_NAMESIZE	16
+#define UT_HOSTSIZE	256
+#define UT_IDLEN	2
+#define ut_name ut_user
+
+struct utmp {
+    short ut_type;	
+    sigar_pid_t ut_pid;		
+    char ut_line[UT_LINESIZE];
+    char ut_id[UT_IDLEN];
+    time_t ut_time;	
+    char ut_user[UT_NAMESIZE];	
+    char ut_host[UT_HOSTSIZE];	
+    long ut_addr;	
+};
+#else
+#  include <utmp.h>
+#  ifdef UTMP_FILE
+#    define SIGAR_UTMP_FILE UTMP_FILE
+#  else
+#    define SIGAR_UTMP_FILE _PATH_UTMP
+#  endif
+#endif
+
+#if defined(__FreeBSD__) || defined(DARWIN)
+#  define ut_user ut_name
+#endif
+
+#define WHOCPY(dest, src) \
+    SIGAR_SSTRCPY(dest, src); \
+    if (sizeof(src) < sizeof(dest)) \
+        dest[sizeof(src)] = '\0'
+
+static int sigar_who_utmp(sigar_t *sigar,
+                          sigar_who_list_t *wholist)
+{
+    FILE *fp;
+#ifdef __sun
+    struct utmpx ut;
+#else
+    struct utmp ut;
+#endif
+    if (!(fp = fopen(SIGAR_UTMP_FILE, "r"))) {
+        return errno;
+    }
+
+    while (fread(&ut, sizeof(ut), 1, fp) == 1) {
+        sigar_who_t *who;
+
+        if (*ut.ut_name == '\0') {
+            continue;
+        }
+
+#ifdef USER_PROCESS
+        if (ut.ut_type != USER_PROCESS) {
+            continue;
+        }
+#endif
+
+        SIGAR_WHO_LIST_GROW(wholist);
+        who = &wholist->data[wholist->number++];
+
+        WHOCPY(who->user, ut.ut_user);
+        WHOCPY(who->device, ut.ut_line);
+        WHOCPY(who->host, ut.ut_host);
+
+        who->time = ut.ut_time;
+    }
+
+    fclose(fp);
+
+    return SIGAR_OK;
+}
+
 #ifdef WIN32
 
 #include <lm.h>
@@ -925,6 +1007,9 @@ SIGAR_DECLARE(int) sigar_who_list_get(sigar_t *sigar,
 
     sigar_who_registry(sigar, wholist);
 
+    /* cygwin ssh */
+    sigar_who_utmp(sigar, wholist);
+
     return SIGAR_OK;
 }
 
@@ -949,67 +1034,18 @@ SIGAR_DECLARE(int) sigar_resource_limit_get(sigar_t *sigar,
 }
 #else
 
-#ifdef __sun
-#  include <utmpx.h>
-#  define SIGAR_UTMP_FILE _UTMPX_FILE
-#  define ut_time ut_tv.tv_sec
-#else
-#  include <utmp.h>
-#  ifdef UTMP_FILE
-#    define SIGAR_UTMP_FILE UTMP_FILE
-#  else
-#    define SIGAR_UTMP_FILE _PATH_UTMP
-#  endif
-#endif
-
-#if defined(__FreeBSD__) || defined(DARWIN)
-#  define ut_user ut_name
-#endif
-
-#define WHOCPY(dest, src) \
-    SIGAR_SSTRCPY(dest, src); \
-    if (sizeof(src) < sizeof(dest)) \
-        dest[sizeof(src)] = '\0'
-
 int sigar_who_list_get(sigar_t *sigar,
                        sigar_who_list_t *wholist)
 {
-    FILE *fp;
-#ifdef __sun
-    struct utmpx ut;
-#else
-    struct utmp ut;
-#endif
-    if (!(fp = fopen(SIGAR_UTMP_FILE, "r"))) {
-        return errno;
-    }
+    int status;
 
     sigar_who_list_create(wholist);
 
-    while (fread(&ut, sizeof(ut), 1, fp) == 1) {
-        sigar_who_t *who;
-
-        if (*ut.ut_name == '\0') {
-            continue;
-        }
-
-#ifdef USER_PROCESS
-        if (ut.ut_type != USER_PROCESS) {
-            continue;
-        }
-#endif
-
-        SIGAR_WHO_LIST_GROW(wholist);
-        who = &wholist->data[wholist->number++];
-
-        WHOCPY(who->user, ut.ut_user);
-        WHOCPY(who->device, ut.ut_line);
-        WHOCPY(who->host, ut.ut_host);
-
-        who->time = ut.ut_time;
+    status = sigar_who_utmp(sigar, wholist);
+    if (status != SIGAR_OK) {
+        sigar_who_list_destroy(sigar, wholist);
+        return status;
     }
-
-    fclose(fp);
 
     return SIGAR_OK;
 }
