@@ -144,6 +144,9 @@ SIGAR_DECLARE(int)sigar_file_attrs_mode_get(sigar_uint64_t permissions)
 
 #ifdef WIN32
 
+#include <accctrl.h>
+#include <aclapi.h>
+
 static void fillin_fileattrs(sigar_file_attrs_t *finfo,
                              WIN32_FILE_ATTRIBUTE_DATA *wininfo,
                              int linkinfo)
@@ -169,6 +172,86 @@ static void fillin_fileattrs(sigar_file_attrs_t *finfo,
     else {
         finfo->type = SIGAR_FILETYPE_REG;
     }
+}
+
+static sigar_uint64_t convert_perms(ACCESS_MASK acc, sigar_uint64_t scope)
+{
+    sigar_uint64_t perms = 0;
+    if (acc & FILE_EXECUTE) {
+        perms |= SIGAR_WEXECUTE;
+    }
+    if (acc & FILE_WRITE_DATA) {
+        perms |= SIGAR_WWRITE;
+    }
+    if (acc & FILE_READ_DATA) {
+        perms |= SIGAR_WREAD;
+    }
+
+    return (perms << scope);
+}
+
+static int get_security_info(sigar_t *sigar,
+                             const char *file,
+                             sigar_file_attrs_t *fileattrs)
+{
+    DWORD retval;
+    PSID user = NULL, group = NULL, world = NULL;
+    PACL dacl = NULL;
+    PSECURITY_DESCRIPTOR pdesc = NULL;
+    SECURITY_INFORMATION sinfo =
+        OWNER_SECURITY_INFORMATION |
+        GROUP_SECURITY_INFORMATION |        
+        DACL_SECURITY_INFORMATION;
+    TRUSTEE ident = {NULL, NO_MULTIPLE_TRUSTEE, TRUSTEE_IS_SID};
+    ACCESS_MASK acc;
+    SID_IDENTIFIER_AUTHORITY auth = SECURITY_WORLD_SID_AUTHORITY;
+
+    retval = GetNamedSecurityInfo((char *)file,
+                                  SE_FILE_OBJECT,
+                                  sinfo,
+                                  &user,
+                                  &group,
+                                  &dacl,
+                                  NULL,
+                                  &pdesc);
+
+    if (retval != ERROR_SUCCESS) {
+        return retval;
+    }
+
+    if (!AllocateAndInitializeSid(&auth, 1, SECURITY_WORLD_RID,
+                                  0, 0, 0, 0, 0, 0, 0, &world))
+    {
+        world = NULL;
+    }
+
+    ident.TrusteeType = TRUSTEE_IS_USER;
+    ident.ptstrName = user;
+    if (GetEffectiveRightsFromAcl(dacl, &ident, &acc) == ERROR_SUCCESS) {
+        fileattrs->permissions |= convert_perms(acc, 8);
+    }
+
+    ident.TrusteeType = TRUSTEE_IS_GROUP;
+    ident.ptstrName = group;
+    if (GetEffectiveRightsFromAcl(dacl, &ident, &acc) == ERROR_SUCCESS) {
+        fileattrs->permissions |= convert_perms(acc, 4);
+    }
+
+    if (world) {
+        ident.TrusteeType = TRUSTEE_IS_WELL_KNOWN_GROUP;
+        ident.ptstrName = world;
+        if (GetEffectiveRightsFromAcl(dacl, &ident, &acc) == ERROR_SUCCESS) {
+            fileattrs->permissions |= convert_perms(acc, 0);
+        }
+    }
+
+    if (world) {
+        FreeSid(world);
+    }
+
+    LocalFree(pdesc);
+
+    return SIGAR_OK;
 }
 
 static int fileattrs_get(sigar_t *sigar,
@@ -214,6 +297,8 @@ static int fileattrs_get(sigar_t *sigar,
         }
         CloseHandle(handle);
     }
+
+    get_security_info(sigar, file, fileattrs);
 
     return SIGAR_OK;
 }
