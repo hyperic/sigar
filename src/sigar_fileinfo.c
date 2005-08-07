@@ -176,7 +176,10 @@ static int fileattrs_get(sigar_t *sigar,
                          sigar_file_attrs_t *fileattrs,
                          int linkinfo)
 {
+    BY_HANDLE_FILE_INFORMATION info;
     WIN32_FILE_ATTRIBUTE_DATA attrs;
+    HANDLE handle;
+    DWORD flags;
 
     SIGAR_ZERO(fileattrs);
 
@@ -188,6 +191,29 @@ static int fileattrs_get(sigar_t *sigar,
     }
 
     fillin_fileattrs(fileattrs, &attrs, linkinfo);
+
+    flags = fileattrs->type == SIGAR_FILETYPE_DIR ?
+        FILE_FLAG_BACKUP_SEMANTICS :
+        FILE_ATTRIBUTE_NORMAL;
+
+    handle = CreateFile(file,
+                        GENERIC_READ,
+                        FILE_SHARE_READ,
+                        NULL,
+                        OPEN_EXISTING,
+                        flags,
+                        NULL);
+ 
+    if (handle != INVALID_HANDLE_VALUE) {
+        if (GetFileInformationByHandle(handle, &info)) {
+            fileattrs->inode =
+                info.nFileIndexLow |
+                (info.nFileIndexHigh << 32);
+            fileattrs->device = info.dwVolumeSerialNumber;
+            fileattrs->nlink  = info.nNumberOfLinks;
+        }
+        CloseHandle(handle);
+    }
 
     return SIGAR_OK;
 }
