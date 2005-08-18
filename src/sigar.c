@@ -766,6 +766,8 @@ struct utmp {
     char ut_host[UT_HOSTSIZE];	
     long ut_addr;	
 };
+#elif defined(NETWARE)
+/*XXX*/
 #else
 #  include <utmp.h>
 #  ifdef UTMP_FILE
@@ -778,6 +780,8 @@ struct utmp {
 #if defined(__FreeBSD__) || defined(DARWIN)
 #  define ut_user ut_name
 #endif
+
+#ifndef NETWARE
 
 #define WHOCPY(dest, src) \
     SIGAR_SSTRCPY(dest, src); \
@@ -825,7 +829,9 @@ static int sigar_who_utmp(sigar_t *sigar,
     return SIGAR_OK;
 }
 
-#ifdef WIN32
+#endif /* NETWARE */
+
+#if defined(WIN32)
 
 #include <lm.h>
 
@@ -1032,6 +1038,9 @@ SIGAR_DECLARE(int) sigar_resource_limit_get(sigar_t *sigar,
 
     return SIGAR_OK;
 }
+
+#elif defined(NETWARE)
+/*XXX*/
 #else
 
 int sigar_who_list_get(sigar_t *sigar,
@@ -1228,7 +1237,7 @@ void sigar_hwaddr_format(char *buff, unsigned char *ptr)
             (ptr[3] & 0377), (ptr[4] & 0377), (ptr[5] & 0377));
 }
 
-#if !defined(WIN32) && !defined(DARWIN) && !defined(__FreeBSD__)
+#if !defined(WIN32) && !defined(DARWIN) && !defined(__FreeBSD__) && !defined(NETWARE)
 
 /* XXX: prolly will be moving these stuffs into os_net.c */
 #include <sys/socket.h>

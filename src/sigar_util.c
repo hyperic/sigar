@@ -406,7 +406,7 @@ void sigar_cpu_model_adjust(sigar_t *sigar, sigar_cpu_info_t *info)
     strcpy(info->model, ptr);
 }
 
-#ifndef WIN32
+#if !defined(WIN32) && !defined(NETWARE)
 #include <netdb.h>
 #include <rpc/rpc.h>
 #include <rpc/pmap_prot.h>

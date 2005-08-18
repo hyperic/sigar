@@ -142,7 +142,9 @@ SIGAR_DECLARE(int)sigar_file_attrs_mode_get(sigar_uint64_t permissions)
 #define IS_DOTDIR(dir) \
     ((dir[0] == '.') && (!dir[1] || ((dir[1] == '.') && !dir[2])))
 
-#ifdef WIN32
+#if defined(NETWARE)
+
+#elif defined(WIN32)
 
 #include <accctrl.h>
 #include <aclapi.h>
