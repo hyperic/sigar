@@ -3,6 +3,9 @@
 #include "sigar_os.h"
 #include "sigar_util.h"
 
+#include <errno.h>
+#include <monitor.h>
+
 int sigar_os_open(sigar_t **sigar)
 {
     *sigar = malloc(sizeof(**sigar));
@@ -23,13 +26,19 @@ char *sigar_os_error_string(sigar_t *sigar, int err)
 
 int sigar_mem_get(sigar_t *sigar, sigar_mem_t *mem)
 {
-    mem->total  = -1;
-    mem->ram    = -1;
-    mem->used   = -1;
-    mem->free   = -1;
+    struct memory_info info;
+    if (netware_mem_info(&info) != 0) {
+        return errno;
+    }
+    mem->total  = info.TotalKnownSystemMemoryUnder4Gb;
+    mem->used   = info.TotalWorkMemory;
+    mem->free   = mem->total - mem->free;
     mem->shared = -1;
     mem->actual_free = mem->free;
     mem->actual_used = mem->used;
+
+    sigar_mem_calc_ram(sigar, mem);
+
     return SIGAR_OK;
 }
 
