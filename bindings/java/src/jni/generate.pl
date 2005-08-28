@@ -1474,5 +1474,12 @@ EOF
     close JFH;
 }
 
+my $jsigar = "../../src/jni/javasigar.c";
+open JSIGAR, $jsigar or die "open $jsigar: $!";
+while (<JSIGAR>) {
+    next unless /SIGAR_JNI\(([A-Za-z_]+)\)/;
+    print DFH "Java_net_hyperic_sigar_$1\n";
+}
+
 close CFH;
 close DFH;
