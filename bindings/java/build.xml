@@ -4,6 +4,7 @@
 
 <project name="Sigar" default="build" basedir=".">
 
+  <property name="copyright.year" value="2004,2005"/>
   <property name="version.major" value="1"/>
   <property name="version.minor" value="1"/>
   <property name="version.maint" value="22"/>
@@ -70,7 +71,7 @@
       <group title="Sigar" packages="net.hyperic.sigar" />
       <classpath refid="libjars"/>
       <classpath><path path="${env.ANT_HOME}/lib/ant.jar"/></classpath> 
-     <bottom>Copyright &#169; 2004,2005 <![CDATA[<a target="_top" href="http://www.hyperic.net/">Hyperic, LLC</a>]]>. All Rights Reserved.</bottom>
+     <bottom>Copyright &#169; ${copyright.year} <![CDATA[<a target="_top" href="http://www.hyperic.net/">Hyperic, LLC</a>]]>. All Rights Reserved.</bottom>
     </javadoc>
   </target>
 
@@ -109,6 +110,7 @@
       <replacefilter token="@@VERSION_MAJOR@@" value="${version.major}"/>
       <replacefilter token="@@VERSION_MINOR@@" value="${version.minor}"/>
       <replacefilter token="@@VERSION_MAINT@@" value="${version.maint}"/>
+      <replacefilter token="@@COPYRIGHT_YEAR@@" value="${copyright.year}"/>
     </replace>
   </target>
 
