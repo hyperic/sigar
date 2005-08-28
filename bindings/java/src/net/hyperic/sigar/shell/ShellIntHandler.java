@@ -14,7 +14,12 @@ public class ShellIntHandler implements SignalHandler {
         handlerShell = shell;
         handlers = new Stack();
 
-        Signal signal = new Signal("INT");
+        Signal signal;
+        try {
+            signal = new Signal("INT");
+        } catch (IllegalArgumentException e) {
+            return; //e.g NetWare
+        }
 
         try {
             Signal.handle(signal, new ShellIntHandler());
