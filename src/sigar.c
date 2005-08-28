@@ -767,7 +767,15 @@ struct utmp {
     long ut_addr;	
 };
 #elif defined(NETWARE)
-/*XXX*/
+static char *getpass(const char *prompt)
+{
+    static char password[BUFSIZ];
+
+    fputs(prompt, stderr);
+    fgets((char *)&password, sizeof(password), stdin);
+
+    return (char *)&password;
+}
 #else
 #  include <utmp.h>
 #  ifdef UTMP_FILE
