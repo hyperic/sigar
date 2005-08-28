@@ -101,6 +101,15 @@
       <replacefilter token="@@BUILD_DATE@@" value="${BUILD_DATE}"/>
       <replacefilter token="@@VERSION_STRING@@" value="${sigar.version}"/>
     </replace>
+
+    <copy file="../../src/os/netware/sigar.def.in"
+          tofile="${build}/sigar.def"/>
+
+    <replace file="${build}/sigar.def">
+      <replacefilter token="@@VERSION_MAJOR@@" value="${version.major}"/>
+      <replacefilter token="@@VERSION_MINOR@@" value="${version.minor}"/>
+      <replacefilter token="@@VERSION_MAINT@@" value="${version.maint}"/>
+    </replace>
   </target>
 
   <target name="prepare-src" depends="sigar-version">
