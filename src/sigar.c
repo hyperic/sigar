@@ -1045,6 +1045,12 @@ int sigar_resource_limit_get(sigar_t *sigar,
 {
     return SIGAR_ENOTIMPL;
 }
+
+int sigar_who_list_get(sigar_t *sigar,
+                       sigar_who_list_t *wholist)
+{
+    return SIGAR_ENOTIMPL;
+}
 #else
 
 int sigar_who_list_get(sigar_t *sigar,
@@ -1703,7 +1709,7 @@ SIGAR_DECLARE(int) sigar_fqdn_get(sigar_t *sigar, char *name, int namelen)
     sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
                      "[fqdn] unresolved using gethostbyname.h_addr_list");
 
-#ifndef WIN32
+#if !defined(WIN32) && !defined(NETWARE)
     if (!IS_FQDN(name) && /* e.g. aix gethostname is already fqdn */
         (getdomainname(domain, sizeof(domain) - 1) == 0) &&
         (domain[0] != '\0') &&

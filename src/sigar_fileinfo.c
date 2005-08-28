@@ -158,6 +158,13 @@ int sigar_file_attrs_get(sigar_t *sigar,
     return SIGAR_ENOTIMPL;
 }
 
+int sigar_link_attrs_get(sigar_t *sigar,
+                         const char *file,
+                         sigar_file_attrs_t *fileattrs)
+{
+    return SIGAR_ENOTIMPL;
+}
+
 #elif defined(WIN32)
 
 #include <accctrl.h>
