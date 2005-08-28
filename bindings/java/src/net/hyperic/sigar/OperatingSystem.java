@@ -19,6 +19,7 @@ public class OperatingSystem {
     public static final String NAME_MACOSX  = "MacOSX";
     public static final String NAME_FREEBSD = "FreeBSD";
     public static final String NAME_WIN32   = "Win32";
+    public static final String NAME_NETWARE = "NetWare";
     
     public static String[] UNIX_NAMES = {
         OperatingSystem.NAME_LINUX,
@@ -67,6 +68,7 @@ public class OperatingSystem {
     private static final int TYPE_MACOSX  = 4;
     private static final int TYPE_FREEBSD = 5;
     private static final int TYPE_WIN32   = 6;
+    private static final int TYPE_NETWARE = 7;
 
     private static final String ETC =
         System.getProperty("sigar.etc.dir", "/etc") + "/";
@@ -167,6 +169,11 @@ public class OperatingSystem {
                 os.type = TYPE_FREEBSD;
                 os.vendor = NAME_FREEBSD;
             }
+            else if (os.name.equals(NAME_NETWARE)) {
+                os.type = TYPE_NETWARE;
+                os.vendor = "Novell";
+                os.vendorVersion = os.version.substring(0, 3);
+            }
             else {
                 os.vendor = "Unknown";
             }
@@ -198,6 +205,9 @@ public class OperatingSystem {
           case TYPE_WIN32:
             //"Microsoft Windows 2003"
             return this.vendor + " Windows " + this.vendorVersion;
+          case TYPE_NETWARE:
+            //"NetWare 6.0"
+            return this.name + " " + this.vendorVersion;
           default:
             //"AIX 5.2", "FreeBSD 5.3"
             return this.name + " " + this.version;
