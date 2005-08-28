@@ -144,6 +144,20 @@ SIGAR_DECLARE(int)sigar_file_attrs_mode_get(sigar_uint64_t permissions)
 
 #if defined(NETWARE)
 
+int sigar_dir_stat_get(sigar_t *sigar,
+                       const char *dir,
+                       sigar_dir_stat_t *dirstats)
+{
+    return SIGAR_ENOTIMPL;
+}
+
+int sigar_file_attrs_get(sigar_t *sigar,
+                         const char *file,
+                         sigar_file_attrs_t *fileattrs)
+{
+    return SIGAR_ENOTIMPL;
+}
+
 #elif defined(WIN32)
 
 #include <accctrl.h>

@@ -1040,7 +1040,11 @@ SIGAR_DECLARE(int) sigar_resource_limit_get(sigar_t *sigar,
 }
 
 #elif defined(NETWARE)
-/*XXX*/
+int sigar_resource_limit_get(sigar_t *sigar,
+                             sigar_resource_limit_t *rlimit)
+{
+    return SIGAR_ENOTIMPL;
+}
 #else
 
 int sigar_who_list_get(sigar_t *sigar,
