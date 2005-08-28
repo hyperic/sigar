@@ -1073,6 +1073,7 @@ my %func_alias = (
 my $cfile = 'javasigar_generated.c';
 my $hfile = 'javasigar_generated.h';
 my $pfile = 'Sigar_generated.xs';
+my $dfile = 'javasigar_generated.def';
 
 my $build_src = $ARGV[0] or die "usage: $0 build_directory";
 
@@ -1095,6 +1096,7 @@ mkpath([$jsrc], 0, 0755) unless -d $jsrc;
 open CFH, ">$cfile" or die "open $cfile: $!";
 open HFH, ">$hfile" or die "open $hfile: $!";
 open PFH, ">$pfile" or die "open $pfile: $!";
+open DFH, ">$dfile" or die "open $dfile: $!";
 
 my $datestamp = scalar localtime;
 
@@ -1246,6 +1248,7 @@ while (my($name, $fields) = each %classes) {
     print JFH $warning;
 
     my $impl = ! $get_not_impl{$cname};
+    print DFH $nativefunc, "\n" if $impl;
 
     print CFH <<EOF if $impl;
 
@@ -1472,3 +1475,4 @@ EOF
 }
 
 close CFH;
+close DFH;
