@@ -1,3 +1,5 @@
+#define WIN32_LEAN_AND_MEAN
+
 #include "sigar.h"
 #include "sigar_private.h"
 #include "sigar_os.h"
@@ -5,6 +7,56 @@
 
 #include <errno.h>
 #include <monitor.h>
+#include <stdio.h>
+#include <windows.h>
+#include <novsock2.h>
+#include <ws2tcpip.h>
+
+/*
+ * http://developer.novell.com/research/appnotes/2003/may/05/a0305058.htm
+ */
+int _NonAppStart(void *NLMHandle,
+                 void        *errorScreen,
+                 const char  *cmdLine,
+                 const char  *loadDirPath,
+                 size_t      uninitializedDataLength,
+                 void        *NLMFileHandle,
+                 int         (*readRoutineP)(int conn,
+                                             void *fileHandle,
+                                             size_t offset,
+                                             size_t nbytes,
+                                             size_t *bytesRead,
+                                             void *buffer),
+                 size_t      customDataOffset,
+                 size_t      customDataSize,
+                 int         messageCount,
+                 const char  **messages)
+{
+
+#pragma unused(cmdLine)
+#pragma unused(loadDirPath)
+#pragma unused(uninitializedDataLength)
+#pragma unused(NLMFileHandle)
+#pragma unused(readRoutineP)
+#pragma unused(customDataOffset)
+#pragma unused(customDataSize)
+#pragma unused(messageCount)
+#pragma unused(messages)
+
+    WSADATA wsaData;
+
+    return WSAStartup((WORD)MAKEWORD(2, 0), &wsaData);
+}
+
+void _NonAppStop(void)
+{
+    WSACleanup();
+}
+
+int _NonAppCheckUnload(void)
+{
+    return 0;
+}
 
 int sigar_os_open(sigar_t **sigar)
 {
