@@ -46,7 +46,8 @@ SIGAR_SRC = \
 ..\..\sigar_cache.c \
 ..\..\sigar_getline.c \
 ..\..\sigar_fileinfo.c \
-..\..\sigar_util.c
+..\..\sigar_util.c \
+..\..\sigar_win32ish.c \
 
 JNI_SRC = $(JBINDINGS)\src\jni\javasigar.c
 

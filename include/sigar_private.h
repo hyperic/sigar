@@ -66,6 +66,9 @@
 /* cpu ticks to seconds */
 #define SIGAR_TICK2SEC(s) ((s) / sigar->ticks)
 
+#define IFTYPE_LO  2
+#define IFTYPE_ETH 3
+
 #define SIGAR_LAST_PROC_EXPIRE 2
 
 #define SIGAR_FS_MAX 10
@@ -211,5 +214,9 @@ int sigar_group_name_get(sigar_t *sigar, int gid, char *buf, int buflen);
     fsusage->disk_reads = fsusage->disk_writes = \
     fsusage->disk_read_bytes = fsusage->disk_write_bytes = \
     fsusage->disk_queue = SIGAR_FIELD_NOTIMPL;
+
+#if defined(WIN32) || defined(NETWARE)
+int sigar_get_iftype(const char *name, int *type, int *inst);
+#endif
 
 #endif

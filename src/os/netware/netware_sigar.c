@@ -292,19 +292,6 @@ int sigar_net_route_list_get(sigar_t *sigar,
     return SIGAR_ENOTIMPL;
 }
 
-int sigar_net_interface_list_get(sigar_t *sigar,
-                                 sigar_net_interface_list_t *iflist)
-{
-    return SIGAR_ENOTIMPL;
-}
-
-int sigar_net_interface_config_get(sigar_t *sigar,
-                                   const char *name,
-                                   sigar_net_interface_config_t *ifconfig)
-{
-    return SIGAR_ENOTIMPL;
-}
-
 int sigar_net_interface_stat_get(sigar_t *sigar, const char *name,
                                  sigar_net_interface_stat_t *ifstat)
 {
