@@ -249,7 +249,36 @@ int sigar_os_fs_type_get(sigar_file_system_t *fsp)
 int sigar_file_system_list_get(sigar_t *sigar,
                                sigar_file_system_list_t *fslist)
 {
+    struct volume_info info;
+    int num = 0;
+
     sigar_file_system_list_create(fslist);
+
+    while (netware_vol_info(&info, &num) == 0) {
+        sigar_file_system_t *fsp;
+        int len;
+        char *type = NULL;
+
+        SIGAR_FILE_SYSTEM_LIST_GROW(fslist);
+
+        fsp = &fslist->data[fslist->number++];
+        SIGAR_SSTRCPY(fsp->dev_name, info.name);
+        SIGAR_SSTRCPY(fsp->dir_name, info.name);
+        len = strlen(info.name);
+        fsp->dir_name[len] = ':';
+        fsp->dir_name[len+1] = '/';
+        fsp->dir_name[len+2] = '\0';
+
+        fsp->type = SIGAR_FSTYPE_LOCAL_DISK;
+        type = "nss";
+
+        sigar_fs_type_get(fsp);
+        if (!type) {
+            type = fsp->type_name;
+        }
+
+        SIGAR_SSTRCPY(fsp->sys_type_name, type);
+    }
 
     return SIGAR_OK;
 }
