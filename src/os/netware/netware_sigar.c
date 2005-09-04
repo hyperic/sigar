@@ -9,6 +9,7 @@
 #include <monitor.h>
 #include <stdio.h>
 #include <windows.h>
+#include <netware.h>
 #include <novsock2.h>
 #include <ws2tcpip.h>
 #include <sys/statfs.h>
@@ -97,9 +98,15 @@ int sigar_mem_get(sigar_t *sigar, sigar_mem_t *mem)
 
 int sigar_swap_get(sigar_t *sigar, sigar_swap_t *swap)
 {
-    swap->total  = -1;
-    swap->used   = -1;
-    swap->free   = -1;
+    struct vmemory_info info;
+
+    if (netware_vmem_info(&info) != 0) {
+        return errno;
+    }
+
+    swap->used  = info.SwapPageCount * PAGESIZE;
+    swap->free  = info.SwapFreeCount * PAGESIZE;
+    swap->total = swap->used + swap->free;
 
     return SIGAR_OK;
 }
