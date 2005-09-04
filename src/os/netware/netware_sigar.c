@@ -272,16 +272,23 @@ int sigar_file_system_usage_get(sigar_t *sigar,
 int sigar_cpu_info_list_get(sigar_t *sigar,
                             sigar_cpu_info_list_t *cpu_infos)
 {
-    sigar_cpu_info_t *info;
+    struct cpu_info cpu;
+    int num = 0;
 
     sigar_cpu_info_list_create(cpu_infos);
 
-    info = &cpu_infos->data[cpu_infos->number++];
+    while (netware_cpu_info(&cpu, &num) == 0) {
+        sigar_cpu_info_t *info;
 
-    SIGAR_SSTRCPY(info->vendor, "vendor");
-    SIGAR_SSTRCPY(info->model, "model");
-    info->mhz = -1;
-    info->cache_size = -1;
+        SIGAR_CPU_INFO_LIST_GROW(cpu_infos);
+
+        info = &cpu_infos->data[cpu_infos->number++];
+
+        SIGAR_SSTRCPY(info->vendor, "vendor");
+        SIGAR_SSTRCPY(info->model, "model");
+        info->mhz = cpu.Speed;
+        info->cache_size = cpu.L2CacheSize;
+    }
 
     return SIGAR_OK;
 }
