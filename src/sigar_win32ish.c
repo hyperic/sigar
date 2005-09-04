@@ -13,6 +13,7 @@
 #include <stdio.h>
 #include <novsock2.h>
 #include <ws2tcpip.h>
+#include <monitor.h>
 #endif
 
 int sigar_get_iftype(const char *name, int *type, int *inst)
@@ -102,7 +103,14 @@ static void hwaddr_lookup(sigar_net_interface_config_t *ifconfig, int num)
 
 static void hwaddr_lookup(sigar_net_interface_config_t *ifconfig, int num)
 {
-    sigar_hwaddr_set_null(ifconfig);
+    uint8_t addr[6];
+
+    if (netware_net_macaddr(num, addr) == 0) {
+        sigar_hwaddr_format(ifconfig->hwaddr, addr);
+    }
+    else {
+        sigar_hwaddr_set_null(ifconfig);
+    }
 }
 
 #endif /* WIN32 */
@@ -216,7 +224,11 @@ sigar_net_interface_config_get(sigar_t *sigar,
         ifconfig->flags |= SIGAR_IFF_LOOPBACK;
         ifconfig->destination = ifconfig->address;
         ifconfig->broadcast = 0;
+#ifdef NETWARE
+        hwaddr_lookup(ifconfig, i+1);
+#else
         sigar_hwaddr_set_null(ifconfig);
+#endif
     }
     else {
         hwaddr_lookup(ifconfig, i);
