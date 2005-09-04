@@ -11,6 +11,7 @@
 #include <windows.h>
 #include <novsock2.h>
 #include <ws2tcpip.h>
+#include <sys/statfs.h>
 
 /*
  * http://developer.novell.com/research/appnotes/2003/may/05/a0305058.htm
@@ -283,16 +284,27 @@ int sigar_file_system_list_get(sigar_t *sigar,
     return SIGAR_OK;
 }
 
+#define SIGAR_FS_BLOCKS_TO_BYTES(buf, f) \
+    ((buf.f * (buf.f_bsize / 512)) >> 1)
+
 int sigar_file_system_usage_get(sigar_t *sigar,
                                 const char *dirname,
                                 sigar_file_system_usage_t *fsusage)
 {
-    fsusage->total = -1;
-    fsusage->free  = -1;
-    fsusage->avail = -1;
-    fsusage->used  = -1;
-    fsusage->files = -1;
-    fsusage->free_files = -1;
+    struct statfs buf;
+
+    if (statfs(dirname, &buf) != 0) {
+        return errno;
+    }
+
+    fsusage->total = SIGAR_FS_BLOCKS_TO_BYTES(buf, f_blocks);
+    fsusage->free  = SIGAR_FS_BLOCKS_TO_BYTES(buf, f_bfree);
+    fsusage->avail = fsusage->free;
+    fsusage->used  = fsusage->total - fsusage->free;
+    fsusage->files = buf.f_files;
+    fsusage->free_files = buf.f_ffree;
+    fsusage->use_percent = sigar_file_system_usage_calc_used(sigar, fsusage);
+
     SIGAR_DISK_STATS_NOTIMPL(fsusage);
 
     return SIGAR_OK;
