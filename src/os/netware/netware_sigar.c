@@ -47,11 +47,14 @@ int _NonAppStart(void *NLMHandle,
 
     WSADATA wsaData;
 
+    NWCallsInit(NULL, NULL);
+
     return WSAStartup((WORD)MAKEWORD(2, 0), &wsaData);
 }
 
 void _NonAppStop(void)
 {
+    NWCallsTerm(NULL);
     WSACleanup();
 }
 

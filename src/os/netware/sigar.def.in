@@ -12,6 +12,8 @@ check _LibCCheckUnload
 import @c:/novell/ndk/libc/imports/libc.imp
 import @c:/novell/ndk/libc/imports/netware.imp
 import @c:/novell/ndk/libc/imports/ws2nlm.imp
+import @c:/novell/ndk/clib/imports/clib.imp
+import @c:/novell/ndk/clib/imports/calnlm32.imp
 module libc
 export @../../../bindings/java/build/src/javasigar_generated.def
 

@@ -4,6 +4,7 @@ NDRIVE = g:
 
 NDK_ROOT = $(NDKBASE)/ndk
 SDK_LIBC = $(NDK_ROOT)/libc
+SDK_CLIB = $(NDK_ROOT)/clib
 
 JBINDINGS = ../../../bindings/java
 JBUILD    = $(JBINDINGS)/build
@@ -35,7 +36,9 @@ LDFLAGS	= -nostdlib $(PRELUDE) $(DEF_FILE) $(NW_OBJ) $(SIGAR_OBJ) $(JNI_OBJ) -o 
 INCLUDES += \
 -I$(SDK_LIBC)/include \
 -I$(SDK_LIBC)/include/nks \
--I$(SDK_LIBC)/include/winsock
+-I$(SDK_LIBC)/include/winsock \
+-I$(SDK_CLIB)/include \
+-I$(SDK_CLIB)/include/nlm
 
 CFLAGS += $(INCLUDES)
 
