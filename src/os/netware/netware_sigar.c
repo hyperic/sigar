@@ -13,6 +13,8 @@
 #include <novsock2.h>
 #include <ws2tcpip.h>
 #include <sys/statfs.h>
+#define _STRUCT_TM
+#include <nwtime.h>
 
 /*
  * http://developer.novell.com/research/appnotes/2003/may/05/a0305058.htm
@@ -135,7 +137,10 @@ int sigar_cpu_list_get(sigar_t *sigar, sigar_cpu_list_t *cpulist)
 int sigar_uptime_get(sigar_t *sigar,
                      sigar_uptime_t *uptime)
 {
-    uptime->uptime   = -1;
+    LONG seconds, tenths;
+
+    TicksToSeconds(GetCurrentTicks(), &seconds, &tenths);
+    uptime->uptime = seconds;
 
     return SIGAR_OK;
 }
