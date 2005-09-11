@@ -15,6 +15,7 @@
 #include <sys/statfs.h>
 #define _STRUCT_TM
 #include <nwtime.h>
+#include <nit/nwservst.h>
 
 /*
  * http://developer.novell.com/research/appnotes/2003/may/05/a0305058.htm
@@ -358,18 +359,30 @@ int sigar_net_route_list_get(sigar_t *sigar,
 int sigar_net_interface_stat_get(sigar_t *sigar, const char *name,
                                  sigar_net_interface_stat_t *ifstat)
 {
-    ifstat->rx_bytes      = -1;
-    ifstat->rx_packets    = -1;
-    ifstat->rx_errors     = -1;
+    LONG board = 1; /* XXX derive from name */
+    LONG block = 0;
+    BYTE buffer[SS_DEFAULT_BUFFER_SIZE];
+    WORD len = sizeof(buffer);
+    CommonLANStructure *info;
+
+    if (SSGetLANCommonCounters(board, block, buffer, len) != 0) {
+        return ENOENT;
+    }
+
+    info = &((GetLANCommonCountersStructure *)buffer)->info;
+
+    ifstat->rx_bytes      = info->TotalTxOKByteCountHigh;
+    ifstat->rx_packets    = info->TotalRxPacketCount;
+    ifstat->rx_errors     = info->PacketRxMiscErrorCount;
     ifstat->rx_dropped    = -1;
-    ifstat->rx_overruns   = -1;
+    ifstat->rx_overruns   = info->PacketRxTooBigCount;
     ifstat->rx_frame      = -1;
 
-    ifstat->tx_bytes      = -1;
-    ifstat->tx_packets    = -1;
-    ifstat->tx_errors     = -1;
-    ifstat->tx_dropped    = -1;
-    ifstat->tx_overruns   = -1;
+    ifstat->tx_bytes      = info->TotalTxOKByteCountHigh;
+    ifstat->tx_packets    = info->TotalTxPacketCount;
+    ifstat->tx_errors     = info->PacketTxMiscErrorCount;
+    ifstat->tx_dropped    = info->RetryTxCount;
+    ifstat->tx_overruns   = info->PacketTxTooBigCount;
     ifstat->tx_collisions = -1;
     ifstat->tx_carrier    = -1;
 
