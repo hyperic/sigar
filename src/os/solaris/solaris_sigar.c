@@ -693,7 +693,7 @@ int sigar_proc_args_get(sigar_t *sigar, sigar_pid_t pid,
     int fd, status;
     char buffer[BUFSIZ];
     char *argvb[56];
-    char *arg, **argvp = argvb;
+    char **argvp = argvb;
 
     int n;
     size_t nread = 0;
@@ -726,8 +726,6 @@ int sigar_proc_args_get(sigar_t *sigar, sigar_pid_t pid,
     procargs->data =
         (char **)malloc(sizeof(*(procargs->data)) *
                         procargs->size);
-
-    arg = buffer;
 
     for (n = 0; n < pinfo->pr_argc; n++) {
         int alen;
