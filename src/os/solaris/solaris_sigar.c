@@ -704,6 +704,11 @@ int sigar_proc_args_get(sigar_t *sigar, sigar_pid_t pid,
     }
     pinfo = sigar->pinfo;
 
+    if (pinfo->pr_argc == 0) {
+        procargs->number = procargs->size = 0;
+        return SIGAR_OK;
+    }
+
     argv_size = sizeof(*argvp) * pinfo->pr_argc;
 
     (void)SIGAR_PROC_FILENAME(buffer, pid, "/as");
