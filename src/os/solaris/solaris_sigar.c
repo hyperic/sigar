@@ -718,6 +718,9 @@ int sigar_proc_args_get(sigar_t *sigar, sigar_pid_t pid,
 
     if ((nread = pread(fd, argvp, argv_size, pinfo->pr_argv)) <= 0) {
         close(fd);
+        if (argvp != argvb) {
+            free(argvp);
+        }
         return errno;
     }
 
@@ -733,6 +736,9 @@ int sigar_proc_args_get(sigar_t *sigar, sigar_pid_t pid,
 
         if ((nread = pread(fd, buffer, sizeof(buffer), (off_t)argvp[n])) <= 0) {
             close(fd);
+            if (argvp != argvb) {
+                free(argvp);
+            }
             return errno;
         }
 
