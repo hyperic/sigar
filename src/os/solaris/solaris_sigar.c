@@ -708,6 +708,13 @@ int sigar_proc_args_get(sigar_t *sigar, sigar_pid_t pid,
         procargs->number = procargs->size = 0;
         return SIGAR_OK;
     }
+    else if (pinfo->pr_dmodel != PR_MODEL_NATIVE) {
+        /* we are compiled in 32bit mode
+         * punt any 64bit native process,
+         * sizeof our structures can't handle.
+         */
+        return EINVAL;
+    }
 
     argv_size = sizeof(*argvp) * pinfo->pr_argc;
 
