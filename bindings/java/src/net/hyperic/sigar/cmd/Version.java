@@ -53,6 +53,8 @@ public class Version extends SigarCommandBase {
         if (!fqdn.equals(host)) {
             os.println("Hostname............" + host);
         }
+        os.println("Current user........" +
+                   System.getProperty("user.name"));
         os.println("");
         
         OperatingSystem sys = OperatingSystem.getInstance();
