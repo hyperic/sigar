@@ -27,28 +27,33 @@ public class EventLogThread implements Runnable {
     private String logName = "Application";
     private long interval  = 10 * 1000; // Default to 10 seconds
 
-    public static synchronized EventLogThread getInstance(String name) {
-        EventLogThread instance =
-            (EventLogThread)logs.get(name);
+    public static EventLogThread getInstance(String name) {
+        EventLogThread instance;
 
-        if (instance == null) {
-            instance = new EventLogThread();
-            instance.setLogName(name);
-            logs.put(name, instance);
+        synchronized (logs) {
+            instance = (EventLogThread)logs.get(name);
+
+            if (instance == null) {
+                instance = new EventLogThread();
+                instance.setLogName(name);
+                logs.put(name, instance);
+            }
         }
 
         return instance;
     }
 
-    public static synchronized void closeInstances() {
-        for (Iterator it = logs.values().iterator();
-             it.hasNext();)
-        {
-            EventLogThread eventLogThread =
-                (EventLogThread)it.next();
-            eventLogThread.doStop();
+    public static void closeInstances() {
+        synchronized (logs) {
+            for (Iterator it = logs.values().iterator();
+                 it.hasNext();)
+            {
+                EventLogThread eventLogThread =
+                    (EventLogThread)it.next();
+                eventLogThread.doStop();
+            }
+            logs.clear();
         }
-        logs.clear();
     }
 
     public void setInterval(long interval) {
