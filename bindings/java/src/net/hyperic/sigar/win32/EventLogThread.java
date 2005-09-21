@@ -20,19 +20,35 @@ public class EventLogThread implements Runnable {
         Logger.getLogger(EventLogThread.class.getName());
 
     private Thread thread = null;
-    private static EventLogThread instance = null;
+    private static HashMap logs = new HashMap();
     private boolean shouldDie = false;
     private Set notifiers     = Collections.synchronizedSet(new HashSet());
 
     private String logName = "Application";
     private long interval  = 10 * 1000; // Default to 10 seconds
 
-    public static synchronized EventLogThread getInstance() {
+    public static synchronized EventLogThread getInstance(String name) {
+        EventLogThread instance =
+            (EventLogThread)logs.get(name);
+
         if (instance == null) {
             instance = new EventLogThread();
+            instance.setLogName(name);
+            logs.put(name, instance);
         }
 
         return instance;
+    }
+
+    public static synchronized void closeInstances() {
+        for (Iterator it = logs.values().iterator();
+             it.hasNext();)
+        {
+            EventLogThread eventLogThread =
+                (EventLogThread)it.next();
+            eventLogThread.doStop();
+        }
+        logs.clear();
     }
 
     public void setInterval(long interval) {
@@ -140,7 +156,6 @@ public class EventLogThread implements Runnable {
     }
 
     public static void main(String[] args) {
-        HashMap logs = new HashMap();
         if (args.length == 0) {
             args = new String[] {
                 "System", "Application", "Security"
@@ -161,13 +176,11 @@ public class EventLogThread implements Runnable {
         for (int i=0; i<args.length; i++) {
             String name = args[i];
             EventLogThread eventLogThread = 
-                new EventLogThread();
+                EventLogThread.getInstance(name);
 
-            eventLogThread.setLogName(name);
             eventLogThread.doStart();
             eventLogThread.setInterval(1000);
             eventLogThread.add(watcher);
-            logs.put(name, eventLogThread);
         }
 
         System.out.println("Press any key to stop");
@@ -175,12 +188,6 @@ public class EventLogThread implements Runnable {
             System.in.read();
         } catch (IOException e) { }
 
-        for (Iterator it = logs.values().iterator();
-             it.hasNext();)
-        {
-            EventLogThread eventLogThread =
-                (EventLogThread)it.next();
-            eventLogThread.doStop();
-        }
+        EventLogThread.closeInstances();
     }
 }
