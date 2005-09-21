@@ -1,7 +1,9 @@
 package net.hyperic.sigar.win32;
 
+import java.io.IOException;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Set;
 
@@ -135,5 +137,50 @@ public class EventLogThread implements Runnable {
 
     public void die() {
         this.shouldDie = true;
+    }
+
+    public static void main(String[] args) {
+        HashMap logs = new HashMap();
+        if (args.length == 0) {
+            args = new String[] {
+                "System", "Application", "Security"
+            };
+        }
+
+        EventLogNotification watcher =
+            new EventLogNotification() {
+                public boolean matches(EventLogRecord record) {
+                    return true;
+                }
+
+                public void handleNotification(EventLogRecord record) { 
+                    System.out.println(record);
+                }
+            };
+
+        for (int i=0; i<args.length; i++) {
+            String name = args[i];
+            EventLogThread eventLogThread = 
+                new EventLogThread();
+
+            eventLogThread.setLogName(name);
+            eventLogThread.doStart();
+            eventLogThread.setInterval(1000);
+            eventLogThread.add(watcher);
+            logs.put(name, eventLogThread);
+        }
+
+        System.out.println("Press any key to stop");
+        try {
+            System.in.read();
+        } catch (IOException e) { }
+
+        for (Iterator it = logs.values().iterator();
+             it.hasNext();)
+        {
+            EventLogThread eventLogThread =
+                (EventLogThread)it.next();
+            eventLogThread.doStop();
+        }
     }
 }
