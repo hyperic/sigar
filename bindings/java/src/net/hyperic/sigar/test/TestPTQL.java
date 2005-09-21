@@ -22,8 +22,8 @@ public class TestPTQL extends SigarTestCase {
         "State.Name.ct=ssh", //anything ssh, "ssh", "ssh-agent", "sshd"
         //disabled to pass with jdk 1.3
         //"Args.-1.eq=weblogic.Server,Env.WEBLOGIC_CLASSPATH.re=.*weblogic.jar.*", //weblogic
-        "State.Name.eq=java,Args.-1.ew=SpiderAgent", //cam agents
-        "Cred.Uid.eq=1003,State.Name.eq=java,Args.-1.ew=SpiderAgent", //my cam agent
+        "State.Name.eq=java,Args.-1.ew=AgentClient", //hq agents
+        "Cred.Uid.eq=1003,State.Name.eq=java,Args.-1.ew=AgentClient", //my hq agent
         "Cred.Uid.gt=0,Cred.Uid.lt=1000", //range of users
         "Cred.Uid.eq=1003,Cred.Gid.eq=1003", //me
         "CredName.User.eq=dougm", //me
