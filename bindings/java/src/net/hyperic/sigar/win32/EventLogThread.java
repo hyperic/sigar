@@ -24,8 +24,8 @@ public class EventLogThread implements Runnable {
     private boolean shouldDie = false;
     private Set notifiers     = Collections.synchronizedSet(new HashSet());
 
-    private String logName = "Application";
-    private long interval  = 10 * 1000; // Default to 10 seconds
+    private String logName = EventLog.APPLICATION;
+    private long interval  = DEFAULT_INTERVAL;
 
     public static EventLogThread getInstance(String name) {
         EventLogThread instance;
@@ -146,14 +146,12 @@ public class EventLogThread implements Runnable {
                 } catch (InterruptedException e) {
                 }
             }
-            
-            log.close();
-
         } catch (Win32Exception e) {
-            logger.error("Unable to monitor event log:", e);
+            logger.error("Unable to monitor event log: ", e);
         } finally {
             try { log.close(); } 
-            catch (Win32Exception e) {}}
+            catch (Win32Exception e) {}
+        }
     }
 
     public void die() {
