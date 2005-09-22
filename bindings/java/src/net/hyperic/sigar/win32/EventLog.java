@@ -65,12 +65,13 @@ public class EventLog extends Win32 {
      * EVENTLOG_SEEK_READ flag, no sequential reading is currently
      * supported.
      * 
+     * @param logName The event log name
      * @param recordOffset The record offset to read.
      * @exception Win32Exception If the event log is not open, or
      *                           if the specified record could not be
      *                           found
      */
-    public native EventLogRecord read(int recordOffset)
+    public native EventLogRecord read(String logName, int recordOffset)
         throws Win32Exception;
 
     /**

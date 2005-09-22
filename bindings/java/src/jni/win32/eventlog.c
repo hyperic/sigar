@@ -3,7 +3,7 @@
 #include "win32bindings.h"
 
 #define MAX_INSERT_STRS  8
-#define MAX_MSG_LENGTH   4096
+#define MAX_MSG_LENGTH   8192
 #define MAX_ERROR_LENGTH 1024
 
 #define REG_MSGFILE_ROOT "SYSTEM\\CurrentControlSet\\Services\\EventLog\\"
@@ -40,29 +40,31 @@ static HANDLE win32_get_pointer(JNIEnv *env, jobject obj)
     return h;
 }
 
-static int get_messagefile_dll(char *app, char *source, char *dllfile)
+static int get_messagefile_dll(const char *app, char *source, char *dllfile)
 {
     HKEY hk;
     DWORD type, data;
     char buf[MAX_MSG_LENGTH];
+    LONG rc;
 
     sprintf(buf, "%s%s\\%s", REG_MSGFILE_ROOT, app, source);
-    
-    if (RegOpenKey(HKEY_LOCAL_MACHINE, buf, &hk)) {
-        return GetLastError();
+    rc = RegOpenKey(HKEY_LOCAL_MACHINE, buf, &hk); 
+    if (rc) {
+        return rc;
     }
 
-    if (RegQueryValueEx(hk, "EventMessageFile", NULL, &type,
-                        (UCHAR *)buf, &data)) {
+    rc = RegQueryValueEx(hk, "EventMessageFile", NULL, &type,
+                         (UCHAR *)buf, &data);
+    if (rc) {
         RegCloseKey(hk);
-        return GetLastError();
+        return rc;
     }
 
     strncpy(dllfile, buf, sizeof(dllfile));
 
     RegCloseKey(hk);
 
-    return 0;
+    return ERROR_SUCCESS;
 }
 
 static int get_formatted_message(EVENTLOGRECORD *pevlr, char *dllfile,
@@ -163,11 +165,12 @@ JNIEXPORT jint SIGAR_JNI(win32_EventLog_getOldestRecord)
 }
 
 JNIEXPORT jobject SIGAR_JNI(win32_EventLog_read)
-(JNIEnv *env, jobject obj, jint recordOffset)
+(JNIEnv *env, jobject obj, jstring jname, jint recordOffset)
 {
     EVENTLOGRECORD *pevlr;
     BYTE buffer[8192];
     char dllfile[1024];
+    char msg[MAX_MSG_LENGTH];
     DWORD dwRead, dwNeeded;
     LPSTR source, machineName;
     HANDLE h;
@@ -175,6 +178,7 @@ JNIEXPORT jobject SIGAR_JNI(win32_EventLog_read)
     jclass cls = WIN32_FIND_CLASS("EventLogRecord");
     jobject eventObj; /* Actual instance of the EventLogRecord */
     jfieldID id;
+    const char *name;
 
     h = win32_get_pointer(env, obj);
 
@@ -225,21 +229,22 @@ JNIEXPORT jobject SIGAR_JNI(win32_EventLog_read)
     source = (LPSTR)((LPBYTE)pevlr + sizeof(EVENTLOGRECORD));
     SetStringField(env, eventObj, id, source);
 
+    name = JENV->GetStringUTFChars(env, jname, 0);
+
     /* Get the formatted message */
-    if (!get_messagefile_dll("Application", source, dllfile)) {
-        char msg[MAX_MSG_LENGTH];
-        if (!get_formatted_message(pevlr, dllfile, msg)) {
-            
-            id = JENV->GetFieldID(env, cls, "stringData", 
-                                  "Ljava/lang/String;");
-            SetStringField(env, eventObj, id, msg);
-        }
+    if ((get_messagefile_dll(name, source, dllfile) == ERROR_SUCCESS) &&
+        (get_formatted_message(pevlr, dllfile, msg) == ERROR_SUCCESS))
+    {
+        id = JENV->GetFieldID(env, cls, "stringData", 
+                              "Ljava/lang/String;");
+        SetStringField(env, eventObj, id, msg);
     } else if (pevlr->StringOffset > 0) {
         /* Work around some applications not using a message file */
         char *tmp = (LPSTR)((LPBYTE)pevlr + pevlr->StringOffset);            
         id = JENV->GetFieldID(env, cls, "stringData", "Ljava/lang/String;");
         SetStringField(env, eventObj, id, tmp);
     }
+    JENV->ReleaseStringUTFChars(env, jname, name);
 
     /* Increment up to the machine name. */
     id = JENV->GetFieldID(env, cls, "computerName", "Ljava/lang/String;");
