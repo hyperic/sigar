@@ -4,6 +4,10 @@ public class EventLog extends Win32 {
 
     int eventLogHandle = 0;  // holds the event log HANDLE
 
+    public static final String SYSTEM = "SYSTEM";
+    public static final String APPLICATION = "APPLICATION";
+    public static final String SECURITY = "SECURITY";
+
     // Event log types as defined in WINNT.H
     public static final int EVENTLOG_SUCCESS          = 0x0000;
     public static final int EVENTLOG_ERROR_TYPE       = 0x0001;

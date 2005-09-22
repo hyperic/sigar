@@ -163,7 +163,9 @@ public class EventLogThread implements Runnable {
     public static void main(String[] args) {
         if (args.length == 0) {
             args = new String[] {
-                "System", "Application", "Security"
+                EventLog.SYSTEM,
+                EventLog.APPLICATION,
+                EventLog.SECURITY
             };
         }
 
