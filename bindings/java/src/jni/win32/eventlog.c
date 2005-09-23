@@ -61,6 +61,7 @@ static int get_messagefile_dll(const char *app, char *source, char *dllfile)
     }
 
     strncpy(dllfile, buf, MAX_MSG_LENGTH);
+    dllfile[MAX_MSG_LENGTH] = '\0';
 
     RegCloseKey(hk);
 
@@ -100,6 +101,7 @@ static int get_formatted_message(EVENTLOGRECORD *pevlr, char *dllfile,
                   insert_strs);
 
     strncpy(msg, msgbuf, MAX_MSG_LENGTH);
+    msg[MAX_MSG_LENGTH] = '\0';
 
     FreeLibrary(hlib);
     LocalFree((HLOCAL)msgbuf);
