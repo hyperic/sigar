@@ -108,7 +108,8 @@ public class TestEventLog extends TestCase {
     // Test event log thread
     public void testEventLogThread() throws Exception {
 
-        EventLogThread thread = EventLogThread.getInstance();
+        EventLogThread thread =
+            EventLogThread.getInstance(EventLog.APPLICATION);
 
         thread.doStart();
 
