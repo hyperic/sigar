@@ -107,7 +107,7 @@ static int get_formatted_message(EVENTLOGRECORD *pevlr, char *dllfile,
     return 0;
 }
 
-JNIEXPORT void SIGAR_JNI(win32_EventLog_open)
+JNIEXPORT void SIGAR_JNI(win32_EventLog_openlog)
 (JNIEnv *env, jobject obj, jstring lpSourceName)
 {
     HANDLE h;
@@ -164,7 +164,7 @@ JNIEXPORT jint SIGAR_JNI(win32_EventLog_getOldestRecord)
     return oldest;
 }
 
-JNIEXPORT jobject SIGAR_JNI(win32_EventLog_read)
+JNIEXPORT jobject SIGAR_JNI(win32_EventLog_readlog)
 (JNIEnv *env, jobject obj, jstring jname, jint recordOffset)
 {
     EVENTLOGRECORD *pevlr;

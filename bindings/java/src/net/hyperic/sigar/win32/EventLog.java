@@ -18,6 +18,7 @@ public class EventLog extends Win32 {
 
     // Event log timeouts
     public static final int EVENTLOG_WAIT_INFINITE    = -1;
+    private String name;
 
     /**
      * Create an event log.
@@ -30,7 +31,12 @@ public class EventLog extends Win32 {
      *                     Application, System or Security.
      * @exception Win32Exception If opening the event log fails.
      */
-    public native void open(String lpSourceName) throws Win32Exception;
+    public void open(String name) throws Win32Exception {
+        this.name = name;
+        openlog(name);
+    }
+
+    public native void openlog(String name) throws Win32Exception;
 
     /**
      * Close the event log.
@@ -65,13 +71,18 @@ public class EventLog extends Win32 {
      * EVENTLOG_SEEK_READ flag, no sequential reading is currently
      * supported.
      * 
-     * @param logName The event log name
      * @param recordOffset The record offset to read.
      * @exception Win32Exception If the event log is not open, or
      *                           if the specified record could not be
      *                           found
      */
-    public native EventLogRecord read(String logName, int recordOffset)
+    public EventLogRecord read(int recordOffset)
+        throws Win32Exception {
+
+        return readlog(this.name, recordOffset);
+    }
+
+    private native EventLogRecord readlog(String name, int recordOffset)
         throws Win32Exception;
 
     /**

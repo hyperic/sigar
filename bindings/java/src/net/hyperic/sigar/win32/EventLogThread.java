@@ -101,7 +101,7 @@ public class EventLogThread implements Runnable {
             EventLogRecord record;
 
             try {
-                record = log.read(this.logName, i);
+                record = log.read(i);
             } catch (Win32Exception e) {
                 logger.error("Unable to read event id " + i + ": " + e);
                 continue;
