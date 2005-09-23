@@ -43,8 +43,8 @@ static HANDLE win32_get_pointer(JNIEnv *env, jobject obj)
 static int get_messagefile_dll(const char *app, char *source, char *dllfile)
 {
     HKEY hk;
-    DWORD type, data;
     char buf[MAX_MSG_LENGTH];
+    DWORD type, data = sizeof(buf);
     LONG rc;
 
     sprintf(buf, "%s%s\\%s", REG_MSGFILE_ROOT, app, source);
@@ -60,7 +60,7 @@ static int get_messagefile_dll(const char *app, char *source, char *dllfile)
         return rc;
     }
 
-    strncpy(dllfile, buf, sizeof(dllfile));
+    strncpy(dllfile, buf, MAX_MSG_LENGTH);
 
     RegCloseKey(hk);
 
@@ -99,7 +99,7 @@ static int get_formatted_message(EVENTLOGRECORD *pevlr, char *dllfile,
                   MAX_MSG_LENGTH,
                   insert_strs);
 
-    strncpy(msg, msgbuf, sizeof(msg));
+    strncpy(msg, msgbuf, MAX_MSG_LENGTH);
 
     FreeLibrary(hlib);
     LocalFree((HLOCAL)msgbuf);
@@ -169,7 +169,7 @@ JNIEXPORT jobject SIGAR_JNI(win32_EventLog_readlog)
 {
     EVENTLOGRECORD *pevlr;
     BYTE buffer[8192];
-    char dllfile[1024];
+    char dllfile[MAX_MSG_LENGTH];
     char msg[MAX_MSG_LENGTH];
     DWORD dwRead, dwNeeded;
     LPSTR source, machineName;
