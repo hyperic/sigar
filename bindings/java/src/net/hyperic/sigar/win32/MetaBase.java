@@ -139,11 +139,13 @@ public class MetaBase extends Win32
     private final native String[]  MetaBaseGetMultiStringValue(int datakey);
 
     public static void main(String args[]) {
-
+        String key = "/LM/W3SVC";
         try {
             MetaBase mb = new MetaBase();
 
-            mb.OpenSubKey("/LM/W3SVC");
+            mb.OpenSubKey(key);
+            String logdir = mb.getStringValue(MD_LOGFILEDIRECTORY);
+            System.out.println("Logdir: " + logdir);
             String keys[] = mb.getSubKeyNames();
 
             System.out.println("Listing IIS Web Sites");
@@ -157,7 +159,7 @@ public class MetaBase extends Win32
                 }
 
                 MetaBase vhost = new MetaBase();
-                vhost.OpenSubKey("/LM/W3SVC/" + serverNum);
+                vhost.OpenSubKey(key + "/" + serverNum);
                 
                 String[] bindings = 
                     vhost.getMultiStringValue(MD_SERVER_BINDINGS);
