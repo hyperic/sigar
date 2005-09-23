@@ -178,36 +178,46 @@ JNIEXPORT jint SIGAR_JNI(win32_MetaBase_MetaBaseGetIntValue)
 JNIEXPORT jstring SIGAR_JNI(win32_MetaBase_MetaBaseGetStringValue)
 (JNIEnv *env, jobject cur, jint key)
 {
+    int i;
     HRESULT hRes = 0;
     METADATA_HANDLE MyHandle; 
     METADATA_RECORD MyRecord; 
     DWORD dwBufLen = 8096; 
     DWORD dwReqBufLen = 0; 
     TCHAR pbBuffer[8096]; 
+    DWORD data_types[] = {
+        STRING_METADATA,
+        EXPANDSZ_METADATA /* e.g. MD_LOGFILEDIRECTORY */
+    };
 
     CComPtr <IMSAdminBase> *pIMeta;
     pIMeta = (CComPtr <IMSAdminBase> *)env->GetLongField(cur, IMeta_field);
 
     MyHandle = (METADATA_HANDLE)env->GetIntField(cur, ptr_field);
 
-    // Initialize the input structure - 
-    // the values specify what kind of data to enumerate. 
-    MyRecord.dwMDIdentifier = key;
-    MyRecord.dwMDAttributes = 0; 
-    MyRecord.dwMDUserType = IIS_MD_UT_SERVER; 
-    MyRecord.dwMDDataType = STRING_METADATA; 
-    MyRecord.dwMDDataLen = dwBufLen; 
-    MyRecord.pbMDData = (unsigned char *)pbBuffer; 
+    for (i=0; i<sizeof(data_types)/sizeof(data_types[0]); i++) {
+        DWORD dtype = data_types[i];
+        // Initialize the input structure - 
+        // the values specify what kind of data to enumerate. 
+        MyRecord.dwMDIdentifier = key;
+        MyRecord.dwMDAttributes = 0; 
+        MyRecord.dwMDUserType = IIS_MD_UT_SERVER; 
+        MyRecord.dwMDDataType = dtype;
+        MyRecord.dwMDDataLen = dwBufLen; 
+        MyRecord.pbMDData = (unsigned char *)pbBuffer; 
   
-    hRes = (*pIMeta)->GetData(MyHandle, TEXT(""), &MyRecord, &dwReqBufLen); 
-    if (SUCCEEDED(hRes)) { 
-        jstring strResult;
-        // Store the data identifiers in an array for future use. 
-        // Note: declare a suitable DWORD array for names and add 
-        // array bounds checking. 
-        strResult = env->NewString((const jchar *)MyRecord.pbMDData,
-                                   lstrlen(pbBuffer));
-        return strResult;
+        hRes =
+            (*pIMeta)->GetData(MyHandle, TEXT(""), &MyRecord, &dwReqBufLen); 
+
+        if (SUCCEEDED(hRes)) { 
+            jstring strResult;
+            // Store the data identifiers in an array for future use. 
+            // Note: declare a suitable DWORD array for names and add 
+            // array bounds checking. 
+            strResult = env->NewString((const jchar *)MyRecord.pbMDData,
+                                       lstrlen(pbBuffer));
+            return strResult;
+        }
     }
     jclass cls = env->FindClass(WIN32_PACKAGE "Win32Exception");
     env->ThrowNew(cls, "No Such string value");
