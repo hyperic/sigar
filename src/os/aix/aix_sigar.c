@@ -1977,11 +1977,7 @@ int sigar_cpu_info_list_get(sigar_t *sigar,
 int sigar_net_route_list_get(sigar_t *sigar,
                              sigar_net_route_list_t *routelist)
 {
-    sigar_net_route_t *route;
-
-    sigar_net_route_list_create(routelist);
-
-    return SIGAR_OK;
+    return SIGAR_ENOTIMPL;
 }
 
 int sigar_net_interface_stat_get(sigar_t *sigar, const char *name,
