@@ -82,11 +82,15 @@ public class TestEventLog extends SigarTestCase {
         log.open(logname);
         int oldestRecord = log.getOldestRecord();
         int numRecords = log.getNumberOfRecords();
+        traceln("oldest=" + oldestRecord + ", total=" + numRecords);
 
         for (int i = oldestRecord; i < oldestRecord + numRecords; i++) {
             try {
                 record = log.read(i);
                 success++;
+                if (!getVerbose() && (success > 500)) {
+                    break; //read plenty
+                }
             } catch (Win32Exception e) {
                 fail++;
                 traceln("Error reading record " + i + ": " +
@@ -95,7 +99,8 @@ public class TestEventLog extends SigarTestCase {
         }
 
         log.close();
-        
+
+        traceln("success=" + success + ", fail=" + fail);
         return success > fail;
     }
 
