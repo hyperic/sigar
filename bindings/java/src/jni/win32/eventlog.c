@@ -60,7 +60,7 @@ static int get_messagefile_dll(const char *app, char *source, char *dllfile)
     }
 
     strncpy(dllfile, buf, MAX_MSG_LENGTH);
-    dllfile[MAX_MSG_LENGTH] = '\0';
+    dllfile[MAX_MSG_LENGTH-1] = '\0';
 
     RegCloseKey(hk);
 
@@ -71,10 +71,10 @@ static int get_formatted_message(EVENTLOGRECORD *pevlr, char *dllfile,
                                  char *msg)
 {
     HINSTANCE hlib;
-    LPTSTR msgbuf;
+    LPVOID msgbuf;
     char msgdll[MAX_MSG_LENGTH];
-    char **insert_strs, *ch;
-    int i;
+    char *insert_strs[16], *ch;
+    int i, max = sizeof(insert_strs) / sizeof(char *);
     DWORD result;
 
     if (!ExpandEnvironmentStrings(dllfile, msgdll, MAX_PATH))
@@ -84,37 +84,39 @@ static int get_formatted_message(EVENTLOGRECORD *pevlr, char *dllfile,
                                LOAD_LIBRARY_AS_DATAFILE)))
         return GetLastError();
 
-    insert_strs =
-        (char **)malloc(sizeof(char *) * pevlr->NumStrings);
+    memset(insert_strs, '\0', sizeof(insert_strs));
     ch = (char *)((LPBYTE)pevlr + pevlr->StringOffset);
-    for (i = 0; i < pevlr->NumStrings; i++) {
+    for (i = 0; i < pevlr->NumStrings && i < max; i++) {
         insert_strs[i] = ch;
+        if (ch == NULL) {
+            break;
+        }
         ch += strlen(ch) + 1;
     }
 
     result =
         FormatMessage(FORMAT_MESSAGE_FROM_HMODULE |
+                      FORMAT_MESSAGE_FROM_SYSTEM |
                       FORMAT_MESSAGE_ALLOCATE_BUFFER |
                       FORMAT_MESSAGE_ARGUMENT_ARRAY,
                       hlib,
                       pevlr->EventID,
                       MAKELANGID(LANG_NEUTRAL, SUBLANG_ENGLISH_US),
                       (LPTSTR) &msgbuf,
-                      0,
+                      MAX_MSG_LENGTH,
                       insert_strs);
 
     if (result) {
         strncpy(msg, msgbuf, MAX_MSG_LENGTH);
-        msg[MAX_MSG_LENGTH] = '\0';
-        result = 0;
+        msg[MAX_MSG_LENGTH-1] = '\0';
+        result = ERROR_SUCCESS;
+        LocalFree(msgbuf);
     }
     else {
         result = GetLastError();
     }
 
     FreeLibrary(hlib);
-    free(insert_strs);
-    LocalFree((HLOCAL)msgbuf);
 
     return result;
 }
@@ -160,7 +162,10 @@ JNIEXPORT jint SIGAR_JNI(win32_EventLog_getNumberOfRecords)
     DWORD records;
     HANDLE h = win32_get_pointer(env, obj);
 
-    GetNumberOfEventLogRecords(h, &records);
+    if (!GetNumberOfEventLogRecords(h, &records)) {
+        win32_throw_last_error(env);
+        return 0;
+    }
 
     return records;
 }
@@ -171,7 +176,10 @@ JNIEXPORT jint SIGAR_JNI(win32_EventLog_getOldestRecord)
     DWORD oldest;
     HANDLE h = win32_get_pointer(env, obj);
 
-    GetOldestEventLogRecord(h, &oldest);
+    if (!GetOldestEventLogRecord(h, &oldest)) {
+        win32_throw_last_error(env);
+        return 0;
+    }
 
     return oldest;
 }
@@ -244,14 +252,15 @@ JNIEXPORT jobject SIGAR_JNI(win32_EventLog_readlog)
     name = JENV->GetStringUTFChars(env, jname, 0);
 
     /* Get the formatted message */
-    if ((get_messagefile_dll(name, source, dllfile) == ERROR_SUCCESS) &&
+    if ((pevlr->NumStrings > 0) &&
+        (get_messagefile_dll(name, source, dllfile) == ERROR_SUCCESS) &&
         (get_formatted_message(pevlr, dllfile, msg) == ERROR_SUCCESS))
     {
         id = JENV->GetFieldID(env, cls, "message", 
                               "Ljava/lang/String;");
         SetStringField(env, eventObj, id, msg);
-    } else if (pevlr->StringOffset > 0) {
-        /* Work around some applications not using a message file */
+    }
+    else if (pevlr->NumStrings > 0) {
         char *tmp = (LPSTR)((LPBYTE)pevlr + pevlr->StringOffset);            
         id = JENV->GetFieldID(env, cls, "message", "Ljava/lang/String;");
         SetStringField(env, eventObj, id, tmp);
