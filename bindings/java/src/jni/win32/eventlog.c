@@ -2,7 +2,6 @@
 #include "javasigar.h"
 #include "win32bindings.h"
 
-#define MAX_INSERT_STRS  8
 #define MAX_MSG_LENGTH   8192
 #define MAX_ERROR_LENGTH 1024
 
@@ -74,8 +73,9 @@ static int get_formatted_message(EVENTLOGRECORD *pevlr, char *dllfile,
     HINSTANCE hlib;
     LPTSTR msgbuf;
     char msgdll[MAX_MSG_LENGTH];
-    char *insert_strs[MAX_INSERT_STRS], *ch;
+    char **insert_strs, *ch;
     int i;
+    DWORD result;
 
     if (!ExpandEnvironmentStrings(dllfile, msgdll, MAX_PATH))
         return GetLastError();
@@ -84,29 +84,39 @@ static int get_formatted_message(EVENTLOGRECORD *pevlr, char *dllfile,
                                LOAD_LIBRARY_AS_DATAFILE)))
         return GetLastError();
 
+    insert_strs =
+        (char **)malloc(sizeof(char *) * pevlr->NumStrings);
     ch = (char *)((LPBYTE)pevlr + pevlr->StringOffset);
-    for (i = 0; i < pevlr->NumStrings && i < MAX_INSERT_STRS; i++) {
+    for (i = 0; i < pevlr->NumStrings; i++) {
         insert_strs[i] = ch;
         ch += strlen(ch) + 1;
     }
 
-    FormatMessage(FORMAT_MESSAGE_FROM_HMODULE |
-                  FORMAT_MESSAGE_ALLOCATE_BUFFER |
-                  FORMAT_MESSAGE_ARGUMENT_ARRAY,
-                  hlib,
-                  pevlr->EventID,
-                  MAKELANGID(LANG_NEUTRAL, SUBLANG_ENGLISH_US),
-                  (LPTSTR) &msgbuf,
-                  MAX_MSG_LENGTH,
-                  insert_strs);
+    result =
+        FormatMessage(FORMAT_MESSAGE_FROM_HMODULE |
+                      FORMAT_MESSAGE_ALLOCATE_BUFFER |
+                      FORMAT_MESSAGE_ARGUMENT_ARRAY,
+                      hlib,
+                      pevlr->EventID,
+                      MAKELANGID(LANG_NEUTRAL, SUBLANG_ENGLISH_US),
+                      (LPTSTR) &msgbuf,
+                      0,
+                      insert_strs);
 
-    strncpy(msg, msgbuf, MAX_MSG_LENGTH);
-    msg[MAX_MSG_LENGTH] = '\0';
+    if (result) {
+        strncpy(msg, msgbuf, MAX_MSG_LENGTH);
+        msg[MAX_MSG_LENGTH] = '\0';
+        result = 0;
+    }
+    else {
+        result = GetLastError();
+    }
 
     FreeLibrary(hlib);
+    free(insert_strs);
     LocalFree((HLOCAL)msgbuf);
 
-    return 0;
+    return result;
 }
 
 JNIEXPORT void SIGAR_JNI(win32_EventLog_openlog)
