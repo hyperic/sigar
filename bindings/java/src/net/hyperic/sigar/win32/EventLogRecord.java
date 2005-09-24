@@ -15,7 +15,7 @@ public class EventLogRecord {
     String source;
     String computerName;
     String user;
-    String stringData;
+    String message;
 
     /* Get the record number for this event entry */
     public long getRecordNumber() {
@@ -84,10 +84,17 @@ public class EventLogRecord {
     }
     
     /**
-     * Get the string data for the event. (The message)
+     * Get the message for the event.
+     */
+    public String getMessage() {
+        return this.message;
+    }
+
+    /**
+     * @deprecated
      */
     public String getStringData() {
-        return this.stringData;
+        return getMessage();
     }
 
     /**
@@ -100,7 +107,7 @@ public class EventLogRecord {
             "source=" + source + " " +
             "computerName=" + computerName + " " +
             "user=" + user + " " +
-            "stringData=" + stringData;
+            "message=" + message;
     }
 }
 

@@ -237,13 +237,13 @@ JNIEXPORT jobject SIGAR_JNI(win32_EventLog_readlog)
     if ((get_messagefile_dll(name, source, dllfile) == ERROR_SUCCESS) &&
         (get_formatted_message(pevlr, dllfile, msg) == ERROR_SUCCESS))
     {
-        id = JENV->GetFieldID(env, cls, "stringData", 
+        id = JENV->GetFieldID(env, cls, "message", 
                               "Ljava/lang/String;");
         SetStringField(env, eventObj, id, msg);
     } else if (pevlr->StringOffset > 0) {
         /* Work around some applications not using a message file */
         char *tmp = (LPSTR)((LPBYTE)pevlr + pevlr->StringOffset);            
-        id = JENV->GetFieldID(env, cls, "stringData", "Ljava/lang/String;");
+        id = JENV->GetFieldID(env, cls, "message", "Ljava/lang/String;");
         SetStringField(env, eventObj, id, tmp);
     }
     JENV->ReleaseStringUTFChars(env, jname, name);
