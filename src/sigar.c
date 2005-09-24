@@ -789,7 +789,7 @@ static char *getpass(const char *prompt)
 #  define ut_user ut_name
 #endif
 
-#ifndef NETWARE
+#if !defined(NETWARE) && !defined(_AIX)
 
 #define WHOCPY(dest, src) \
     SIGAR_SSTRCPY(dest, src); \
@@ -1061,6 +1061,7 @@ int sigar_who_list_get(sigar_t *sigar,
 }
 #else
 
+#ifndef _AIX
 int sigar_who_list_get(sigar_t *sigar,
                        sigar_who_list_t *wholist)
 {
@@ -1076,6 +1077,7 @@ int sigar_who_list_get(sigar_t *sigar,
 
     return SIGAR_OK;
 }
+#endif
 
 static int sigar_get_default_gateway(sigar_t *sigar,
                                      char *gateway)

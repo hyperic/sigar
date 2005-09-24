@@ -873,6 +873,105 @@ int sigar_uptime_get(sigar_t *sigar,
     return SIGAR_OK;
 }
 
+#define WHOCPY(dest, src) \
+    SIGAR_SSTRCPY(dest, src); \
+    if (sizeof(src) < sizeof(dest)) \
+        dest[sizeof(src)] = '\0'
+
+static int who_v4(sigar_t *sigar, sigar_who_list_t *wholist, FILE *fp)
+{
+    struct utmp ut;
+
+    while (fread(&ut, sizeof(ut), 1, fp) == 1) {
+        sigar_who_t *who;
+
+        if (*ut.ut_name == '\0') {
+            continue;
+        }
+
+        if (ut.ut_type != USER_PROCESS) {
+            continue;
+        }
+
+        SIGAR_WHO_LIST_GROW(wholist);
+        who = &wholist->data[wholist->number++];
+
+        WHOCPY(who->user, ut.ut_user);
+        WHOCPY(who->device, ut.ut_line);
+        WHOCPY(who->host, ut.ut_host);
+
+        who->time = ut.ut_time;
+    }
+
+    return SIGAR_OK;
+}
+
+static int who_v5(sigar_t *sigar, sigar_who_list_t *wholist, FILE *fp)
+{
+    struct utmp_v5 ut;
+
+    while (fread(&ut, sizeof(ut), 1, fp) == 1) {
+        sigar_who_t *who;
+
+        if (*ut.ut_name == '\0') {
+            continue;
+        }
+
+        if (ut.ut_type != USER_PROCESS) {
+            continue;
+        }
+
+        SIGAR_WHO_LIST_GROW(wholist);
+        who = &wholist->data[wholist->number++];
+
+        WHOCPY(who->user, ut.ut_user);
+        WHOCPY(who->device, ut.ut_line);
+        WHOCPY(who->host, ut.ut_host);
+
+        who->time = ut.ut_time;
+    }
+
+    return SIGAR_OK;
+}
+
+static int sigar_who_utmp(sigar_t *sigar,
+                          sigar_who_list_t *wholist)
+{
+    int status;
+    FILE *fp;
+
+    if (!(fp = fopen(UTMP_FILE, "r"))) {
+        return errno;
+    }
+
+    if (sigar->aix_version == 4) {
+        status = who_v4(sigar, wholist, fp);
+    }
+    else {
+        status = who_v5(sigar, wholist, fp);
+    }
+
+    fclose(fp);
+
+    return status;
+}
+
+int sigar_who_list_get(sigar_t *sigar,
+                       sigar_who_list_t *wholist)
+{
+    int status;
+
+    sigar_who_list_create(wholist);
+
+    status = sigar_who_utmp(sigar, wholist);
+    if (status != SIGAR_OK) {
+        sigar_who_list_destroy(sigar, wholist);
+        return status;
+    }
+
+    return SIGAR_OK;
+}
+
 int sigar_loadavg_get(sigar_t *sigar,
                       sigar_loadavg_t *loadavg)
 {
