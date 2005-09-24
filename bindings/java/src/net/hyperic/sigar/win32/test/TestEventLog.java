@@ -27,11 +27,11 @@ public class TestEventLog extends TestCase {
             // OK
         }
 
-        log.open("Application");
+        log.open(EventLog.APPLICATION);
         log.close();
 
         // Try to reopen using the System log
-        log.open("System");
+        log.open(EventLog.SYSTEM);
         log.close();
     }
 
@@ -39,7 +39,7 @@ public class TestEventLog extends TestCase {
         int numRecords;
         EventLog log = new EventLog();
 
-        log.open("Application");
+        log.open(EventLog.APPLICATION);
         try {
             numRecords = log.getNumberOfRecords();
         } catch (Exception e) {
@@ -53,7 +53,7 @@ public class TestEventLog extends TestCase {
         int oldestRecord;
         EventLog log = new EventLog();
 
-        log.open("Application");
+        log.open(EventLog.APPLICATION);
         try {
             oldestRecord = log.getOldestRecord();
         } catch (Exception e) {
@@ -67,7 +67,7 @@ public class TestEventLog extends TestCase {
         int newestRecord;
         EventLog log = new EventLog();
 
-        log.open("Application");
+        log.open(EventLog.APPLICATION);
         try {
             newestRecord = log.getNewestRecord();
         } catch (Exception e) {
@@ -82,7 +82,7 @@ public class TestEventLog extends TestCase {
         EventLogRecord record;
         EventLog log = new EventLog();
 
-        log.open("Application");
+        log.open(EventLog.APPLICATION);
         int oldestRecord = log.getOldestRecord();
         int numRecords = log.getNumberOfRecords();
 
