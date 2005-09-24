@@ -1690,7 +1690,6 @@ int sigar_net_interface_stat_get(sigar_t *sigar, const char *name,
 
 #include <sys/socketvar.h>
 #include <netinet/tcp.h>
-#include <netinet/tcpip.h>
 #include <netinet/in_pcb.h>
 #include <netinet/tcp_var.h>
 #include <netinet/tcp_fsm.h>
