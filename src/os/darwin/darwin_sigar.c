@@ -1686,9 +1686,11 @@ int sigar_net_interface_stat_get(sigar_t *sigar, const char *name,
     return SIGAR_OK;
 }
 
-#if defined(SIGAR_FREEBSD5)
+#if defined(SIGAR_FREEBSD5) || defined(DARWIN)
 
 #include <sys/socketvar.h>
+#include <netinet/tcp.h>
+#include <netinet/tcpip.h>
 #include <netinet/in_pcb.h>
 #include <netinet/tcp_var.h>
 #include <netinet/tcp_fsm.h>
@@ -1853,6 +1855,16 @@ int sigar_net_connection_list_get(sigar_t *sigar,
 
     return SIGAR_OK;
 }
+#else
+int sigar_net_connection_list_get(sigar_t *sigar,
+                                  sigar_net_connection_list_t *connlist,
+                                  int flags)
+{
+    return SIGAR_ENOTIMPL;
+}
+#endif
+
+#if defined(SIGAR_FREEBSD5)
 
 #define _KERNEL
 #include <sys/file.h>
@@ -1976,13 +1988,6 @@ int sigar_proc_port_get(sigar_t *sigar, int protocol,
 }
 
 #else
-
-int sigar_net_connection_list_get(sigar_t *sigar,
-                                  sigar_net_connection_list_t *connlist,
-                                  int flags)
-{
-    return SIGAR_ENOTIMPL;
-}
 
 int sigar_proc_port_get(sigar_t *sigar, int protocol,
                         unsigned long port, sigar_pid_t *pid)
