@@ -1381,10 +1381,17 @@ int sigar_cpu_info_list_get(sigar_t *sigar,
 
 #define rt_s_addr(sa) ((struct sockaddr_in *)(sa))->sin_addr.s_addr
 
+#ifndef SA_SIZE
+#define SA_SIZE(sa)                                             \
+    (  (!(sa) || ((struct sockaddr *)(sa))->sa_len == 0) ?      \
+        sizeof(long)            :                               \
+        1 + ( (((struct sockaddr *)(sa))->sa_len - 1) | (sizeof(long) - 1) ) )
+#endif
+
 int sigar_net_route_list_get(sigar_t *sigar,
                              sigar_net_route_list_t *routelist)
 {
-#if defined(SIGAR_FREEBSD5)
+#if defined(SIGAR_FREEBSD5) || defined(DARWIN)
     size_t needed;
     int bit;
     char *buf, *next, *lim;
