@@ -226,7 +226,7 @@ public class Service extends Win32 {
      * @deprecated
      */
     public void stopAndWait(long timeout) throws Win32Exception {
-        return stop(timeout);
+        stop(timeout);
     }
 
     public void stop(long timeout) throws Win32Exception
