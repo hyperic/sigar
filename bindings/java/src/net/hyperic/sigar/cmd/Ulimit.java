@@ -71,7 +71,7 @@ public class Ulimit extends SigarCommandBase {
         println("stack size..........." + getValue("Stack"));
         println("cpu time............." + getValue("Cpu"));
         println("max user processes..." + getValue("Processes"));
-        println("virual memory........" + getValue("VirtualMemory"));
+        println("virtual memory......." + getValue("VirtualMemory"));
     }
 
     public static void main(String[] args) throws Exception {
