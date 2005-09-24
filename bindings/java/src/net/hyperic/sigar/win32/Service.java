@@ -222,6 +222,13 @@ public class Service extends Win32 {
         control(CONTROL_STOP);
     }
 
+    /**
+     * @deprecated
+     */
+    public void stopAndWait(long timeout) throws Win32Exception {
+        return stop(timeout);
+    }
+
     public void stop(long timeout) throws Win32Exception
     {
         long status;
