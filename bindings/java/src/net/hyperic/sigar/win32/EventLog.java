@@ -27,8 +27,8 @@ public class EventLog extends Win32 {
 
     /**
      * Open the event log.  This must be done before any other operation.
-     * @param lpSourceName The event log to open.  Should be one of
-     *                     Application, System or Security.
+     * @param name Name of the event log to open.
+     * For example: "Application", "System" or "Security".
      * @exception Win32Exception If opening the event log fails.
      */
     public void open(String name) throws Win32Exception {
