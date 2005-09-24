@@ -1,22 +1,19 @@
 package net.hyperic.sigar.win32.test;
 
+import net.hyperic.sigar.test.SigarTestCase;
 import net.hyperic.sigar.win32.EventLog;
 import net.hyperic.sigar.win32.EventLogNotification;
 import net.hyperic.sigar.win32.EventLogRecord;
 import net.hyperic.sigar.win32.EventLogThread;
 import net.hyperic.sigar.win32.Win32Exception;
 
-
-import junit.framework.TestCase;
-
-public class TestEventLog extends TestCase {
+public class TestEventLog extends SigarTestCase {
 
     public TestEventLog(String name) {
         super(name);
     }
 
     public void testOpenClose() throws Exception {
-
         EventLog log = new EventLog();
 
         // Try to close an event log that isn't open
@@ -77,20 +74,44 @@ public class TestEventLog extends TestCase {
         log.close();
     }
 
-    // Test reading all records
-    public void testRead() throws Exception {
+    private boolean readAll(String logname) throws Exception {
+        int fail = 0, success = 0; 
         EventLogRecord record;
         EventLog log = new EventLog();
 
-        log.open(EventLog.APPLICATION);
+        log.open(logname);
         int oldestRecord = log.getOldestRecord();
         int numRecords = log.getNumberOfRecords();
 
         for (int i = oldestRecord; i < oldestRecord + numRecords; i++) {
-            record = log.read(i);
+            try {
+                record = log.read(i);
+                success++;
+            } catch (Win32Exception e) {
+                fail++;
+                traceln("Error reading record " + i + ": " +
+                        e.getMessage());
+            }
         }
 
         log.close();
+        
+        return success > fail;
+    }
+
+    // Test reading all records
+    public void testRead() throws Exception {
+        String[] logs = {
+            EventLog.SYSTEM,
+            EventLog.APPLICATION
+        };
+        for (int i=0; i<logs.length; i++) {
+            String msg = "readAll(" + logs[i] + ")"; 
+            traceln(msg);
+            if (!readAll(logs[i])) {
+                fail(msg);
+            }
+        }
     }
 
     private class SSHEventLogNotification 
@@ -107,7 +128,6 @@ public class TestEventLog extends TestCase {
 
     // Test event log thread
     public void testEventLogThread() throws Exception {
-
         EventLogThread thread =
             EventLogThread.getInstance(EventLog.APPLICATION);
 
