@@ -875,7 +875,7 @@ static int sigar_who_net_sessions(sigar_t *sigar,
                     SIGAR_WHO_LIST_GROW(wholist);
                     who = &wholist->data[wholist->number++];
 
-                    who->time = (time() - ptr->sesi10_time);
+                    who->time = (time(NULL) - ptr->sesi10_time);
                     SIGAR_W2A((LPCWSTR)ptr->sesi10_username,
                               who->user, sizeof(who->user));
                     SIGAR_W2A((LPCWSTR)ptr->sesi10_cname,
@@ -892,6 +892,7 @@ static int sigar_who_net_sessions(sigar_t *sigar,
 
         if (buffer) {
             NetApiBufferFree(buffer);
+            buffer = NULL;
         }
     } while (status == ERROR_MORE_DATA);
 
