@@ -2053,3 +2053,185 @@ SIGAR_DECLARE(int) sigar_proc_port_get(sigar_t *sigar,
 
     return ENOENT;
 }
+
+int sigar_who_list_get_win32(sigar_t *sigar,
+                             sigar_who_list_t *wholist)
+{
+    sigar_who_net_sessions(sigar, wholist);
+
+    sigar_who_registry(sigar, wholist);
+
+    return SIGAR_OK;
+}
+
+#include <lm.h>
+
+static int sigar_who_net_sessions(sigar_t *sigar,
+                                  sigar_who_list_t *wholist)
+{
+    NET_API_STATUS status;
+    LPSESSION_INFO_10 buffer=NULL, ptr;
+    DWORD entries=0, total_entries=0;
+    DWORD resume_handle=0;
+    DWORD i;
+
+    do {
+        status = NetSessionEnum(NULL, /* server name */
+                                NULL, /* client name */
+                                NULL, /* user name */
+                                10,   /* level */
+                                (LPBYTE*)&buffer,
+                                MAX_PREFERRED_LENGTH,
+                                &entries,
+                                &total_entries,
+                                &resume_handle);
+
+        if ((status == NERR_Success) || (status == ERROR_MORE_DATA)) {
+            if ((ptr = buffer)) {
+                for (i=0; i<entries; i++) {
+                    sigar_who_t *who;
+
+                    if (!ptr) {
+                        break;
+                    }
+
+                    SIGAR_WHO_LIST_GROW(wholist);
+                    who = &wholist->data[wholist->number++];
+
+                    who->time = (time(NULL) - ptr->sesi10_time);
+                    SIGAR_W2A((LPCWSTR)ptr->sesi10_username,
+                              who->user, sizeof(who->user));
+                    SIGAR_W2A((LPCWSTR)ptr->sesi10_cname,
+                              who->host, sizeof(who->host));
+                    SIGAR_SSTRCPY(who->device, "network share");
+
+                    ptr++;
+                }
+            }
+        }
+        else {
+            break;
+        }
+
+        if (buffer) {
+            NetApiBufferFree(buffer);
+            buffer = NULL;
+        }
+    } while (status == ERROR_MORE_DATA);
+
+    if (buffer) {
+        NetApiBufferFree(buffer);
+    }
+
+    return SIGAR_OK;
+}
+
+static int get_logon_info(HKEY users,
+                          char *username,
+                          sigar_who_t *who)
+{
+    DWORD status, size, type;
+    HKEY key;
+    char key_name[MAX_PATH];
+    char value[256];
+    FILETIME wtime;
+
+    who->time = 0;
+
+    sprintf(key_name, "%s\\Volatile Environment", username);
+    if (RegOpenKey(users, key_name, &key) != ERROR_SUCCESS) {
+        return ENOENT;
+    }
+
+    status = RegQueryInfoKey(key,
+                             NULL, NULL, NULL, NULL, NULL,
+                             NULL, NULL, NULL, NULL, NULL,
+                             &wtime);
+    
+    if (status == ERROR_SUCCESS) {
+        FileTimeToLocalFileTime(&wtime, &wtime);
+        who->time = FileTimeToTime(&wtime) / 1000000;
+    }
+
+    size = sizeof(value);
+    status = RegQueryValueEx(key, "CLIENTNAME",
+                             NULL, &type, value, &size);
+    if (status == ERROR_SUCCESS) {
+        if ((value[0] != '\0') && !strEQ(value, "Console")) {
+            SIGAR_SSTRCPY(who->host, value);
+        }
+    }
+
+    size = sizeof(value);
+    status = RegQueryValueEx(key, "SESSIONNAME",
+                             NULL, &type, value, &size);
+    if (status == ERROR_SUCCESS) {
+        SIGAR_SSTRCPY(who->device, value);
+    }
+
+    RegCloseKey(key);
+
+    return SIGAR_OK;
+}
+
+/*XXX dlload, not in NT */
+BOOL WINAPI ConvertStringSidToSidA(LPCSTR, PSID *);
+
+static int sigar_who_registry(sigar_t *sigar,
+                              sigar_who_list_t *wholist)
+{
+    HKEY users;
+    DWORD index=-1, status;
+
+    status = RegOpenKey(HKEY_USERS, NULL, &users);
+    if (status != ERROR_SUCCESS) {
+        return status;
+    }
+
+    while (1) {
+        char subkey[MAX_PATH];
+        char username[SIGAR_CRED_NAME_MAX];
+        char domain[SIGAR_CRED_NAME_MAX];
+        DWORD subkey_len = sizeof(subkey);
+        DWORD username_len = sizeof(username);
+        DWORD domain_len = sizeof(domain);
+        PSID sid;
+        SID_NAME_USE type;
+
+        index++;
+
+        status = RegEnumKeyEx(users, index, subkey, &subkey_len,
+                              NULL, NULL, NULL, NULL);
+
+        if (status != ERROR_SUCCESS) {
+            break;
+        }
+
+        if (!ConvertStringSidToSidA(subkey, &sid)) {
+            continue;
+        }
+
+        if (LookupAccountSid(NULL, /* server */
+                             sid, 
+                             username, &username_len,
+                             domain, &domain_len,
+                             &type))
+        {
+            sigar_who_t *who;
+            
+            SIGAR_WHO_LIST_GROW(wholist);
+            who = &wholist->data[wholist->number++];
+            
+            SIGAR_SSTRCPY(who->user, username);
+            SIGAR_SSTRCPY(who->host, domain);
+            SIGAR_SSTRCPY(who->device, "console");
+            get_logon_info(users, subkey, who);
+        }               
+
+        LocalFree(sid);
+    }
+
+    RegCloseKey(users);
+
+    return SIGAR_OK;
+}
