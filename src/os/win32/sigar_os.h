@@ -97,6 +97,84 @@ typedef struct _IP_ADAPTER_INFO {
 
 /* end iptypes.h */
 
+/* from wtsapi32.h not in vs6.0 */
+typedef enum {
+    WTSInitialProgram,
+    WTSApplicationName,
+    WTSWorkingDirectory,
+    WTSOEMId,
+    WTSSessionId,
+    WTSUserName,
+    WTSWinStationName,
+    WTSDomainName,
+    WTSConnectState,
+    WTSClientBuildNumber,
+    WTSClientName,
+    WTSClientDirectory,
+    WTSClientProductId,
+    WTSClientHardwareId,
+    WTSClientAddress,
+    WTSClientDisplay,
+    WTSClientProtocolType,
+} WTS_INFO_CLASS;
+
+typedef enum _WTS_CONNECTSTATE_CLASS {
+    WTSActive,
+    WTSConnected,
+    WTSConnectQuery,
+    WTSShadow,
+    WTSDisconnected,
+    WTSIdle,
+    WTSListen,
+    WTSReset,
+    WTSDown,
+    WTSInit
+} WTS_CONNECTSTATE_CLASS;
+
+#define WTS_PROTOCOL_TYPE_CONSOLE 0
+#define WTS_PROTOCOL_TYPE_ICA     1
+#define WTS_PROTOCOL_TYPE_RDP     2
+
+typedef struct _WTS_SESSION_INFO {
+    DWORD SessionId;
+    LPTSTR pWinStationName;
+    DWORD State;
+} WTS_SESSION_INFO, *PWTS_SESSION_INFO;
+
+typedef struct _WTS_PROCESS_INFO {
+    DWORD SessionId;
+    DWORD ProcessId;
+    LPSTR pProcessName;
+    PSID pUserSid;
+} WTS_PROCESS_INFO, *PWTS_PROCESS_INFO;
+
+typedef struct _WTS_CLIENT_ADDRESS {
+    DWORD AddressFamily;
+    BYTE Address[20];
+} WTS_CLIENT_ADDRESS, *PWTS_CLIENT_ADDRESS;
+
+/* the WINSTATION_INFO stuff here is undocumented
+ * got the howto from google groups:
+ * http://redirx.com/?31gy
+ */
+typedef enum _WINSTATION_INFO_CLASS {
+    WinStationInformation = 8
+} WINSTATION_INFO_CLASS;
+
+typedef struct _WINSTATION_INFO {
+    BYTE Reserved1[72];
+    ULONG SessionId;
+    BYTE Reserved2[4];
+    FILETIME ConnectTime;
+    FILETIME DisconnectTime;
+    FILETIME LastInputTime;
+    FILETIME LoginTime;
+    BYTE Reserved3[1096];
+    FILETIME CurrentTime;
+} WINSTATION_INFO, *PWINSTATION_INFO;
+
+/* end wtsapi32.h */
+
 #include <iprtrmib.h>
 
 /* undocumented structures */
@@ -126,7 +204,6 @@ typedef struct {
 } MIB_UDPEXTABLE, *PMIB_UDPEXTABLE;
 
 /* end undocumented structures */
-
 typedef DWORD (CALLBACK *LPGETIPFORWARDTABLE)(PMIB_IPFORWARDTABLE, PULONG, BOOL);
 
 typedef DWORD (CALLBACK *LPGETIFTABLE)(PMIB_IFTABLE, PULONG, BOOL);
@@ -152,6 +229,24 @@ typedef BOOL (CALLBACK *LPENUMMODULES)(HANDLE, HMODULE*,
 
 typedef DWORD (CALLBACK *LPGETMODULENAME)(HANDLE, HMODULE,
                                           LPTSTR, DWORD);
+
+typedef BOOLEAN (CALLBACK *LPSTATIONQUERYINFO)(HANDLE,
+                                               ULONG,
+                                               WINSTATION_INFO_CLASS,
+                                               PVOID, ULONG, PULONG);
+
+typedef BOOL (CALLBACK *LPWTSENUMERATESESSIONS)(HANDLE,
+                                                DWORD,
+                                                DWORD,
+                                                PWTS_SESSION_INFO *,
+                                                DWORD *);
+
+typedef void (CALLBACK *LPWTSFREEMEMORY)(PVOID);
+
+typedef BOOL (CALLBACK *LPWTSQUERYSESSION)(HANDLE,
+                                           DWORD,
+                                           WTS_INFO_CLASS,
+                                           LPSTR *, DWORD *);
 
 /* no longer in the standard header files */
 typedef struct {
@@ -187,6 +282,8 @@ struct sigar_t {
     HINSTANCE ip_handle;
     HINSTANCE nt_handle;
     HINSTANCE ps_handle;
+    HINSTANCE wts_handle;
+    HINSTANCE sta_handle;
     LPGETIFTABLE get_if_table;
     LPGETIPFORWARDTABLE get_ipforward_table;
     LPGETTCPTABLE get_tcp_table;
@@ -199,6 +296,10 @@ struct sigar_t {
     LPENUMMODULES enum_modules;
     LPGETMODULENAME get_module_name;
     sigar_win32_pinfo_t pinfo;
+    LPSTATIONQUERYINFO query_station;
+    LPWTSENUMERATESESSIONS wts_enum_sessions;
+    LPWTSFREEMEMORY wts_free;
+    LPWTSQUERYSESSION wts_query_session;
     WORD ws_version;
     int ws_error;
     LPBYTE peb; //scratch pad for getting peb info

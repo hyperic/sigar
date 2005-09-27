@@ -258,6 +258,20 @@ int sigar_os_open(sigar_t **sigar)
         (*sigar)->ps_handle = NULL;
     }
 
+    if ((h = LoadLibrary("wtsapi32.dll"))) {
+        (*sigar)->wts_handle = h;
+    }
+    else {
+        (*sigar)->wts_handle = NULL;
+    }
+
+    if ((h = LoadLibrary("winsta.dll"))) {
+        (*sigar)->sta_handle = h;
+    }
+    else {
+        (*sigar)->sta_handle = NULL;
+    }
+
     (*sigar)->pinfo.pid = -1;
     (*sigar)->ws_version = 0;
     (*sigar)->ncpu = 0;
@@ -286,6 +300,14 @@ int sigar_os_close(sigar_t *sigar)
 
     if (sigar->ps_handle) {
         FreeLibrary(sigar->ps_handle);
+    }
+
+    if (sigar->wts_handle) {
+        FreeLibrary(sigar->wts_handle);
+    }
+
+    if (sigar->sta_handle) {
+        FreeLibrary(sigar->sta_handle);
     }
 
     if (sigar->ws_version != 0) {
@@ -2061,6 +2083,8 @@ int sigar_who_list_get_win32(sigar_t *sigar,
 
     sigar_who_registry(sigar, wholist);
 
+    sigar_who_wts(sigar, wholist);
+
     return SIGAR_OK;
 }
 
@@ -2232,6 +2256,126 @@ static int sigar_who_registry(sigar_t *sigar,
     }
 
     RegCloseKey(users);
+
+    return SIGAR_OK;
+}
+
+static int sigar_who_wts(sigar_t *sigar,
+                         sigar_who_list_t *wholist)
+{
+    DWORD count, i;
+    WTS_SESSION_INFO *sessions = NULL;
+
+    if (!sigar->wts_enum_sessions && sigar->wts_handle) {
+        sigar->wts_enum_sessions =
+            (LPWTSENUMERATESESSIONS)GetProcAddress(sigar->wts_handle,
+                                                   "WTSEnumerateSessionsA");
+        sigar->wts_free =
+            (LPWTSFREEMEMORY)GetProcAddress(sigar->wts_handle,
+                                            "WTSFreeMemory");
+        sigar->wts_query_session =
+            (LPWTSQUERYSESSION)GetProcAddress(sigar->wts_handle,
+                                              "WTSQuerySessionInformationA");
+        sigar->query_station =
+            (LPSTATIONQUERYINFO)GetProcAddress(sigar->sta_handle,
+                                               "WinStationQueryInformationW");
+    }
+    if (!sigar->wts_enum_sessions) {
+        return ENOENT;
+    }
+
+    if (!sigar->wts_enum_sessions(0, 0, 1, &sessions, &count)) {
+        return GetLastError();
+    }
+
+    for (i=0; i<count; i++) {
+        DWORD bytes;
+        LPTSTR buffer;
+        DWORD sessionId = sessions[i].SessionId;
+        WINSTATION_INFO station_info;
+        sigar_who_t *who;
+
+        if (sessions[i].State != WTSActive) {
+            continue;
+        }
+
+        buffer = NULL;
+        bytes = 0;
+        if (sigar->wts_query_session(0,
+                                     sessionId,
+                                     WTSClientProtocolType,
+                                     &buffer,
+                                     &bytes))
+        {
+            DWORD type = *buffer;
+            sigar->wts_free(buffer);
+
+            if (type == WTS_PROTOCOL_TYPE_CONSOLE) {
+                continue;
+            }
+        }
+
+        SIGAR_WHO_LIST_GROW(wholist);
+        who = &wholist->data[wholist->number++];
+
+        SIGAR_SSTRCPY(who->device, sessions[i].pWinStationName);
+
+        buffer = NULL;
+        bytes = 0;
+        if (sigar->wts_query_session(0,
+                                     sessionId,
+                                     WTSClientAddress,
+                                     &buffer,
+                                     &bytes))
+        {
+            PWTS_CLIENT_ADDRESS client =
+                (PWTS_CLIENT_ADDRESS)buffer;
+
+            sprintf(who->host, "%u.%u.%u.%u",
+                    client->Address[2],
+                    client->Address[3],
+                    client->Address[4],
+                    client->Address[5]);
+
+            sigar->wts_free(buffer);
+        }
+        else {
+            SIGAR_SSTRCPY(who->host, "unknown");
+        }
+
+        buffer = NULL;
+        bytes = 0;
+        if (sigar->wts_query_session(0,
+                                     sessionId,
+                                     WTSUserName,
+                                     &buffer,
+                                     &bytes))
+        {
+            SIGAR_SSTRCPY(who->user, buffer);
+            sigar->wts_free(buffer);
+        }
+        else {
+            SIGAR_SSTRCPY(who->user, "unknown");
+        }
+
+        buffer = NULL;
+        bytes = 0;
+        if (sigar->query_station(0,
+                                 sessionId,
+                                 WinStationInformation,
+                                 &station_info,
+                                 sizeof(station_info),
+                                 &bytes))
+        {
+            who->time =
+                FileTimeToTime(&station_info.ConnectTime) / 1000000;
+        }
+        else {
+            who->time = 0;
+        }
+    }
+
+    sigar->wts_free(sessions);
 
     return SIGAR_OK;
 }
