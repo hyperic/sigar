@@ -92,6 +92,26 @@ typedef enum {
 #define PERF_VAL_CPU(ix) \
     NS100_2SEC(PERF_VAL(ix))
 
+static FARPROC sigar_GetProcAddress(sigar_t *sigar,
+                                    HMODULE hModule, LPCSTR lpProcName)
+{
+    FARPROC ptr;
+
+    if (!hModule) {
+        sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
+                         "GetProcAddress(%s): %s\n",
+                         lpProcName, "No module handle");
+    }
+
+    if (!(ptr = GetProcAddress(hModule, lpProcName))) {
+        sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
+                         "GetProcAddress(%s): %s",
+                         lpProcName, sigar_strerror(sigar, GetLastError()));
+    }
+
+    return ptr;
+}
+
 static PERF_OBJECT_TYPE *get_perf_object(sigar_t *sigar, char *counter_key,
                                          DWORD *err)
 {
@@ -2267,20 +2287,46 @@ static int sigar_who_wts(sigar_t *sigar,
     WTS_SESSION_INFO *sessions = NULL;
 
     if (!sigar->wts_enum_sessions && sigar->wts_handle) {
-        sigar->wts_enum_sessions =
-            (LPWTSENUMERATESESSIONS)GetProcAddress(sigar->wts_handle,
-                                                   "WTSEnumerateSessionsA");
-        sigar->wts_free =
-            (LPWTSFREEMEMORY)GetProcAddress(sigar->wts_handle,
-                                            "WTSFreeMemory");
-        sigar->wts_query_session =
-            (LPWTSQUERYSESSION)GetProcAddress(sigar->wts_handle,
-                                              "WTSQuerySessionInformationA");
-        sigar->query_station =
-            (LPSTATIONQUERYINFO)GetProcAddress(sigar->sta_handle,
-                                               "WinStationQueryInformationW");
+        FARPROC ptr;
+
+        if ((ptr = sigar_GetProcAddress(sigar,
+                                        sigar->wts_handle,
+                                        "WTSEnumerateSessionsA")))
+        {
+            sigar->wts_enum_sessions = (LPWTSENUMERATESESSIONS)ptr;
+        }
+
+        if ((ptr = sigar_GetProcAddress(sigar,
+                                        sigar->wts_handle,
+                                        "WTSFreeMemory")))
+        {
+            sigar->wts_free = (LPWTSFREEMEMORY)ptr;
+        }
+
+        if ((ptr = sigar_GetProcAddress(sigar,
+                                        sigar->wts_handle,
+                                        "WTSQuerySessionInformationA")))
+        {
+            sigar->wts_query_session = (LPWTSQUERYSESSION)ptr;
+        }
+
+        if ((ptr = sigar_GetProcAddress(sigar, 
+                                        sigar->sta_handle,
+                                        "WinStationQueryInformationW")))
+        {
+            sigar->query_station = (LPSTATIONQUERYINFO)ptr;
+        }
+
+        sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
+                         "Done looking up Terminal Services api functions");
     }
-    if (!sigar->wts_enum_sessions) {
+
+    if (!(sigar->wts_enum_sessions &&
+          sigar->wts_free &&
+          sigar->wts_query_session))
+    {
+        sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
+                         "Terminal Services api functions not available");
         return ENOENT;
     }
 
@@ -2360,7 +2406,8 @@ static int sigar_who_wts(sigar_t *sigar,
 
         buffer = NULL;
         bytes = 0;
-        if (sigar->query_station(0,
+        if (sigar->query_station &&
+            sigar->query_station(0,
                                  sessionId,
                                  WinStationInformation,
                                  &station_info,
