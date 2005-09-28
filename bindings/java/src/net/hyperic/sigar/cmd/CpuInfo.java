@@ -23,6 +23,16 @@ public class CpuInfo extends SigarCommandBase {
         return "Display cpu information";
     }
 
+    private void output(CpuPerc cpu) {
+        println("User Time....." + CpuPerc.format(cpu.getUser()));
+        println("Sys Time......" + CpuPerc.format(cpu.getSys()));
+        println("Idle Time....." + CpuPerc.format(cpu.getIdle()));
+        println("Wait Time....." + CpuPerc.format(cpu.getWait()));
+        println("Nice Time....." + CpuPerc.format(cpu.getNice()));
+        println("Combined......" + CpuPerc.format(cpu.getCombined()));
+        println("");
+    }
+
     public void output(String[] args) throws SigarException {
         net.hyperic.sigar.CpuInfo[] infos =
             this.sigar.getCpuInfoList();
@@ -38,25 +48,22 @@ public class CpuInfo extends SigarCommandBase {
         if (cacheSize != Sigar.FIELD_NOTIMPL) {
             println("Cache size...." + cacheSize);
         }
+        println("");
 
         if (!this.displayTimes) {
             return;
         }
 
         for (int i=0; i<infos.length; i++) {
+            println("CPU " + i + ".........");
             if (cpus == null) {
                 cpus = this.sigar.getCpuPercList();
             }
-            CpuPerc cpu = cpus[i];
-            println("User Time....." + CpuPerc.format(cpu.getUser()));
-            println("Sys Time......" + CpuPerc.format(cpu.getSys()));
-            println("Idle Time....." + CpuPerc.format(cpu.getIdle()));
-            println("Wait Time....." + CpuPerc.format(cpu.getWait()));
-            println("Nice Time....." + CpuPerc.format(cpu.getNice()));
-            println("Combined......" + CpuPerc.format(cpu.getCombined()));
-            
-            println("");
+            output(cpus[i]);
         }
+
+        println("Totals........");
+        output(this.sigar.getCpuPerc());
     }
 
     public static void main(String[] args) throws Exception {
