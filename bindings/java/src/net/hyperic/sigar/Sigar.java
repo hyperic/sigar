@@ -35,6 +35,9 @@ public class Sigar implements SigarProxy {
     public static final String BUILD_DATE =
         SigarVersion.BUILD_DATE;
 
+    private static boolean enableLogging =
+        "true".equals(System.getProperty("sigar.nativeLogging"));
+
     private static SigarLoader loader = new SigarLoader(Sigar.class);
     private FileSystemMap mounts = null;
 
@@ -102,9 +105,16 @@ public class Sigar implements SigarProxy {
         try {
             open();
         } catch (SigarException e) {
-            //XXX log?
+            if (enableLogging) {
+                e.printStackTrace();
+            }
         } catch (UnsatisfiedLinkError e) {
-            //XXX log?
+            if (enableLogging) {
+                e.printStackTrace();
+            }
+        }
+        if (enableLogging) {
+            enableLogging(true);
         }
     }
 
