@@ -83,10 +83,10 @@ char *sigar_proc_filename(char *buffer, int buflen,
     char *pid_str = sigar_uitoa(pid_buf, pid, &len);
 
     assert((unsigned int)buflen >=
-           (SSTRLEN(PROC_FS_ROOT) + UITOA_BUFFER_SIZE + fname_len + 1));
+           (SSTRLEN(PROCP_FS_ROOT) + UITOA_BUFFER_SIZE + fname_len + 1));
 
-    memcpy(ptr, PROC_FS_ROOT, SSTRLEN(PROC_FS_ROOT));
-    ptr += SSTRLEN(PROC_FS_ROOT);
+    memcpy(ptr, PROCP_FS_ROOT, SSTRLEN(PROCP_FS_ROOT));
+    ptr += SSTRLEN(PROCP_FS_ROOT);
 
     memcpy(ptr, pid_str, len);
     ptr += len;

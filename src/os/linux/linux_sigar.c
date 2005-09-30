@@ -24,8 +24,8 @@
 #define PROC_PSTATUS "/status"
 
 #define SYS_BLOCK "/sys/block"
-#define PROC_PARTITIONS "/proc/partitions"
-#define PROC_DISKSTATS "/proc/diskstats"
+#define PROC_PARTITIONS PROC_FS_ROOT "partitions"
+#define PROC_DISKSTATS  PROC_FS_ROOT "diskstats"
 
 /*
  * /proc/self/stat fields:
@@ -438,8 +438,8 @@ static SIGAR_INLINE int proc_isthread(sigar_t *sigar, char *pidstr, int len)
     int fd, n, offset=sigar->proc_signal_offset;
 
     /* sprintf(buffer, "/proc/%s/stat", pidstr) */
-    memcpy(ptr, PROC_FS_ROOT, SSTRLEN(PROC_FS_ROOT));
-    ptr += SSTRLEN(PROC_FS_ROOT);
+    memcpy(ptr, PROCP_FS_ROOT, SSTRLEN(PROCP_FS_ROOT));
+    ptr += SSTRLEN(PROCP_FS_ROOT);
 
     memcpy(ptr, pidstr, len);
     ptr += len;
@@ -501,7 +501,7 @@ static SIGAR_INLINE int proc_isthread(sigar_t *sigar, char *pidstr, int len)
 int sigar_proc_list_get(sigar_t *sigar,
                         sigar_proc_list_t *proclist)
 {
-    DIR *dirp = opendir("/proc");
+    DIR *dirp = opendir(PROCP_FS_ROOT);
     struct dirent *ent, dbuf;
 
     if (!dirp) {
@@ -1383,7 +1383,7 @@ int sigar_cpu_info_list_get(sigar_t *sigar,
     /* in the event that a box has > 36 cpus */
     int cpu_id_max = sizeof(cpu_id)/sizeof(int);
 
-    if (!(fp = fopen("/proc/cpuinfo", "r"))) {
+    if (!(fp = fopen(PROC_FS_ROOT "cpuinfo", "r"))) {
         return errno;
     }
 
@@ -1478,7 +1478,7 @@ int sigar_net_route_list_get(sigar_t *sigar,
 
     routelist->size = routelist->number = 0;
 
-    if (!(fp = fopen("/proc/net/route", "r"))) {
+    if (!(fp = fopen(PROC_FS_ROOT "net/route", "r"))) {
         return errno;
     }
 
@@ -1519,7 +1519,7 @@ int sigar_net_interface_stat_get(sigar_t *sigar, const char *name,
 {
     int found = 0;
     char buffer[BUFSIZ];
-    FILE *fp = fopen("/proc/net/dev", "r");
+    FILE *fp = fopen(PROC_FS_ROOT "net/dev", "r");
     
     if (!fp) {
         return errno;
@@ -1726,7 +1726,7 @@ static int net_conn_get(sigar_t *sigar,
 
     if (flags & SIGAR_NETCONN_TCP) {
         status = proc_net_read(getter,
-                               "/proc/net/tcp",
+                               PROC_FS_ROOT "net/tcp",
                                flags, SIGAR_NETCONN_TCP);
 
         if (status != SIGAR_OK) {
@@ -1734,7 +1734,7 @@ static int net_conn_get(sigar_t *sigar,
         }
 
         status = proc_net_read(getter,
-                               "/proc/net/tcp6",
+                               PROC_FS_ROOT "net/tcp6",
                                flags, SIGAR_NETCONN_TCP);
 
         if (!((status == SIGAR_OK) || (status == ENOENT))) {
@@ -1744,7 +1744,7 @@ static int net_conn_get(sigar_t *sigar,
 
     if (flags & SIGAR_NETCONN_UDP) {
         status = proc_net_read(getter,
-                               "/proc/net/udp",
+                               PROC_FS_ROOT "net/udp",
                                flags, SIGAR_NETCONN_UDP);
 
         if (status != SIGAR_OK) {
@@ -1752,7 +1752,7 @@ static int net_conn_get(sigar_t *sigar,
         }
 
         status = proc_net_read(getter,
-                               "/proc/net/udp6",
+                               PROC_FS_ROOT "net/udp6",
                                flags, SIGAR_NETCONN_UDP);
 
         if (!((status == SIGAR_OK) || (status == ENOENT))) {
@@ -1762,7 +1762,7 @@ static int net_conn_get(sigar_t *sigar,
 
     if (flags & SIGAR_NETCONN_RAW) {
         status = proc_net_read(getter,
-                               "/proc/net/raw",
+                               PROC_FS_ROOT "net/raw",
                                flags, SIGAR_NETCONN_RAW);
 
         if (status != SIGAR_OK) {
@@ -1770,7 +1770,7 @@ static int net_conn_get(sigar_t *sigar,
         }
 
         status = proc_net_read(getter,
-                               "/proc/net/raw6",
+                               PROC_FS_ROOT "net/raw6",
                                flags, SIGAR_NETCONN_RAW);
 
         if (!((status == SIGAR_OK) || (status == ENOENT))) {
@@ -1847,7 +1847,7 @@ int sigar_proc_port_get(sigar_t *sigar, int protocol,
         return SIGAR_OK; /* XXX or ENOENT? */
     }
 
-    if (!(dirp = opendir("/proc"))) {
+    if (!(dirp = opendir(PROCP_FS_ROOT))) {
         return errno;
     }
 
@@ -1867,8 +1867,8 @@ int sigar_proc_port_get(sigar_t *sigar, int protocol,
         }
 
         /* sprintf(pid_name, "/proc/%s", ent->d_name) */
-        memcpy(&pid_name[0], PROC_FS_ROOT, SSTRLEN(PROC_FS_ROOT));
-        len = SSTRLEN(PROC_FS_ROOT);
+        memcpy(&pid_name[0], PROCP_FS_ROOT, SSTRLEN(PROCP_FS_ROOT));
+        len = SSTRLEN(PROCP_FS_ROOT);
         pid_name[len++] = '/';
 
         slen = strlen(ent->d_name);
