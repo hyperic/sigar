@@ -16,7 +16,7 @@ while (my $pid = readdir DH) {
     if ($match) {
 	next unless grep { /$match/o } @cmdline;
     }
-    print "$pid=[", (map { "=>$_<=" } @cmdline), "]\n";
+    print "(pid=$pid) ", (map { "=>$_<=" } @cmdline), "\n";
 }
 
 closedir DH;
