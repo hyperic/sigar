@@ -4,7 +4,7 @@
 
 use strict;
 
-my(@proc_files) = qw(cmdline stat statm status);
+my(@proc_files) = qw(cmdline stat statm status maps);
 my $cpname = "copy-proc";
 my $tmp = $ENV{TMPDIR} || "/tmp";
 my $tmpdir = "$tmp/$cpname";
