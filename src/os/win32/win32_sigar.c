@@ -101,6 +101,7 @@ static FARPROC sigar_GetProcAddress(sigar_t *sigar,
         sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
                          "GetProcAddress(%s): %s\n",
                          lpProcName, "No module handle");
+        return NULL;
     }
 
     if (!(ptr = GetProcAddress(hModule, lpProcName))) {
