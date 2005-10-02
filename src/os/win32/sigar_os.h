@@ -204,6 +204,9 @@ typedef struct {
 } MIB_UDPEXTABLE, *PMIB_UDPEXTABLE;
 
 /* end undocumented structures */
+
+typedef BOOL (CALLBACK *LPCONVERTSTRINGSID)(LPCSTR, PSID *);
+
 typedef DWORD (CALLBACK *LPGETIPFORWARDTABLE)(PMIB_IPFORWARDTABLE, PULONG, BOOL);
 
 typedef DWORD (CALLBACK *LPGETIFTABLE)(PMIB_IFTABLE, PULONG, BOOL);
@@ -279,11 +282,13 @@ struct sigar_t {
     HKEY handle;
     char *perfbuf;
     DWORD perfbuf_size;
+    HINSTANCE adv_handle;
     HINSTANCE ip_handle;
     HINSTANCE nt_handle;
     HINSTANCE ps_handle;
     HINSTANCE wts_handle;
     HINSTANCE sta_handle;
+    LPCONVERTSTRINGSID convert_string_sid;
     LPGETIFTABLE get_if_table;
     LPGETIPFORWARDTABLE get_ipforward_table;
     LPGETTCPTABLE get_tcp_table;

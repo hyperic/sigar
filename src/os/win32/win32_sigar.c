@@ -258,6 +258,17 @@ int sigar_os_open(sigar_t **sigar)
         (*sigar)->ip_handle = NULL;
     }
 
+    if ((h = LoadLibrary("advapi32.dll"))) {
+        (*sigar)->convert_string_sid =
+            (LPCONVERTSTRINGSID)GetProcAddress(h, 
+                                               "ConvertStringSidToSidA");
+        (*sigar)->adv_handle = h;
+    }
+    else {
+        (*sigar)->adv_handle = NULL;
+        (*sigar)->convert_string_sid = NULL;
+    }
+
     if ((h = LoadLibrary("Ntdll.dll"))) {
         (*sigar)->get_ntsys_info =
             (LPSYSINFO)GetProcAddress(h, "NtQuerySystemInformation");
@@ -2212,14 +2223,15 @@ static int get_logon_info(HKEY users,
     return SIGAR_OK;
 }
 
-/*XXX dlload, not in NT */
-BOOL WINAPI ConvertStringSidToSidA(LPCSTR, PSID *);
-
 static int sigar_who_registry(sigar_t *sigar,
                               sigar_who_list_t *wholist)
 {
     HKEY users;
     DWORD index=0, status;
+
+    if (!sigar->convert_string_sid) {
+        return ENOENT;
+    }
 
     status = RegOpenKey(HKEY_USERS, NULL, &users);
     if (status != ERROR_SUCCESS) {
@@ -2249,7 +2261,7 @@ static int sigar_who_registry(sigar_t *sigar,
             continue;
         }
 
-        if (!ConvertStringSidToSidA(subkey, &sid)) {
+        if (!sigar->convert_string_sid(subkey, &sid)) {
             continue;
         }
 
