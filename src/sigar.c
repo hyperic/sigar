@@ -229,7 +229,7 @@ SIGAR_DECLARE(char *) sigar_format_size(sigar_uint64_t size, char *buf)
 
 int sigar_user_name_get(sigar_t *sigar, int uid, char *buf, int buflen)
 {
-    struct passwd *pw;
+    struct passwd *pw = NULL;
     /* XXX cache lookup */
 
 # ifdef HAVE_GETPWUID_R
@@ -238,6 +238,9 @@ int sigar_user_name_get(sigar_t *sigar, int uid, char *buf, int buflen)
 
     if (getpwuid_r(uid, &pwbuf, buffer, sizeof(buffer), &pw) != 0) {
         return errno;
+    }
+    if (!pw) {
+        return ENOENT;
     }
 # else
     if ((pw = getpwuid(uid)) == NULL) {
