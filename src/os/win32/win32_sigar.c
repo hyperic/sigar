@@ -2315,16 +2315,16 @@ static int sigar_who_wts(sigar_t *sigar,
             sigar->query_station = (LPSTATIONQUERYINFO)ptr;
         }
 
-        sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
-                         "Done looking up Terminal Services api functions");
+        sigar_log(sigar, SIGAR_LOG_DEBUG,
+                  "Done looking up Terminal Services api functions");
     }
 
     if (!(sigar->wts_enum_sessions &&
           sigar->wts_free &&
           sigar->wts_query_session))
     {
-        sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
-                         "Terminal Services api functions not available");
+        sigar_log(sigar, SIGAR_LOG_DEBUG,
+                  "Terminal Services api functions not available");
         return ENOENT;
     }
 
