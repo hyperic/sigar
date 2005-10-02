@@ -278,6 +278,11 @@ int sigar_os_open(sigar_t **sigar)
         (*sigar)->ps_handle = NULL;
     }
 
+    (*sigar)->wts_enum_sessions = NULL;
+    (*sigar)->wts_free = NULL;
+    (*sigar)->wts_query_session = NULL;
+    (*sigar)->query_station = NULL;
+
     if ((h = LoadLibrary("wtsapi32.dll"))) {
         (*sigar)->wts_handle = h;
     }
@@ -2096,18 +2101,6 @@ SIGAR_DECLARE(int) sigar_proc_port_get(sigar_t *sigar,
     return ENOENT;
 }
 
-int sigar_who_list_get_win32(sigar_t *sigar,
-                             sigar_who_list_t *wholist)
-{
-    sigar_who_net_sessions(sigar, wholist);
-
-    sigar_who_registry(sigar, wholist);
-
-    sigar_who_wts(sigar, wholist);
-
-    return SIGAR_OK;
-}
-
 #include <lm.h>
 
 static int sigar_who_net_sessions(sigar_t *sigar,
@@ -2225,7 +2218,7 @@ static int sigar_who_registry(sigar_t *sigar,
                               sigar_who_list_t *wholist)
 {
     HKEY users;
-    DWORD index=-1, status;
+    DWORD index=0, status;
 
     status = RegOpenKey(HKEY_USERS, NULL, &users);
     if (status != ERROR_SUCCESS) {
@@ -2242,13 +2235,17 @@ static int sigar_who_registry(sigar_t *sigar,
         PSID sid;
         SID_NAME_USE type;
 
-        index++;
-
         status = RegEnumKeyEx(users, index, subkey, &subkey_len,
                               NULL, NULL, NULL, NULL);
 
         if (status != ERROR_SUCCESS) {
             break;
+        }
+
+        index++;
+
+        if ((subkey[0] == '.') || strstr(subkey, "_Classes")) {
+            continue;
         }
 
         if (!ConvertStringSidToSidA(subkey, &sid)) {
@@ -2262,13 +2259,14 @@ static int sigar_who_registry(sigar_t *sigar,
                              &type))
         {
             sigar_who_t *who;
-            
+
             SIGAR_WHO_LIST_GROW(wholist);
             who = &wholist->data[wholist->number++];
             
             SIGAR_SSTRCPY(who->user, username);
             SIGAR_SSTRCPY(who->host, domain);
             SIGAR_SSTRCPY(who->device, "console");
+
             get_logon_info(users, subkey, who);
         }               
 
@@ -2283,7 +2281,7 @@ static int sigar_who_registry(sigar_t *sigar,
 static int sigar_who_wts(sigar_t *sigar,
                          sigar_who_list_t *wholist)
 {
-    DWORD count, i;
+    DWORD count=0, i;
     WTS_SESSION_INFO *sessions = NULL;
 
     if (!sigar->wts_enum_sessions && sigar->wts_handle) {
@@ -2423,6 +2421,18 @@ static int sigar_who_wts(sigar_t *sigar,
     }
 
     sigar->wts_free(sessions);
+
+    return SIGAR_OK;
+}
+
+int sigar_who_list_get_win32(sigar_t *sigar,
+                             sigar_who_list_t *wholist)
+{
+    sigar_who_net_sessions(sigar, wholist);
+
+    sigar_who_registry(sigar, wholist);
+
+    sigar_who_wts(sigar, wholist);
 
     return SIGAR_OK;
 }
