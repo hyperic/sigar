@@ -1549,8 +1549,8 @@ SIGAR_DECLARE(int) sigar_fqdn_get(sigar_t *sigar, char *name, int namelen)
         }
     }
 
-    sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
-                     "[fqdn] unresolved using gethostbyname.h_addr_list");
+    sigar_log(sigar, SIGAR_LOG_DEBUG,
+              "[fqdn] unresolved using gethostbyname.h_addr_list");
 
 #if !defined(WIN32) && !defined(NETWARE)
     if (!IS_FQDN(name) && /* e.g. aix gethostname is already fqdn */
