@@ -327,6 +327,10 @@ int sigar_os_close(sigar_t *sigar)
 
     retval = RegCloseKey(sigar->handle);
 
+    if (sigar->adv_handle) {
+        FreeLibrary(sigar->adv_handle);
+    }
+
     if (sigar->ip_handle) {
         FreeLibrary(sigar->ip_handle);
     }
