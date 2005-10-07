@@ -27,6 +27,13 @@ public class EventLogThread implements Runnable {
     private String logName = EventLog.APPLICATION;
     private long interval  = DEFAULT_INTERVAL;
 
+    /**
+     * @deprecated
+     */
+    public static EventLogThread getInstance() {
+        return getInstance(EventLog.APPLICATION);
+    }
+
     public static EventLogThread getInstance(String name) {
         EventLogThread instance;
 
