@@ -32,15 +32,15 @@ int main(int argc, char **argv)
             printf("pid=%d\n", pid);
 
             for (i=0; i<args.number; i++) {
-                printf("%d=%s\n", i, args.data[i]);
+                printf("%d='%s'\n", i, args.data[i]);
             }
+
+            sigar_proc_args_destroy(sigar, &args);
         }
         else {
             printf("pid=%d error=%d...%s\n",
                    pid, status, sigar_strerror(sigar, status));
         }
-
-        sigar_proc_args_destroy(sigar, &args);
     }
 
     sigar_proc_list_destroy(sigar, &procs);
