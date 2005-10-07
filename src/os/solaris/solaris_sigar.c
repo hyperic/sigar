@@ -746,7 +746,7 @@ int sigar_proc_args_get(sigar_t *sigar, sigar_pid_t pid,
         int alen;
         char *arg;
 
-        if ((nread = pread(fd, buffer, sizeof(buffer), (off_t)argvp[n])) <= 0) {
+        if ((nread = pread(fd, buffer, sizeof(buffer)-1, (off_t)argvp[n])) <= 0) {
             close(fd);
             if (argvp != argvb) {
                 free(argvp);
@@ -754,7 +754,8 @@ int sigar_proc_args_get(sigar_t *sigar, sigar_pid_t pid,
             sigar_proc_args_destroy(sigar, procargs);
             return errno;
         }
-
+        /* chances of arg > 1024 are slim, but just incase. */
+        buffer[nread] = '\0'; 
         alen = strlen(buffer)+1;
         arg = malloc(alen);
         memcpy(arg, buffer, alen);
