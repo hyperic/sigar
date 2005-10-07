@@ -20,7 +20,13 @@
 #define sigar_isalpha(c) \
     (isalpha(((unsigned char)(c))))
 
+#ifndef PROC_FS_ROOT
 #define PROC_FS_ROOT "/proc/"
+#endif
+
+#ifndef PROCP_FS_ROOT
+#define PROCP_FS_ROOT "/proc/"
+#endif
 
 char *sigar_uitoa(char *buf, unsigned int n, int *len);
 
