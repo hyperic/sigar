@@ -1883,10 +1883,10 @@ int sigar_net_interface_stat_get(sigar_t *sigar, const char *name,
         }
         break;
       default:
-        return sigar_net_ifstat_get_any(sigar, name, ifstat);
+        break;
     }
     
-    return ENXIO;
+    return sigar_net_ifstat_get_any(sigar, name, ifstat);
 }
 
 #define TCPQ_SIZE(s) ((s) >= 0 ? (s) : 0)
