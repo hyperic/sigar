@@ -4,8 +4,9 @@ use strict;
 
 my $match = $ARGV[0];
 
-opendir DH, "/proc" or die;
-chdir "/proc";
+my $proc = "/proc";
+opendir DH, $proc or die;
+chdir $proc;
 local $/;
 
 while (my $pid = readdir DH) {
@@ -16,7 +17,15 @@ while (my $pid = readdir DH) {
     if ($match) {
 	next unless grep { /$match/o } @cmdline;
     }
-    print "(pid=$pid) ", (map { "=>$_<=" } @cmdline), "\n";
+
+    print "-------------------------------\n";
+
+    my $i=0;
+    print "pid=$pid\n";
+    for my $arg (@cmdline) {
+	print "$i='$arg'\n";
+	$i++;
+    }
 }
 
 closedir DH;
