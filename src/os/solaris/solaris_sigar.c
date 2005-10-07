@@ -1269,6 +1269,7 @@ static int create_fsdev_cache(sigar_t *sigar)
     }
 
     if (!(mapping = get_fsdev_paths(sigar, &fslist))) {
+        sigar_file_system_list_destroy(sigar, &fslist);
         return ENOENT;
     }
 
@@ -1322,7 +1323,6 @@ static int create_fsdev_cache(sigar_t *sigar)
             }
         }
     }
-
 
     sigar_file_system_list_destroy(sigar, &fslist);
 
