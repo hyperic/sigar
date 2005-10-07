@@ -225,12 +225,7 @@ int sigar_procfs_args_get(sigar_t *sigar, sigar_pid_t pid,
         if (len == 0) {
             break;
         }
-        if (buf) {
-            buf = realloc(buf, total+len);
-        }
-        else {
-            buf = malloc(len+1);
-        }
+        buf = realloc(buf, total+len+1);
         memcpy(buf+total, buffer, len);
         total += len;
     }
@@ -256,7 +251,11 @@ int sigar_procfs_args_get(sigar_t *sigar, sigar_pid_t pid,
         memcpy(arg, ptr, alen);
 
         procargs->data[procargs->number++] = arg;
-            
+
+        total -= alen;
+        if (total <= 0) {
+            break;
+        }
         ptr += alen;
     }
 
