@@ -691,7 +691,7 @@ int sigar_proc_args_get(sigar_t *sigar, sigar_pid_t pid,
 {
     psinfo_t *pinfo;
     int fd, status;
-    char buffer[BUFSIZ];
+    char buffer[9086];
     char *argvb[56];
     char **argvp = argvb;
 
@@ -754,7 +754,7 @@ int sigar_proc_args_get(sigar_t *sigar, sigar_pid_t pid,
             sigar_proc_args_destroy(sigar, procargs);
             return errno;
         }
-        /* chances of arg > 1024 are slim, but just incase. */
+
         buffer[nread] = '\0'; 
         alen = strlen(buffer)+1;
         arg = malloc(alen);
