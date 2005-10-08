@@ -1741,6 +1741,62 @@ static int sigar_net_ifstat_get_lo(sigar_t *sigar, const char *name,
     return SIGAR_OK;
 }
 
+#if 0
+/* looking for sigar_net_ifstat_get_any alternative,
+ * but dont get much data this way.
+ */
+static int sigar_net_ifstat_get_mib2(sigar_t *sigar, const char *name,
+                                     sigar_net_interface_stat_t *ifstat)
+{
+    char *data;
+    int len;
+    int rc;
+    struct opthdr *op;
+
+    while ((rc = get_mib2(&sigar->mib2, &op, &data, &len)) == GET_MIB2_OK) {
+        mib2_ipAddrEntry_t *entry;
+        char *end;
+
+        if (!((op->level == MIB2_IP) && (op->name == MIB2_IP_ADDR))) {
+            continue;
+        }
+
+        for (entry = (mib2_ipAddrEntry_t *)data, end = data + len;
+             (char *)entry < end; entry++)
+        {
+            if (strEQ(name, entry->ipAdEntIfIndex.o_bytes)) {
+                struct ipAdEntInfo_s *info = &entry->ipAdEntInfo;
+
+                ifstat->rx_bytes      = -1;
+                ifstat->rx_packets    = info->ae_ibcnt;
+                ifstat->rx_errors     = -1;
+                ifstat->rx_dropped    = -1;
+                ifstat->rx_overruns   = -1;
+                ifstat->rx_frame      = -1;
+
+                ifstat->tx_bytes      = -1;
+                ifstat->tx_packets    = info->ae_obcnt;
+                ifstat->tx_errors     = -1;
+                ifstat->tx_dropped    = -1;
+                ifstat->tx_overruns   = -1;
+                ifstat->tx_collisions = -1;
+                ifstat->tx_carrier    = -1;
+
+                close_mib2(&sigar->mib2);
+                return SIGAR_OK;
+            }
+        }
+    }
+
+    if (rc != GET_MIB2_EOD) {
+        close_mib2(&sigar->mib2);
+        return SIGAR_EMIB2;
+    }
+
+    return SIGAR_OK;
+}
+#endif
+
 static int sigar_net_ifstat_get_any(sigar_t *sigar, const char *name,
                                     sigar_net_interface_stat_t *ifstat)
 {
