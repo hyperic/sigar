@@ -86,7 +86,7 @@ static void hwaddr_lookup(sigar_net_interface_config_t *ifconfig, int num)
     memset(&ncb.ncb_callname[1], ' ',
            sizeof(ncb.ncb_callname)-1);
 
-    ncb.ncb_callname[sizeof(ncb.ncb_callname)] = '\0';
+    ncb.ncb_callname[sizeof(ncb.ncb_callname)-1] = '\0';
 
     ncb.ncb_buffer = (unsigned char *)&adapter;
     ncb.ncb_length = sizeof(adapter);
