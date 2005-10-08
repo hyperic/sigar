@@ -140,9 +140,6 @@ int sigar_os_close(sigar_t *sigar)
     if (sigar->fsdev) {
         sigar_cache_destroy(sigar->fsdev);
     }
-    if (sigar->mib2.sd != -1) {
-        close_mib2(&sigar->mib2);
-    }
     free(sigar);
     return SIGAR_OK;
 }
@@ -1545,6 +1542,7 @@ int sigar_net_route_list_get(sigar_t *sigar,
     }
 
     if (rc != GET_MIB2_EOD) {
+        close_mib2(&sigar->mib2);
         return SIGAR_EMIB2;
     }
 
@@ -2042,6 +2040,7 @@ int sigar_net_connection_list_get(sigar_t *sigar,
     }
 
     if (rc != GET_MIB2_EOD) {
+        close_mib2(&sigar->mib2);
         return SIGAR_EMIB2;
     }
 
