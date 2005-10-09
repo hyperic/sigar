@@ -1874,6 +1874,75 @@ static void ifstat_kstat_common(sigar_net_interface_stat_t *ifstat,
     }
 }
 
+/*
+http://cvs.opensolaris.org/source/xref/usr/src/uts/common/io/bge/bge_kstats.c
+ */
+static void ifstat_kstat_bge(sigar_net_interface_stat_t *ifstat,
+                             kstat_named_t *data, int ndata)
+{
+    int i;
+
+    for (i=0; i<ndata; i++) {
+        sigar_uint64_t value = data[i].value.ui32;
+
+        char *ptr = data[i].name;
+
+        switch (*ptr) {
+          case 'd':
+            if (strEQ(ptr, "dot3StatsFrameTooLongs")) {
+                ifstat->rx_frame = value;
+            }
+            else if (strEQ(ptr, "dot3StatsCarrierSenseErrors")) {
+                ifstat->tx_carrier = value;
+            }
+            break;
+          case 'e':
+            if (strEQ(ptr, "etherStatsCollisions")) {
+                ifstat->tx_collisions = value;
+            }
+            else if (strEQ(ptr, "etherStatsUndersizePkts")) {
+                ifstat->rx_overruns = ifstat->tx_overruns =
+                    value;
+            }
+            break;
+          case 'i':
+            if (strEQ(ptr, "ifHCInOctets")) {
+                ifstat->rx_bytes = value;
+            }
+            else if (strEQ(ptr, "ifHCOutOctets")) {
+                ifstat->tx_bytes = value;
+            }
+            else if (strEQ(ptr, "ifHCInUcastPkts") ||
+                     strEQ(ptr, "ifHCInMulticastPkts") ||
+                     strEQ(ptr, "ifHCInBroadcastPkts"))
+            {
+                ifstat->rx_packets += value;
+            }
+            else if (strEQ(ptr, "ifHCOutUcastPkts") ||
+                     strEQ(ptr, "ifHCOutMulticastPkts") ||
+                     strEQ(ptr, "ifHCOutBroadcastPkts"))
+            {
+                ifstat->tx_packets += value;
+            }
+            else if (strEQ(ptr, "ifInDiscards")) {
+                ifstat->rx_dropped = value;
+            }
+            else if (strEQ(ptr, "ifOutDiscards")) {
+                ifstat->tx_dropped = value;
+            }
+            else if (strEQ(ptr, "ifInErrors")) {
+                ifstat->rx_errors = value;
+            }
+            else if (strEQ(ptr, "ifOutErrors")) {
+                ifstat->tx_errors = value;
+            }
+            break;
+          default:
+            break;
+        }
+    }
+}
+
 static int sigar_net_ifstat_get_any(sigar_t *sigar, const char *name,
                                     sigar_net_interface_stat_t *ifstat)
 {
@@ -1911,10 +1980,8 @@ static int sigar_net_ifstat_get_any(sigar_t *sigar, const char *name,
 
     data = (kstat_named_t *)ksp->ks_data;
 
-    /* http://cvs.opensolaris.org/source/xref/usr/src/uts/common/io/bge */
     if (strEQ(dev, "bge")) {
-        /* XXX totally different names */
-        /* ifstat_kstat_bge(ifstat, data, ksp->ks_ndata); */
+        ifstat_kstat_bge(ifstat, data, ksp->ks_ndata);
     }
     else {
         ifstat_kstat_common(ifstat, data, ksp->ks_ndata);
