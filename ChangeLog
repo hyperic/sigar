@@ -1,3 +1,11 @@
+2005-10-08  Doug MacEachern  <dougm@hyperic.net>
+
+        * Add support for solaris 'bge' network interface metrics
+
+        * Add win32 sigar_who_list impl
+
+        * sigar_proc_args fixes for linux and solaris
+        
 2005-09-24  Doug MacEachern  <dougm@hyperic.net>
 
         * 1.1.22 released
