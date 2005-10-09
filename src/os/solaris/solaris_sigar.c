@@ -1797,46 +1797,15 @@ static int sigar_net_ifstat_get_mib2(sigar_t *sigar, const char *name,
 }
 #endif
 
-static int sigar_net_ifstat_get_any(sigar_t *sigar, const char *name,
-                                    sigar_net_interface_stat_t *ifstat)
+static void ifstat_kstat_common(sigar_net_interface_stat_t *ifstat,
+                                kstat_named_t *data, int ndata)
 {
-    kstat_ctl_t *kc = sigar->kc; 
-    kstat_t *ksp;
-    kstat_named_t *data;
-    char dev[64], *ptr=dev;
-    int num, i;
+    int i;
 
-    kstat_chain_update(kc);
-    strncpy(dev, name, sizeof(dev)-1);
-    dev[sizeof(dev)-1] = '\0';
-
-    while (!sigar_isdigit(*ptr) && (*ptr != '\0')) {
-        ptr++;
-    }
-
-    if (*ptr == '\0') {
-        return ENXIO;
-    }
-
-    /* iprb0 -> dev="iprb", num=0 */
-    num = atoi(ptr);
-    *ptr = '\0';
-
-    if (!(ksp = kstat_lookup(kc, dev, num, NULL))) {
-        return ENXIO;
-    }
-
-    if (kstat_read(kc, ksp, NULL) < 0) {
-        return ENOENT;
-    }
-
-    SIGAR_ZERO(ifstat);
-
-    data = (kstat_named_t *)ksp->ks_data;
-    for (i=0; i<ksp->ks_ndata; i++) {
+    for (i=0; i<ndata; i++) {
         sigar_uint64_t value = data[i].value.ui32;
 
-        ptr = data[i].name;
+        char *ptr = data[i].name;
 
         switch (*ptr) {
           case 'c':
@@ -1902,6 +1871,53 @@ static int sigar_net_ifstat_get_any(sigar_t *sigar, const char *name,
           default:
             break;
         }
+    }
+}
+
+static int sigar_net_ifstat_get_any(sigar_t *sigar, const char *name,
+                                    sigar_net_interface_stat_t *ifstat)
+{
+    kstat_ctl_t *kc = sigar->kc; 
+    kstat_t *ksp;
+    kstat_named_t *data;
+    char dev[64], *ptr=dev;
+    int num;
+
+    kstat_chain_update(kc);
+    strncpy(dev, name, sizeof(dev)-1);
+    dev[sizeof(dev)-1] = '\0';
+
+    while (!sigar_isdigit(*ptr) && (*ptr != '\0')) {
+        ptr++;
+    }
+
+    if (*ptr == '\0') {
+        return ENXIO;
+    }
+
+    /* iprb0 -> dev="iprb", num=0 */
+    num = atoi(ptr);
+    *ptr = '\0';
+
+    if (!(ksp = kstat_lookup(kc, dev, num, NULL))) {
+        return ENXIO;
+    }
+
+    if (kstat_read(kc, ksp, NULL) < 0) {
+        return ENOENT;
+    }
+
+    SIGAR_ZERO(ifstat);
+
+    data = (kstat_named_t *)ksp->ks_data;
+
+    /* http://cvs.opensolaris.org/source/xref/usr/src/uts/common/io/bge */
+    if (strEQ(dev, "bge")) {
+        /* XXX totally different names */
+        /* ifstat_kstat_bge(ifstat, data, ksp->ks_ndata); */
+    }
+    else {
+        ifstat_kstat_common(ifstat, data, ksp->ks_ndata);
     }
 
     return SIGAR_OK;
