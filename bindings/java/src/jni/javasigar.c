@@ -2,6 +2,8 @@
 #include "sigar.h"
 #include "sigar_fileinfo.h"
 #include "sigar_log.h"
+#include "sigar_private.h"
+#include "sigar_os.h"
 
 #include <string.h>
 
@@ -1184,6 +1186,11 @@ JNIEXPORT jlong SIGAR_JNI(Sigar_getServicePid)
     SC_HANDLE mgr;
     dSIGAR(0);
 
+    if (!sigar->adv_handle) {
+        sigar_throw_notimpl(env, "advapi32.dll not available");
+        return 0;
+    }
+
     name = JENV->GetStringUTFChars(env, jname, &is_copy);
 
     mgr = OpenSCManager(NULL, SERVICES_ACTIVE_DATABASE,
@@ -1195,28 +1202,19 @@ JNIEXPORT jlong SIGAR_JNI(Sigar_getServicePid)
         if (svc) {
             SERVICE_STATUS_PROCESS status;
             DWORD bytes;
-            HANDLE lib;
+            QueryServiceStatusExFunc status_query =
+                (QueryServiceStatusExFunc)
+                    GetProcAddress(sigar->adv_handle,
+                                   "QueryServiceStatusEx");
 
-            if ((lib = LoadLibrary("advapi32.dll"))) {
-                QueryServiceStatusExFunc status_query;
-                status_query =
-                    (QueryServiceStatusExFunc)
-                    GetProcAddress(lib, "QueryServiceStatusEx");
-
-                if (!status_query) {
-                    err = SIGAR_ENOTIMPL;
-                }
-                else if (status_query(svc,
-                                      SC_STATUS_PROCESS_INFO,
-                                      (LPBYTE)&status, sizeof(status), &bytes))
-                {
-                    pid = status.dwProcessId;
-                }
-                else {
-                    err = GetLastError();
-                }
-
-                FreeLibrary(lib);
+            if (!status_query) {
+                err = SIGAR_ENOTIMPL;
+            }
+            else if (status_query(svc,
+                                  SC_STATUS_PROCESS_INFO,
+                                  (LPBYTE)&status, sizeof(status), &bytes))
+            {
+                pid = status.dwProcessId;
             }
             else {
                 err = GetLastError();

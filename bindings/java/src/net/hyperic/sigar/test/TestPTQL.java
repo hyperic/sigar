@@ -45,6 +45,7 @@ public class TestPTQL extends SigarTestCase {
         "Pid.PidFile.eq=pid.file",
         "Pid.Pid.eq=1",
         "Pid.Service.eq=Eventlog",
+        "Pid.Service.eq=NOSUCHSERVICE",
         "Pid.Service.eq=Hyperic HQ Agent",
         "State.Name.eq=java,Pid.Pid.ne=$$", //all java procs cept this one
         "Cpu.Percent.ge=0.2",
