@@ -9,7 +9,7 @@
   <property name="version.minor" value="1"/>
   <property name="version.maint" value="23"/>
   <property name="sigar.version"
-            value="${version.major}.${version.minor}.${version.maint}-dev"/>
+            value="${version.major}.${version.minor}.${version.maint}"/>
 
   <property file="${user.home}/.sigar-build.properties"/>
   <property name="project.name" value="sigar"/>
