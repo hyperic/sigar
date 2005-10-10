@@ -2368,10 +2368,12 @@ static int sigar_who_wts(sigar_t *sigar,
                                      &buffer,
                                      &bytes))
         {
-            DWORD type = *buffer;
+            int isConsole = 
+                (*buffer == WTS_PROTOCOL_TYPE_CONSOLE);
+
             sigar->wts_free(buffer);
 
-            if (type == WTS_PROTOCOL_TYPE_CONSOLE) {
+            if (isConsole) {
                 continue;
             }
         }
