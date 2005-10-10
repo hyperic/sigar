@@ -42,12 +42,14 @@ typedef struct {
 #define dSIGAR_VOID \
     dSIGAR_GET; \
     if (!jsigar) return; \
-    sigar = jsigar->sigar
+    sigar = jsigar->sigar; \
+    jsigar->env = env
 
 #define dSIGAR(val) \
     dSIGAR_GET; \
     if (!jsigar) return val; \
-    sigar = jsigar->sigar
+    sigar = jsigar->sigar; \
+    jsigar->env = env
 
 static void sigar_throw_exception(JNIEnv *env, char *msg)
 {
@@ -1119,8 +1121,6 @@ JNIEXPORT void SIGAR_JNI(SigarLog_setLogger)
 (JNIEnv *env, jclass classinstance, jobject sigar_obj, jobject logger)
 {
     dSIGAR_VOID;
-
-    jsigar->env = env;
 
     if (jsigar->logger != NULL) {
         JENV->DeleteGlobalRef(env, jsigar->logger);
