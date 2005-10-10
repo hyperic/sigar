@@ -3,6 +3,7 @@
 #include "sigar_fileinfo.h"
 #include "sigar_log.h"
 #include "sigar_private.h"
+#include "sigar_util.h"
 #include "sigar_os.h"
 
 #include <string.h>
