@@ -1873,7 +1873,7 @@ static void ifstat_kstat_common(sigar_net_interface_stat_t *ifstat,
         }
     }
 }
-
+#if 0
 /*
 http://cvs.opensolaris.org/source/xref/usr/src/uts/common/io/bge/bge_kstats.c
  */
@@ -1942,7 +1942,7 @@ static void ifstat_kstat_bge(sigar_net_interface_stat_t *ifstat,
         }
     }
 }
-
+#endif
 static int sigar_net_ifstat_get_any(sigar_t *sigar, const char *name,
                                     sigar_net_interface_stat_t *ifstat)
 {
@@ -1968,7 +1968,7 @@ static int sigar_net_ifstat_get_any(sigar_t *sigar, const char *name,
     num = atoi(ptr);
     *ptr = '\0';
 
-    if (!(ksp = kstat_lookup(kc, dev, num, NULL))) {
+    if (!(ksp = kstat_lookup(kc, dev, num, (char *)name))) {
         return ENXIO;
     }
 
@@ -1980,12 +1980,7 @@ static int sigar_net_ifstat_get_any(sigar_t *sigar, const char *name,
 
     data = (kstat_named_t *)ksp->ks_data;
 
-    if (strEQ(dev, "bge")) {
-        ifstat_kstat_bge(ifstat, data, ksp->ks_ndata);
-    }
-    else {
-        ifstat_kstat_common(ifstat, data, ksp->ks_ndata);
-    }
+    ifstat_kstat_common(ifstat, data, ksp->ks_ndata);
 
     return SIGAR_OK;
 }
