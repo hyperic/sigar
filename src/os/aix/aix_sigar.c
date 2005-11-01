@@ -1088,7 +1088,7 @@ int sigar_proc_mem_get(sigar_t *sigar, sigar_pid_t pid,
     procmem->vsize = PAGESHIFT(pinfo->pi_dvm);
     procmem->share = PAGESHIFT(pinfo->pi_sdsize);
     procmem->rss   = PAGESHIFT(pinfo->pi_drss + pinfo->pi_trss);
-    procmem->resident = SIGAR_FIELD_NOTIMPL; /* N/A */
+    procmem->resident = procmem->rss;
 
     return SIGAR_OK;
 }
