@@ -807,7 +807,7 @@ SIGAR_DECLARE(int) sigar_proc_mem_get(sigar_t *sigar, sigar_pid_t pid,
     procmem->size     = pinfo->size;
     procmem->resident = pinfo->resident;
     procmem->share    = SIGAR_FIELD_NOTIMPL;
-    procmem->rss      = SIGAR_FIELD_NOTIMPL;
+    procmem->rss      = pinfo->resident;
 
     return SIGAR_OK;
 }
