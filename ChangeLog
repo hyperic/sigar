@@ -1,3 +1,7 @@
+2005-11-01  Doug MacEachern  <dougm@hyperic.net>
+
+        * proc_mem.resident for all platforms
+
 2005-10-10  Doug MacEachern  <dougm@hyperic.net>
 
         * 1.1.23 released
