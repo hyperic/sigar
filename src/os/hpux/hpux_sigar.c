@@ -271,6 +271,8 @@ int sigar_proc_mem_get(sigar_t *sigar, sigar_pid_t pid,
         
     procmem->rss = pinfo->pst_rssize * pagesize;
 
+    procmem->resident = procmem->rss;
+
     procmem->share = pinfo->pst_shmsize * pagesize;
 
     return SIGAR_OK;
