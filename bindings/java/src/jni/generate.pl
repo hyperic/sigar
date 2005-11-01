@@ -248,7 +248,7 @@ my %classes = (
       {
          name => 'resident', type => 'Long',
          desc => 'Total process non-swapped memory',
-         plat => 'L'
+         plat => '*'
       },
       {
          name => 'share', type => 'Long',
@@ -258,7 +258,7 @@ my %classes = (
       {
          name => 'rss', type => 'Long',
          desc => 'Process resident set size',
-         plat => 'AFHL'
+         plat => '*'
       },
     ],
     ProcCred => [
