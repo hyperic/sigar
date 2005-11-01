@@ -805,7 +805,7 @@ SIGAR_DECLARE(int) sigar_proc_mem_get(sigar_t *sigar, sigar_pid_t pid,
 
     procmem->vsize    = pinfo->vsize;
     procmem->size     = pinfo->size;
-    procmem->resident = SIGAR_FIELD_NOTIMPL;
+    procmem->resident = pinfo->resident;
     procmem->share    = SIGAR_FIELD_NOTIMPL;
     procmem->rss      = SIGAR_FIELD_NOTIMPL;
 
@@ -1044,6 +1044,7 @@ static int get_proc_info(sigar_t *sigar, sigar_pid_t pid)
 
         pinfo->size     = PERF_VAL(PERF_IX_MEM_SIZE);
         pinfo->vsize    = PERF_VAL(PERF_IX_MEM_VSIZE);
+        pinfo->resident = PERF_VAL(PERF_IX_MEM_PRIV);
         pinfo->ppid     = PERF_VAL(PERF_IX_PPID);
         pinfo->priority = PERF_VAL(PERF_IX_PRIORITY);
         pinfo->handles  = PERF_VAL(PERF_IX_HANDLE_CNT);

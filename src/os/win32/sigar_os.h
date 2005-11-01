@@ -269,6 +269,7 @@ typedef struct {
     time_t mtime;
     sigar_uint64_t vsize;
     sigar_uint64_t size;
+    sigar_uint64_t resident;
     char name[SIGAR_PROC_NAME_LEN];
     char state;
     sigar_uint64_t handles;
