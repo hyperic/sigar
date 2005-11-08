@@ -1436,10 +1436,10 @@ static int fqdn_ip_get(sigar_t *sigar, char *name)
 #endif
 
 #define IS_FQDN(name) \
-    strchr(name, '.')
+    (name && strchr(name, '.'))
 
 #define H_ALIAS_MATCH(alias, name) \
-    (IS_FQDN(alias) && strnEQ(alias, name, strlen(name)))
+    (IS_FQDN(alias) && name && strnEQ(alias, name, strlen(name)))
 
 #define FQDN_SET(fqdn) \
     SIGAR_STRNCPY(name, fqdn, namelen)
@@ -1524,7 +1524,23 @@ SIGAR_DECLARE(int) sigar_fqdn_get(sigar_t *sigar, char *name, int namelen)
                 gethostbyaddr(p->h_addr_list[i],
                               p->h_length,
                               p->h_addrtype);
-            
+
+            if (!q) {
+                if (SIGAR_LOG_IS_DEBUG(sigar)) {
+                    char addr[INET6_ADDRSTRLEN];
+                    struct in_addr *in =
+                        (struct in_addr *)p->h_addr_list[i];
+
+                    sigar_inet_ntoa(sigar, in->s_addr, addr);
+
+                    sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
+                                     "[fqdn] gethostbyaddr(%s) failed: %s",
+                                     addr,
+                                     sigar_strerror(sigar, errno));
+                }
+                continue;
+            }
+
             if (IS_FQDN(q->h_name)) {
                 FQDN_SET(q->h_name);
 
