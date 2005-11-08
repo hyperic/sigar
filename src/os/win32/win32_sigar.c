@@ -1485,10 +1485,11 @@ static PERF_INSTANCE_DEFINITION *get_disk_instance(sigar_t *sigar,
                                                    DWORD *perf_offsets,
                                                    DWORD *num, DWORD *err)
 {
-    PERF_OBJECT_TYPE *object = get_perf_object(sigar, "236", err);
+    PERF_OBJECT_TYPE *object =
+        get_perf_object(sigar, PERF_TITLE_DISK_KEY, err);
     PERF_INSTANCE_DEFINITION *inst;
     PERF_COUNTER_DEFINITION *counter;
-    DWORD i;
+    DWORD i, found=0;
 
     if (!object) {
         return NULL;
@@ -1503,20 +1504,30 @@ static PERF_INSTANCE_DEFINITION *get_disk_instance(sigar_t *sigar,
         switch (counter->CounterNameTitleIndex) {
           case PERF_TITLE_DISK_READ:
             perf_offsets[PERF_IX_DISK_READ] = offset;
+            found = 1;
             break;
           case PERF_TITLE_DISK_WRITE:
             perf_offsets[PERF_IX_DISK_WRITE] = offset;
+            found = 1;
             break;
           case PERF_TITLE_DISK_READ_BYTES:
             perf_offsets[PERF_IX_DISK_READ_BYTES] = offset;
+            found = 1;
             break;
           case PERF_TITLE_DISK_WRITE_BYTES:
             perf_offsets[PERF_IX_DISK_WRITE_BYTES] = offset;
+            found = 1;
             break;
           case PERF_TITLE_DISK_QUEUE:
             perf_offsets[PERF_IX_DISK_QUEUE] = offset;
+            found = 1;
             break;
         }
+    }
+
+    if (!found) {
+        *err = ENOENT;
+        return NULL;
     }
 
     if (num) {
