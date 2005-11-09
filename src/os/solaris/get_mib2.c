@@ -46,6 +46,10 @@ static char copyright[] =
 #include <string.h>
 #include <unistd.h>
 
+#ifdef DMALLOC
+#include <dmalloc.h>
+#endif
+
 /*
  * close_mib2() - close MIB2 access
  *
