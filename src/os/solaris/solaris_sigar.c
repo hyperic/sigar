@@ -1292,6 +1292,9 @@ static int create_fsdev_cache(sigar_t *sigar)
             if ((s = strchr(ptr, ':'))) {
                 partition = *(s+1);
             }
+            else {
+                continue;
+            }
 
             for (j=0, paths=mapping; paths->name[0]; j++) {
                 if (strnEQ(paths->device, ptr, strlen(paths->device))) {
@@ -1430,7 +1433,7 @@ int sigar_cpu_info_list_get(sigar_t *sigar,
 {
     processor_info_t stats;
     unsigned int i;
-    int status;
+    int status = SIGAR_OK;
 
     sigar_kstat_update(sigar); /* for sigar->ncpu */
 
