@@ -13,6 +13,12 @@
 #define ENTRIES_SIZE(n) \
     (sizeof(sigar_cache_entry_t *) * (n))
 
+/* wrap free() for use w/ dmalloc */
+static void free_value(void *ptr)
+{
+    free(ptr);
+}
+
 sigar_cache_t *sigar_cache_new(int size)
 {
     sigar_cache_t *table = malloc(sizeof(*table));
@@ -20,7 +26,7 @@ sigar_cache_t *sigar_cache_new(int size)
     table->size = size;
     table->entries = malloc(ENTRIES_SIZE(size));
     memset(table->entries, '\0', ENTRIES_SIZE(size));
-    table->free_value = free;
+    table->free_value = free_value;
     return table;
 }
 
