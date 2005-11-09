@@ -54,6 +54,31 @@ typedef struct {
     sigar = jsigar->sigar; \
     jsigar->env = env
 
+JNIEXPORT jint JNICALL
+JNI_OnLoad(JavaVM *vm, void *reserved)
+{
+#ifdef DMALLOC
+    char *options =
+        getenv("DMALLOC_OPTIONS");
+    if (!options) {
+        options = 
+            "debug=0x4f47d03,"
+            "lockon=20,"
+            "log=dmalloc-sigar.log";
+    }
+    dmalloc_debug_setup(options);
+#endif
+    return JNI_VERSION_1_2;
+}
+
+JNIEXPORT void JNICALL
+JNI_OnUnload(JavaVM *vm, void *reserved)
+{
+#ifdef DMALLOC
+    dmalloc_shutdown();
+#endif
+}
+
 static void sigar_throw_exception(JNIEnv *env, char *msg)
 {
     jclass errorClass = SIGAR_FIND_CLASS("SigarException");
