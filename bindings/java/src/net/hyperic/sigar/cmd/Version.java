@@ -35,10 +35,13 @@ public class Version extends SigarCommandBase {
     }
 
     private static String getFQDN() {
+        Sigar sigar = new Sigar(); 
         try {
-            return Sigar.getInstance().getFQDN();
+            return sigar.getFQDN();
         } catch (SigarException e) {
             return "unknown";
+        } finally {
+            sigar.close();
         }
     }
 
