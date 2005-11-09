@@ -164,6 +164,11 @@ public class Shell extends ShellBase {
                                                                 pid);
     }
 
+    public void shutdown() {
+        this.sigar.close();
+        super.shutdown();
+    }
+
     public static void main(String[] args) {
         Shell shell = new Shell();
 
