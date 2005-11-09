@@ -1347,7 +1347,8 @@ int sigar_net_interface_list_get(sigar_t *sigar,
         }
 #   endif        
 #endif
-        iflist->data[iflist->number++] = strdup(ifr->ifr_name);
+        iflist->data[iflist->number++] =
+            sigar_strdup(ifr->ifr_name);
     }
 
     return SIGAR_OK;

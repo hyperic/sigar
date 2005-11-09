@@ -1021,7 +1021,7 @@ static char *get_fsdev(sigar_t *sigar,
                 ptr = fsp->dev_name;
                 if (strnEQ(ptr, "/dev/", 5)) {
                     ptr += 5;
-                    ent->value = strdup(ptr);
+                    ent->value = sigar_strdup(ptr);
                     continue;
                 }
 

@@ -12,6 +12,10 @@
 #include <strings.h>
 #endif
 
+#ifdef DMALLOC
+#include <dmalloc.h>
+#endif
+
 /* common to all os sigar_t's */
 /* XXX: this is ugly; but don't want the same stuffs
  * duplicated on 4 platforms and am too lazy to change
@@ -38,6 +42,15 @@
 #   define SIGAR_INLINE inline
 #else
 #   define SIGAR_INLINE
+#endif
+
+#ifdef DMALLOC
+/* linux has its own strdup macro, make sure we use dmalloc's */
+#define sigar_strdup(s) \
+    dmalloc_strdup(__FILE__, __LINE__, s, 0);
+#else
+#define sigar_strdup(s) \
+    strdup(s)
 #endif
 
 #define SIGAR_ZERO(s) \
