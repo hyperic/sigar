@@ -56,6 +56,8 @@ public class TestInvoker extends SigarTestCase {
             SigarProxyCache.newInstance(sigar);
 
         testOK(proxy);
+
+        sigar.close();
     }
 
     private void testOK(SigarProxy proxy) throws Exception {

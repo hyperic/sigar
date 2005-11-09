@@ -13,5 +13,6 @@ public class TestLog extends SigarTestCase {
         sigar.enableLogging(true);
         sigar.enableLogging(false);
         sigar.enableLogging(true);
+        sigar.close();
     }
 }

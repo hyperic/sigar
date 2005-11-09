@@ -20,7 +20,9 @@ import net.hyperic.sigar.shell.ShellCommandHandler;
 import net.hyperic.sigar.shell.ShellCommandInitException;
 import net.hyperic.sigar.shell.ShellCommandUsageException;
 
+import net.hyperic.sigar.test.SigarTestCase;
 import net.hyperic.sigar.test.SigarTestRunner;
+
 import net.hyperic.sigar.util.Getline;
 
 /**
@@ -166,6 +168,7 @@ public class Shell extends ShellBase {
 
     public void shutdown() {
         this.sigar.close();
+        SigarTestCase.closeSigar(); //shutup dmalloc
         super.shutdown();
     }
 

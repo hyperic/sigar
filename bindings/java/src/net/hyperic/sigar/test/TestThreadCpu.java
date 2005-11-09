@@ -12,7 +12,7 @@ public class TestThreadCpu extends SigarTestCase {
     }
 
     public void testCreate() throws Exception {
-        Sigar sigar = new Sigar();
+        Sigar sigar = getSigar();
 
         ThreadCpu cpu;
         try {

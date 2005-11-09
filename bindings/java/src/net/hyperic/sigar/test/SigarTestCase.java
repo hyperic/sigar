@@ -52,6 +52,12 @@ public abstract class SigarTestCase extends TestCase {
         return sigar;
     }
 
+    public static void closeSigar() {
+        if (sigar != null) {
+            sigar.close();
+        }
+    }
+
     public Properties getProperties() {
         return this.props;
     }
