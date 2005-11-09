@@ -5,7 +5,9 @@ typedef unsigned long long int u_int64_t;
 
 #include <ctype.h>
 #include <assert.h>
+#ifndef DMALLOC
 #include <malloc.h>
+#endif
 #include <unistd.h>
 #include <fcntl.h>
 #include <stdio.h>
