@@ -1,3 +1,10 @@
+2005-11-08  Doug MacEachern  <dougm@hyperic.net>
+
+	* fix possible segv in sigar_fqdn_get
+
+	* fix possible fault in sigar_filesystem_usage_get on win32 if
+	LogicalDisk perf counters are uninstalled
+
 2005-11-01  Doug MacEachern  <dougm@hyperic.net>
 
         * proc_mem.resident for all platforms
