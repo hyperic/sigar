@@ -232,7 +232,10 @@ static int (*gl_out_hook)(char *buf) = 0;
 static int (*gl_tab_hook)(char *buf, int prompt_width, int *loc) = gl_tab;
 
 /******************** imported interface *********************************/
-
+#ifdef DMALLOC
+/* reports leaks, which is the history buffer.  dont care */ 
+#undef DMALLOC
+#endif
 #include "sigar_getline.h"
 #include "sigar_private.h"
 #include "sigar_util.h"
