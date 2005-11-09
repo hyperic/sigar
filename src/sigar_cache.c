@@ -70,18 +70,16 @@ void sigar_cache_destroy(sigar_cache_t *table)
 
     for (i=0; i<table->size; i++) {
         sigar_cache_entry_t *entry, *ptr;
-        entry = ptr = *entries++;
+        entry = *entries++;
 
-        if (!entry) {
-            continue;
-        }
-
-        do {
-            if (ptr->value) {
-                table->free_value(ptr->value);
+        while (entry) {
+            if (entry->value) {
+                table->free_value(entry->value);
             }
-        } while ((ptr = ptr->next));
-        free(entry);
+            ptr = entry->next;
+            free(entry);
+            entry = ptr;
+        }
     }
 
     free(table->entries);
