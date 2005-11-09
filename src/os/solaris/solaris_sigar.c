@@ -1321,6 +1321,7 @@ static int create_fsdev_cache(sigar_t *sigar)
         }
     }
 
+    free(mapping);
     sigar_file_system_list_destroy(sigar, &fslist);
 
     return SIGAR_OK;
