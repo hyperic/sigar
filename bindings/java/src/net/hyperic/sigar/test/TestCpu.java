@@ -2,7 +2,6 @@ package net.hyperic.sigar.test;
 
 import net.hyperic.sigar.Sigar;
 import net.hyperic.sigar.SigarNotImplementedException;
-import net.hyperic.sigar.SigarProxy;
 import net.hyperic.sigar.Cpu;
 
 public class TestCpu extends SigarTestCase {
@@ -29,8 +28,7 @@ public class TestCpu extends SigarTestCase {
     }
 
     public void testCreate() throws Exception {
-        SigarProxy sigar = Sigar.getInstance(); //test reuse
-
+        Sigar sigar = getSigar();
         Cpu cpu = sigar.getCpu();
 
         traceln("getCpu:");

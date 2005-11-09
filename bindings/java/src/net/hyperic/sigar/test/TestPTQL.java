@@ -2,7 +2,7 @@ package net.hyperic.sigar.test;
 
 import net.hyperic.sigar.SigarException;
 import net.hyperic.sigar.SigarProxy;
-import net.hyperic.sigar.SynchronizedSigarProxyCache;
+import net.hyperic.sigar.SigarProxyCache;
 import net.hyperic.sigar.SigarNotImplementedException;
 
 import net.hyperic.sigar.ptql.ProcessQuery;
@@ -140,7 +140,8 @@ public class TestPTQL extends SigarTestCase {
     }
 
     public void testCreate() throws Exception {
-        SigarProxy proxy = SynchronizedSigarProxyCache.getInstance();
+        SigarProxy proxy =
+            SigarProxyCache.newInstance(getSigar());
 
         testOK(proxy);
         testMalformed(proxy);

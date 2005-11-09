@@ -55,6 +55,7 @@ public abstract class SigarTestCase extends TestCase {
     public static void closeSigar() {
         if (sigar != null) {
             sigar.close();
+            sigar = null;
         }
     }
 
