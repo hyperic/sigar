@@ -13,6 +13,8 @@
 #endif
 
 #ifdef DMALLOC
+#define _MEMORY_H /* exclude memory.h on solaris */
+#define DMALLOC_FUNC_CHECK
 #include <dmalloc.h>
 #endif
 
