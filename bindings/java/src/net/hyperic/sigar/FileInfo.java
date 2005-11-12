@@ -246,7 +246,7 @@ public class FileInfo extends FileAttrs {
             sb.append("Ctime........").
                 append(new Date(info.ctime)).
                 append(DIFF_SEP).
-                append(new Date(info.ctime)).
+                append(new Date(this.ctime)).
                 append("\n");
             changed = true;
         }
