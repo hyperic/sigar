@@ -1,8 +1,13 @@
 package net.hyperic.sigar;
 
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 
 public class FileInfo extends FileAttrs {
+
+    private static final SimpleDateFormat DATE_FORMAT =
+        new SimpleDateFormat("MMM dd HH:mm");
 
     String name;
     private Sigar sigar;
@@ -168,6 +173,52 @@ public class FileInfo extends FileAttrs {
         }
     }
 
+    private class Diff {
+        private String attr, old, cur;
+
+        Diff(String attr, String old, String cur) {
+            this.attr = attr;
+            this.old = old;
+            this.cur = cur;
+        }
+
+        Diff(String attr, int old, int cur) {
+            this(attr,
+                 String.valueOf(old),
+                 String.valueOf(cur));
+        }
+
+        Diff(String attr, long old, long cur) {
+            this(attr,
+                 String.valueOf(old),
+                 String.valueOf(cur));
+        }
+
+        public String toString() {
+            return this.attr + ": " +
+                this.old + "|" + this.cur;
+        }
+    }
+
+    private StringBuffer format(ArrayList changes) {
+        StringBuffer sb = new StringBuffer();
+
+        if (changes.size() == 0) {
+            return sb;
+        }
+        
+        int size = changes.size();
+        for (int i=0; i<size; i++) {
+            sb.append('{').append(changes.get(i)).append('}');
+        }
+
+        return sb;
+    }
+
+    private static String formatDate(long time) {
+        return DATE_FORMAT.format(new Date(time));
+    }
+
     public String diff() {
         if (this.oldInfo == null) {
             return "";
@@ -177,165 +228,123 @@ public class FileInfo extends FileAttrs {
 
     public String diff(DirStat stat) {
         DirStat thisStat = this.stat;
-        StringBuffer sb = new StringBuffer();
+        ArrayList changes = new ArrayList();
 
         if (thisStat.files != stat.files) {
-            sb.append("Files........").
-                append(stat.files).
-                append(DIFF_SEP).
-                append(thisStat.files).
-                append("\n");
+            changes.add(new Diff("Files",
+                                 stat.getFiles(),
+                                 thisStat.getFiles()));
         }
 
         if (thisStat.subdirs != stat.subdirs) {
-            sb.append("Subdirs......").
-                append(stat.subdirs).
-                append(DIFF_SEP).
-                append(thisStat.subdirs).
-                append("\n");
+            changes.add(new Diff("Subdirs",
+                                 stat.getSubdirs(),
+                                 thisStat.getSubdirs()));
         }
 
         if (thisStat.symlinks != stat.symlinks) {
-            sb.append("Symlinks.....").
-                append(stat.symlinks).
-                append(DIFF_SEP).
-                append(thisStat.symlinks).
-                append("\n");
+            changes.add(new Diff("Symlinks",
+                                 stat.getSymlinks(),
+                                 thisStat.getSymlinks()));
         }
 
         if (thisStat.chrdevs != stat.chrdevs) {
-            sb.append("Chrdevs......").
-                append(stat.chrdevs).
-                append(DIFF_SEP).
-                append(thisStat.chrdevs).
-                append("\n");
+            changes.add(new Diff("Chrdevs",
+                                 stat.getChrdevs(),
+                                 thisStat.getChrdevs()));
         }
 
         if (thisStat.blkdevs != stat.blkdevs) {
-            sb.append("Blkdevs......").
-                append(stat.blkdevs).
-                append(DIFF_SEP).
-                append(thisStat.blkdevs).
-                append("\n");
+            changes.add(new Diff("Blkdevs",
+                                 stat.getBlkdevs(),
+                                 thisStat.getBlkdevs()));
         }
 
         if (thisStat.sockets != stat.sockets) {
-            sb.append("Sockets......").
-                append(stat.sockets).
-                append(DIFF_SEP).
-                append(thisStat.sockets).
-                append("\n");
+            changes.add(new Diff("Sockets",
+                                 stat.getSockets(),
+                                 thisStat.getSockets()));
         }
 
         if (thisStat.total != stat.total) {
-            sb.append("Total........").
-                append(stat.total).
-                append(DIFF_SEP).
-                append(thisStat.total).
-                append("\n");
+            changes.add(new Diff("Total",
+                                 stat.getTotal(),
+                                 thisStat.getTotal()));
         }
 
-        return sb.toString();
+        return format(changes).toString();
     }
 
     public String diff(FileInfo info) {
-        StringBuffer sb = new StringBuffer();
-        boolean changed = false;
+        ArrayList changes = new ArrayList();
 
-        if (this.ctime != info.ctime) {
-            sb.append("Ctime........").
-                append(new Date(info.ctime)).
-                append(DIFF_SEP).
-                append(new Date(this.ctime)).
-                append("\n");
-            changed = true;
+        if (this.getMtime() != info.getMtime()) {
+            changes.add(new Diff("Mtime",
+                                 formatDate(info.getMtime()),
+                                 formatDate(this.getMtime())));
         }
-
-        if (this.mtime != info.mtime) {
-            sb.append("Mtime........").
-                append(new Date(info.mtime)).
-                append(DIFF_SEP).
-                append(new Date(this.mtime)).
-                append("\n");
+        else if (this.getCtime() != info.getCtime()) {
+            changes.add(new Diff("Ctime",
+                                 formatDate(info.getCtime()),
+                                 formatDate(this.getCtime())));
         }
-        else if (!changed) {
+        else {
             //no point in checking the rest if all times are the same.
             //or should we include atime in the diff?
             return "";
         }
 
-        if (this.atime != info.atime) {
-            sb.append("Atime........").
-                append(new Date(info.atime)).
-                append(DIFF_SEP).
-                append(new Date(this.atime)).
-                append("\n");
+        if (this.getPermissions() != info.getPermissions()) {
+            changes.add(new Diff("Perms",
+                                 info.getPermissionsString(),
+                                 this.getPermissionsString()));
         }
 
-        if (this.permissions != info.permissions) {
-            sb.append("Permissions..").
-                append(getPermissionsString(info.permissions)).
-                append(DIFF_SEP).
-                append(getPermissionsString(this.permissions)).
-                append("\n");
+        if (this.getType() != info.getType()) {
+            changes.add(new Diff("Type",
+                                 info.getTypeString(),
+                                 this.getTypeString()));
         }
 
-        if (this.type != info.type) {
-            sb.append("Type.........").
-                append(getTypeString(info.type)).
-                append(DIFF_SEP).
-                append(getTypeString(this.type)).
-                append("\n");
+        if (this.getUid() != info.getUid()) {
+            changes.add(new Diff("Uid",
+                                 info.getUid(),
+                                 this.getUid()));
         }
 
-        if (this.uid != info.uid) {
-            sb.append("Uid..........").
-                append(info.uid).
-                append(DIFF_SEP).
-                append(this.uid).
-                append("\n");
+        if (this.getGid() != info.getGid()) {
+            changes.add(new Diff("Gid",
+                                 info.getGid(),
+                                 this.getGid()));
         }
 
-        if (this.gid != info.gid) {
-            sb.append("Gid..........").
-                append(info.gid).
-                append(DIFF_SEP).
-                append(this.gid).
-                append("\n");
+        if (this.getSize() != info.getSize()) {
+            changes.add(new Diff("Size",
+                                 info.getSize(),
+                                 this.getSize()));
         }
 
-        if (this.inode != info.inode) {
-            sb.append("Inode........").
-                append(info.inode).
-                append(DIFF_SEP).
-                append(this.inode).
-                append("\n");
+        if (!OperatingSystem.IS_WIN32) {
+            if (this.getInode() != info.getInode()) {
+                changes.add(new Diff("Inode",
+                                     info.getInode(),
+                                     this.getInode()));
+            }
+
+            if (this.getDevice() != info.getDevice()) {
+                changes.add(new Diff("Device",
+                                     info.getDevice(),
+                                     this.getDevice()));
+            }
+
+            if (this.getNlink() != info.getNlink()) {
+                changes.add(new Diff("Nlink",
+                                     info.getNlink(),
+                                     this.getNlink()));
+            }
         }
 
-        if (this.device != info.device) {
-            sb.append("Device.......").
-                append(info.device).
-                append(DIFF_SEP).
-                append(this.device).
-                append("\n");
-        }
-
-        if (this.nlink != info.nlink) {
-            sb.append("Nlink........").
-                append(info.nlink).
-                append(DIFF_SEP).
-                append(this.nlink).
-                append("\n");
-        }
-
-        if (this.size != info.size) {
-            sb.append("Size.........").
-                append(info.size).
-                append(DIFF_SEP).
-                append(this.size).
-                append("\n");
-        }
-
+        StringBuffer sb = format(changes);
         if (this.dirStatEnabled) {
             sb.append(diff(info.stat));
         }
