@@ -3,6 +3,7 @@ package net.hyperic.sigar.cmd;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Date;
 
 import net.hyperic.sigar.Sigar;
@@ -87,15 +88,14 @@ public class Watch {
         FileWatcherThread watcherThread = 
             FileWatcherThread.getInstance();
 
-        watcherThread.doStart();
-
         watcherThread.setInterval(1000);
 
         FileWatcher watcher =
             new FileWatcher(sigar) {
                 public void onChange(FileInfo info) {
                     System.out.println(info.getName() +
-                                       " Changed:\n" + info.diff());
+                                       " Changed:\n" +
+                                       info.diff());
                 }
 
                 public void onNotFound(FileInfo info) {
@@ -119,6 +119,8 @@ public class Watch {
         }
 
         watcherThread.add(watcher);
+
+        watcherThread.doStart();
 
         System.out.println("Press any key to stop");
         try {
