@@ -67,7 +67,6 @@ JNI_OnLoad(JavaVM *vm, void *reserved)
             "log=dmalloc-sigar.log";
     }
     dmalloc_debug_setup(options);
-    fprintf(stderr, "DMALLOC_OPTIONS=%s\n", options);
 #endif
     return JNI_VERSION_1_2;
 }
