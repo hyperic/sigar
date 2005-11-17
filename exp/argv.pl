@@ -10,12 +10,12 @@ if (@ARGV) {
 }
 else {
     my(@argv);
-    my $nargs = 126;
-    my $arglen = 256;
+    my $nargs = 26;
+    my $arglen = 4256;
     my $arg = 'a';
     for (my $i=0; $i<$nargs; $i++) {
 	push @argv, $arg++ x $arglen;
     }
-
-    exec $^X, $0, @argv;
+    print "$^X $0\n";
+    exec $^X, $0, @argv or die $!;
 } 

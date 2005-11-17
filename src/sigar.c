@@ -1182,11 +1182,6 @@ int sigar_net_interface_config_get(sigar_t *sigar, const char *name,
     if (!ioctl(sock, SIOCGIFADDR, &ifr)) {
         ifconfig->address = ifr_s_addr(ifr);
     }
-    else {
-        /* if this one failed, so will everything else */
-        close(sock);
-        return errno;
-    }
 
     if (!ioctl(sock, SIOCGIFNETMASK, &ifr)) {
         ifconfig->netmask = ifr_s_addr(ifr);
