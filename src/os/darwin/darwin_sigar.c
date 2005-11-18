@@ -1637,6 +1637,8 @@ int sigar_net_interface_config_get(sigar_t *sigar, const char *name,
     if (ifconfig->flags & IFF_LOOPBACK) {
         ifconfig->destination = ifconfig->address;
         ifconfig->broadcast = 0;
+        SIGAR_SSTRCPY(ifconfig->type,
+                      SIGAR_NIC_LOOPBACK);
     }
     else {
         if (!ioctl(sock, SIOCGIFDSTADDR, &ifr)) {
@@ -1646,6 +1648,8 @@ int sigar_net_interface_config_get(sigar_t *sigar, const char *name,
         if (!ioctl(sock, SIOCGIFBRDADDR, &ifr)) {
             ifconfig->broadcast = ifr_s_addr(ifr);
         }
+        SIGAR_SSTRCPY(ifconfig->type,
+                      SIGAR_NIC_ETHERNET);
     }
 
     close(sock);

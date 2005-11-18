@@ -229,9 +229,13 @@ sigar_net_interface_config_get(sigar_t *sigar,
 #else
         sigar_hwaddr_set_null(ifconfig);
 #endif
+        SIGAR_SSTRCPY(ifconfig->type,
+                      SIGAR_NIC_LOOPBACK);
     }
     else {
         hwaddr_lookup(ifconfig, i);
+        SIGAR_SSTRCPY(ifconfig->type,
+                      SIGAR_NIC_ETHERNET);
     }
     if (flags & IFF_POINTTOPOINT) {
         ifconfig->flags |= SIGAR_IFF_POINTOPOINT;
