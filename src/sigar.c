@@ -1161,6 +1161,30 @@ static void hwaddr_arp_lookup(sigar_net_interface_config_t *ifconfig, int sock)
 
 #endif
 
+#ifdef __linux__
+
+#include <net/if_arp.h>
+
+static void get_interface_type(sigar_net_interface_config_t *ifconfig,
+                               int family)
+{
+    char *type;
+
+    switch (family) {
+      case ARPHRD_NETROM:
+        type = "AMPR NET/ROM";
+        break;
+        /* XXX more */
+      default:
+        type = "Ethernet";
+        break;
+    }
+
+    SIGAR_SSTRCPY(ifconfig->type, type);
+}
+
+#endif
+
 int sigar_net_interface_config_get(sigar_t *sigar, const char *name,
                                    sigar_net_interface_config_t *ifconfig)
 {
@@ -1217,6 +1241,7 @@ int sigar_net_interface_config_get(sigar_t *sigar, const char *name,
         ifconfig->destination = ifconfig->address;
         ifconfig->broadcast = 0;
         sigar_hwaddr_set_null(ifconfig);
+        SIGAR_SSTRCPY(ifconfig->type, "Local Loopback");
     }
     else {
         if (!ioctl(sock, SIOCGIFDSTADDR, &ifr)) {
@@ -1229,12 +1254,16 @@ int sigar_net_interface_config_get(sigar_t *sigar, const char *name,
 
 #if defined(SIOCGIFHWADDR)
         if (!ioctl(sock, SIOCGIFHWADDR, &ifr)) {
+            get_interface_type(ifconfig,
+                               ifr.ifr_hwaddr.sa_family);
             sigar_hwaddr_format(ifconfig->hwaddr, ifr.ifr_hwaddr.sa_data);
         }
 #elif defined(_AIX) || defined(__osf__)
         hwaddr_aix_lookup(sigar, ifconfig);
+        SIGAR_SSTRCPY(ifconfig->type, "Ethernet");
 #else
         hwaddr_arp_lookup(ifconfig, sock);
+        SIGAR_SSTRCPY(ifconfig->type, "Ethernet");
 #endif
     }
 
