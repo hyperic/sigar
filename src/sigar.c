@@ -1273,6 +1273,69 @@ static int sigar_netif_configured(sigar_t *sigar, char *name)
 }
 #endif
 
+#ifdef __linux__
+static SIGAR_INLINE int has_interface(sigar_net_interface_list_t *iflist,
+                                      char *name)
+{
+    register int i;
+    register int num = iflist->number;
+    register char **data = iflist->data;
+    for (i=0; i<num; i++) {
+        if (strEQ(name, data[i])) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+static int proc_net_interface_list_get(sigar_t *sigar,
+                                       sigar_net_interface_list_t *iflist)
+{
+    /* certain interfaces such as VMware vmnic
+     * are not returned by ioctl(SIOCGIFCONF).
+     * check /proc/net/dev for any ioctl missed.
+     */
+    char buffer[BUFSIZ];
+    FILE *fp = fopen("/proc/net/dev", "r");
+
+    if (!fp) {
+        return errno;
+    }
+
+    /* skip header */
+    fgets(buffer, sizeof(buffer), fp);
+    fgets(buffer, sizeof(buffer), fp);
+
+    while (fgets(buffer, sizeof(buffer), fp)) {
+        char *ptr, *dev;
+
+        dev = buffer;
+        while (isspace(*dev)) {
+            dev++;
+        }
+
+        if (!(ptr = strchr(dev, ':'))) {
+            continue;
+        }
+
+        *ptr++ = 0;
+
+        if (has_interface(iflist, dev)) {
+            continue;
+        }
+
+        SIGAR_NET_IFLIST_GROW(iflist);
+
+        iflist->data[iflist->number++] =
+            sigar_strdup(dev);
+    }
+
+    fclose(fp);
+
+    return SIGAR_OK;
+}
+#endif
+
 int sigar_net_interface_list_get(sigar_t *sigar,
                                  sigar_net_interface_list_t *iflist)
 {
@@ -1345,6 +1408,10 @@ int sigar_net_interface_list_get(sigar_t *sigar,
         iflist->data[iflist->number++] =
             sigar_strdup(ifr->ifr_name);
     }
+
+#ifdef __linux__
+    proc_net_interface_list_get(sigar, iflist);
+#endif
 
     return SIGAR_OK;
 }
