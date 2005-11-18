@@ -454,6 +454,7 @@ SIGAR_DECLARE(int) sigar_net_route_list_destroy(sigar_t *sigar,
 typedef struct {
     char name[16];
     char hwaddr[64];
+    char type[64];
     sigar_uint64_t
         address,
         destination,
