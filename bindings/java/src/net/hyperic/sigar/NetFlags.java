@@ -67,6 +67,8 @@ public class NetFlags {
      */
     public final static int IFF_MULTICAST = 0x800;
 
+    public final static int IFF_SLAVE = 0x1000;
+
     public static final int RTF_UP = 0x1;
 
     public static final int RTF_GATEWAY = 0x2;
@@ -150,6 +152,8 @@ public class NetFlags {
             retval += "PROMISC ";
         if ((flags & IFF_ALLMULTI) > 0)
             retval += "ALLMULTI ";
+        if ((flags & IFF_SLAVE) > 0)
+            retval += "SLAVE ";
         if ((flags & IFF_MULTICAST) > 0)
             retval += "MULTICAST ";
 

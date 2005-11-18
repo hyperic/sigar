@@ -1212,8 +1212,10 @@ int sigar_net_interface_config_get(sigar_t *sigar, const char *name,
     }
     
     if (!ioctl(sock, SIOCGIFFLAGS, &ifr)) {
-        ifconfig->flags = ifr.ifr_flags;
+        sigar_uint64_t flags = ifr.ifr_flags;
 #ifdef __linux__
+        int is_mcast = flags & IFF_MULTICAST;
+        int is_slave = flags & IFF_SLAVE;
         /*
          * XXX: should just define SIGAR_IFF_*
          * and test IFF_* bits on given platform.
@@ -1221,14 +1223,15 @@ int sigar_net_interface_config_get(sigar_t *sigar, const char *name,
          * for the flags we care about.
          *
          */
-        if (ifconfig->flags & IFF_MULTICAST) {
-            ifconfig->flags |= SIGAR_IFF_MULTICAST;
+        flags &= ~(IFF_MULTICAST|IFF_SLAVE);
+        if (is_mcast) {
+            flags |= SIGAR_IFF_MULTICAST;
         }
-        else {
-            /* 0x800 == IFF_SLAVE on linux */
-            ifconfig->flags &= ~SIGAR_IFF_MULTICAST;
+        if (is_slave) {
+            flags |= SIGAR_IFF_SLAVE;
         }
 #endif
+        ifconfig->flags = flags;
     }
     else {
         /* should always be able to get flags for existing device */
