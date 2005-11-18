@@ -70,17 +70,13 @@ public class Ifconfig extends SigarCommandBase {
             this.sigar.getNetInterfaceConfig(name);
         long flags = ifconfig.getFlags();
 
-        //XXX cannot assume ethernet
-        String encap = (flags & NetFlags.IFF_LOOPBACK) > 0 ?
-            "Local Loopback" : "Ethernet";
-
         String hwaddr = "";
         if (!NetFlags.NULL_HWADDR.equals(ifconfig.getHwaddr())) {
             hwaddr = " HWaddr " + ifconfig.getHwaddr();
         }
 
         println(ifconfig.getName() + "\t" +
-                "Link encap:" + encap +
+                "Link encap:" + ifconfig.getType() +
                 hwaddr);
 
         String ptp = "";
