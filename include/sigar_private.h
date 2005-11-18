@@ -234,4 +234,8 @@ int sigar_group_name_get(sigar_t *sigar, int gid, char *buf, int buflen);
 int sigar_get_iftype(const char *name, int *type, int *inst);
 #endif
 
+#define SIGAR_NIC_LOOPBACK "Local Loopback"
+#define SIGAR_NIC_ETHERNET "Ethernet"
+#define SIGAR_NIC_NETROM   "AMPR NET/ROM"
+
 #endif
