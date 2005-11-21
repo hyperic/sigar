@@ -12,7 +12,7 @@ public class CpuPerc {
 
     CpuPerc() {}
 
-    static CpuPerc calculate(Cpu oldCpu, Cpu curCpu) {
+    public static CpuPerc calculate(Cpu oldCpu, Cpu curCpu) {
         double diffUser, diffSys, diffNice, diffIdle, diffWait, diffTotal;
 
         diffUser = curCpu.getUser() - oldCpu.getUser();
