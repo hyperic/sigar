@@ -61,10 +61,10 @@ public class CpuPerc {
     }
 
     /**
-     * @return Sum of User + Sys + Nice
+     * @return Sum of User + Sys + Nice + Wait
      */ 
     public double getCombined() {
-        return this.user + this.sys + this.nice;
+        return this.user + this.sys + this.nice + this.wait;
     }
 
     public static String format(double val) {
