@@ -696,6 +696,29 @@ int sigar_proc_time_get(sigar_t *sigar, sigar_pid_t pid,
     return SIGAR_OK;
 }
 
+static int proc_status_get(sigar_t *sigar, sigar_pid_t pid,
+                           sigar_proc_state_t *procstate)
+{
+    char buffer[BUFSIZ], *ptr;
+    int status = SIGAR_PROC_FILE2STR(buffer, pid, PROC_PSTATUS);
+
+    if (status != SIGAR_OK) {
+        return status;
+    }
+
+    ptr = strstr(buffer, "\nThreads:");
+    if (ptr) {
+        /* 2.6+ kernel only */
+        ptr = sigar_skip_token(ptr);
+        procstate->threads = sigar_strtoul(ptr);
+    }
+    else {
+        procstate->threads = SIGAR_FIELD_NOTIMPL;
+    }
+
+    return SIGAR_OK;
+}
+
 int sigar_proc_state_get(sigar_t *sigar, sigar_pid_t pid,
                          sigar_proc_state_t *procstate)
 {
@@ -713,6 +736,8 @@ int sigar_proc_state_get(sigar_t *sigar, sigar_pid_t pid,
     procstate->tty      = pstat->tty;
     procstate->priority = pstat->priority;
     procstate->nice     = pstat->nice;
+
+    proc_status_get(sigar, pid, procstate);
 
     return SIGAR_OK;
 }

@@ -255,6 +255,7 @@ typedef struct {
     int tty;
     int priority;
     int nice;
+    int threads;
 } sigar_proc_state_t;
 
 SIGAR_DECLARE(int) sigar_proc_state_get(sigar_t *sigar, sigar_pid_t pid,

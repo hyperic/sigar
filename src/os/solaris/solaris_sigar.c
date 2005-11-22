@@ -660,6 +660,7 @@ int sigar_proc_state_get(sigar_t *sigar, sigar_pid_t pid,
     procstate->tty  = pinfo->pr_ttydev;
     procstate->priority = pinfo->pr_lwp.pr_pri;
     procstate->nice     = pinfo->pr_lwp.pr_nice - NZERO;
+    procstate->threads  = pinfo->pr_nlwp;
 
     switch (pinfo->pr_lwp.pr_state) {
       case SONPROC:

@@ -21,7 +21,8 @@ public class TestProcState extends SigarTestCase {
         ProcState procState = sigar.getProcState(sigar.getPid());
         char state = procState.getState();
         traceln(procState.getName() + "=" + state);
-        
+        traceln("threads=" + procState.getThreads());
+
         assertTrue((state == 'R') || (state == 'S'));
 
         assertTrue(procState.getName().indexOf("java") != -1);

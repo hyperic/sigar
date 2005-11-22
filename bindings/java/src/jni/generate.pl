@@ -348,6 +348,11 @@ my %classes = (
          desc => 'Kernel scheduling priority of process',
          plat => 'DFHLSW'
       },
+      {
+         name => 'threads', type => 'Long',
+         desc => 'Number of active threads',
+         plat => ''
+      },
     ],
     ProcFd => [
       {
