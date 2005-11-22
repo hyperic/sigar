@@ -948,6 +948,7 @@ SIGAR_DECLARE(int) sigar_proc_state_get(sigar_t *sigar, sigar_pid_t pid,
     procstate->priority = pinfo->priority;
     procstate->nice = SIGAR_FIELD_NOTIMPL;
     procstate->tty =  SIGAR_FIELD_NOTIMPL;
+    procstate->threads = pinfo->threads;
 
     return SIGAR_OK;
 }
@@ -1048,6 +1049,7 @@ static int get_proc_info(sigar_t *sigar, sigar_pid_t pid)
         pinfo->ppid     = PERF_VAL(PERF_IX_PPID);
         pinfo->priority = PERF_VAL(PERF_IX_PRIORITY);
         pinfo->handles  = PERF_VAL(PERF_IX_HANDLE_CNT);
+        pinfo->threads  = PERF_VAL(PERF_IX_THREAD_CNT);
 
         return SIGAR_OK;
     }

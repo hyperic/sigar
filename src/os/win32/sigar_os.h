@@ -273,6 +273,7 @@ typedef struct {
     char name[SIGAR_PROC_NAME_LEN];
     char state;
     sigar_uint64_t handles;
+    sigar_uint64_t threads;
 } sigar_win32_pinfo_t;
 
 struct sigar_t {
