@@ -332,6 +332,7 @@ int sigar_proc_state_get(sigar_t *sigar, sigar_pid_t pid,
                               pinfo->pst_term.psd_minor);
     procstate->priority = pinfo->pst_pri;
     procstate->nice     = pinfo->pst_nice;
+    procstate->threads  = pinfo->pst_nlwps;
 
     switch (pinfo->pst_stat) {
       case PS_SLEEP:
