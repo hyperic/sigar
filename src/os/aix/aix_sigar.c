@@ -1152,7 +1152,8 @@ int sigar_proc_state_get(sigar_t *sigar, sigar_pid_t pid,
     procstate->nice = pinfo->pi_nice;
     procstate->tty  = pinfo->pi_ttyd;
     procstate->priority = SIGAR_FIELD_NOTIMPL; /* XXX getthrds() */
-                
+    procstate->threads = pinfo->pi_thcount;
+
     switch (pinfo->pi_state) {
       case SACTIVE:
         procstate->state = 'R';
