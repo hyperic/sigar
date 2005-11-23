@@ -262,18 +262,18 @@ my %classes = (
       },
       {
          name => 'minor_faults', type => 'Long',
-         desc => '',
-         plat => ''
+         desc => 'non i/o page faults',
+         plat => 'AHLS'
       },
       {
          name => 'major_faults', type => 'Long',
-         desc => '',
-         plat => ''
+         desc => 'i/o page faults',
+         plat => 'AHLS'
       },
       {
          name => 'page_faults', type => 'Long',
-         desc => '',
-         plat => ''
+         desc => 'Total number of page faults',
+         plat => 'AHLSW'
       },
     ],
     ProcCred => [
