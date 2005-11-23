@@ -10,6 +10,26 @@ public class TestProcMem extends SigarTestCase {
         super(name);
     }
 
+    private void traceMem(Sigar sigar, long pid) throws Exception {
+        ProcMem procMem;
+
+        try {
+            procMem = sigar.getProcMem(pid);
+        } catch (SigarException e) {
+            traceln("pid " + pid + ": " + e.getMessage());
+            return;
+        }
+
+        traceln("Pid=" + pid);
+        traceln("Size=" + Sigar.formatSize(procMem.getSize()));
+        traceln("Vsize=" + Sigar.formatSize(procMem.getVsize()));
+        traceln("Resident=" + Sigar.formatSize(procMem.getResident()));
+        traceln("Share=" + Sigar.formatSize(procMem.getShare()));
+        traceln("Rss=" + Sigar.formatSize(procMem.getRss()));
+        //assertTrue(procMem.getSize() > 0);
+        // XXX vsize, resident, share, rss
+    }
+
     public void testCreate() throws Exception {
         Sigar sigar = getSigar();
 
@@ -18,14 +38,9 @@ public class TestProcMem extends SigarTestCase {
         } catch (SigarException e) {
         }
 
-        ProcMem procMem = sigar.getProcMem(sigar.getPid());
-
-        traceln("Size=" + Sigar.formatSize(procMem.getSize()));
-        traceln("Vsize=" + Sigar.formatSize(procMem.getVsize()));
-        traceln("Resident=" + Sigar.formatSize(procMem.getResident()));
-        traceln("Share=" + Sigar.formatSize(procMem.getShare()));
-        traceln("Rss=" + Sigar.formatSize(procMem.getRss()));
-        assertTrue(procMem.getSize() > 0);
-        // XXX vsize, resident, share, rss
+        long[] pids = sigar.getProcList();
+        for (int i=0; i<pids.length; i++) {
+            traceMem(sigar, pids[i]);
+        }
     }
 }
