@@ -136,6 +136,7 @@ int sigar_proc_state_get(sigar_t *sigar, sigar_pid_t pid,
     procstate->nice = -1;
     procstate->tty = -1;
     procstate->state = 'R';
+    procstate->threads = -1;
 
     return SIGAR_OK;
 }

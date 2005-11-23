@@ -279,6 +279,7 @@ int sigar_proc_state_get(sigar_t *sigar, sigar_pid_t pid,
     procstate->priority = SIGAR_FIELD_NOTIMPL;
     procstate->nice = SIGAR_FIELD_NOTIMPL;
     procstate->tty = info.pi_ttyd;
+    procstate->threads = SIGAR_FIELD_NOTIMPL;
 
     switch (info.pi_status) {
       case PI_ACTIVE:

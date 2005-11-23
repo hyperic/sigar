@@ -940,6 +940,7 @@ int sigar_proc_state_get(sigar_t *sigar, sigar_pid_t pid,
     procstate->priority = pinfo->KI_PRI;
     procstate->nice     = pinfo->KI_NICE;
     procstate->tty      = SIGAR_FIELD_NOTIMPL; /*XXX*/
+    procstate->threads  = SIGAR_FIELD_NOTIMPL;
 
     switch (pinfo->KI_STAT) {
       case SIDL:
