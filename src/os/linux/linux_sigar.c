@@ -627,6 +627,23 @@ static int proc_stat_read(sigar_t *sigar, sigar_pid_t pid)
     pstat->vsize = sigar_strtoul(ptr);
     pstat->rss   = pageshift(sigar_strtoul(ptr));
 
+    ptr = sigar_skip_token(ptr); /* startcode */
+    ptr = sigar_skip_token(ptr); /* endcode */
+    ptr = sigar_skip_token(ptr); /* startstack */
+    ptr = sigar_skip_token(ptr); /* kstkesp */
+    ptr = sigar_skip_token(ptr); /* kstkeip */
+    ptr = sigar_skip_token(ptr); /* signal */
+    ptr = sigar_skip_token(ptr); /* blocked */
+    ptr = sigar_skip_token(ptr); /* sigignore */
+    ptr = sigar_skip_token(ptr); /* sigcache */
+    ptr = sigar_skip_token(ptr); /* wchan */
+    ptr = sigar_skip_token(ptr); /* nswap */
+    ptr = sigar_skip_token(ptr); /* cnswap */
+    ptr = sigar_skip_token(ptr); /* exit_signal */
+
+    ptr = sigar_skip_token(ptr);
+    pstat->processor = sigar_strtoul(ptr);
+
     return SIGAR_OK;
 }
 
@@ -736,7 +753,11 @@ int sigar_proc_state_get(sigar_t *sigar, sigar_pid_t pid,
     procstate->tty      = pstat->tty;
     procstate->priority = pstat->priority;
     procstate->nice     = pstat->nice;
-    procstate->processor = SIGAR_FIELD_NOTIMPL;
+    procstate->processor = pstat->processor;
+
+    if (is_ht_enabled(sigar)) {
+        procstate->processor /= sigar->lcpu;
+    }
 
     proc_status_get(sigar, pid, procstate);
 

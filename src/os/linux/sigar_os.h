@@ -28,6 +28,7 @@ typedef struct {
     sigar_uint64_t stime;
     char name[SIGAR_PROC_NAME_LEN];
     char state;
+    int processor;
 } linux_proc_stat_t;
 
 typedef enum {
