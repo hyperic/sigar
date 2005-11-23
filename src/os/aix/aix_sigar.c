@@ -1142,16 +1142,26 @@ int sigar_proc_state_get(sigar_t *sigar, sigar_pid_t pid,
 {
     int status = sigar_getprocs(sigar, pid);
     struct procsinfo *pinfo = sigar->pinfo;
+    tid_t tid = 0;
+    struct thrdsinfo64 thrinfo;
 
     if (status != SIGAR_OK) {
         return status;
     }
 
+    if (getthrds(pid, &thrinfo, sizeof(thrinfo), &tid, 1) == 1) {
+        procstate->priority = thrinfo.ti_pri;
+        procstate->processor = thrinfo.ti_affinity;
+    }
+    else {
+        procstate->priority = SIGAR_FIELD_NOTIMPL;
+        procstate->processor = SIGAR_FIELD_NOTIMPL;
+    }
+    
     SIGAR_SSTRCPY(procstate->name, pinfo->pi_comm);
     procstate->ppid = pinfo->pi_ppid;
     procstate->nice = pinfo->pi_nice;
     procstate->tty  = pinfo->pi_ttyd;
-    procstate->priority = SIGAR_FIELD_NOTIMPL; /* XXX getthrds() */
     procstate->threads = pinfo->pi_thcount;
 
     switch (pinfo->pi_state) {

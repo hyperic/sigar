@@ -255,6 +255,7 @@ typedef struct {
     int tty;
     int priority;
     int nice;
+    int processor;
     sigar_uint64_t threads;
 } sigar_proc_state_t;
 

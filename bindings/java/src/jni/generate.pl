@@ -353,6 +353,11 @@ my %classes = (
          desc => 'Number of active threads',
          plat => 'AHLSW'
       },
+      {
+         name => 'processor', type => 'Int',
+         desc => 'Processor number last run on',
+         plat => ''
+      },
     ],
     ProcFd => [
       {

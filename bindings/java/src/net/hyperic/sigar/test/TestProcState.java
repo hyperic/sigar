@@ -22,6 +22,7 @@ public class TestProcState extends SigarTestCase {
         char state = procState.getState();
         traceln(procState.getName() + "=" + state);
         traceln("threads=" + procState.getThreads());
+        traceln("processor=" + procState.getProcessor());
         traceln("priority=" + procState.getPriority());
 
         assertTrue((state == 'R') || (state == 'S'));
