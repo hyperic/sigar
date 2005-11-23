@@ -67,7 +67,7 @@ struct sigar_t {
     swaps_t swaps;
     time_t last_getprocs;
     sigar_pid_t last_pid;
-    struct procsinfo *pinfo;
+    struct procsinfo64 *pinfo;
     struct cpuinfo *cpuinfo;
     int cpuinfo_size;
     int cpu_mhz;

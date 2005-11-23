@@ -1078,7 +1078,7 @@ int sigar_proc_mem_get(sigar_t *sigar, sigar_pid_t pid,
                        sigar_proc_mem_t *procmem)
 {
     int status = sigar_getprocs(sigar, pid);
-    struct procsinfo *pinfo = sigar->pinfo;
+    struct procsinfo64 *pinfo = sigar->pinfo;
 
     if (status != SIGAR_OK) {
         return status;
@@ -1097,7 +1097,7 @@ int sigar_proc_cred_get(sigar_t *sigar, sigar_pid_t pid,
                         sigar_proc_cred_t *proccred)
 {
     int status = sigar_getprocs(sigar, pid);
-    struct procsinfo *pinfo = sigar->pinfo;
+    struct procsinfo64 *pinfo = sigar->pinfo;
 
     if (status != SIGAR_OK) {
         return status;
@@ -1122,7 +1122,7 @@ int sigar_proc_time_get(sigar_t *sigar, sigar_pid_t pid,
                         sigar_proc_time_t *proctime)
 {
     int status = sigar_getprocs(sigar, pid);
-    struct procsinfo *pinfo = sigar->pinfo;
+    struct procsinfo64 *pinfo = sigar->pinfo;
 
     if (status != SIGAR_OK) {
         return status;
@@ -1141,7 +1141,7 @@ int sigar_proc_state_get(sigar_t *sigar, sigar_pid_t pid,
                          sigar_proc_state_t *procstate)
 {
     int status = sigar_getprocs(sigar, pid);
-    struct procsinfo *pinfo = sigar->pinfo;
+    struct procsinfo64 *pinfo = sigar->pinfo;
     tid_t tid = 0;
     struct thrdsinfo64 thrinfo;
 
@@ -1150,11 +1150,9 @@ int sigar_proc_state_get(sigar_t *sigar, sigar_pid_t pid,
     }
 
     if (getthrds(pid, &thrinfo, sizeof(thrinfo), &tid, 1) == 1) {
-        procstate->priority = thrinfo.ti_pri;
         procstate->processor = thrinfo.ti_affinity;
     }
     else {
-        procstate->priority = SIGAR_FIELD_NOTIMPL;
         procstate->processor = SIGAR_FIELD_NOTIMPL;
     }
     
@@ -1162,6 +1160,7 @@ int sigar_proc_state_get(sigar_t *sigar, sigar_pid_t pid,
     procstate->ppid = pinfo->pi_ppid;
     procstate->nice = pinfo->pi_nice;
     procstate->tty  = pinfo->pi_ttyd;
+    procstate->priority = pinfo->pi_pri;
     procstate->threads = pinfo->pi_thcount;
 
     switch (pinfo->pi_state) {
