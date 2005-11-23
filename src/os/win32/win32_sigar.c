@@ -27,6 +27,7 @@ typedef enum {
 } perf_cpu_offsets_t;
 
 #define PERF_TITLE_CPUTIME    6
+#define PERF_TITLE_PAGE_FAULTS 28
 #define PERF_TITLE_MEM_VSIZE  174
 #define PERF_TITLE_MEM_SIZE   180
 #define PERF_TITLE_MEM_PRIV   186
@@ -39,6 +40,7 @@ typedef enum {
 
 typedef enum {
     PERF_IX_CPUTIME,
+    PERF_IX_PAGE_FAULTS,
     PERF_IX_MEM_VSIZE,
     PERF_IX_MEM_SIZE,
     PERF_IX_MEM_PRIV,
@@ -808,6 +810,9 @@ SIGAR_DECLARE(int) sigar_proc_mem_get(sigar_t *sigar, sigar_pid_t pid,
     procmem->resident = pinfo->resident;
     procmem->share    = SIGAR_FIELD_NOTIMPL;
     procmem->rss      = pinfo->resident;
+    procmem->page_faults  = pinfo->page_faults;
+    procmem->minor_faults = SIGAR_FIELD_NOTIMPL;
+    procmem->major_faults = SIGAR_FIELD_NOTIMPL;
 
     return SIGAR_OK;
 }
@@ -999,6 +1004,9 @@ static int get_proc_info(sigar_t *sigar, sigar_pid_t pid)
           case PERF_TITLE_CPUTIME:
             perf_offsets[PERF_IX_CPUTIME] = offset;
             break;
+          case PERF_TITLE_PAGE_FAULTS:
+            perf_offsets[PERF_IX_PAGE_FAULTS] = offset;
+            break;
           case PERF_TITLE_MEM_VSIZE:
             perf_offsets[PERF_IX_MEM_VSIZE] = offset;
             break;
@@ -1051,6 +1059,7 @@ static int get_proc_info(sigar_t *sigar, sigar_pid_t pid)
         pinfo->priority = PERF_VAL(PERF_IX_PRIORITY);
         pinfo->handles  = PERF_VAL(PERF_IX_HANDLE_CNT);
         pinfo->threads  = PERF_VAL(PERF_IX_THREAD_CNT);
+        pinfo->page_faults = PERF_VAL(PERF_IX_PAGE_FAULTS);
 
         return SIGAR_OK;
     }
