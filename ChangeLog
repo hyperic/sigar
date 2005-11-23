@@ -1,3 +1,8 @@
+2005-11-23  Doug MacEachern  <dougm@hyperic.net>
+
+        * Add sigar_proc_mem page fault metrics for AIX, HPUX, Linux,
+          Solaris and Win32
+
 2005-11-22  Doug MacEachern  <dougm@hyperic.net>
 
         * Add sigar_proc_state.processor for AIX, HPUX, Linux and
