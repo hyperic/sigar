@@ -260,6 +260,21 @@ my %classes = (
          desc => 'Process resident set size',
          plat => '*'
       },
+      {
+         name => 'minor_faults', type => 'Long',
+         desc => '',
+         plat => ''
+      },
+      {
+         name => 'major_faults', type => 'Long',
+         desc => '',
+         plat => ''
+      },
+      {
+         name => 'page_faults', type => 'Long',
+         desc => '',
+         plat => ''
+      },
     ],
     ProcCred => [
       {

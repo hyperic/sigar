@@ -602,9 +602,9 @@ static int proc_stat_read(sigar_t *sigar, sigar_pid_t pid)
     ptr = sigar_skip_token(ptr); /* tty pgrp */
 
     ptr = sigar_skip_token(ptr); /* flags */
-    ptr = sigar_skip_token(ptr); /* min flt */
+    pstat->minor_faults = sigar_strtoul(ptr);
     ptr = sigar_skip_token(ptr); /* cmin flt */
-    ptr = sigar_skip_token(ptr); /* maj flt */
+    pstat->major_faults = sigar_strtoul(ptr);
     ptr = sigar_skip_token(ptr); /* cmaj flt */
 
     pstat->utime = sigar_strtoul(ptr) / sigar->ticks;
@@ -656,7 +656,11 @@ int sigar_proc_mem_get(sigar_t *sigar, sigar_pid_t pid,
 
     procmem->vsize = pstat->vsize;
     procmem->rss   = pstat->rss;
-
+    procmem->minor_faults = pstat->minor_faults;
+    procmem->major_faults = pstat->major_faults;
+    procmem->page_faults =
+        procmem->minor_faults + procmem->major_faults;
+    
     status = SIGAR_PROC_FILE2STR(buffer, pid, "/statm");
 
     if (status != SIGAR_OK) {

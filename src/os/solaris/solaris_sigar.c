@@ -575,6 +575,7 @@ int sigar_proc_mem_get(sigar_t *sigar, sigar_pid_t pid,
 {
     int status = sigar_proc_psinfo_get(sigar, pid);
     psinfo_t *pinfo = sigar->pinfo;
+    prusage_t usage;
 
     if (status != SIGAR_OK) {
         return status;
@@ -585,6 +586,19 @@ int sigar_proc_mem_get(sigar_t *sigar, sigar_pid_t pid,
     procmem->resident = procmem->rss;
     procmem->vsize    = SIGAR_FIELD_NOTIMPL;
     procmem->share    = SIGAR_FIELD_NOTIMPL;
+
+    if (sigar_proc_usage_get(sigar, &usage, pid) == SIGAR_OK) {
+        procmem->minor_faults = usage.pr_minf;
+        procmem->major_faults = usage.pr_majf;
+        procmem->page_faults =
+            procmem->minor_faults +
+            procmem->major_faults;
+    }
+    else {
+        procmem->minor_faults = SIGAR_FIELD_NOTIMPL;
+        procmem->major_faults = SIGAR_FIELD_NOTIMPL;
+        procmem->page_faults = SIGAR_FIELD_NOTIMPL;
+    }
 
     return SIGAR_OK;
 }

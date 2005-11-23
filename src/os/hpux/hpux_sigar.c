@@ -275,6 +275,12 @@ int sigar_proc_mem_get(sigar_t *sigar, sigar_pid_t pid,
 
     procmem->share = pinfo->pst_shmsize * pagesize;
 
+    procmem->minor_faults = pinfo->pst_minorfaults;
+    procmem->major_faults = pinfo->pst_majorfaults;
+    procmem->page_faults =
+        procmem->minor_faults +
+        procmem->major_faults;
+
     return SIGAR_OK;
 }
 

@@ -208,7 +208,10 @@ typedef struct {
         vsize,
         resident,
         share,
-        rss;
+        rss,
+        minor_faults,
+        major_faults,
+        page_faults;
 } sigar_proc_mem_t;
 
 SIGAR_DECLARE(int) sigar_proc_mem_get(sigar_t *sigar, sigar_pid_t pid,

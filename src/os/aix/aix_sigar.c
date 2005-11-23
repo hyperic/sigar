@@ -1090,6 +1090,12 @@ int sigar_proc_mem_get(sigar_t *sigar, sigar_pid_t pid,
     procmem->rss   = PAGESHIFT(pinfo->pi_drss + pinfo->pi_trss);
     procmem->resident = procmem->rss;
 
+    procmem->minor_faults = pinfo->pi_minflt;
+    procmem->major_faults = pinfo->pi_majflt;
+    procmem->page_faults =
+        procmem->minor_faults +
+        procmem->major_faults;
+
     return SIGAR_OK;
 }
 

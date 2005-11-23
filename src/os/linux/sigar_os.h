@@ -19,6 +19,8 @@ typedef struct {
     time_t mtime;
     sigar_uint64_t vsize;
     sigar_uint64_t rss;
+    sigar_uint64_t minor_faults;
+    sigar_uint64_t major_faults;
     sigar_uint64_t ppid;
     int tty;
     int priority;
