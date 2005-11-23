@@ -1322,6 +1322,9 @@ EOF
     print JFH <<EOF;
 package net.hyperic.sigar;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * $name sigar class.
  */
@@ -1345,7 +1348,7 @@ public class $name {
 
 EOF
 
-    my @copy;
+    my(@copy, @tostring);
     my $define = "JAVA_SIGAR_SET_FIELDS_\U$name";
     my @macro = ("\#define $define(cls, obj, s)");
     my $init_define = "JAVA_SIGAR_INIT_FIELDS_\U$name";
@@ -1460,6 +1463,7 @@ EOF
 
         print JFH "    $jtype $jname = $init;\n\n";
         push @copy, "        copy.$jname = this.$jname;\n";
+        push @tostring, $jname;
 
         #documentation
         print JFH "    /**\n";
@@ -1481,8 +1485,29 @@ EOF
 
     print JFH "\n    void copyTo($name copy) {\n", @copy, "    }\n";
 
-    if (my $code = $extra_code{$name}) {
+    my $code = $extra_code{$name};
+    if ($code) {
         print JFH $code;
+    }
+
+    my $num_fields = @tostring;
+    print JFH "\n    public Map toMap() {\n";
+    print JFH "        Map map = new HashMap();\n";
+    for (my $i=0; $i<$num_fields; $i++) {
+        my $jfield = $tostring[$i];
+        my $sfield = "str${jfield}";
+        print JFH "        String $sfield = \n";
+        print JFH "            String.valueOf(this.$jfield);\n";
+        print JFH qq{        if (!"-1".equals($sfield))\n};
+        print JFH qq{            map.put("\u$jfield", $sfield);\n};
+    }
+    print JFH "        return map;\n";
+    print JFH "    }\n";
+
+    if (!$code or $code !~ /toString/) {
+        print JFH "\n    public String toString() {\n";
+        print JFH "        return toMap().toString();\n";
+        print JFH "    }\n";
     }
 
     push @init_fields, "    }";
