@@ -807,6 +807,9 @@ int sigar_proc_mem_get(sigar_t *sigar, sigar_pid_t pid,
     procmem->share = shared;
     procmem->vsize = vsize;
     procmem->resident = resident;
+    procmem->page_faults  = SIGAR_FIELD_NOTIMPL;
+    procmem->minor_faults = SIGAR_FIELD_NOTIMPL;
+    procmem->major_faults = SIGAR_FIELD_NOTIMPL;
 
     return SIGAR_OK;
 #else
@@ -824,6 +827,10 @@ int sigar_proc_mem_get(sigar_t *sigar, sigar_pid_t pid,
         pinfo->KI_RSS * sigar->pagesize;
 
     procmem->share = SIGAR_FIELD_NOTIMPL;
+
+    procmem->page_faults  = SIGAR_FIELD_NOTIMPL;
+    procmem->minor_faults = SIGAR_FIELD_NOTIMPL;
+    procmem->major_faults = SIGAR_FIELD_NOTIMPL;
 
     return SIGAR_OK;
 #endif

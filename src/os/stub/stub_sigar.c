@@ -101,6 +101,9 @@ int sigar_proc_mem_get(sigar_t *sigar, sigar_pid_t pid,
     procmem->share = -1;
     procmem->rss = -1;
     procmem->resident = -1;
+    procmem->page_faults  = -1;
+    procmem->minor_faults = -1;
+    procmem->major_faults = -1;
 
     return SIGAR_OK;
 }

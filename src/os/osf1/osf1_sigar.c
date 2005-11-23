@@ -228,6 +228,10 @@ int sigar_proc_mem_get(sigar_t *sigar, sigar_pid_t pid,
     /*XXX*/
     procmem->size = 1; /* 1 == let ant test pass for now */
 
+    procmem->page_faults  = SIGAR_FIELD_NOTIMPL;
+    procmem->minor_faults = SIGAR_FIELD_NOTIMPL;
+    procmem->major_faults = SIGAR_FIELD_NOTIMPL;
+
     return SIGAR_OK;
 }
 
