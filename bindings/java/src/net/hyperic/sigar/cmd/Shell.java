@@ -66,6 +66,7 @@ public class Shell extends ShellBase {
         registerCommandHandler("penv", new ShowEnv(this));
         registerCommandHandler("pfile", new ProcFileInfo(this));
         registerCommandHandler("pmodules", new ProcModuleInfo(this));
+        registerCommandHandler("pinfo", new ProcInfo(this));
         registerCommandHandler("cpuinfo", new CpuInfo(this));
         registerCommandHandler("ifconfig", new Ifconfig(this));
         registerCommandHandler("uptime", new Uptime(this));
