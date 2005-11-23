@@ -351,7 +351,7 @@ my %classes = (
       {
          name => 'threads', type => 'Long',
          desc => 'Number of active threads',
-         plat => ''
+         plat => 'AHLSW'
       },
     ],
     ProcFd => [
