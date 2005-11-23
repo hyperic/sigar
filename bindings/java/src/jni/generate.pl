@@ -356,7 +356,7 @@ my %classes = (
       {
          name => 'processor', type => 'Int',
          desc => 'Processor number last run on',
-         plat => ''
+         plat => 'AHLS'
       },
     ],
     ProcFd => [
