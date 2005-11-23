@@ -1,3 +1,8 @@
+2005-11-22  Doug MacEachern  <dougm@hyperic.net>
+
+        * Add sigar_proc_state.threads for AIX, HPUX, Linux (2.6+),
+          Solaris and Win32
+
 2005-11-18  Doug MacEachern  <dougm@hyperic.net>
 
         * net_interface related changes to support VMware vmnic
