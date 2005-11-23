@@ -14,13 +14,7 @@ public class TestProcState extends SigarTestCase {
         try {
             ProcState procState =
                 sigar.getProcState(pid);
-            char state = procState.getState();
-            traceln("[" + procState.getName() + "] " +
-                    "pid=" + pid +
-                    ",state=" + state +
-                    ",threads=" + procState.getThreads() +
-                    ",processor=" + procState.getProcessor() +
-                    ",priority=" + procState.getPriority());
+            traceln("[pid=" + pid + "] " + procState);
         } catch (SigarException e) {
             traceln("pid " + pid + ": " + e.getMessage());
         }
