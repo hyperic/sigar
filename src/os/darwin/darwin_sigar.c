@@ -692,6 +692,7 @@ int sigar_proc_mem_get(sigar_t *sigar, sigar_pid_t pid,
     mach_port_t task, self = mach_task_self();
     kern_return_t status;
     task_basic_info_data_t info;
+    task_events_info_data_t events;
     mach_msg_type_number_t count;
     vm_size_t vsize, resident, private, vprivate, shared;
     shared_table table;
@@ -712,6 +713,18 @@ int sigar_proc_mem_get(sigar_t *sigar, sigar_pid_t pid,
 
     vsize = info.virtual_size;
     resident = info.resident_size;
+
+    count = TASK_EVENTS_INFO_COUNT;
+    status = task_info(task, TASK_EVENTS_INFO, (task_info_t)&events, &count);
+    if (status == KERN_SUCCESS) {
+        procmem->page_faults = events.faults;
+    }
+    else {
+        procmem->page_faults = SIGAR_FIELD_NOTIMPL;
+    }
+
+    procmem->minor_faults = SIGAR_FIELD_NOTIMPL;
+    procmem->major_faults = SIGAR_FIELD_NOTIMPL;
 
     private = vprivate = shared = 0;
     memset(table, 0, sizeof(table));
@@ -807,9 +820,6 @@ int sigar_proc_mem_get(sigar_t *sigar, sigar_pid_t pid,
     procmem->share = shared;
     procmem->vsize = vsize;
     procmem->resident = resident;
-    procmem->page_faults  = SIGAR_FIELD_NOTIMPL;
-    procmem->minor_faults = SIGAR_FIELD_NOTIMPL;
-    procmem->major_faults = SIGAR_FIELD_NOTIMPL;
 
     return SIGAR_OK;
 #else
