@@ -1,5 +1,7 @@
 2005-11-28  Doug MacEachern  <dougm@hyperic.net>
 
+        * 1.1.25 released
+
         * Fix sigar_file_system_usage_t.free_files for Solaris and Darwin
 
 2005-11-23  Doug MacEachern  <dougm@hyperic.net>
