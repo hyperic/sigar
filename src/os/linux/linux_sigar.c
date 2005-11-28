@@ -43,31 +43,31 @@
  * 12 - majflt
  * 13 - cmajflt
  * 14 - utime
- * 14 - stime
- * 15 - cutime
- * 16 - cstime
- * 17 - priority
- * 18 - nice
- * 19 - 0 (removed field)
- * 20 - itrealvalue
- * 21 - starttime
- * 22 - vsize
- * 23 - rss
- * 24 - rlim
- * 25 - startcode
- * 26 - endcode
- * 27 - startstack
- * 28 - kstkesp
- * 29 - kstkeip
- * 30 - signal
- * 31 - blocked
- * 32 - sigignore
- * 33 - sigcache
- * 34 - wchan
- * 35 - nswap
- * 36 - cnswap
- * 37 - exit_signal <-- looking for this.
- * 38 - processor
+ * 15 - stime
+ * 16 - cutime
+ * 17 - cstime
+ * 18 - priority
+ * 19 - nice
+ * 20 - 0 (removed field)
+ * 21 - itrealvalue
+ * 22 - starttime
+ * 23 - vsize
+ * 24 - rss
+ * 25 - rlim
+ * 26 - startcode
+ * 27 - endcode
+ * 28 - startstack
+ * 29 - kstkesp
+ * 30 - kstkeip
+ * 31 - signal
+ * 32 - blocked
+ * 33 - sigignore
+ * 34 - sigcache
+ * 35 - wchan
+ * 36 - nswap
+ * 37 - cnswap
+ * 38 - exit_signal <-- looking for this.
+ * 39 - processor
  * ... more for newer RH
  */
 
@@ -587,62 +587,63 @@ static int proc_stat_read(sigar_t *sigar, sigar_pid_t pid)
         len = sizeof(pstat->name)-1;
     }
 
+    /* (1,2) */
     memcpy(pstat->name, ptr, len);
     pstat->name[len] = '\0';
     ptr = tmp+1;
 
     SIGAR_SKIP_SPACE(ptr);
-    pstat->state = *ptr++;
+    pstat->state = *ptr++; /* (3) */
     SIGAR_SKIP_SPACE(ptr);
 
-    pstat->ppid = sigar_strtoul(ptr);
-    ptr = sigar_skip_token(ptr); /* pgrp */
-    ptr = sigar_skip_token(ptr); /* session */
-    pstat->tty = sigar_strtoul(ptr);
-    ptr = sigar_skip_token(ptr); /* tty pgrp */
+    pstat->ppid = sigar_strtoul(ptr); /* (4) */
+    ptr = sigar_skip_token(ptr); /* (5) pgrp */
+    ptr = sigar_skip_token(ptr); /* (6) session */
+    pstat->tty = sigar_strtoul(ptr); /* (7) */
+    ptr = sigar_skip_token(ptr); /* (8) tty pgrp */
 
-    ptr = sigar_skip_token(ptr); /* flags */
-    pstat->minor_faults = sigar_strtoul(ptr);
-    ptr = sigar_skip_token(ptr); /* cmin flt */
-    pstat->major_faults = sigar_strtoul(ptr);
-    ptr = sigar_skip_token(ptr); /* cmaj flt */
+    ptr = sigar_skip_token(ptr); /* (9) flags */
+    pstat->minor_faults = sigar_strtoul(ptr); /* (10) */
+    ptr = sigar_skip_token(ptr); /* (11) cmin flt */
+    pstat->major_faults = sigar_strtoul(ptr); /* (12) */
+    ptr = sigar_skip_token(ptr); /* (13) cmaj flt */
 
-    pstat->utime = sigar_strtoul(ptr) / sigar->ticks;
-    pstat->stime = sigar_strtoul(ptr) / sigar->ticks;
+    pstat->utime = sigar_strtoul(ptr) / sigar->ticks; /* (14) */
+    pstat->stime = sigar_strtoul(ptr) / sigar->ticks; /* (15) */
 
-    ptr = sigar_skip_token(ptr); /* cutime */
-    ptr = sigar_skip_token(ptr); /* cstime */
+    ptr = sigar_skip_token(ptr); /* (16) cutime */
+    ptr = sigar_skip_token(ptr); /* (17) cstime */
 
-    pstat->priority = sigar_strtoul(ptr);
-    pstat->nice     = sigar_strtoul(ptr);
+    pstat->priority = sigar_strtoul(ptr); /* (18) */
+    pstat->nice     = sigar_strtoul(ptr); /* (19) */
 
-    ptr = sigar_skip_token(ptr); /* timeout */
-    ptr = sigar_skip_token(ptr); /* it_real_value */
+    ptr = sigar_skip_token(ptr); /* (20) timeout */
+    ptr = sigar_skip_token(ptr); /* (21) it_real_value */
 
-    pstat->start_time  = sigar_strtoul(ptr);
+    pstat->start_time  = sigar_strtoul(ptr); /* (22) */
     pstat->start_time /= sigar->ticks;
     pstat->start_time += sigar->boot_time; /* seconds */
     pstat->start_time *= 1000; /* milliseconds */
 
-    pstat->vsize = sigar_strtoul(ptr);
-    pstat->rss   = pageshift(sigar_strtoul(ptr));
+    pstat->vsize = sigar_strtoul(ptr); /* (23) */
+    pstat->rss   = pageshift(sigar_strtoul(ptr)); /* (24) */
 
-    ptr = sigar_skip_token(ptr); /* startcode */
-    ptr = sigar_skip_token(ptr); /* endcode */
-    ptr = sigar_skip_token(ptr); /* startstack */
-    ptr = sigar_skip_token(ptr); /* kstkesp */
-    ptr = sigar_skip_token(ptr); /* kstkeip */
-    ptr = sigar_skip_token(ptr); /* signal */
-    ptr = sigar_skip_token(ptr); /* blocked */
-    ptr = sigar_skip_token(ptr); /* sigignore */
-    ptr = sigar_skip_token(ptr); /* sigcache */
-    ptr = sigar_skip_token(ptr); /* wchan */
-    ptr = sigar_skip_token(ptr); /* nswap */
-    ptr = sigar_skip_token(ptr); /* cnswap */
-    ptr = sigar_skip_token(ptr); /* exit_signal */
+    ptr = sigar_skip_token(ptr); /* (25) rlim */
+    ptr = sigar_skip_token(ptr); /* (26) startcode */
+    ptr = sigar_skip_token(ptr); /* (27) endcode */
+    ptr = sigar_skip_token(ptr); /* (28) startstack */
+    ptr = sigar_skip_token(ptr); /* (29) kstkesp */
+    ptr = sigar_skip_token(ptr); /* (30) kstkeip */
+    ptr = sigar_skip_token(ptr); /* (31) signal */
+    ptr = sigar_skip_token(ptr); /* (32) blocked */
+    ptr = sigar_skip_token(ptr); /* (33) sigignore */
+    ptr = sigar_skip_token(ptr); /* (34) sigcache */
+    ptr = sigar_skip_token(ptr); /* (35) wchan */
+    ptr = sigar_skip_token(ptr); /* (36) nswap */
+    ptr = sigar_skip_token(ptr); /* (37) cnswap */
+    ptr = sigar_skip_token(ptr); /* (38) exit_signal */
 
-    ptr = sigar_skip_token(ptr);
-    pstat->processor = sigar_strtoul(ptr);
+    pstat->processor = sigar_strtoul(ptr); /* (39) */
 
     return SIGAR_OK;
 }
