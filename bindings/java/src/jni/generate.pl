@@ -273,7 +273,7 @@ my %classes = (
       {
          name => 'page_faults', type => 'Long',
          desc => 'Total number of page faults',
-         plat => 'AHLSW'
+         plat => 'ADHLSW'
       },
     ],
     ProcCred => [
