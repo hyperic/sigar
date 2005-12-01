@@ -158,10 +158,10 @@ public class OperatingSystem {
                 os.type = TYPE_MACOSX;
                 os.name = NAME_MACOSX;
                 os.vendor = "Apple";
-                if (os.version.equals("10.4")) {
+                if (os.version.startsWith("10.4")) {
                     os.vendorCodeName = "Tiger";
                 }
-                else if (os.version.equals("10.3")) {
+                else if (os.version.startsWith("10.3")) {
                     os.vendorCodeName = "Panther";
                 }
             }
@@ -200,8 +200,13 @@ public class OperatingSystem {
             //"HP-UX 11"
             return this.vendorName + " " + this.vendorVersion;
           case TYPE_MACOSX:
-            //"Mac OS X 10.4"
-            return this.vendorName + " " + this.vendorCodeName;
+            //"Mac OS X Tiger"
+            if (this.vendorCodeName != null) {
+                return this.vendorName + " " + this.vendorCodeName;
+            }
+            else {
+                return this.vendorName;
+            }
           case TYPE_WIN32:
             //"Microsoft Windows 2003"
             return this.vendor + " Windows " + this.vendorVersion;
