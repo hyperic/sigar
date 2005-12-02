@@ -1,3 +1,9 @@
+2005-12-01  Doug MacEachern  <dougm@hyperic.net>
+
+        * Add sigar_cpu_info_t.{mhz,cache_size,model} for Darwin
+
+        * Fix OperatingSystem.getDescription() for Darwin
+        
 2005-11-28  Doug MacEachern  <dougm@hyperic.net>
 
         * 1.1.25 released
