@@ -1350,11 +1350,15 @@ int sigar_cpu_info_list_get(sigar_t *sigar,
     char model[128], vendor[128], *ptr;
 
     size = sizeof(mhz);
-    if (!sysctlbyname(CTL_HW_FREQ, &mhz, &size, NULL, 0)) {
-        mhz /= 1000000;
+    if (sysctlbyname(CTL_HW_FREQ, &mhz, &size, NULL, 0) < 0) {
+        int mib[] = { CTL_HW, HW_CPU_FREQ };
+        size = sizeof(mhz);
+        if (sysctl(mib, NMIB(mib), &mhz, &size, NULL, 0) < 0) {
+            mhz = SIGAR_FIELD_NOTIMPL;
+        }
     }
-    else {
-        mhz = SIGAR_FIELD_NOTIMPL;
+    if (mhz != SIGAR_FIELD_NOTIMPL) {
+        mhz /= 1000000;
     }
 
     size = sizeof(model);
