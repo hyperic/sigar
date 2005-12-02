@@ -1345,18 +1345,27 @@ int sigar_cpu_info_list_get(sigar_t *sigar,
                             sigar_cpu_info_list_t *cpu_infos)
 {
     int i;
-    unsigned int mhz, cache_size;
+    unsigned int mhz;
+    int cache_size=SIGAR_FIELD_NOTIMPL;
     size_t size;
     char model[128], vendor[128], *ptr;
 
     size = sizeof(mhz);
-    if (sysctlbyname(CTL_HW_FREQ, &mhz, &size, NULL, 0) < 0) {
+
+#ifdef DARWIN
+    {
         int mib[] = { CTL_HW, HW_CPU_FREQ };
         size = sizeof(mhz);
         if (sysctl(mib, NMIB(mib), &mhz, &size, NULL, 0) < 0) {
             mhz = SIGAR_FIELD_NOTIMPL;
         }
     }
+#else
+    if (sysctlbyname(CTL_HW_FREQ, &mhz, &size, NULL, 0) < 0) {
+        mhz = SIGAR_FIELD_NOTIMPL;
+    }
+#endif
+
     if (mhz != SIGAR_FIELD_NOTIMPL) {
         mhz /= 1000000;
     }
@@ -1388,6 +1397,7 @@ int sigar_cpu_info_list_get(sigar_t *sigar,
         SIGAR_SSTRCPY(model, ptr+1);
     }
 
+#ifdef DARWIN
     {
         int mib[] = { CTL_HW, HW_L2CACHESIZE }; / * in bytes */
         size = sizeof(cache_size);
@@ -1395,6 +1405,7 @@ int sigar_cpu_info_list_get(sigar_t *sigar,
             cache_size = SIGAR_FIELD_NOTIMPL;
         }
     }
+#endif
 
     sigar_cpu_info_list_create(cpu_infos);
 
