@@ -1345,7 +1345,7 @@ int sigar_cpu_info_list_get(sigar_t *sigar,
                             sigar_cpu_info_list_t *cpu_infos)
 {
     int i;
-    unsigned int mhz;
+    unsigned int mhz, cache_size;
     size_t size;
     char model[128], vendor[128], *ptr;
 
@@ -1388,6 +1388,14 @@ int sigar_cpu_info_list_get(sigar_t *sigar,
         SIGAR_SSTRCPY(model, ptr+1);
     }
 
+    {
+        int mib[] = { CTL_HW, HW_L2CACHESIZE }; / * in bytes */
+        size = sizeof(cache_size);
+        if (sysctl(mib, NMIB(mib), &cache_size, &size, NULL, 0) < 0) {
+            cache_size = SIGAR_FIELD_NOTIMPL;
+        }
+    }
+
     sigar_cpu_info_list_create(cpu_infos);
 
     for (i=0; i<sigar->ncpu; i++) {
@@ -1405,7 +1413,7 @@ int sigar_cpu_info_list_get(sigar_t *sigar,
         sigar_cpu_model_adjust(sigar, info);
 
         info->mhz = mhz;
-        info->cache_size = SIGAR_FIELD_NOTIMPL;
+        info->cache_size = cache_size;
     }
 
     return SIGAR_OK;
