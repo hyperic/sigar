@@ -1404,6 +1404,9 @@ int sigar_cpu_info_list_get(sigar_t *sigar,
         if (sysctl(mib, NMIB(mib), &cache_size, &size, NULL, 0) < 0) {
             cache_size = SIGAR_FIELD_NOTIMPL;
         }
+        else {
+            cache_size /= 1024; /* convert to KB */
+        }
     }
 #endif
 
