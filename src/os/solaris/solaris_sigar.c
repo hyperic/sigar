@@ -1512,6 +1512,13 @@ int sigar_net_route_list_get(sigar_t *sigar,
     char *data;
     int len, rc;
     struct opthdr *op;
+    size_t nread=0, size=sizeof(mib2_ipRouteEntry_t);
+
+    if (sigar->solaris_version >= 10) {
+        size += /* bincompat for new solaris 10 fields */
+            sizeof(DeviceName) +
+            sizeof(IpAddress);
+    }
 
     sigar_net_route_list_create(routelist);
 
@@ -1524,7 +1531,8 @@ int sigar_net_route_list_get(sigar_t *sigar,
         }
 
         for (entry = (mib2_ipRouteEntry_t *)data, end = data + len;
-             (char *)entry < end; entry++)
+             (char *)entry < end;
+             entry = (mib2_ipRouteEntry_t *)((char *)data+nread), nread+=size)
         {
             sigar_net_route_t *route;
             int type = entry->ipRouteInfo.re_ire_type;
