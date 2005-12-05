@@ -1290,9 +1290,11 @@ int sigar_file_system_list_get(sigar_t *sigar,
     for (i=0; i<num; i++) {
         sigar_file_system_t *fsp;
 
+#ifdef MNT_AUTOMOUNTED
         if (fs[i].f_flags & MNT_AUTOMOUNTED) {
             continue;
         }
+#endif
 
         SIGAR_FILE_SYSTEM_LIST_GROW(fslist);
 
