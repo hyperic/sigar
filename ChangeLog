@@ -1,4 +1,15 @@
+2005-12-05  Doug MacEachern  <dougm@hyperic.net>
+
+        * 1.1.26 released
+
+        * Filter out network interface types other than loopback and
+          ethernet on Darwin and FreeBSD
+
+        * Filter out auto-mounted filesystems on Darwin
+        
 2005-12-01  Doug MacEachern  <dougm@hyperic.net>
+
+        * Fix net_route_list for Solaris 10
 
         * Add sigar_cpu_info_t.{mhz,cache_size,model} for Darwin
 
