@@ -1591,6 +1591,11 @@ static int sigar_ifmsg_iter(sigar_t *sigar, ifmsg_iter_t *iter)
         if (sdl->sdl_family != AF_LINK) {
             continue;
         }
+        if (!((sdl->sdl_type == IFT_ETHER) ||
+              (sdl->sdl_type == IFT_LOOP)))
+        {
+            continue; /* XXX deal w/ other weirdo interfaces */
+        }
 
         switch (iter->type) {
           case IFMSG_ITER_LIST:
