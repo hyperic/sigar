@@ -10,7 +10,7 @@ public class Ifconfig {
     private static void output(Sigar sigar, String name) {
         NetInterfaceConfig ifconfig =
             sigar.NetInterfaceConfig(name);
-        ulong flags = ifconfig.Flags;
+        long flags = ifconfig.Flags;
 
         String hwaddr = "";
         if (!Sigar.NULL_HWADDR.Equals(ifconfig.Hwaddr)) {
@@ -61,8 +61,8 @@ public class Ifconfig {
             println("\t" + "collisions:" +
                     ifstat.TxCollisions);
 
-            ulong rxBytes = ifstat.RxBytes;
-            ulong txBytes = ifstat.TxBytes;
+            long rxBytes = ifstat.RxBytes;
+            long txBytes = ifstat.TxBytes;
 
             println("\t" +
                     "RX bytes:" + rxBytes +

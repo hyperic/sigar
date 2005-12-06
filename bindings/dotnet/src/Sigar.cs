@@ -47,9 +47,9 @@ namespace Hyperic.Sigar {
 
         [DllImport(Sigar.LIBSIGAR)]
         private static extern void
-        sigar_format_size(ulong size, StringBuilder buffer);
+        sigar_format_size(long size, StringBuilder buffer);
 
-        public static string FormatSize(ulong size) {
+        public static string FormatSize(long size) {
             StringBuilder buffer = new StringBuilder(56);
             sigar_format_size(size, buffer);
             return buffer.ToString();
@@ -138,13 +138,13 @@ namespace Hyperic.Sigar {
 
     [StructLayout(LayoutKind.Sequential)]
     public struct Mem {
-        public readonly ulong Ram;
-        public readonly ulong Total;
-        public readonly ulong Used;
-        public readonly ulong Free;
-        public readonly ulong Shared;
-        public readonly ulong ActualFree;
-        public readonly ulong ActualUsed;
+        public readonly long Ram;
+        public readonly long Total;
+        public readonly long Used;
+        public readonly long Free;
+        public readonly long Shared;
+        public readonly long ActualFree;
+        public readonly long ActualUsed;
 
         [DllImport(Sigar.LIBSIGAR)]
         private static extern int
@@ -171,9 +171,9 @@ namespace Hyperic.Sigar {
 
     [StructLayout(LayoutKind.Sequential)]
     public struct Swap {
-        public readonly ulong Total;
-        public readonly ulong Used;
-        public readonly ulong Free;
+        public readonly long Total;
+        public readonly long Used;
+        public readonly long Free;
 
         [DllImport(Sigar.LIBSIGAR)]
         private static extern int
@@ -199,12 +199,12 @@ namespace Hyperic.Sigar {
 
     [StructLayout(LayoutKind.Sequential)]
     public struct Cpu {
-        public readonly ulong User;
-        public readonly ulong Sys;
-        private readonly ulong NA_Nice;
-        public readonly ulong Idle;
-        private readonly ulong NA_Wait;
-        public readonly ulong Total;
+        public readonly long User;
+        public readonly long Sys;
+        private readonly long NA_Nice;
+        public readonly long Idle;
+        private readonly long NA_Wait;
+        public readonly long Total;
 
         [DllImport(Sigar.LIBSIGAR)]
         private static extern int
@@ -235,7 +235,7 @@ namespace Hyperic.Sigar {
         [MarshalAs(UnmanagedType.ByValTStr, SizeConst=128)]
         public readonly string Model; //char[128]
         public readonly int Mhz;
-        private readonly ulong CacheSize; //XXX not implemented
+        private readonly long CacheSize; //XXX not implemented
     }
 
     [StructLayout(LayoutKind.Sequential)]
@@ -353,17 +353,17 @@ namespace Hyperic.Sigar {
 
     [StructLayout(LayoutKind.Sequential)]
     public struct FileSystemUsage {
-        public readonly ulong Total;
-        public readonly ulong Free;
-        public readonly ulong Avail;
-        public readonly ulong Used;
-        private readonly ulong NA_Files; //XXX not implemented
-        private readonly ulong NA_FreeFiles;
-        private readonly ulong DiskReads;
-        private readonly ulong DiskWrites;
-        private readonly ulong DiskWriteBytes;
-        private readonly ulong DiskReadBytes;
-        private readonly ulong DiskQueue;
+        public readonly long Total;
+        public readonly long Free;
+        public readonly long Avail;
+        public readonly long Used;
+        private readonly long NA_Files; //XXX not implemented
+        private readonly long NA_FreeFiles;
+        private readonly long DiskReads;
+        private readonly long DiskWrites;
+        private readonly long DiskWriteBytes;
+        private readonly long DiskReadBytes;
+        private readonly long DiskQueue;
         public readonly double UsePercent;
 
         [DllImport(Sigar.LIBSIGAR)]
@@ -447,13 +447,13 @@ namespace Hyperic.Sigar {
         public readonly string Hwaddr; //char[64]
         [MarshalAs(UnmanagedType.ByValTStr, SizeConst=64)]
         public readonly string Type; //char[64]
-        private readonly ulong address;
-        private readonly ulong destination;
-        private readonly ulong broadcast;
-        private readonly ulong netmask;
-        public readonly ulong Flags;
-        public readonly ulong Mtu;
-        public readonly ulong Metric;
+        private readonly long address;
+        private readonly long destination;
+        private readonly long broadcast;
+        private readonly long netmask;
+        public readonly long Flags;
+        public readonly long Mtu;
+        public readonly long Metric;
 
         [DllImport(Sigar.LIBSIGAR)]
         private static extern int
@@ -483,10 +483,10 @@ namespace Hyperic.Sigar {
 
         [DllImport(Sigar.LIBSIGAR)]
         private static extern int
-        sigar_inet_ntoa(IntPtr sigar, ulong address,
+        sigar_inet_ntoa(IntPtr sigar, long address,
                         StringBuilder addr_str);
 
-        private string inet_ntoa(ulong address) {
+        private string inet_ntoa(long address) {
             StringBuilder buffer = new StringBuilder();
             buffer.Capacity = (3 * 4 + 3 + 1);
             sigar_inet_ntoa(IntPtr.Zero, address, buffer);
@@ -518,7 +518,7 @@ namespace Hyperic.Sigar {
         }
 
         public String FlagsString() {
-            ulong flags = this.Flags;
+            long flags = this.Flags;
             String retval = "";
 
             if (flags == 0)
@@ -552,19 +552,19 @@ namespace Hyperic.Sigar {
 
     [StructLayout(LayoutKind.Sequential)]
     public struct NetInterfaceStat {
-        public readonly ulong RxPackets;
-        public readonly ulong RxBytes;
-        public readonly ulong RxErrors;
-        public readonly ulong RxDropped;
-        public readonly ulong RxOverruns;
-        public readonly ulong RxFrame;
-        public readonly ulong TxPackets;
-        public readonly ulong TxBytes;
-        public readonly ulong TxErrors;
-        public readonly ulong TxDropped;
-        public readonly ulong TxOverruns;
-        public readonly ulong TxCollisions;
-        public readonly ulong TxCarrier;
+        public readonly long RxPackets;
+        public readonly long RxBytes;
+        public readonly long RxErrors;
+        public readonly long RxDropped;
+        public readonly long RxOverruns;
+        public readonly long RxFrame;
+        public readonly long TxPackets;
+        public readonly long TxBytes;
+        public readonly long TxErrors;
+        public readonly long TxDropped;
+        public readonly long TxOverruns;
+        public readonly long TxCollisions;
+        public readonly long TxCarrier;
 
         [DllImport(Sigar.LIBSIGAR)]
         private static extern int

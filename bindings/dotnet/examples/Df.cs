@@ -3,7 +3,7 @@ using Hyperic.Sigar;
 
 public class Df {
 
-    private static String FormatSize(ulong value) {
+    private static String FormatSize(long value) {
         return Sigar.FormatSize(value * 1024);
     }
 
@@ -12,7 +12,7 @@ public class Df {
 
         foreach (FileSystem fs in sigar.FileSystemList()) {
             FileSystemUsage usage;
-            ulong used, avail, total, pct;
+            long used, avail, total, pct;
 
             try {
                 usage = sigar.FileSystemUsage(fs.DirName);
@@ -20,7 +20,7 @@ public class Df {
                 used = usage.Total - usage.Free;
                 avail = usage.Avail;
                 total = usage.Total;
-                pct = (ulong)(usage.UsePercent * 100);
+                pct = (long)(usage.UsePercent * 100);
             } catch (SigarException) {
                 used = avail = total = pct = 0;
                 continue;
