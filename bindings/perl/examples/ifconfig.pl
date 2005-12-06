@@ -11,8 +11,7 @@ for my $ifname (@$iflist) {
     my $ifconfig = $sigar->net_interface_config($ifname);
     my $flags = $ifconfig->flags;
 
-    my $encap = ($flags & Sigar::IFF_LOOPBACK) ?
-      "Local Loopback" : "Ethernet";
+    my $encap = $ifconfig->type;
 
     my $hwaddr = $ifconfig->hwaddr;
     if ($hwaddr eq Sigar::NULL_HWADDR) {
