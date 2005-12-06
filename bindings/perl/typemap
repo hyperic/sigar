@@ -28,6 +28,8 @@ Sigar::NetRoute T_PTROBJ
 Sigar::NetInterfaceStat T_PTROBJ
 Sigar::Who T_PTROBJ
 Sigar::ThreadCpu T_PTROBJ
+Sigar::ResourceLimit T_PTROBJ
+Sigar::NetInfo T_PTROBJ
 
 OUTPUT
 T_NETADDR
