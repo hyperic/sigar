@@ -445,6 +445,8 @@ namespace Hyperic.Sigar {
         public readonly string Name; //char[16]
         [MarshalAs(UnmanagedType.ByValTStr, SizeConst=64)]
         public readonly string Hwaddr; //char[64]
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst=64)]
+        public readonly string Type; //char[64]
         private readonly ulong address;
         private readonly ulong destination;
         private readonly ulong broadcast;

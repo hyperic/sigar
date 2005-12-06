@@ -12,17 +12,13 @@ public class Ifconfig {
             sigar.NetInterfaceConfig(name);
         ulong flags = ifconfig.Flags;
 
-        //XXX cannot assume ethernet
-        String encap = (flags & Sigar.IFF_LOOPBACK) > 0 ?
-            "Local Loopback" : "Ethernet";
-
         String hwaddr = "";
         if (!Sigar.NULL_HWADDR.Equals(ifconfig.Hwaddr)) {
             hwaddr = " HWaddr " + ifconfig.Hwaddr;
         }
 
         println(ifconfig.Name + "\t" +
-                "Link encap:" + encap +
+                "Link encap:" + ifconfig.Type +
                 hwaddr);
 
         String ptp = "";
