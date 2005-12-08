@@ -2,10 +2,17 @@ package net.hyperic.sigar;
 
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.Reader;
 import java.util.HashMap;
 
 public abstract class FileTail extends FileWatcher {
+
+    public static final String PROP_USE_SUDO =
+        "sigar.tail.sudo";
+
+    private boolean useSudo = 
+        "true".equals(System.getProperty(PROP_USE_SUDO));
 
     private HashMap offsets = new HashMap();
     
@@ -15,13 +22,24 @@ public abstract class FileTail extends FileWatcher {
         super(sigar);
     }
 
+    public void useSudo(boolean useSudo) {
+        this.useSudo = useSudo;
+    }
+
     public void onChange(FileInfo info) {
         long len = info.size;
  
         Reader reader = null;
-               
+        String name = info.getName();
+
         try {
-            reader = new FileReader(info.getName());
+            if (this.useSudo) {
+                reader =
+                    new InputStreamReader(new SudoFileInputStream(name));
+            }
+            else {
+                reader = new FileReader(name);
+            }
             reader.skip(getOffset(info));
             tail(info, reader);
             setOffset(info);
