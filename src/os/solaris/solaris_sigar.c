@@ -154,20 +154,6 @@ char *sigar_os_error_string(sigar_t *sigar, int err)
     }
 }
 
-static SIGAR_INLINE int sigar_kstat_update(sigar_t *sigar)
-{
-    switch (kstat_chain_update(sigar->kc)) {
-      case 0:
-        break;
-      case -1:
-        return -1; /* shouldn't happen */
-      default:
-        sigar_get_kstats(sigar);
-    }
-
-    return SIGAR_OK;
-}
-
 #define KPAGE_SHIFT(v) \
     ((v) << sigar->pagesize)
 
@@ -1368,7 +1354,8 @@ static int get_fs_kstat(sigar_t *sigar,
     kstat_t *ksp, *first;
     char *ptr;
 
-    kstat_chain_update(sigar->kc);
+    sigar_kstat_update(sigar);
+
     first = ksp =
         kstat_lookup(sigar->kc, fsk->module, fsk->instance, NULL);
 
@@ -1980,7 +1967,8 @@ static int sigar_net_ifstat_get_any(sigar_t *sigar, const char *name,
     char dev[64], *ptr=dev;
     int num;
 
-    kstat_chain_update(kc);
+    sigar_kstat_update(sigar);
+
     strncpy(dev, name, sizeof(dev)-1);
     dev[sizeof(dev)-1] = '\0';
 

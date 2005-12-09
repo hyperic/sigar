@@ -33,6 +33,8 @@ typedef struct {
     int nlen;
 } kstat_list_t;
 
+SIGAR_INLINE kid_t sigar_kstat_update(sigar_t *sigar);
+
 int sigar_get_kstats(sigar_t *sigar);
 
 int sigar_get_multi_kstats(sigar_t *sigar,

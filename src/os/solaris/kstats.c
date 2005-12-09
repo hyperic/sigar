@@ -16,7 +16,7 @@ int sigar_get_multi_kstats(sigar_t *sigar,
     name += kl->nlen; /* e.g. "hme0" + 3 */
     dev = atoi(name);
 
-    if ((kl->num == 0) || (kstat_chain_update(kc) > 0)) {
+    if ((kl->num == 0) || (sigar_kstat_update(sigar) > 0)) {
         while ((ksp = kstat_lookup(kc, kl->name, i, NULL))) {
             if (i+1 > kl->num) {
                 kl->num = i+1;
@@ -109,6 +109,28 @@ int sigar_get_kstats(sigar_t *sigar)
     sigar->ks.mempages = kstat_lookup(kc, "bunyip", -1, "mempages");
 
     return SIGAR_OK;
+}
+
+SIGAR_INLINE kid_t sigar_kstat_update(sigar_t *sigar)
+{
+    kid_t id = kstat_chain_update(sigar->kc);
+
+    switch (id) {
+      case -1:
+        sigar_log_printf(sigar, SIGAR_LOG_ERROR,
+                         "kstat_chain_update error: %s",
+                         sigar_strerror(sigar, errno));
+        break;
+      case 0:
+        break;
+      default:
+        sigar_get_kstats(sigar);
+        sigar_log(sigar, SIGAR_LOG_DEBUG,
+                  "kstat chain updated");
+        break;
+    }
+
+    return id;
 }
 
 /*
