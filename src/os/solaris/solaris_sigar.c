@@ -1358,13 +1358,17 @@ static int fs_kstat_read(sigar_t *sigar,
                          sigar_file_system_usage_t *fsusage,
                          kstat_t *ksp)
 {
-    kstat_io_t io;
-    kstat_read(sigar->kc, ksp, &io);
-    fsusage->disk_reads  = io.reads;
-    fsusage->disk_writes = io.writes;
-    fsusage->disk_read_bytes  = io.nread;
-    fsusage->disk_write_bytes = io.nwritten;
-    fsusage->disk_queue       = io.wcnt; /* XXX ? */
+    kstat_io_t *io;
+
+    kstat_read(sigar->kc, ksp, NULL);
+
+    io = (kstat_io_t *)ksp->ks_data;
+
+    fsusage->disk_reads       = io->reads;
+    fsusage->disk_writes      = io->writes;
+    fsusage->disk_read_bytes  = io->nread;
+    fsusage->disk_write_bytes = io->nwritten;
+    fsusage->disk_queue       = io->wcnt; /* XXX ? */
 
     return SIGAR_OK;
 }
