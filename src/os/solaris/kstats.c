@@ -48,17 +48,6 @@ int sigar_get_kstats(sigar_t *sigar)
     unsigned int i, ncpu = sysconf(_SC_NPROCESSORS_CONF);
     int is_debug = SIGAR_LOG_IS_DEBUG(sigar);
 
-    ksp = kstat_lookup(kc, "unix", -1, "vminfo");
-    sigar->ks.vminfo = ksp;
-
-    if (ksp) {
-        kstat_read(kc, ksp, &sigar->vminfo);
-
-        if (!sigar->vminfo_snaptime) {
-            sigar->vminfo_snaptime = ksp->ks_snaptime;
-        }
-    }
-
     if (ncpu != sigar->ncpu) {
         if (!sigar->ks.lcpu) {
             /* init */

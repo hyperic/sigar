@@ -184,7 +184,6 @@ struct sigar_t {
 
     /* kstat_lookup() as needed */
     struct {
-        kstat_t *vminfo;
         kstat_t **cpu;
         processorid_t *cpuid;
         unsigned int lcpu; /* number malloced slots in the cpu array above */
@@ -209,9 +208,6 @@ struct sigar_t {
         int syspages[KSTAT_SYSPAGES_MAX];
     } koffsets;
     
-    vminfo_t vminfo;
-    hrtime_t vminfo_snaptime;
-
     int pagesize;
 
     time_t last_getprocs;

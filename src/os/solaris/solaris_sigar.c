@@ -69,8 +69,6 @@ int sigar_os_open(sigar_t **sig)
     KSTAT_LIST_INIT(sigar, ge);
     KSTAT_LIST_INIT(sigar, eri);
 
-    sigar->vminfo_snaptime = 0;
-
     sigar->koffsets.system[0] = -1;
     sigar->koffsets.mempages[0] = -1;
     sigar->koffsets.syspages[0] = -1;
@@ -197,65 +195,6 @@ int sigar_mem_get(sigar_t *sigar, sigar_mem_t *mem)
 
 int sigar_swap_get(sigar_t *sigar, sigar_swap_t *swap)
 {
-#if defined(SIGAR_SWAP_KSTAT)
-    kstat_ctl_t *kc = sigar->kc; 
-    kstat_t *ksp;
-    vminfo_t vminfo;
-
-    if (sigar_kstat_update(sigar) == -1) {
-        return errno;
-    }
-
-    if ((ksp = sigar->ks.vminfo) && kstat_read(kc, ksp, &vminfo) >= 0) {
-        /* XXX: need some adjustments here */
-        swap->total = vminfo.swap_resv + vminfo.swap_avail;
-        swap->used  = vminfo.swap_alloc;
-        swap->free  = swap->total - swap->used;
-        return SIGAR_OK;
-    }
-
-    return -1;
-#elif defined(SIGAR_SWAP_SC_LIST)
-    unsigned int i;
-    size_t num;
-    swaptbl_t *stab;
-    char path[256];
-
-    swap->total = swap->used = swap->free = 0;
-
-    num = swapctl(SC_GETNSWP, 0);
-
-    switch (num) {
-      case 0:
-        return SIGAR_OK;
-      case -1:
-        return errno;
-      default:
-        break;
-    }
-
-    stab = malloc((num * sizeof(swapent_t)) + sizeof(swaptbl_t));
-
-    for (i=0; i<num; i++) {
-        stab->swt_ent[i].ste_path = &path[0]; /* ignored */
-    }
-
-    stab->swt_n = num;
-    num = swapctl(SC_LIST, stab);
-
-    for (i=0; i<num; i++) {
-        swap->total += stab->swt_ent[i].ste_pages;
-        swap->free += stab->swt_ent[i].ste_free;
-    }
-
-    free(stab);
-
-    swap->total <<= sigar->pagesize;
-    swap->free  <<= sigar->pagesize;
-    swap->used = swap->total - swap->free;
-
-    return SIGAR_OK;
-#else
     struct anoninfo anon;
 
     /* XXX vm/anon.h says:
@@ -277,7 +216,6 @@ int sigar_swap_get(sigar_t *sigar, sigar_swap_t *swap)
     swap->used  <<= sigar->pagesize;
 
     return SIGAR_OK;
-#endif
 }
 
 int sigar_cpu_get(sigar_t *sigar, sigar_cpu_t *cpu)
