@@ -12,11 +12,12 @@ int sigar_get_multi_kstats(sigar_t *sigar,
     kstat_t *ksp;
     int i = 0;
     int dev;
+    kid_t id = sigar_kstat_update(sigar);
 
     name += kl->nlen; /* e.g. "hme0" + 3 */
     dev = atoi(name);
 
-    if ((kl->num == 0) || (sigar_kstat_update(sigar) > 0)) {
+    if ((kl->num == 0) || (id > 0)) {
         while ((ksp = kstat_lookup(kc, kl->name, i, NULL))) {
             if (i+1 > kl->num) {
                 kl->num = i+1;
