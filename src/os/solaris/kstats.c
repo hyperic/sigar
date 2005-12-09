@@ -14,6 +14,10 @@ int sigar_get_multi_kstats(sigar_t *sigar,
     int dev;
     kid_t id = sigar_kstat_update(sigar);
 
+    if (id == -1) {
+        return errno;
+    }
+
     name += kl->nlen; /* e.g. "hme0" + 3 */
     dev = atoi(name);
 
@@ -130,6 +134,7 @@ SIGAR_INLINE kid_t sigar_kstat_update(sigar_t *sigar)
                          sigar_strerror(sigar, errno));
         break;
       case 0:
+        /* up-to-date */
         break;
       default:
         sigar_get_kstats(sigar);

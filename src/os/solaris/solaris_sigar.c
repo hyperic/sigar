@@ -169,7 +169,9 @@ int sigar_mem_get(sigar_t *sigar, sigar_mem_t *mem)
 
     sigar_mem_calc_ram(sigar, mem);
 
-    sigar_kstat_update(sigar);
+    if (sigar_kstat_update(sigar) == -1) {
+        return errno;
+    }
 
     if ((ksp = sigar->ks.syspages) && kstat_read(kc, ksp, NULL) >= 0) {
         sigar_koffsets_init_syspages(sigar, ksp);
@@ -200,7 +202,9 @@ int sigar_swap_get(sigar_t *sigar, sigar_swap_t *swap)
     kstat_t *ksp;
     vminfo_t vminfo;
 
-    sigar_kstat_update(sigar);
+    if (sigar_kstat_update(sigar) == -1) {
+        return errno;
+    }
 
     if ((ksp = sigar->ks.vminfo) && kstat_read(kc, ksp, &vminfo) >= 0) {
         /* XXX: need some adjustments here */
@@ -308,7 +312,10 @@ int sigar_cpu_list_get(sigar_t *sigar, sigar_cpu_list_t *cpulist)
     kstat_t *ksp;
     ulong cpuinfo[CPU_STATES];
     unsigned int i;
-    sigar_kstat_update(sigar);
+
+    if (sigar_kstat_update(sigar) == -1) {
+        return errno;
+    }
 
     if (cpulist == &sigar->cpulist) {
         if (sigar->cpulist.size == 0) {
@@ -409,7 +416,9 @@ int sigar_loadavg_get(sigar_t *sigar,
     kstat_t *ksp;
     int i;
 
-    sigar_kstat_update(sigar);
+    if (sigar_kstat_update(sigar) == -1) {
+        return errno;
+    }
 
     if (!(ksp = sigar->ks.system)) {
         return -1;
@@ -1367,7 +1376,9 @@ static int get_fs_kstat(sigar_t *sigar,
     kstat_t *ksp, *first;
     char *ptr;
 
-    sigar_kstat_update(sigar);
+    if (sigar_kstat_update(sigar) == -1) {
+        return errno;
+    }
 
     first = ksp =
         kstat_lookup(sigar->kc, fsk->module, fsk->instance, NULL);
@@ -1451,7 +1462,9 @@ int sigar_cpu_info_list_get(sigar_t *sigar,
     unsigned int i;
     int status = SIGAR_OK;
 
-    sigar_kstat_update(sigar); /* for sigar->ncpu */
+    if (sigar_kstat_update(sigar) == -1) { /* for sigar->ncpu */
+        return errno;
+    }
 
     /*
      * stats we care about will be the same for each
@@ -1980,7 +1993,9 @@ static int sigar_net_ifstat_get_any(sigar_t *sigar, const char *name,
     char dev[64], *ptr=dev;
     int num;
 
-    sigar_kstat_update(sigar);
+    if (sigar_kstat_update(sigar) == -1) {
+        return errno;
+    }
 
     strncpy(dev, name, sizeof(dev)-1);
     dev[sizeof(dev)-1] = '\0';
