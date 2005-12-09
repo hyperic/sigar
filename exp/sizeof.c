@@ -5,7 +5,7 @@ my $prg = "$0.out";
 my $cmd = "$Config{cc} -Wall -D$^O -o $prg $0; ./$prg; rm $prg";
 print $cmd; system $cmd;
 __END__
- */
+*/
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -31,6 +31,7 @@ static sizeof_info_t sizeof_info[] = {
     SIZEOF_INFO(kstat_named_t),
     SIZEOF_INFO(vminfo_t),
     SIZEOF_INFO(cpu_stat_t),
+    SIZEOF_INFO(kstat_io_t),
     /* procfs */
     SIZEOF_INFO(psinfo_t),
     SIZEOF_INFO(prusage_t),
