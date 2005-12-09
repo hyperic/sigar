@@ -329,12 +329,25 @@ int sigar_cpu_list_get(sigar_t *sigar, sigar_cpu_list_t *cpulist)
         char *buf;
 
         if (!CPU_ONLINE(sigar->ks.cpuid[i])) {
+            sigar_log_printf(sigar, SIGAR_LOG_INFO,
+                             "cpu %d (id=%d) is offline",
+                             i, sigar->ks.cpuid[i]);
             continue;
         }
-        if (!((ksp = sigar->ks.cpu[i]) &&
-              (kstat_read(kc, ksp, NULL) >= 0)))
-        {
-            continue; /* XXX: shouldnot happen */
+
+        if (!(ksp = sigar->ks.cpu[i])) {
+            sigar_log_printf(sigar, SIGAR_LOG_ERROR,
+                             "NULL ksp for cpu %d (id=%d)",
+                             i, sigar->ks.cpuid[i]);
+            continue; /* shouldnot happen */
+        }
+
+        if (kstat_read(kc, ksp, NULL) < 0) {
+            sigar_log_printf(sigar, SIGAR_LOG_ERROR,
+                             "kstat_read failed for cpu %d (id=%d): %s",
+                             i, sigar->ks.cpuid[i],
+                             sigar_strerror(sigar, errno));
+            continue; /* shouldnot happen */
         }
 
         /*

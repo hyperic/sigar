@@ -41,6 +41,7 @@ int sigar_get_kstats(sigar_t *sigar)
     kstat_ctl_t *kc = sigar->kc;
     kstat_t *ksp;
     unsigned int i, ncpu = sysconf(_SC_NPROCESSORS_CONF);
+    int is_debug = SIGAR_LOG_IS_DEBUG(sigar);
 
     ksp = kstat_lookup(kc, "unix", -1, "vminfo");
     sigar->ks.vminfo = ksp;
@@ -61,6 +62,9 @@ int sigar_get_kstats(sigar_t *sigar)
             sigar->ks.cpuid = malloc(sizeof(*(sigar->ks.cpuid)) * ncpu);
         }
         else {
+            sigar_log_printf(sigar, SIGAR_LOG_INFO,
+                             "ncpu changed from %d to %d",
+                             sigar->ncpu, ncpu);
             if (ncpu > sigar->ks.lcpu) {
                 /* one or more cpus have been added */
                 sigar->ks.cpu = realloc(sigar->ks.cpu,
@@ -99,7 +103,10 @@ int sigar_get_kstats(sigar_t *sigar)
 
             sigar->ks.cpu[i] = ksp;
             sigar->ks.cpuid[i] = atoi(id);
-
+            if (is_debug) {
+                sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
+                                 "cpu %d id=%d", i, sigar->ks.cpuid[i]);
+            }
             i++;
         }
     }
