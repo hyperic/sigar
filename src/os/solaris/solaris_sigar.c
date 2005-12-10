@@ -100,6 +100,7 @@ int sigar_os_open(sigar_t **sig)
     sigar->pobjname = NULL;
 
     sigar->fsdev = NULL;
+    sigar->pargs = NULL;
 
     SIGAR_ZERO(&sigar->mib2);
     sigar->mib2.sd = -1;
@@ -141,6 +142,9 @@ int sigar_os_close(sigar_t *sigar)
     }
     if (sigar->fsdev) {
         sigar_cache_destroy(sigar->fsdev);
+    }
+    if (sigar->pargs) {
+        sigar_cache_destroy(sigar->pargs);
     }
     free(sigar);
     return SIGAR_OK;
@@ -676,38 +680,85 @@ static char *sigar_getword(char **line, char stop)
     return res;
 }
 
-static int ucb_ps_args_get(sigar_t *sigar, sigar_pid_t pid,
-                           sigar_proc_args_t *procargs)
+typedef struct {
+    int timestamp;
+    char *args;
+} pargs_t;
+
+static void pargs_free(void *value)
 {
-    char buffer[9086], *args;
-    FILE *fp;
-
-    sprintf(buffer, "/usr/ucb/ps -ww %ld", pid);
-
-    if (!(fp = popen(buffer, "r"))) {
-        return errno;
+    pargs_t *pargs = (pargs_t *)value;
+    if (pargs->args != NULL) {
+        free(pargs->args);
     }
-    /* skip header */
-    (void)fgets(buffer, sizeof(buffer), fp);
-    if ((args = fgets(buffer, sizeof(buffer), fp))) {
-        int len;
-        char *arg;
+    free(pargs);
+}
 
-        /* skip PID,TT,S,TIME */
-        args = sigar_skip_multiple_token(args, 4);
-        SIGAR_SKIP_SPACE(args);
-        len = strlen(args);
-        args[len-1] = '\0'; /* chop \n */
+static int ucb_ps_args_get(sigar_t *sigar, sigar_pid_t pid,
+                           sigar_proc_args_t *procargs,
+                           int timestamp)
+{
+    char buffer[9086], *args, *arg;
+    sigar_cache_entry_t *ent;
+    FILE *fp;
+    pargs_t *pargs;
 
-        sigar_proc_args_create(procargs);
+    if (!sigar->pargs) {
+        sigar->pargs = sigar_cache_new(15);
+        sigar->pargs->free_value = pargs_free;
+    }
 
-        while (*args && (arg = sigar_getword(&args, ' '))) {
-            SIGAR_PROC_ARGS_GROW(procargs);
-            procargs->data[procargs->number++] = arg;
+    ent = sigar_cache_get(sigar->pargs, pid);
+    if (ent->value) {
+        pargs = (pargs_t *)ent->value;
+        if (pargs->timestamp != timestamp) {
+            if (pargs->args) {
+                free(pargs->args);
+                pargs->args = NULL;
+            }
         }
     }
+    else {
+        pargs = malloc(sizeof(*pargs));
+        pargs->args = NULL;
+        ent->value = pargs;
+    }
 
-    pclose(fp);
+    pargs->timestamp = timestamp;
+
+    if (pargs->args) {
+        args = pargs->args;
+    }
+    else {
+        sprintf(buffer, "/usr/ucb/ps -ww %ld", pid);
+
+        if (!(fp = popen(buffer, "r"))) {
+            return errno;
+        }
+        /* skip header */
+        (void)fgets(buffer, sizeof(buffer), fp);
+        if ((args = fgets(buffer, sizeof(buffer), fp))) {
+            int len;
+
+            /* skip PID,TT,S,TIME */
+            args = sigar_skip_multiple_token(args, 4);
+            SIGAR_SKIP_SPACE(args);
+            len = strlen(args);
+            args[len-1] = '\0'; /* chop \n */
+
+            pargs->args = malloc(len+1);
+            memcpy(pargs->args, args, len);
+        }
+
+        pclose(fp);
+    }
+
+    sigar_proc_args_create(procargs);
+
+    while (*args && (arg = sigar_getword(&args, ' '))) {
+        SIGAR_PROC_ARGS_GROW(procargs);
+        procargs->data[procargs->number++] = arg;
+    }
 
     return SIGAR_OK;
 }
@@ -748,7 +799,8 @@ int sigar_proc_args_get(sigar_t *sigar, sigar_pid_t pid,
 
     if ((fd = open(buffer, O_RDONLY)) < 0) {
         if ((errno == EACCES) && sigar->use_ucb_ps) {
-            return ucb_ps_args_get(sigar, pid, procargs);
+            return ucb_ps_args_get(sigar, pid, procargs,
+                                   pinfo->pr_start.tv_sec);
         }
         else {
             return PROC_ERRNO;

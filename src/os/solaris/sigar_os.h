@@ -225,6 +225,7 @@ struct sigar_t {
     proc_exename_func_t pexename;
 
     sigar_cache_t *fsdev;
+    sigar_cache_t *pargs;
 
     solaris_mib2_t mib2;
 };
