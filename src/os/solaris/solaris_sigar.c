@@ -43,7 +43,11 @@ int sigar_os_open(sigar_t **sig)
     else {
         sigar->solaris_version = 6;
     }
-    
+
+    /* experimental, use /usr/ucb/ps for proc_args */
+    sigar->use_ucb_ps = 
+        getenv("SIGAR_USE_UCB_PS") ? 1 : 0;
+
     sigar->pagesize = 0;
     i = sysconf(_SC_PAGESIZE);
     while ((i >>= 1) > 0) {
@@ -645,6 +649,69 @@ int sigar_proc_state_get(sigar_t *sigar, sigar_pid_t pid,
     return SIGAR_OK;
 }
 
+/* XXX: copied from hpux_sigar */
+static char *sigar_getword(char **line, char stop)
+{
+    char *pos = *line;
+    int len;
+    char *res;
+
+    while ((*pos != stop) && *pos) {
+        ++pos;
+    }
+
+    len = pos - *line;
+    res = malloc(len + 1);
+    memcpy(res, *line, len);
+    res[len] = 0;
+
+    if (stop) {
+        while (*pos == stop) {
+            ++pos;
+        }
+    }
+
+    *line = pos;
+
+    return res;
+}
+
+static int ucb_ps_args_get(sigar_t *sigar, sigar_pid_t pid,
+                           sigar_proc_args_t *procargs)
+{
+    char buffer[9086], *args;
+    FILE *fp;
+
+    sprintf(buffer, "/usr/ucb/ps -ww %ld", pid);
+
+    if (!(fp = popen(buffer, "r"))) {
+        return errno;
+    }
+    /* skip header */
+    (void)fgets(buffer, sizeof(buffer), fp);
+    if ((args = fgets(buffer, sizeof(buffer), fp))) {
+        int len;
+        char *arg;
+
+        /* skip PID,TT,S,TIME */
+        args = sigar_skip_multiple_token(args, 4);
+        SIGAR_SKIP_SPACE(args);
+        len = strlen(args);
+        args[len-1] = '\0'; /* chop \n */
+
+        sigar_proc_args_create(procargs);
+
+        while (*args && (arg = sigar_getword(&args, ' '))) {
+            SIGAR_PROC_ARGS_GROW(procargs);
+            procargs->data[procargs->number++] = arg;
+        }
+    }
+
+    pclose(fp);
+
+    return SIGAR_OK;
+}
+
 int sigar_proc_args_get(sigar_t *sigar, sigar_pid_t pid,
                         sigar_proc_args_t *procargs)
 {
@@ -680,7 +747,12 @@ int sigar_proc_args_get(sigar_t *sigar, sigar_pid_t pid,
     (void)SIGAR_PROC_FILENAME(buffer, pid, "/as");
 
     if ((fd = open(buffer, O_RDONLY)) < 0) {
-        return PROC_ERRNO;
+        if ((errno == EACCES) && sigar->use_ucb_ps) {
+            return ucb_ps_args_get(sigar, pid, procargs);
+        }
+        else {
+            return PROC_ERRNO;
+        }
     }
 
     if (argv_size > sizeof(argvb)) {

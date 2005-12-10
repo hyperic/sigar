@@ -179,6 +179,7 @@ struct sigar_t {
     SIGAR_T_BASE;
 
     int solaris_version;
+    int use_ucb_ps;
 
     kstat_ctl_t *kc;
 
