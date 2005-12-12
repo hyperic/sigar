@@ -1729,10 +1729,8 @@ int sigar_net_interface_stat_get(sigar_t *sigar, const char *name,
     ifmsg_iter_t iter;
     struct if_msghdr *ifm;
 
-    if (sigar->ifconf_len == 0) {
-        if ((status = sigar_ifmsg_init(sigar)) != SIGAR_OK) {
-            return status;
-        }
+    if ((status = sigar_ifmsg_init(sigar)) != SIGAR_OK) {
+        return status;
     }
 
     iter.type = IFMSG_ITER_GET;
