@@ -36,6 +36,8 @@ SIGAR_INLINE char *sigar_skip_token(char *p);
 
 SIGAR_INLINE char *sigar_skip_multiple_token(char *p, int count);
 
+char *sigar_getword(char **line, char stop);
+
 int sigar_file2str(const char *fname, char *buffer, int buflen);
 
 int sigar_proc_file2str(char *buffer, int buflen,
