@@ -653,33 +653,6 @@ int sigar_proc_state_get(sigar_t *sigar, sigar_pid_t pid,
     return SIGAR_OK;
 }
 
-/* XXX: copied from hpux_sigar */
-static char *sigar_getword(char **line, char stop)
-{
-    char *pos = *line;
-    int len;
-    char *res;
-
-    while ((*pos != stop) && *pos) {
-        ++pos;
-    }
-
-    len = pos - *line;
-    res = malloc(len + 1);
-    memcpy(res, *line, len);
-    res[len] = 0;
-
-    if (stop) {
-        while (*pos == stop) {
-            ++pos;
-        }
-    }
-
-    *line = pos;
-
-    return res;
-}
-
 typedef struct {
     int timestamp;
     char *args;

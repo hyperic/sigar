@@ -54,6 +54,32 @@ SIGAR_INLINE char *sigar_skip_multiple_token(char *p, int count)
     return p;
 }
 
+char *sigar_getword(char **line, char stop)
+{
+    char *pos = *line;
+    int len;
+    char *res;
+
+    while ((*pos != stop) && *pos) {
+        ++pos;
+    }
+
+    len = pos - *line;
+    res = malloc(len + 1);
+    memcpy(res, *line, len);
+    res[len] = 0;
+
+    if (stop) {
+        while (*pos == stop) {
+            ++pos;
+        }
+    }
+
+    *line = pos;
+
+    return res;
+}
+
 int sigar_file2str(const char *fname, char *buffer, int buflen)
 {
     int len;
