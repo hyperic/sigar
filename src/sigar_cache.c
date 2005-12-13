@@ -1,7 +1,7 @@
 #include "sigar.h"
 #include "sigar_private.h"
 #include "sigar_util.h"
-
+#include <stdio.h>
 /*
  * hash table to cache values where key is a unique number
  * such as:
@@ -30,13 +30,69 @@ sigar_cache_t *sigar_cache_new(int size)
     return table;
 }
 
+#ifdef DEBUG_CACHE
+/* see how well entries are distributed */
+static void sigar_cache_dump(sigar_cache_t *table)
+{
+    int i;
+    sigar_cache_entry_t **entries = table->entries;
+
+    for (i=0; i<table->size; i++) {
+        sigar_cache_entry_t *entry = *entries++;
+
+        printf("|");
+        while (entry) {
+            printf("%lld", entry->id);
+            if (entry->next) {
+                printf(",");
+            }
+            entry = entry->next;
+        }
+    }
+    printf("\n");
+    fflush(stdout);
+}
+#endif
+
+static void sigar_cache_rehash(sigar_cache_t *table)
+{
+    int i;
+    unsigned int new_size = table->size * 2 + 1;
+    sigar_cache_entry_t **entries = table->entries;
+    sigar_cache_entry_t **new_entries =
+        malloc(ENTRIES_SIZE(new_size));
+
+    memset(new_entries, '\0', ENTRIES_SIZE(new_size));
+
+    for (i=0; i<table->size; i++) {
+        sigar_cache_entry_t *entry = *entries++;
+
+        while (entry) {
+            sigar_cache_entry_t *next = entry->next;
+            sigar_uint64_t hash = entry->id % new_size;
+
+            entry->next = new_entries[hash];
+            new_entries[hash] = entry;
+            entry = next;
+        }
+    }
+
+    free(table->entries);
+    table->entries = new_entries;
+    table->size = new_size;
+}
+
+#define SIGAR_CACHE_IX(t, k) \
+    t->entries + (k % t->size)
+
 sigar_cache_entry_t *sigar_cache_get(sigar_cache_t *table,
                                      sigar_uint64_t key)
 {
     sigar_cache_entry_t *entry, **ptr;
 
-    for (ptr = table->entries + (key % table->size), entry = *ptr;
-         entry; ptr = &entry->next, entry = *ptr)
+    for (ptr = SIGAR_CACHE_IX(table, key), entry = *ptr;
+         entry;
+         ptr = &entry->next, entry = *ptr)
     {
         if (entry->id == key) {
             return entry;
@@ -44,15 +100,13 @@ sigar_cache_entry_t *sigar_cache_get(sigar_cache_t *table,
     }
 
     if (table->count++ > table->size) {
-        unsigned int new_size = table->size * 2;
+        sigar_cache_rehash(table);
 
-        table->entries =
-            realloc(table->entries, ENTRIES_SIZE(new_size));
-
-        memset(table->entries + table->size, '\0',
-               ENTRIES_SIZE(new_size - table->size));
-
-        table->size = new_size;
+        for (ptr = SIGAR_CACHE_IX(table, key), entry = *ptr;
+             entry;
+             ptr = &entry->next, entry = *ptr)
+        {
+        }
     }
 
     *ptr = entry = malloc(sizeof(*entry));
@@ -67,6 +121,10 @@ void sigar_cache_destroy(sigar_cache_t *table)
 {
     int i;
     sigar_cache_entry_t **entries = table->entries;
+
+#ifdef DEBUG_CACHE
+    sigar_cache_dump(table);
+#endif
 
     for (i=0; i<table->size; i++) {
         sigar_cache_entry_t *entry, *ptr;
