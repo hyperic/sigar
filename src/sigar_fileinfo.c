@@ -368,9 +368,10 @@ static __inline int file_type(char *file)
     }
 }
 
-SIGAR_DECLARE(int) sigar_dir_stat_get(sigar_t *sigar,
-                                      const char *dir,
-                                      sigar_dir_stat_t *dirstats)
+static int dir_stat_get(sigar_t *sigar,
+                        const char *dir,
+                        sigar_dir_stat_t *dirstats,
+                        int recurse)
 {
     char name[SIGAR_PATH_MAX+1];
     int len = strlen(dir);
@@ -381,7 +382,6 @@ SIGAR_DECLARE(int) sigar_dir_stat_get(sigar_t *sigar,
     DWORD error;
     char delim;
 
-    SIGAR_ZERO(dirstats);
     if (file_type((char *)dir) != SIGAR_FILETYPE_DIR) {
         return ERROR_NO_MORE_FILES;
     }
@@ -466,6 +466,14 @@ SIGAR_DECLARE(int) sigar_dir_stat_get(sigar_t *sigar,
         dirstats->sockets;
 
     return SIGAR_OK;
+}
+
+SIGAR_DECLARE(int) sigar_dir_stat_get(sigar_t *sigar,
+                                      const char *dir,
+                                      sigar_dir_stat_t *dirstats)
+{
+    SIGAR_ZERO(dirstats);
+    return dir_stat_get(sigar, dir, dirstats, 0);
 }
 
 #else
@@ -696,7 +704,7 @@ int sigar_dir_stat_get(sigar_t *sigar,
                        const char *dir,
                        sigar_dir_stat_t *dirstats)
 {
-    SIGAR_ZERO(dirstats);    
+    SIGAR_ZERO(dirstats);
     return dir_stat_get(sigar, dir, dirstats, 0);
 }
 
