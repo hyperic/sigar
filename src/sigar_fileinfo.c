@@ -653,7 +653,7 @@ static int dir_stat_get(sigar_t *sigar,
                                  dirstats, recurse);
                 if ((status != SIGAR_OK) && do_log) {
                     sigar_log_printf(sigar, SIGAR_LOG_WARN,
-                                     "dir_stat: %s: %s\n",
+                                     "dir_stat: cannot stat `%s': %s\n",
                                      name,
                                      sigar_strerror(sigar, status));
                 }
