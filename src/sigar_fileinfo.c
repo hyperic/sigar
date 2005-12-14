@@ -711,3 +711,11 @@ SIGAR_DECLARE(int) sigar_dir_stat_get(sigar_t *sigar,
     SIGAR_ZERO(dirstats);
     return dir_stat_get(sigar, dir, dirstats, 0);
 }
+
+SIGAR_DECLARE(int) sigar_dir_usage_get(sigar_t *sigar,
+                                       const char *dir,
+                                       sigar_dir_usage_t *dirusage)
+{
+    SIGAR_ZERO(dirusage);
+    return dir_stat_get(sigar, dir, dirusage, 1);
+}

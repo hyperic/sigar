@@ -113,6 +113,8 @@ typedef struct {
     sigar_uint64_t disk_usage;
 } sigar_dir_stat_t;
 
+typedef sigar_dir_stat_t sigar_dir_usage_t;
+
 SIGAR_DECLARE(const char *)
 sigar_file_attrs_type_string_get(sigar_file_type_e type);
 
@@ -133,3 +135,7 @@ sigar_file_attrs_permissions_string_get(sigar_uint64_t permissions,
 SIGAR_DECLARE(int) sigar_dir_stat_get(sigar_t *sigar,
                                       const char *dir,
                                       sigar_dir_stat_t *dirstats);
+
+SIGAR_DECLARE(int) sigar_dir_usage_get(sigar_t *sigar,
+                                       const char *dir,
+                                       sigar_dir_usage_t *dirusage);
