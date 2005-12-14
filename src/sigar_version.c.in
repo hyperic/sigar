@@ -1,0 +1,15 @@
+#include "sigar.h"
+
+static sigar_version_t sigar_version = {
+    "@@BUILD_DATE@@",
+    "@@VERSION_STRING@@",
+    "@@ARCHNAME@@",
+    @@VERSION_MAJOR@@,
+    @@VERSION_MINOR@@,
+    @@VERSION_MAINT@@
+};
+
+SIGAR_DECLARE(sigar_version_t *) sigar_version_get(void)
+{
+    return &sigar_version;
+}
