@@ -142,6 +142,12 @@ SIGAR_DECLARE(int)sigar_file_attrs_mode_get(sigar_uint64_t permissions)
 #define IS_DOTDIR(dir) \
     ((dir[0] == '.') && (!dir[1] || ((dir[1] == '.') && !dir[2])))
 
+#define DIR_STAT_WARN() \
+    sigar_log_printf(sigar, SIGAR_LOG_WARN, \
+                     "dir_stat: cannot stat `%s': %s", \
+                     name, \
+                     sigar_strerror(sigar, status))
+
 #if defined(NETWARE)
 
 int sigar_dir_stat_get(sigar_t *sigar,
@@ -652,10 +658,7 @@ static int dir_stat_get(sigar_t *sigar,
                     dir_stat_get(sigar, name,
                                  dirstats, recurse);
                 if ((status != SIGAR_OK) && do_log) {
-                    sigar_log_printf(sigar, SIGAR_LOG_WARN,
-                                     "dir_stat: cannot stat `%s': %s\n",
-                                     name,
-                                     sigar_strerror(sigar, status));
+                    DIR_STAT_WARN();
                 }
             }
             break;
