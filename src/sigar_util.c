@@ -520,9 +520,10 @@ static int proc_module_get_self(void *data, char *name, int len)
     }
 
     if (strnEQ(ptr+1, "libsigar-", 9)) {
-        *ptr = '\0'; /* chop libsigar-powerpc-ibm-aix-4.3.x.so */
+        int offset = ptr - name;
 
         sigar->self_path = sigar_strdup(name);
+        *(sigar->self_path + offset) = '\0'; /* chop libsigar-*.so */
 
         if (SIGAR_LOG_IS_DEBUG(sigar)) {
             sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
