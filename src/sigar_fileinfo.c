@@ -589,9 +589,9 @@ int sigar_link_attrs_get(sigar_t *sigar,
     }
 }
 
-int sigar_dir_stat_get(sigar_t *sigar,
-                       const char *dir,
-                       sigar_dir_stat_t *dirstats)
+static int dir_stat_get(sigar_t *sigar,
+                        const char *dir,
+                        sigar_dir_stat_t *dirstats)
 {
     char name[SIGAR_PATH_MAX+1];
     int len = strlen(dir);
@@ -607,8 +607,6 @@ int sigar_dir_stat_get(sigar_t *sigar,
     if (!dirp) {
         return errno;
     }
-
-    SIGAR_ZERO(dirstats);    
 
     strncpy(name, dir, sizeof(name));
     ptr += len;
@@ -675,6 +673,14 @@ int sigar_dir_stat_get(sigar_t *sigar,
     closedir(dirp);
 
     return SIGAR_OK;
+}
+
+int sigar_dir_stat_get(sigar_t *sigar,
+                       const char *dir,
+                       sigar_dir_stat_t *dirstats)
+{
+    SIGAR_ZERO(dirstats);    
+    return dir_stat_get(sigar, dir, dirstats);
 }
 
 #endif
