@@ -81,6 +81,8 @@ double sigar_file_system_usage_calc_used(sigar_t *sigar,
 
 void sigar_cpu_model_adjust(sigar_t *sigar, sigar_cpu_info_t *info);
 
+char *sigar_get_self_path(sigar_t *sigar);
+
 typedef struct sigar_cache_entry_t sigar_cache_entry_t;
 
 struct sigar_cache_entry_t {

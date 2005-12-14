@@ -510,6 +510,52 @@ SIGAR_DECLARE(int) sigar_nfs_ping(char *host)
 #define vsnprintf _vsnprintf
 #endif
 
+static int proc_module_get_self(void *data, char *name, int len)
+{
+    sigar_t *sigar = (sigar_t *)data;
+    char *ptr = rindex(name, '/');
+
+    if (!ptr) {
+        return SIGAR_OK;
+    }
+
+    if (strnEQ(ptr+1, "libsigar-", 9)) {
+        *ptr = '\0'; /* chop libsigar-powerpc-ibm-aix-4.3.x.so */
+
+        sigar->self_path = sigar_strdup(name);
+
+        if (SIGAR_LOG_IS_DEBUG(sigar)) {
+            sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
+                             "detected sigar-lib='%s'",
+                             sigar->self_path);
+        }
+
+        return !SIGAR_OK; /* break loop */
+    }
+
+    return SIGAR_OK;
+}
+
+char *sigar_get_self_path(sigar_t *sigar)
+{
+    if (!sigar->self_path) {
+        sigar_proc_modules_t procmods;
+        procmods.module_getter = proc_module_get_self;
+        procmods.data = sigar;
+
+        sigar_proc_modules_get(sigar,
+                               sigar_pid_get(sigar),
+                               &procmods);
+
+        if (!sigar->self_path) {
+            /* dont try again */
+            sigar->self_path = sigar_strdup(".");
+        }
+    }
+
+    return sigar->self_path;
+}
+
 SIGAR_DECLARE(void) sigar_log_printf(sigar_t *sigar, int level,
                                      const char *format, ...)
 {
