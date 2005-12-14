@@ -293,6 +293,12 @@ public class SynchronizedSigar implements SigarProxy {
         return this.sigar.getDirStat(name);
     }
 
+    public synchronized DirUsage getDirUsage(String name)
+        throws SigarException
+    {
+        return this.sigar.getDirUsage(name);
+    }
+
     public synchronized CpuInfo[] getCpuInfoList()
         throws SigarException
     {

@@ -593,6 +593,11 @@ public class Sigar implements SigarProxy {
         return DirStat.fetch(this, name);
     }
 
+    public DirUsage getDirUsage(String name)
+        throws SigarException {
+        return DirUsage.fetch(this, name);
+    }
+
     /**
      * Get list of cpu infomation.
      * @exception SigarException on failure.

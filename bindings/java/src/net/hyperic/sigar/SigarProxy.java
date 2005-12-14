@@ -105,6 +105,8 @@ public interface SigarProxy {
 
     public DirStat getDirStat(String name) throws SigarException;
 
+    public DirUsage getDirUsage(String name) throws SigarException;
+
     public CpuInfo[] getCpuInfoList() throws SigarException;
 
     public Cpu[] getCpuList() throws SigarException;

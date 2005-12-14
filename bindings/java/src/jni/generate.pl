@@ -921,6 +921,8 @@ my %classes = (
     ],
 );
 
+$classes{DirUsage} = $classes{DirStat};
+
 my %cmds = (
     Mem => {
        AIX     => 'top',
@@ -1203,7 +1205,7 @@ EOF
 EOF
 );
 
-my %has_name_arg = map { $_, 1 } qw(FileSystemUsage FileAttrs DirStat
+my %has_name_arg = map { $_, 1 } qw(FileSystemUsage FileAttrs DirStat DirUsage
                                     NetInterfaceConfig NetInterfaceStat);
 my %proc_no_arg = map { $_, 1 } qw(stat);
 my %get_not_impl = map { $_, 1 } qw(net_route net_connection who
