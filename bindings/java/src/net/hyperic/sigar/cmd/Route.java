@@ -11,7 +11,7 @@ public class Route extends SigarCommandBase {
     private static final String OUTPUT_FORMAT =
         "%-15s %-15s %-15s %-5s %-6s %-3s %-s";
 
-    //like df -h -a
+    //like route -n
     private static final String[] HEADER = new String[] {
         "Destination",
         "Gateway",
