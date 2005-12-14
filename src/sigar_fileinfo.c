@@ -478,14 +478,6 @@ static int dir_stat_get(sigar_t *sigar,
     return SIGAR_OK;
 }
 
-SIGAR_DECLARE(int) sigar_dir_stat_get(sigar_t *sigar,
-                                      const char *dir,
-                                      sigar_dir_stat_t *dirstats)
-{
-    SIGAR_ZERO(dirstats);
-    return dir_stat_get(sigar, dir, dirstats, 0);
-}
-
 #else
 
 #include <dirent.h>
@@ -710,12 +702,12 @@ static int dir_stat_get(sigar_t *sigar,
     return SIGAR_OK;
 }
 
-int sigar_dir_stat_get(sigar_t *sigar,
-                       const char *dir,
-                       sigar_dir_stat_t *dirstats)
+#endif
+
+SIGAR_DECLARE(int) sigar_dir_stat_get(sigar_t *sigar,
+                                      const char *dir,
+                                      sigar_dir_stat_t *dirstats)
 {
     SIGAR_ZERO(dirstats);
     return dir_stat_get(sigar, dir, dirstats, 0);
 }
-
-#endif
