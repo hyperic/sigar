@@ -8,6 +8,8 @@ import net.hyperic.sigar.SigarException;
  */
 public class Du extends SigarCommandBase {
 
+    //like du -s -b
+
     public Du(Shell shell) {
         super(shell);
     }
