@@ -594,6 +594,15 @@ SIGAR_DECLARE(int) sigar_proc_port_get(sigar_t *sigar,
                                        int protocol, unsigned long port,
                                        sigar_pid_t *pid);
 
+typedef struct {
+    const char *build_date;
+    const char *version;
+    const char *archname;
+    int major, minor, maint;
+} sigar_version_t;
+
+SIGAR_DECLARE(sigar_version_t *) sigar_version_get(void);
+
 #define SIGAR_INET_ADDR_LEN (3 * 4 + 3 + 1)
 
 SIGAR_DECLARE(int) sigar_inet_ntoa(sigar_t *sigar,
