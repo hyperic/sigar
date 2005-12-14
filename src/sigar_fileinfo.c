@@ -409,6 +409,10 @@ SIGAR_DECLARE(int) sigar_dir_stat_get(sigar_t *sigar,
             continue;
         }
 
+        dirstats->disk_usage +=
+            (data.nFileSizeHigh * (MAXDWORD+1)) +
+            data.nFileSizeLow;
+
         /* e.g. "C:\sigar\lib" */
         strncpy(ptr, data.cFileName, max);
         ptr[max] = '\0';
