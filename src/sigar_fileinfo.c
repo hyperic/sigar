@@ -591,8 +591,11 @@ int sigar_link_attrs_get(sigar_t *sigar,
 
 static int dir_stat_get(sigar_t *sigar,
                         const char *dir,
-                        sigar_dir_stat_t *dirstats)
+                        sigar_dir_stat_t *dirstats,
+                        int recurse)
 {
+    int status;
+    int do_log = SIGAR_LOG_IS_WARN(sigar);
     char name[SIGAR_PATH_MAX+1];
     int len = strlen(dir);
     int max = sizeof(name)-len-1;
@@ -644,6 +647,17 @@ static int dir_stat_get(sigar_t *sigar,
             break;
           case SIGAR_FILETYPE_DIR:
             ++dirstats->subdirs;
+            if (recurse) {
+                status = 
+                    dir_stat_get(sigar, name,
+                                 dirstats, recurse);
+                if ((status != SIGAR_OK) && do_log) {
+                    sigar_log_printf(sigar, SIGAR_LOG_WARN,
+                                     "dir_stat: %s: %s\n",
+                                     name,
+                                     sigar_strerror(sigar, status));
+                }
+            }
             break;
           case SIGAR_FILETYPE_LNK:
             ++dirstats->symlinks;
@@ -680,7 +694,7 @@ int sigar_dir_stat_get(sigar_t *sigar,
                        sigar_dir_stat_t *dirstats)
 {
     SIGAR_ZERO(dirstats);    
-    return dir_stat_get(sigar, dir, dirstats);
+    return dir_stat_get(sigar, dir, dirstats, 0);
 }
 
 #endif
