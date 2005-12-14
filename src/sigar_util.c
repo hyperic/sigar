@@ -540,6 +540,13 @@ char *sigar_get_self_path(sigar_t *sigar)
 {
     if (!sigar->self_path) {
         sigar_proc_modules_t procmods;
+        char *self_path = getenv("SIGAR_PATH");
+
+        if (self_path) {
+            sigar->self_path = sigar_strdup(self_path);
+            return sigar->self_path;
+        }
+
         procmods.module_getter = proc_module_get_self;
         procmods.data = sigar;
 
