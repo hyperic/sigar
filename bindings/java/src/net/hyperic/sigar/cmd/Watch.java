@@ -51,6 +51,7 @@ public class Watch {
             System.out.println("   Blkdevs....." + stats.getBlkdevs()); 
             System.out.println("   Sockets....." + stats.getSockets()); 
             System.out.println("   Total......." + stats.getTotal());
+            System.out.println("   Disk Usage.." + stats.getDiskUsage());
         }
     }
 

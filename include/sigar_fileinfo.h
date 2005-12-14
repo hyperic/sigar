@@ -110,6 +110,7 @@ typedef struct {
     sigar_uint64_t chrdevs;
     sigar_uint64_t blkdevs;
     sigar_uint64_t sockets;
+    sigar_uint64_t disk_usage;
 } sigar_dir_stat_t;
 
 SIGAR_DECLARE(const char *)

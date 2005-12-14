@@ -634,6 +634,8 @@ int sigar_dir_stat_get(sigar_t *sigar,
             continue;
         }
 
+        dirstats->disk_usage += info.st_size;
+
         switch (filetype_from_mode(info.st_mode)) {
           case SIGAR_FILETYPE_REG:
             ++dirstats->files;

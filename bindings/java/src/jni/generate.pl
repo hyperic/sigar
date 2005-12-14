@@ -586,6 +586,9 @@ my %classes = (
       {
          name => 'sockets', type => 'Long',
       },
+      {
+         name => 'disk_usage', type => 'Long',
+      },
     ],
     NetInfo => [
       {
