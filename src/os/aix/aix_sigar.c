@@ -164,8 +164,6 @@ int sigar_os_open(sigar_t **sigar)
 
     (*sigar)->model[0] = '\0';
 
-    (*sigar)->self_path[0] = '\0';
-
     uname(&name);
 
     (*sigar)->aix_version = atoi(name.version);
@@ -231,7 +229,7 @@ static int proc_module_get_self(void *data, char *name, int len)
     if (strnEQ(ptr+1, "libsigar-", 9)) {
         *ptr = '\0'; /* chop libsigar-powerpc-ibm-aix-4.3.x.so */
 
-        SIGAR_SSTRCPY(sigar->self_path, name);
+        sigar->self_path = sigar_strdup(name);
 
         if (SIGAR_LOG_IS_DEBUG(sigar)) {
             sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
@@ -247,7 +245,7 @@ static int proc_module_get_self(void *data, char *name, int len)
 
 static char *sigar_get_self_path(sigar_t *sigar)
 {
-    if (sigar->self_path[0] == '\0') {
+    if (!sigar->self_path) {
         sigar_proc_modules_t procmods;
         procmods.module_getter = proc_module_get_self;
         procmods.data = sigar;
@@ -255,9 +253,9 @@ static char *sigar_get_self_path(sigar_t *sigar)
         sigar_proc_modules_get(sigar, sigar_pid_get(sigar),
                                &procmods);
 
-        if (sigar->self_path[0] == '\0') {
+        if (!sigar->self_path) {
             /* dont try again */
-            SIGAR_SSTRCPY(sigar->self_path, ".");
+            sigar->self_path = sigar_strdup(".");
         }
     }
 

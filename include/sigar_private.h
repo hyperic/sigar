@@ -36,7 +36,8 @@
    sigar_pid_t pid; \
    char errbuf[256]; \
    char *ifconf_buf; \
-   int ifconf_len
+   int ifconf_len; \
+   char *self_path
 
 #if defined(WIN32)
 #   define SIGAR_INLINE __inline

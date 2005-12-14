@@ -72,7 +72,6 @@ struct sigar_t {
     int cpuinfo_size;
     int cpu_mhz;
     char model[128];
-    char self_path[SIGAR_PATH_MAX]; /* path to where libsigar.so lives */
     int aix_version;
     int thrusage;
     sigar_cache_t *diskmap; 

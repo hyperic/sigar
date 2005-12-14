@@ -21,6 +21,7 @@ SIGAR_DECLARE(int) sigar_open(sigar_t **sigar)
         (*sigar)->log_level = -1; /* log nothing by default */
         (*sigar)->log_impl = NULL;
         (*sigar)->log_data = NULL;
+        (*sigar)->self_path = NULL;
     }
 
     return status;
@@ -31,7 +32,9 @@ SIGAR_DECLARE(int) sigar_close(sigar_t *sigar)
     if (sigar->ifconf_buf) {
         free(sigar->ifconf_buf);
     }
-    
+    if (sigar->self_path) {
+        free(sigar->self_path);
+    }
     return sigar_os_close(sigar);
 }
 
