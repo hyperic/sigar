@@ -598,6 +598,8 @@ typedef struct {
     const char *build_date;
     const char *version;
     const char *archname;
+    const char *archlib;
+    const char *binname;
     int major, minor, maint;
 } sigar_version_t;
 

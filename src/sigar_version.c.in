@@ -4,6 +4,8 @@ static sigar_version_t sigar_version = {
     "@@BUILD_DATE@@",
     "@@VERSION_STRING@@",
     "@@ARCHNAME@@",
+    "@@ARCHLIB@@",
+    "@@BINNAME@@",
     @@VERSION_MAJOR@@,
     @@VERSION_MINOR@@,
     @@VERSION_MAINT@@
