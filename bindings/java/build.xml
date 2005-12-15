@@ -228,6 +228,8 @@
     <exec executable="${jni.compiler}"
           dir="${jni.source.dir}"
           failonerror="true">
+      <arg value="-Wall"/>
+      <arg value="-Werror"/>
       <arg value="-ldl"/>
       <arg value="-I./include"/>
       <arg value="src/sigar_main.c"/>
