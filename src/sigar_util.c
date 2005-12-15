@@ -510,6 +510,10 @@ SIGAR_DECLARE(int) sigar_nfs_ping(char *host)
 #define vsnprintf _vsnprintf
 #endif
 
+#ifdef WIN32
+#   define rindex strrchr
+#endif
+
 static int proc_module_get_self(void *data, char *name, int len)
 {
     sigar_t *sigar = (sigar_t *)data;
