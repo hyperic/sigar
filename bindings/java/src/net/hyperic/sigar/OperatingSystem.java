@@ -333,7 +333,9 @@ public class OperatingSystem {
                 String codeName = line.substring(ix+1);
                 ix = codeName.indexOf(")");
                 codeName = codeName.substring(0, ix);
-                os.vendorCodeName = codeName;
+                if (!"Final".equals(codeName)) {
+                    os.vendorCodeName = codeName;
+                }
             }
 
             String token = "Red Hat Enterprise Linux ";
