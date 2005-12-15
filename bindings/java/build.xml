@@ -102,7 +102,7 @@
       <replacefilter token="@@BUILD_DATE@@" value="${BUILD_DATE}"/>
       <replacefilter token="@@VERSION_STRING@@" value="${sigar.version}"/>
       <replacefilter token="@@ARCHNAME@@" value="${jni.libarch}"/>
-      <replacefilter token="@@ARCHLIB@@" value="${jni.libname}"/>
+      <replacefilter token="@@ARCHLIB@@" value="${jni.libname.full}"/>
       <replacefilter token="@@BINNAME@@" value="${jni.project.archname}"/>
       <replacefilter token="@@VERSION_MAJOR@@" value="${version.major}"/>
       <replacefilter token="@@VERSION_MINOR@@" value="${version.minor}"/>
