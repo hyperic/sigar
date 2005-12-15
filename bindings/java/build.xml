@@ -155,6 +155,7 @@
     <!-- include sigar *.c files rather than link against libsigar -->
     <patternset id="jni.source.files">
       <include name="src/*.c"/>
+      <exclude name="src/sigar_main.c"/>
       <include name="src/os/${jni.src}/*.c"/>
       <include name="bindings/java/src/jni/*.c"/>
       <include name="bindings/java/src/${win32.jni}/*.cpp"/>
@@ -204,8 +205,44 @@
    </copy>
   </target>
 
+  <target name="sigar-exe-cpptasks">
+    <!-- XXX fuckers complain about '.' in libname -->
+    <cc outtype="executable"
+	outfile="${jni.objdir}/lib/${jni.libname}"
+	objdir="${jni.objdir}">
+
+      <compiler name="${jni.compiler}" debug="${jni.debug}"/>
+
+      <linker name="${jni.compiler}">
+        <libset dir="${jni.bin}/lib"
+                libs="${jni.libname}"/>
+      </linker>
+
+      <fileset dir="${jni.source.dir}">
+        <include name="src/sigar_main.c"/>
+      </fileset>
+    </cc>
+  </target>
+
+  <target name="sigar-exe">
+    <exec executable="${jni.compiler}"
+          dir="${jni.source.dir}"
+          failonerror="true">
+      <arg value="-ldl"/>
+      <arg value="-I./include"/>
+      <arg value="src/sigar_main.c"/>
+      <arg value="-o"/>
+      <arg value="${jni.bin}/lib/${jni.libname}"/>
+    </exec>
+    <chmod perm="a+x">
+      <fileset dir="${jni.bin}/lib">
+        <include name="${jni.libname}"/>
+      </fileset>
+    </chmod>
+  </target>
+
   <target name="build-jni"
-          depends="jni-init,prepare-src,jni-compile,jni-lib-copy,copy-includes"
+          depends="jni-init,prepare-src,jni-compile,sigar-exe,jni-lib-copy,copy-includes"
           if="jni.libarch"/>
 
   <target name="build-perfstat" depends="jni-init" if="aix">
