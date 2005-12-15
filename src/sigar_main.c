@@ -1,5 +1,7 @@
 #include <dlfcn.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <strings.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -71,7 +73,6 @@ static int sigar_main(char *argv0)
     void *handle;
     sigar_callback_t *callbacks =
         (sigar_callback_t *)&sigar_callbacks;
-    int i;
 
     strcpy(sigarlib, argv0);
     ptr = rindex(sigarlib, '/');
