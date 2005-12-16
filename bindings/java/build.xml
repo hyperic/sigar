@@ -224,7 +224,7 @@
     </cc>
   </target>
 
-  <target name="sigar-exe">
+  <target name="sigar-exe" if="jni.compiler.isgcc">
     <exec executable="${jni.compiler}"
           dir="${jni.source.dir}"
           failonerror="true">
