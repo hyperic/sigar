@@ -8,11 +8,16 @@ import net.hyperic.sigar.ProcMem;
 import net.hyperic.sigar.ProcTime;
 import net.hyperic.sigar.ProcState;
 
+import java.io.File;
+import java.io.IOException;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.jar.Attributes;
+import java.util.jar.JarFile;
 
 /**
  * Show process status.
@@ -89,6 +94,51 @@ public class Ps extends SigarCommandBase {
         return true;
     }
 
+    //try to guess classname for java programs
+    public static String getJavaMainClass(SigarProxy sigar, long pid)
+        throws SigarException {
+
+        String[] args = sigar.getProcArgs(pid);
+        for (int i=1; i<args.length; i++) {
+            String arg = args[i];
+            if (isClassName(arg)) {
+                //example: "java:weblogic.Server"
+                return arg;
+            }
+            else if (arg.equals("-jar")) {
+                File file = new File(args[i+1]);
+                if (!file.isAbsolute()) {
+                    try {
+                        String cwd =
+                            sigar.getProcExe(pid).getCwd();
+                        file = new File(cwd + File.separator + file);
+                    } catch (SigarException e) {}
+                }
+
+                if (file.exists()) {
+                    JarFile jar = null;
+                    try {
+                        jar = new JarFile(file);
+                        return
+                            jar.getManifest().
+                            getMainAttributes().
+                            getValue(Attributes.Name.MAIN_CLASS);
+                    } catch (IOException e) {
+                    } finally {
+                        if (jar != null) {
+                            try { jar.close(); }
+                            catch (IOException e){}
+                        }
+                    }
+                }
+                
+                return file.toString();
+            }
+        }
+
+        return null;
+    }
+
     public static List getInfo(SigarProxy sigar, long pid)
         throws SigarException {
 
@@ -132,24 +182,14 @@ public class Ps extends SigarCommandBase {
         }
 
         String name = state.getName();
-        if (name.equals("java")) {
-            //try to guess classname for java programs
+        if (name.equals("java") || name.equals("javaw")) {
+            String className = null;
             try {
-                String[] args = sigar.getProcArgs(pid);
-                for (int i=1; i<args.length; i++) {
-                    String arg = args[i];
-                    if (isClassName(arg)) {
-                        //example: "java:weblogic.Server"
-                        name += ":" + arg;
-                        break;
-                    }
-                    else if (arg.equals("-jar")) {
-                        name += ":" + args[i+1];
-                        break;
-                    }
-                }
-
+                className = getJavaMainClass(sigar, pid);
             } catch (SigarException e) {}
+            if (className != null) {
+                name += ":" + className;
+            }
         }
         else {
             try {
