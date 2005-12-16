@@ -21,6 +21,16 @@ struct {
 
     struct {
         const char *name;
+        int (*func)(sigar_t **);
+    } open;
+
+    struct {
+        const char *name;
+        int (*func)(sigar_t *);
+    } close;
+    
+    struct {
+        const char *name;
         int (*func)(sigar_t *, pid_t, sigar_proc_exe_t *);
     } proc_exe;
     struct {
@@ -55,6 +65,8 @@ struct {
     sigar_callback_t end;
 } sigar_callbacks = {
     { "sigar_version_get", NULL },
+    { "sigar_open", NULL },
+    { "sigar_close", NULL },
     { "sigar_proc_exe_get", NULL },
     { "sigar_proc_args_get", NULL },
     { "sigar_proc_env_get", NULL },
@@ -68,6 +80,8 @@ struct {
 
 static int sigar_main(char *argv0)
 {
+    int status;
+    sigar_t *sigar;
     char *ptr;
     char sigarlib[8096], archlib[512];
     void *handle;
@@ -107,6 +121,16 @@ static int sigar_main(char *argv0)
         exit(0);
     }
 
+    status = sigar_callbacks.open.func(&sigar);
+
+    if (status != SIGAR_OK) {
+        perror("sigar_open");
+        return 1;
+    }
+
+    /* XXX pipe loop */
+
+    sigar_callbacks.close.func(sigar);
     dlclose(handle);
 
     return 0;
