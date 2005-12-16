@@ -48,8 +48,16 @@ public class Version extends SigarCommandBase {
     public static void printInfo(PrintStream os) {
         String fqdn = getFQDN();
         String host = getHostName();
-        os.println("Sigar version......." + Sigar.VERSION_STRING);
-        os.println("Build date.........." + Sigar.BUILD_DATE);
+
+        String version =
+            "java=" + Sigar.VERSION_STRING +
+            ", native=" + Sigar.NATIVE_VERSION_STRING;
+        String build =
+            "java=" + Sigar.BUILD_DATE +
+            ", native=" + Sigar.NATIVE_BUILD_DATE;
+        
+        os.println("Sigar version......." + version);
+        os.println("Build date.........." + build);
         os.println("Archlib............." +
                    SigarLoader.getNativeLibraryName());
         os.println("Current fqdn........" + fqdn);

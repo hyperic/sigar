@@ -24,17 +24,27 @@ public class Sigar implements SigarProxy {
     public static final long FIELD_NOTIMPL = -1;
 
     /**
-     * The Sigar version in String form.
+     * The Sigar java version.
      */
     public static final String VERSION_STRING =
         SigarVersion.VERSION_STRING;
 
     /**
-     * The date on which the Sigar binaries were built.
+     * The Sigar native version.
+     */
+    public static final String NATIVE_VERSION_STRING;
+    
+    /**
+     * The date on which sigar.jar was built.
      */
     public static final String BUILD_DATE =
         SigarVersion.BUILD_DATE;
 
+    /**
+     * The date on which the sigar native binary was built.
+     */
+    public static final String NATIVE_BUILD_DATE;
+        
     private static boolean enableLogging =
         "true".equals(System.getProperty("sigar.nativeLogging"));
 
@@ -50,10 +60,11 @@ public class Sigar implements SigarProxy {
     private static SigarProxy instance = null;
 
     static {
+        boolean loaded = false;
         try {
             loadLibrary();
+            loaded = true;
         } catch (SigarException e) {
-            loadError = "Sigar.load: " + e.getMessage();
             try {
                 SigarLog.debug(loadError, e);
             } catch (NoClassDefFoundError ne) {
@@ -61,6 +72,13 @@ public class Sigar implements SigarProxy {
                 System.err.println(loadError);
                 e.printStackTrace();
             }
+        }
+        if (loaded) {
+            NATIVE_VERSION_STRING = getNativeVersion();
+            NATIVE_BUILD_DATE = getNativeBuildDate();
+        }
+        else {
+            NATIVE_VERSION_STRING = NATIVE_BUILD_DATE = "N/A";
         }
     }
 
@@ -97,6 +115,9 @@ public class Sigar implements SigarProxy {
      * @return The formatted string.
      */
     public static native String formatSize(long size);
+
+    private static native String getNativeVersion();
+    private static native String getNativeBuildDate();
 
     /**
      * Allocate and initialize the native Sigar object.

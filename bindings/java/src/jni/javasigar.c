@@ -197,6 +197,20 @@ JNIEXPORT jstring SIGAR_JNI(Sigar_formatSize)
     return JENV->NewStringUTF(env, buf);
 }
 
+JNIEXPORT jstring SIGAR_JNI(Sigar_getNativeVersion)
+(JNIEnv *env, jclass cls)
+{
+    sigar_version_t *version = sigar_version_get();
+    return JENV->NewStringUTF(env, version->version);
+}
+
+JNIEXPORT jstring SIGAR_JNI(Sigar_getNativeBuildDate)
+(JNIEnv *env, jclass cls)
+{
+    sigar_version_t *version = sigar_version_get();
+    return JENV->NewStringUTF(env, version->build_date);
+}
+
 JNIEXPORT void SIGAR_JNI(Sigar_open)
 (JNIEnv *env, jobject obj)
 {
