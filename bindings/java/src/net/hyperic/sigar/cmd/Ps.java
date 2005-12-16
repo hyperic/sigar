@@ -138,12 +138,15 @@ public class Ps extends SigarCommandBase {
                 String[] args = sigar.getProcArgs(pid);
                 for (int i=1; i<args.length; i++) {
                     String arg = args[i];
-                    if (!isClassName(arg)) {
-                        continue;
+                    if (isClassName(arg)) {
+                        //example: "java:weblogic.Server"
+                        name += ":" + arg;
+                        break;
                     }
-                    //example: "java:weblogic.Server"
-                    name += ":" + arg;
-                    break;
+                    else if (arg.equals("-jar")) {
+                        name += ":" + args[i+1];
+                        break;
+                    }
                 }
 
             } catch (SigarException e) {}
