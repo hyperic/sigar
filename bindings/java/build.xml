@@ -244,7 +244,7 @@
   </target>
 
   <target name="build-jni"
-          depends="jni-init,prepare-src,jni-compile,sigar-exe,jni-lib-copy,copy-includes"
+          depends="jni-init,prepare-src,jni-compile,jni-lib-copy,copy-includes"
           if="jni.libarch"/>
 
   <target name="build-perfstat" depends="jni-init" if="aix">
