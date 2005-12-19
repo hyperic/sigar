@@ -1,3 +1,11 @@
+2005-12-19  Doug MacEachern  <dougm@hyperic.net>
+
+        * Add version api for native binaries
+
+        * Add dir_usage api, recursive version of dir_stat api
+
+        * Add dir_stat.disk_usage field
+
 2005-12-12  Doug MacEachern  <dougm@hyperic.net>
 
         * Fix internal hash table used for caching to properly rehash
