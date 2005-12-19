@@ -1,5 +1,7 @@
 2005-12-19  Doug MacEachern  <dougm@hyperic.net>
 
+        * Add net_interface_config.mtu for Solaris, HPUX, AIX
+        
         * Add version api for native binaries
 
         * Add dir_usage api, recursive version of dir_stat api
