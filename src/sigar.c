@@ -1276,9 +1276,21 @@ int sigar_net_interface_config_get(sigar_t *sigar, const char *name,
 #endif
     }
 
-#ifdef __linux__    
+#if defined(SIOCGLIFMTU) && !defined(__hpux)
+    {
+        struct lifreq lifr;
+        SIGAR_SSTRCPY(lifr.lifr_name, name);
+        if(!ioctl(sock, SIOCGLIFMTU, &lifr)) {
+            ifconfig->mtu = lifr.lifr_mtu;
+        }
+    }
+#elif defined(SIOCGIFMTU)
     if (!ioctl(sock, SIOCGIFMTU, &ifr)) {
+#  if defined(__hpux)
+        ifconfig->mtu = ifr.ifr_metric;
+#  else
         ifconfig->mtu = ifr.ifr_mtu;
+#endif
     }
 #else
     ifconfig->mtu = 0; /*XXX*/
