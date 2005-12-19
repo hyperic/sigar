@@ -232,6 +232,8 @@ int sigar_os_open(sigar_t **sigar)
     get_sysinfo(*sigar);
 
     if ((h = LoadLibrary("iphlpapi.dll"))) {
+        (*sigar)->get_if_entry = 
+            (LPGETIFENTRY)GetProcAddress(h, "GetIfEntry");
         (*sigar)->get_if_table = 
             (LPGETIFTABLE)GetProcAddress(h, "GetIfTable");
         (*sigar)->get_ipforward_table = 
