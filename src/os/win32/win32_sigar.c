@@ -257,6 +257,7 @@ int sigar_os_open(sigar_t **sigar)
         (*sigar)->ip_handle = h;
     }
     else {
+        (*sigar)->get_if_entry = NULL;
         (*sigar)->get_if_table = NULL;
         (*sigar)->get_ipforward_table = NULL;
         (*sigar)->ip_handle = NULL;
