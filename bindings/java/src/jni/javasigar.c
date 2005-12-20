@@ -1192,27 +1192,8 @@ JNIEXPORT void SIGAR_JNI(SigarLog_setLevel)
  * in the future would better to integrate win32bindings w/ sigar.
  */
 #ifdef WIN32
-typedef struct _SERVICE_STATUS_PROCESS {
-    DWORD dwServiceType;
-    DWORD dwCurrentState;
-    DWORD dwControlsAccepted;
-    DWORD dwWin32ExitCode;
-    DWORD dwServiceSpecificExitCode;
-    DWORD dwCheckPoint;
-    DWORD dwWaitHint;
-    DWORD dwProcessId;
-    DWORD dwServiceFlags;
-} SERVICE_STATUS_PROCESS;
-
-typedef enum {
-    SC_STATUS_PROCESS_INFO = 0
-} SC_STATUS_TYPE;
-
-typedef BOOL (CALLBACK *QueryServiceStatusExFunc)(SC_HANDLE,
-                                                  SC_STATUS_TYPE,
-                                                  LPBYTE,
-                                                  DWORD,
-                                                  LPDWORD);
+#define sigar_QueryServiceStatusEx \
+    sigar->advapi.query_service_status.func
 #endif
 
 JNIEXPORT jlong SIGAR_JNI(Sigar_getServicePid)
@@ -1226,8 +1207,9 @@ JNIEXPORT jlong SIGAR_JNI(Sigar_getServicePid)
     SC_HANDLE mgr;
     dSIGAR(0);
 
-    if (!sigar->adv_handle) {
-        sigar_throw_notimpl(env, "advapi32.dll not available");
+    if (!sigar_QueryServiceStatusEx) {
+        sigar_throw_notimpl(env,
+                            "QueryServiceStatusEx not available");
         return 0;
     }
 
@@ -1242,17 +1224,11 @@ JNIEXPORT jlong SIGAR_JNI(Sigar_getServicePid)
         if (svc) {
             SERVICE_STATUS_PROCESS status;
             DWORD bytes;
-            QueryServiceStatusExFunc status_query =
-                (QueryServiceStatusExFunc)
-                    GetProcAddress(sigar->adv_handle,
-                                   "QueryServiceStatusEx");
 
-            if (!status_query) {
-                err = SIGAR_ENOTIMPL;
-            }
-            else if (status_query(svc,
-                                  SC_STATUS_PROCESS_INFO,
-                                  (LPBYTE)&status, sizeof(status), &bytes))
+            if (sigar_QueryServiceStatusEx(svc,
+                                           SC_STATUS_PROCESS_INFO,
+                                           (LPBYTE)&status,
+                                           sizeof(status), &bytes))
             {
                 pid = status.dwProcessId;
             }

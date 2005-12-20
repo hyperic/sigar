@@ -94,27 +94,6 @@ typedef enum {
 #define PERF_VAL_CPU(ix) \
     NS100_2SEC(PERF_VAL(ix))
 
-static FARPROC sigar_GetProcAddress(sigar_t *sigar,
-                                    HMODULE hModule, LPCSTR lpProcName)
-{
-    FARPROC ptr;
-
-    if (!hModule) {
-        sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
-                         "GetProcAddress(%s): No module handle",
-                         lpProcName);
-        return NULL;
-    }
-
-    if (!(ptr = GetProcAddress(hModule, lpProcName))) {
-        sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
-                         "GetProcAddress(%s): %s",
-                         lpProcName, sigar_strerror(sigar, GetLastError()));
-    }
-
-    return ptr;
-}
-
 static PERF_OBJECT_TYPE *get_perf_object(sigar_t *sigar, char *counter_key,
                                          DWORD *err)
 {
@@ -192,11 +171,145 @@ SIGAR_DECLARE(sigar_t *) sigar_new(void)
     return sigar;
 }
 
+static sigar_wtsapi_t sigar_wtsapi = {
+    "wtsapi32.dll",
+    NULL,
+    { "WTSEnumerateSessionsA", NULL },
+    { "WTSFreeMemory", NULL },
+    { "WTSQuerySessionInformationA", NULL },
+    { NULL, NULL }
+};
+
+static sigar_iphlpapi_t sigar_iphlpapi = {
+    "iphlpapi.dll",
+    NULL,
+    { "GetIpForwardTable", NULL },
+    { "GetIfTable", NULL },
+    { "GetIfEntry", NULL },
+    { "GetTcpTable", NULL },
+    { "GetUdpTable", NULL },
+    { "AllocateAndGetTcpExTableFromStack", NULL },
+    { "AllocateAndGetUdpExTableFromStack", NULL },
+    { "GetNetworkParams", NULL },
+    { "GetAdaptersInfo", NULL },
+    { NULL, NULL }
+};
+
+static sigar_advapi_t sigar_advapi = {
+    "advapi32.dll",
+    NULL,
+    { "ConvertStringSidToSidA", NULL },
+    { "QueryServiceStatusEx", NULL },
+    { NULL, NULL }
+};
+
+static sigar_ntdll_t sigar_ntdll = {
+    "ntdll.dll",
+    NULL,
+    { "NtQuerySystemInformation", NULL },
+    { NULL, NULL }
+};
+
+static sigar_psapi_t sigar_psapi = {
+    "psapi.dll",
+    NULL,
+    { "EnumProcessModules", NULL },
+    { "GetModuleFileNameExA", NULL },
+    { NULL, NULL }
+};
+
+static sigar_psapi_t sigar_winsta = {
+    "winsta.dll",
+    NULL,
+    { "WinStationQueryInformationW", NULL },
+    { NULL, NULL }
+};
+
+#define DLLMOD_COPY(name) \
+    memcpy(&(*sigar)->##name, &sigar_##name, sizeof(sigar_##name))
+
+#define DLLMOD_INIT(name, all) \
+    sigar_dllmod_init(sigar, (sigar_dll_module_t *)&(sigar->##name), all)
+
+#define DLLMOD_FREE(name) \
+    sigar_dllmod_free((sigar_dll_module_t *)&(sigar->##name))
+
+static void sigar_dllmod_free(sigar_dll_module_t *module)
+{
+    if (module->handle) {
+        FreeLibrary(module->handle);
+        module->handle = NULL;
+    }
+}
+
+static int sigar_dllmod_init(sigar_t *sigar,
+                             sigar_dll_module_t *module,
+                             int all)
+{
+    sigar_dll_func_t *funcs = &module->funcs[0];
+    int is_debug = SIGAR_LOG_IS_DEBUG(sigar);
+    int rc, success;
+
+    if (module->handle == INVALID_HANDLE_VALUE) {
+        return ENOENT; /* XXX better rc */
+    }
+
+    if (module->handle) {
+        return SIGAR_OK;
+    }
+    
+    module->handle = LoadLibrary(module->name);
+    if (!(success = (module->handle ? TRUE : FALSE))) {
+        rc = GetLastError();
+        /* dont try again */
+        module->handle = INVALID_HANDLE_VALUE;
+    }
+    
+    if (is_debug) {
+        sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
+                         "LoadLibrary(%s): %s",
+                         module->name,
+                         success ?
+                         "OK" :
+                         sigar_strerror(sigar, rc));
+    }
+
+    if (!success) {
+        return rc;
+    }
+
+    while (funcs->name) {
+        funcs->func = GetProcAddress(module->handle, funcs->name);
+
+        if (!(success = (funcs->func ? TRUE : FALSE))) {
+            rc = GetLastError();
+        }
+
+        if (is_debug) {
+            sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
+                             "GetProcAddress(%s:%s): %s",
+                             module->name, funcs->name,
+                             success ?
+                             "OK" :
+                             sigar_strerror(sigar, rc));
+        }
+
+        if (all && !success) {
+            return rc;
+        }
+
+        funcs++;
+    }
+
+    return SIGAR_OK;
+}
+
 int sigar_os_open(sigar_t **sigar)
 {
     LONG result;
     HINSTANCE h;
     OSVERSIONINFO version;
+    int i;
 
     *sigar = malloc(sizeof(**sigar));
     (*sigar)->machine = ""; /* local machine */
@@ -231,88 +344,18 @@ int sigar_os_open(sigar_t **sigar)
 
     get_sysinfo(*sigar);
 
-    if ((h = LoadLibrary("iphlpapi.dll"))) {
-        (*sigar)->get_if_entry = 
-            (LPGETIFENTRY)GetProcAddress(h, "GetIfEntry");
-        (*sigar)->get_if_table = 
-            (LPGETIFTABLE)GetProcAddress(h, "GetIfTable");
-        (*sigar)->get_ipforward_table = 
-            (LPGETIPFORWARDTABLE)GetProcAddress(h, "GetIpForwardTable");
-        (*sigar)->get_tcp_table = 
-            (LPGETTCPTABLE)GetProcAddress(h, "GetTcpTable");
-        (*sigar)->get_tcpx_table = 
-            (LPGETTCPEXTABLE)GetProcAddress(h,
-                                            "AllocateAndGet"
-                                            "TcpExTableFromStack");
-        (*sigar)->get_udp_table = 
-            (LPGETUDPTABLE)GetProcAddress(h, "GetUdpTable");
-        (*sigar)->get_udpx_table = 
-            (LPGETUDPEXTABLE)GetProcAddress(h,
-                                            "AllocateAndGet"
-                                            "UdpExTableFromStack");
-        (*sigar)->get_net_params =
-            (LPNETPARAMS)GetProcAddress(h, "GetNetworkParams");
-        (*sigar)->get_adapters_info =
-            (LPADAPTERSINFO)GetProcAddress(h, "GetAdaptersInfo");
-        (*sigar)->ip_handle = h;
-    }
-    else {
-        (*sigar)->get_if_entry = NULL;
-        (*sigar)->get_if_table = NULL;
-        (*sigar)->get_ipforward_table = NULL;
-        (*sigar)->ip_handle = NULL;
-    }
+    DLLMOD_COPY(wtsapi);
+    DLLMOD_COPY(iphlpapi);
+    DLLMOD_COPY(advapi);
+    DLLMOD_COPY(ntdll);
+    DLLMOD_COPY(psapi);
+    DLLMOD_COPY(winsta);
 
-    if ((h = LoadLibrary("advapi32.dll"))) {
-        (*sigar)->convert_string_sid =
-            (LPCONVERTSTRINGSID)GetProcAddress(h, 
-                                               "ConvertStringSidToSidA");
-        (*sigar)->adv_handle = h;
-    }
-    else {
-        (*sigar)->adv_handle = NULL;
-        (*sigar)->convert_string_sid = NULL;
-    }
-
-    if ((h = LoadLibrary("Ntdll.dll"))) {
-        (*sigar)->get_ntsys_info =
-            (LPSYSINFO)GetProcAddress(h, "NtQuerySystemInformation");
-        (*sigar)->nt_handle = h;
-    }
-    else {
-        (*sigar)->get_ntsys_info = NULL;
-        (*sigar)->nt_handle = NULL;
-    }
-
-    if ((h = LoadLibrary("psapi.dll"))) {
-        (*sigar)->enum_modules =
-            (LPENUMMODULES)GetProcAddress(h, "EnumProcessModules");
-        (*sigar)->get_module_name =
-            (LPGETMODULENAME)GetProcAddress(h, "GetModuleFileNameExA");
-        (*sigar)->ps_handle = h;
-    }
-    else {
-        (*sigar)->ps_handle = NULL;
-    }
-
-    (*sigar)->wts_enum_sessions = NULL;
-    (*sigar)->wts_free = NULL;
-    (*sigar)->wts_query_session = NULL;
-    (*sigar)->query_station = NULL;
-
-    if ((h = LoadLibrary("wtsapi32.dll"))) {
-        (*sigar)->wts_handle = h;
-    }
-    else {
-        (*sigar)->wts_handle = NULL;
-    }
-
-    if ((h = LoadLibrary("winsta.dll"))) {
-        (*sigar)->sta_handle = h;
-    }
-    else {
-        (*sigar)->sta_handle = NULL;
-    }
+    (*sigar)->log_level = -1; /* else below segfaults */
+    /* XXX init early for use by javasigar.c */
+    sigar_dllmod_init(*sigar,
+                      (sigar_dll_module_t *)&(*sigar)->advapi,
+                      FALSE);
 
     (*sigar)->pinfo.pid = -1;
     (*sigar)->ws_version = 0;
@@ -326,35 +369,18 @@ int sigar_os_close(sigar_t *sigar)
 {
     int retval;
 
+    DLLMOD_FREE(wtsapi);
+    DLLMOD_FREE(iphlpapi);
+    DLLMOD_FREE(advapi);
+    DLLMOD_FREE(ntdll);
+    DLLMOD_FREE(psapi);
+    DLLMOD_FREE(winsta);
+
     if (sigar->perfbuf) {
         free(sigar->perfbuf);
     }
 
     retval = RegCloseKey(sigar->handle);
-
-    if (sigar->adv_handle) {
-        FreeLibrary(sigar->adv_handle);
-    }
-
-    if (sigar->ip_handle) {
-        FreeLibrary(sigar->ip_handle);
-    }
-
-    if (sigar->nt_handle) {
-        FreeLibrary(sigar->nt_handle);
-    }
-
-    if (sigar->ps_handle) {
-        FreeLibrary(sigar->ps_handle);
-    }
-
-    if (sigar->wts_handle) {
-        FreeLibrary(sigar->wts_handle);
-    }
-
-    if (sigar->sta_handle) {
-        FreeLibrary(sigar->sta_handle);
-    }
 
     if (sigar->ws_version != 0) {
         WSACleanup();
@@ -450,6 +476,9 @@ static PERF_INSTANCE_DEFINITION *get_cpu_instance(sigar_t *sigar,
     return PdhFirstInstance(object);
 }
 
+#define sigar_NtQuerySystemInformation \
+   sigar->ntdll.query_sys_info.func
+
 static int get_idle_cpu(sigar_t *sigar, sigar_cpu_t *cpu,
                         DWORD idx,
                         PERF_COUNTER_BLOCK *counter_block,
@@ -463,13 +492,14 @@ static int get_idle_cpu(sigar_t *sigar, sigar_cpu_t *cpu,
     else {
         /* windows NT and 2000 do not have an Idle counter */
         sigar_cpu_count(sigar);
-        if (sigar->get_ntsys_info) {
+        DLLMOD_INIT(ntdll, FALSE);
+        if (sigar_NtQuerySystemInformation) {
             DWORD retval, num;
             /* XXX unhardcode 16 */
             SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION info[16];
             /* into the lungs of hell */
-            sigar->get_ntsys_info(SystemProcessorPerformanceInformation,
-                                  &info, sizeof(info), &retval);
+            sigar_NtQuerySystemInformation(SystemProcessorPerformanceInformation,
+                                           &info, sizeof(info), &retval);
 
             if (!retval) {
                 return GetLastError();
@@ -539,8 +569,8 @@ static int sigar_cpu_ntsys_get(sigar_t *sigar, sigar_cpu_t *cpu)
     /* XXX unhardcode 16 */
     SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION info[16];
     /* into the lungs of hell */
-    sigar->get_ntsys_info(SystemProcessorPerformanceInformation,
-                          &info, sizeof(info), &retval);
+    sigar_NtQuerySystemInformation(SystemProcessorPerformanceInformation,
+                                   &info, sizeof(info), &retval);
 
     if (!retval) {
         return GetLastError();
@@ -561,7 +591,8 @@ static int sigar_cpu_ntsys_get(sigar_t *sigar, sigar_cpu_t *cpu)
 
 SIGAR_DECLARE(int) sigar_cpu_get(sigar_t *sigar, sigar_cpu_t *cpu)
 {
-    if (sigar->get_ntsys_info) {
+    DLLMOD_INIT(ntdll, FALSE);
+    if (sigar_NtQuerySystemInformation) {
         return sigar_cpu_ntsys_get(sigar, cpu);
     }
     else {
@@ -642,7 +673,7 @@ static int sigar_cpu_list_ntsys_get(sigar_t *sigar,
     /* XXX unhardcode 16 */
     SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION info[16];
     /* into the lungs of hell */
-    sigar->get_ntsys_info(SystemProcessorPerformanceInformation,
+    sigar_NtQuerySystemInformation(SystemProcessorPerformanceInformation,
                           &info, sizeof(info), &retval);
 
     if (!retval) {
@@ -694,7 +725,8 @@ static int sigar_cpu_list_ntsys_get(sigar_t *sigar,
 SIGAR_DECLARE(int) sigar_cpu_list_get(sigar_t *sigar,
                                       sigar_cpu_list_t *cpulist)
 {
-    if (sigar->get_ntsys_info) {
+    DLLMOD_INIT(ntdll, FALSE);
+    if (sigar_NtQuerySystemInformation) {
         return sigar_cpu_list_ntsys_get(sigar, cpulist);
     }
     else {
@@ -1344,6 +1376,12 @@ SIGAR_DECLARE(int) sigar_proc_exe_get(sigar_t *sigar, sigar_pid_t pid,
     return status;
 }
 
+#define sigar_EnumProcessModules \
+    sigar->psapi.enum_modules.func
+
+#define sigar_GetModuleFileNameEx \
+    sigar->psapi.get_module_name.func
+
 SIGAR_DECLARE(int) sigar_proc_modules_get(sigar_t *sigar, sigar_pid_t pid,
                                           sigar_proc_modules_t *procmods)
 {
@@ -1352,7 +1390,7 @@ SIGAR_DECLARE(int) sigar_proc_modules_get(sigar_t *sigar, sigar_pid_t pid,
     DWORD size = 0;
     unsigned int i;
 
-    if (!sigar->ps_handle) {
+    if (DLLMOD_INIT(psapi, TRUE) != SIGAR_OK) {
         return SIGAR_ENOTIMPL;
     }
 
@@ -1360,7 +1398,7 @@ SIGAR_DECLARE(int) sigar_proc_modules_get(sigar_t *sigar, sigar_pid_t pid,
         return GetLastError();
     }
 
-    if (!sigar->enum_modules(proc, modules, sizeof(modules), &size)) {
+    if (!sigar_EnumProcessModules(proc, modules, sizeof(modules), &size)) {
         CloseHandle(proc);
         return GetLastError();
     }
@@ -1369,7 +1407,9 @@ SIGAR_DECLARE(int) sigar_proc_modules_get(sigar_t *sigar, sigar_pid_t pid,
         int status;
         char name[MAX_PATH];
 
-        if (!sigar->get_module_name(proc, modules[i], name, sizeof(name))) {
+        if (!sigar_GetModuleFileNameEx(proc, modules[i],
+                                       name, sizeof(name)))
+        {
             continue;
         }
 
@@ -1679,6 +1719,12 @@ SIGAR_DECLARE(int) sigar_cpu_info_list_get(sigar_t *sigar,
     return SIGAR_OK;
 }
 
+#define sigar_GetNetworkParams \
+    sigar->iphlpapi.get_net_params.func
+
+#define sigar_GetAdaptersInfo \
+    sigar->iphlpapi.get_adapters_info.func
+
 SIGAR_DECLARE(int) sigar_net_info_get(sigar_t *sigar,
                                       sigar_net_info_t *netinfo)
 {
@@ -1686,20 +1732,22 @@ SIGAR_DECLARE(int) sigar_net_info_get(sigar_t *sigar,
     ULONG len = 0;
     IP_ADDR_STRING *ip;
     DWORD rc;
+
+    DLLMOD_INIT(iphlpapi, FALSE);
     
-    if (!sigar->get_net_params) {
+    if (!sigar_GetNetworkParams) {
         return SIGAR_ENOTIMPL;
     }
 
     SIGAR_ZERO(netinfo);
 
-    rc = sigar->get_net_params(NULL, &len);
+    rc = sigar_GetNetworkParams(NULL, &len);
     if (rc != ERROR_BUFFER_OVERFLOW) {
         return rc;
     }
 
     info = malloc(len);
-    rc = sigar->get_net_params(info, &len);
+    rc = sigar_GetNetworkParams(info, &len);
     if (rc != NO_ERROR) {
         free(info);
         return rc;
@@ -1717,17 +1765,17 @@ SIGAR_DECLARE(int) sigar_net_info_get(sigar_t *sigar,
     
     free(info);
 
-    if (sigar->get_adapters_info) {
+    if (sigar_GetAdaptersInfo) {
         PIP_ADAPTER_INFO buffer, info;
         len = 0;
-        rc = sigar->get_adapters_info(NULL, &len);
+        rc = sigar_GetAdaptersInfo(NULL, &len);
 
         if (rc != ERROR_BUFFER_OVERFLOW) {
             return rc;
         }
         buffer = malloc(len);
 
-        rc = sigar->get_adapters_info(buffer, &len);
+        rc = sigar_GetAdaptersInfo(buffer, &len);
         if (rc != NO_ERROR) {
             free(buffer);
             return rc;
@@ -1756,28 +1804,30 @@ SIGAR_DECLARE(int) sigar_net_info_get(sigar_t *sigar,
     return SIGAR_OK;
 }
 
+#define sigar_GetIpForwardTable \
+    sigar->iphlpapi.get_ipforward_table.func
+
 SIGAR_DECLARE(int) sigar_net_route_list_get(sigar_t *sigar,
                                             sigar_net_route_list_t *routelist)
 {
-    char *buffer = NULL;
+    PMIB_IPFORWARDTABLE buffer = NULL;
     ULONG bufsize = 0;
     DWORD rc, i;
     MIB_IPFORWARDTABLE *ipt;
     sigar_net_route_t *route;
 
-    if (!sigar->get_ipforward_table) {
+    DLLMOD_INIT(iphlpapi, FALSE);
+    if (!sigar_GetIpForwardTable) {
         return SIGAR_ENOTIMPL;
     }
 
-    rc = (*(sigar->get_ipforward_table))((PMIB_IPFORWARDTABLE)buffer,
-                                         &bufsize, FALSE);
+    rc = sigar_GetIpForwardTable(buffer, &bufsize, FALSE);
     if (rc != ERROR_INSUFFICIENT_BUFFER) {
         return GetLastError();
     }
 
     buffer = malloc(bufsize);
-    rc = (*(sigar->get_ipforward_table))((PMIB_IPFORWARDTABLE)buffer,
-                                         &bufsize, FALSE);
+    rc = sigar_GetIpForwardTable(buffer, &bufsize, FALSE);
     if (rc != NO_ERROR) {
         free(buffer);
         return GetLastError();
@@ -1786,7 +1836,7 @@ SIGAR_DECLARE(int) sigar_net_route_list_get(sigar_t *sigar,
     sigar_net_route_list_create(routelist);
     routelist->size = routelist->number = 0;
 
-    ipt = (MIB_IPFORWARDTABLE *)buffer;
+    ipt = buffer;
 
     for (i=0; i<ipt->dwNumEntries; i++) {
         MIB_IPFORWARDROW *ipr = ipt->table + i;
@@ -1814,17 +1864,22 @@ SIGAR_DECLARE(int) sigar_net_route_list_get(sigar_t *sigar,
     return SIGAR_OK;
 }
 
+#define sigar_GetIfTable \
+    sigar->iphlpapi.get_if_table.func
+
 static int sigar_get_if_table(sigar_t *sigar)
 {
     ULONG size = sigar->ifconf_len;
     DWORD rc;
 
-    if (!sigar->get_if_table) {
+    DLLMOD_INIT(iphlpapi, FALSE);
+
+    if (!sigar_GetIfTable) {
         return SIGAR_ENOTIMPL;
     }
 
-    rc = sigar->get_if_table((PMIB_IFTABLE)sigar->ifconf_buf,
-                             &size, FALSE);
+    rc = sigar_GetIfTable((PMIB_IFTABLE)sigar->ifconf_buf,
+                          &size, FALSE);
 
     if (rc == ERROR_INSUFFICIENT_BUFFER) {
         sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
@@ -1834,8 +1889,8 @@ static int sigar_get_if_table(sigar_t *sigar)
         sigar->ifconf_buf = realloc(sigar->ifconf_buf,
                                     sigar->ifconf_len);
 
-        rc = sigar->get_if_table((PMIB_IFTABLE)sigar->ifconf_buf,
-                                 &size, FALSE);
+        rc = sigar_GetIfTable((PMIB_IFTABLE)sigar->ifconf_buf,
+                              &size, FALSE);
     }
 
     if (rc != NO_ERROR) {
@@ -1917,21 +1972,29 @@ sigar_net_interface_stat_get(sigar_t *sigar, const char *name,
 #define IS_TCP_CLIENT(state, flags) \
     ((flags & SIGAR_NETCONN_CLIENT) && (state != MIB_TCP_STATE_LISTEN))
 
+#define sigar_GetTcpTable \
+    sigar->iphlpapi.get_tcp_table.func
+
 static int net_conn_get_tcp(sigar_t *sigar,
                             sigar_net_connection_list_t *connlist,
                             int flags)
 {
     int status;
-    DWORD rc, size, i;
+    DWORD rc, size=0, i;
     PMIB_TCPTABLE tcp;
 
-    size = 0;
-    rc = sigar->get_tcp_table(NULL, &size, FALSE);
+    DLLMOD_INIT(iphlpapi, FALSE);
+
+    if (!sigar_GetTcpTable) {
+        return SIGAR_ENOTIMPL;
+    }
+
+    rc = sigar_GetTcpTable(NULL, &size, FALSE);
     if (rc != ERROR_INSUFFICIENT_BUFFER) {
         return GetLastError();
     }
     tcp = malloc(size);
-    rc = sigar->get_tcp_table(tcp, &size, FALSE);
+    rc = sigar_GetTcpTable(tcp, &size, FALSE);
     if (rc) {
         free(tcp);
         return GetLastError();
@@ -2015,21 +2078,29 @@ static int net_conn_get_tcp(sigar_t *sigar,
 #define IS_UDP_CLIENT(state, flags) \
     ((flags & SIGAR_NETCONN_CLIENT) && conn.remote_port)
 
+#define sigar_GetUdpTable \
+    sigar->iphlpapi.get_udp_table.func
+
 static int net_conn_get_udp(sigar_t *sigar,
                             sigar_net_connection_list_t *connlist,
                             int flags)
 {
     int status;
-    DWORD rc, size, i;
+    DWORD rc, size=0, i;
     PMIB_UDPTABLE udp;
 
-    size = 0;
-    rc = sigar->get_udp_table(NULL, &size, FALSE);
+    DLLMOD_INIT(iphlpapi, FALSE);
+
+    if (!sigar_GetTcpTable) {
+        return SIGAR_ENOTIMPL;
+    }
+
+    rc = sigar_GetUdpTable(NULL, &size, FALSE);
     if (rc != ERROR_INSUFFICIENT_BUFFER) {
         return GetLastError();
     }
     udp = malloc(size);
-    rc = sigar->get_udp_table(udp, &size, FALSE);
+    rc = sigar_GetUdpTable(udp, &size, FALSE);
     if (rc) {
         free(udp);
         return GetLastError();
@@ -2093,6 +2164,12 @@ sigar_net_connection_list_get(sigar_t *sigar,
     return SIGAR_OK;
 }
 
+#define sigar_GetTcpExTable \
+    sigar->iphlpapi.get_tcpx_table.func
+
+#define sigar_GetUdpExTable \
+    sigar->iphlpapi.get_udpx_table.func
+
 SIGAR_DECLARE(int) sigar_proc_port_get(sigar_t *sigar,
                                        int protocol,
                                        unsigned long port,
@@ -2100,15 +2177,17 @@ SIGAR_DECLARE(int) sigar_proc_port_get(sigar_t *sigar,
 {
     DWORD rc, i;
 
+    DLLMOD_INIT(iphlpapi, FALSE);
+
     if (protocol == SIGAR_NETCONN_TCP) {
         PMIB_TCPEXTABLE tcp;
 
-        if (!sigar->get_tcpx_table) {
+        if (!sigar_GetTcpExTable) {
             return SIGAR_ENOTIMPL;
         }
 
-        rc = sigar->get_tcpx_table(&tcp, FALSE, GetProcessHeap(),
-                                   2, 2);
+        rc = sigar_GetTcpExTable(&tcp, FALSE, GetProcessHeap(),
+                                 2, 2);
 
         if (rc) {
             return GetLastError();
@@ -2131,12 +2210,12 @@ SIGAR_DECLARE(int) sigar_proc_port_get(sigar_t *sigar,
     else if (protocol == SIGAR_NETCONN_UDP) {
         PMIB_UDPEXTABLE udp;
 
-        if (!sigar->get_udpx_table) {
+        if (!sigar_GetUdpExTable) {
             return SIGAR_ENOTIMPL;
         }
 
-        rc = sigar->get_udpx_table(&udp, FALSE, GetProcessHeap(),
-                                   2, 2);
+        rc = sigar_GetUdpExTable(&udp, FALSE, GetProcessHeap(),
+                                 2, 2);
 
         if (rc) {
             return GetLastError();
@@ -2269,13 +2348,16 @@ static int get_logon_info(HKEY users,
     return SIGAR_OK;
 }
 
+#define sigar_ConvertStringSidToSid \
+    sigar->advapi.convert_string_sid.func
+
 static int sigar_who_registry(sigar_t *sigar,
                               sigar_who_list_t *wholist)
 {
     HKEY users;
     DWORD index=0, status;
 
-    if (!sigar->convert_string_sid) {
+    if (!sigar_ConvertStringSidToSid) {
         return ENOENT;
     }
 
@@ -2307,7 +2389,7 @@ static int sigar_who_registry(sigar_t *sigar,
             continue;
         }
 
-        if (!sigar->convert_string_sid(subkey, &sid)) {
+        if (!sigar_ConvertStringSidToSid(subkey, &sid)) {
             continue;
         }
 
@@ -2337,57 +2419,33 @@ static int sigar_who_registry(sigar_t *sigar,
     return SIGAR_OK;
 }
 
+#define sigar_WTSEnumerateSessions \
+    sigar->wtsapi.enum_sessions.func
+
+#define sigar_WTSFreeMemory \
+    sigar->wtsapi.free_mem.func
+
+#define sigar_WTSQuerySessionInformation \
+    sigar->wtsapi.query_session.func
+
+#define sigar_WinStationQueryInformation \
+    sigar->winsta.query_info.func
+
 static int sigar_who_wts(sigar_t *sigar,
                          sigar_who_list_t *wholist)
 {
     DWORD count=0, i;
     WTS_SESSION_INFO *sessions = NULL;
 
-    if (!sigar->wts_enum_sessions && sigar->wts_handle) {
-        FARPROC ptr;
-
-        if ((ptr = sigar_GetProcAddress(sigar,
-                                        sigar->wts_handle,
-                                        "WTSEnumerateSessionsA")))
-        {
-            sigar->wts_enum_sessions = (LPWTSENUMERATESESSIONS)ptr;
-        }
-
-        if ((ptr = sigar_GetProcAddress(sigar,
-                                        sigar->wts_handle,
-                                        "WTSFreeMemory")))
-        {
-            sigar->wts_free = (LPWTSFREEMEMORY)ptr;
-        }
-
-        if ((ptr = sigar_GetProcAddress(sigar,
-                                        sigar->wts_handle,
-                                        "WTSQuerySessionInformationA")))
-        {
-            sigar->wts_query_session = (LPWTSQUERYSESSION)ptr;
-        }
-
-        if ((ptr = sigar_GetProcAddress(sigar, 
-                                        sigar->sta_handle,
-                                        "WinStationQueryInformationW")))
-        {
-            sigar->query_station = (LPSTATIONQUERYINFO)ptr;
-        }
-
-        sigar_log(sigar, SIGAR_LOG_DEBUG,
-                  "Done looking up Terminal Services api functions");
-    }
-
-    if (!(sigar->wts_enum_sessions &&
-          sigar->wts_free &&
-          sigar->wts_query_session))
-    {
+    if (DLLMOD_INIT(wtsapi, TRUE) != SIGAR_OK) {
         sigar_log(sigar, SIGAR_LOG_DEBUG,
                   "Terminal Services api functions not available");
         return ENOENT;
     }
 
-    if (!sigar->wts_enum_sessions(0, 0, 1, &sessions, &count)) {
+    DLLMOD_INIT(winsta, FALSE);
+
+    if (!sigar_WTSEnumerateSessions(0, 0, 1, &sessions, &count)) {
         return GetLastError();
     }
 
@@ -2404,16 +2462,16 @@ static int sigar_who_wts(sigar_t *sigar,
 
         buffer = NULL;
         bytes = 0;
-        if (sigar->wts_query_session(0,
-                                     sessionId,
-                                     WTSClientProtocolType,
-                                     &buffer,
-                                     &bytes))
+        if (sigar_WTSQuerySessionInformation(0,
+                                             sessionId,
+                                             WTSClientProtocolType,
+                                             &buffer,
+                                             &bytes))
         {
             int isConsole = 
                 (*buffer == WTS_PROTOCOL_TYPE_CONSOLE);
 
-            sigar->wts_free(buffer);
+            sigar_WTSFreeMemory(buffer);
 
             if (isConsole) {
                 continue;
@@ -2427,11 +2485,11 @@ static int sigar_who_wts(sigar_t *sigar,
 
         buffer = NULL;
         bytes = 0;
-        if (sigar->wts_query_session(0,
-                                     sessionId,
-                                     WTSClientAddress,
-                                     &buffer,
-                                     &bytes))
+        if (sigar_WTSQuerySessionInformation(0,
+                                             sessionId,
+                                             WTSClientAddress,
+                                             &buffer,
+                                             &bytes))
         {
             PWTS_CLIENT_ADDRESS client =
                 (PWTS_CLIENT_ADDRESS)buffer;
@@ -2442,7 +2500,7 @@ static int sigar_who_wts(sigar_t *sigar,
                     client->Address[4],
                     client->Address[5]);
 
-            sigar->wts_free(buffer);
+            sigar_WTSFreeMemory(buffer);
         }
         else {
             SIGAR_SSTRCPY(who->host, "unknown");
@@ -2450,14 +2508,14 @@ static int sigar_who_wts(sigar_t *sigar,
 
         buffer = NULL;
         bytes = 0;
-        if (sigar->wts_query_session(0,
-                                     sessionId,
-                                     WTSUserName,
-                                     &buffer,
-                                     &bytes))
+        if (sigar_WTSQuerySessionInformation(0,
+                                             sessionId,
+                                             WTSUserName,
+                                             &buffer,
+                                             &bytes))
         {
             SIGAR_SSTRCPY(who->user, buffer);
-            sigar->wts_free(buffer);
+            sigar_WTSFreeMemory(buffer);
         }
         else {
             SIGAR_SSTRCPY(who->user, "unknown");
@@ -2465,13 +2523,13 @@ static int sigar_who_wts(sigar_t *sigar,
 
         buffer = NULL;
         bytes = 0;
-        if (sigar->query_station &&
-            sigar->query_station(0,
-                                 sessionId,
-                                 WinStationInformation,
-                                 &station_info,
-                                 sizeof(station_info),
-                                 &bytes))
+        if (sigar_WinStationQueryInformation &&
+            sigar_WinStationQueryInformation(0,
+                                             sessionId,
+                                             WinStationInformation,
+                                             &station_info,
+                                             sizeof(station_info),
+                                             &bytes))
         {
             who->time =
                 FileTimeToTime(&station_info.ConnectTime) / 1000000;
@@ -2481,7 +2539,7 @@ static int sigar_who_wts(sigar_t *sigar,
         }
     }
 
-    sigar->wts_free(sessions);
+    sigar_WTSFreeMemory(sessions);
 
     return SIGAR_OK;
 }

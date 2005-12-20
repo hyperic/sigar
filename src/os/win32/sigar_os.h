@@ -97,6 +97,23 @@ typedef struct _IP_ADAPTER_INFO {
 
 /* end iptypes.h */
 
+/* service manager stuff not in vs6.0 */
+typedef struct _SERVICE_STATUS_PROCESS {
+    DWORD dwServiceType;
+    DWORD dwCurrentState;
+    DWORD dwControlsAccepted;
+    DWORD dwWin32ExitCode;
+    DWORD dwServiceSpecificExitCode;
+    DWORD dwCheckPoint;
+    DWORD dwWaitHint;
+    DWORD dwProcessId;
+    DWORD dwServiceFlags;
+} SERVICE_STATUS_PROCESS;
+
+typedef enum {
+    SC_STATUS_PROCESS_INFO = 0
+} SC_STATUS_TYPE;
+
 /* from wtsapi32.h not in vs6.0 */
 typedef enum {
     WTSInitialProgram,
@@ -205,54 +222,6 @@ typedef struct {
 
 /* end undocumented structures */
 
-typedef BOOL (CALLBACK *LPCONVERTSTRINGSID)(LPCSTR, PSID *);
-
-typedef DWORD (CALLBACK *LPGETIPFORWARDTABLE)(PMIB_IPFORWARDTABLE, PULONG, BOOL);
-
-typedef DWORD (CALLBACK *LPGETIFTABLE)(PMIB_IFTABLE, PULONG, BOOL);
-
-typedef DWORD (CALLBACK *LPGETIFENTRY)(PMIB_IFROW);
-
-typedef DWORD (CALLBACK *LPGETTCPTABLE)(PMIB_TCPTABLE, PDWORD, BOOL);
-
-typedef DWORD (CALLBACK *LPGETUDPTABLE)(PMIB_UDPTABLE, PDWORD, BOOL);
-
-typedef DWORD (CALLBACK *LPGETTCPEXTABLE)(PMIB_TCPEXTABLE *, BOOL, HANDLE,
-                                          DWORD, DWORD);
-
-typedef DWORD (CALLBACK *LPGETUDPEXTABLE)(PMIB_UDPEXTABLE *, BOOL, HANDLE,
-                                          DWORD, DWORD);
-
-typedef DWORD (CALLBACK *LPNETPARAMS)(PFIXED_INFO, PULONG);
-
-typedef DWORD (CALLBACK *LPADAPTERSINFO)(PIP_ADAPTER_INFO, PULONG);
-
-typedef DWORD (CALLBACK *LPSYSINFO)(DWORD, PVOID, ULONG, PULONG);
-
-typedef BOOL (CALLBACK *LPENUMMODULES)(HANDLE, HMODULE*,
-                                       DWORD, LPDWORD);
-
-typedef DWORD (CALLBACK *LPGETMODULENAME)(HANDLE, HMODULE,
-                                          LPTSTR, DWORD);
-
-typedef BOOLEAN (CALLBACK *LPSTATIONQUERYINFO)(HANDLE,
-                                               ULONG,
-                                               WINSTATION_INFO_CLASS,
-                                               PVOID, ULONG, PULONG);
-
-typedef BOOL (CALLBACK *LPWTSENUMERATESESSIONS)(HANDLE,
-                                                DWORD,
-                                                DWORD,
-                                                PWTS_SESSION_INFO *,
-                                                DWORD *);
-
-typedef void (CALLBACK *LPWTSFREEMEMORY)(PVOID);
-
-typedef BOOL (CALLBACK *LPWTSQUERYSESSION)(HANDLE,
-                                           DWORD,
-                                           WTS_INFO_CLASS,
-                                           LPSTR *, DWORD *);
-
 /* no longer in the standard header files */
 typedef struct {
     LARGE_INTEGER IdleTime;
@@ -279,6 +248,174 @@ typedef struct {
     sigar_uint64_t page_faults;
 } sigar_win32_pinfo_t;
 
+typedef struct {
+    const char *name;
+    HINSTANCE handle;
+} sigar_dll_handle_t;
+
+typedef struct {
+    const char *name;
+    FARPROC func;
+} sigar_dll_func_t;
+
+typedef struct {
+    const char *name;
+    HINSTANCE handle;
+    sigar_dll_func_t funcs[12];
+} sigar_dll_module_t;
+
+/* wtsapi.dll */
+typedef BOOL (CALLBACK *wtsapi_enum_sessions)(HANDLE,
+                                              DWORD,
+                                              DWORD,
+                                              PWTS_SESSION_INFO *,
+                                              DWORD *);
+
+typedef void (CALLBACK *wtsapi_free_mem)(PVOID);
+
+typedef BOOL (CALLBACK *wtsapi_query_session)(HANDLE,
+                                              DWORD,
+                                              WTS_INFO_CLASS,
+                                              LPSTR *, DWORD *);
+/* iphlpapi.dll */
+
+typedef DWORD (CALLBACK *iphlpapi_get_ipforward_table)(PMIB_IPFORWARDTABLE,
+                                                       PULONG,
+                                                       BOOL);
+
+typedef DWORD (CALLBACK *iphlpapi_get_if_table)(PMIB_IFTABLE,
+                                                PULONG,
+                                                BOOL);
+
+typedef DWORD (CALLBACK *iphlpapi_get_if_entry)(PMIB_IFROW);
+
+typedef DWORD (CALLBACK *iphlpapi_get_tcp_table)(PMIB_TCPTABLE,
+                                                 PDWORD,
+                                                 BOOL);
+
+typedef DWORD (CALLBACK *iphlpapi_get_udp_table)(PMIB_UDPTABLE,
+                                                 PDWORD,
+                                                 BOOL);
+
+typedef DWORD (CALLBACK *iphlpapi_get_tcpx_table)(PMIB_TCPEXTABLE *,
+                                                  BOOL,
+                                                  HANDLE,
+                                                  DWORD,
+                                                  DWORD);
+
+typedef DWORD (CALLBACK *iphlpapi_get_udpx_table)(PMIB_UDPEXTABLE *,
+                                                  BOOL,
+                                                  HANDLE,
+                                                  DWORD,
+                                                  DWORD);
+
+typedef DWORD (CALLBACK *iphlpapi_get_net_params)(PFIXED_INFO,
+                                                  PULONG);
+
+typedef DWORD (CALLBACK *iphlpapi_get_adapters_info)(PIP_ADAPTER_INFO,
+                                                     PULONG);
+
+/* advapi32.dll */
+typedef BOOL (CALLBACK *advapi_convert_string_sid)(LPCSTR,
+                                                   PSID *);
+
+typedef BOOL (CALLBACK *advapi_query_service_status)(SC_HANDLE,
+                                                     SC_STATUS_TYPE,
+                                                     LPBYTE,
+                                                     DWORD,
+                                                     LPDWORD);
+
+/* ntdll.dll */
+typedef DWORD (CALLBACK *ntdll_query_sys_info)(DWORD,
+                                               PVOID,
+                                               ULONG,
+                                               PULONG);
+
+/* psapi.dll */
+typedef BOOL (CALLBACK *psapi_enum_modules)(HANDLE,
+                                            HMODULE *,
+                                            DWORD,
+                                            LPDWORD);
+
+typedef DWORD (CALLBACK *psapi_get_module_name)(HANDLE,
+                                                HMODULE,
+                                                LPTSTR,
+                                                DWORD);
+
+/* winsta.dll */
+typedef BOOLEAN (CALLBACK *winsta_query_info)(HANDLE,
+                                              ULONG,
+                                              WINSTATION_INFO_CLASS,
+                                              PVOID,
+                                              ULONG,
+                                              PULONG);
+
+#define SIGAR_DLLFUNC(api, name) \
+    struct { \
+         const char *name; \
+         ##api##_##name func; \
+    } ##name
+
+typedef struct {
+    sigar_dll_handle_t handle;
+
+    SIGAR_DLLFUNC(wtsapi, enum_sessions);
+    SIGAR_DLLFUNC(wtsapi, free_mem);
+    SIGAR_DLLFUNC(wtsapi, query_session);
+
+    sigar_dll_func_t end;
+} sigar_wtsapi_t;
+
+typedef struct {
+    sigar_dll_handle_t handle;
+
+    SIGAR_DLLFUNC(iphlpapi, get_ipforward_table);
+    SIGAR_DLLFUNC(iphlpapi, get_if_table);
+    SIGAR_DLLFUNC(iphlpapi, get_if_entry);
+    SIGAR_DLLFUNC(iphlpapi, get_tcp_table);
+    SIGAR_DLLFUNC(iphlpapi, get_udp_table);
+    SIGAR_DLLFUNC(iphlpapi, get_tcpx_table);
+    SIGAR_DLLFUNC(iphlpapi, get_udpx_table);
+    SIGAR_DLLFUNC(iphlpapi, get_net_params);
+    SIGAR_DLLFUNC(iphlpapi, get_adapters_info);
+
+    sigar_dll_func_t end;
+} sigar_iphlpapi_t;
+
+typedef struct {
+    sigar_dll_handle_t handle;
+
+    SIGAR_DLLFUNC(advapi, convert_string_sid);
+    SIGAR_DLLFUNC(advapi, query_service_status);
+
+    sigar_dll_func_t end;
+} sigar_advapi_t;
+
+typedef struct {
+    sigar_dll_handle_t handle;
+
+    SIGAR_DLLFUNC(ntdll, query_sys_info);
+
+    sigar_dll_func_t end;
+} sigar_ntdll_t;
+
+typedef struct {
+    sigar_dll_handle_t handle;
+
+    SIGAR_DLLFUNC(psapi, enum_modules);
+    SIGAR_DLLFUNC(psapi, get_module_name);
+
+    sigar_dll_func_t end;
+} sigar_psapi_t;
+
+typedef struct {
+    sigar_dll_handle_t handle;
+
+    SIGAR_DLLFUNC(winsta, query_info);
+
+    sigar_dll_func_t end;
+} sigar_winsta_t;
+
 struct sigar_t {
     SIGAR_T_BASE;
     char *machine;
@@ -287,30 +424,13 @@ struct sigar_t {
     HKEY handle;
     char *perfbuf;
     DWORD perfbuf_size;
-    HINSTANCE adv_handle;
-    HINSTANCE ip_handle;
-    HINSTANCE nt_handle;
-    HINSTANCE ps_handle;
-    HINSTANCE wts_handle;
-    HINSTANCE sta_handle;
-    LPCONVERTSTRINGSID convert_string_sid;
-    LPGETIFTABLE get_if_table;
-    LPGETIFENTRY get_if_entry;
-    LPGETIPFORWARDTABLE get_ipforward_table;
-    LPGETTCPTABLE get_tcp_table;
-    LPGETTCPEXTABLE get_tcpx_table;
-    LPGETUDPTABLE get_udp_table;
-    LPGETUDPEXTABLE get_udpx_table;
-    LPNETPARAMS get_net_params;
-    LPADAPTERSINFO get_adapters_info;
-    LPSYSINFO get_ntsys_info;
-    LPENUMMODULES enum_modules;
-    LPGETMODULENAME get_module_name;
+    sigar_wtsapi_t wtsapi;
+    sigar_iphlpapi_t iphlpapi;
+    sigar_advapi_t advapi;
+    sigar_ntdll_t ntdll;
+    sigar_psapi_t psapi;
+    sigar_winsta_t winsta;
     sigar_win32_pinfo_t pinfo;
-    LPSTATIONQUERYINFO query_station;
-    LPWTSENUMERATESESSIONS wts_enum_sessions;
-    LPWTSFREEMEMORY wts_free;
-    LPWTSQUERYSESSION wts_query_session;
     WORD ws_version;
     int ws_error;
     LPBYTE peb; //scratch pad for getting peb info
