@@ -1813,12 +1813,42 @@ SIGAR_DECLARE(int) sigar_net_route_list_get(sigar_t *sigar,
     return SIGAR_OK;
 }
 
+static int sigar_get_if_table(sigar_t *sigar)
+{
+    ULONG size = sigar->ifconf_len;
+    DWORD rc;
+
+    if (!sigar->get_if_table) {
+        return SIGAR_ENOTIMPL;
+    }
+
+    rc = sigar->get_if_table((PMIB_IFTABLE)sigar->ifconf_buf,
+                             &size, FALSE);
+
+    if (rc == ERROR_INSUFFICIENT_BUFFER) {
+        sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
+                         "realloc ifconf_buf old=%d, new=%d",
+                         sigar->ifconf_len, size);
+        sigar->ifconf_len = size;
+        sigar->ifconf_buf = realloc(sigar->ifconf_buf,
+                                    sigar->ifconf_len);
+
+        rc = sigar->get_if_table((PMIB_IFTABLE)sigar->ifconf_buf,
+                                 &size, FALSE);
+    }
+
+    if (rc != NO_ERROR) {
+        return GetLastError();
+    }
+    else {
+        return SIGAR_OK;
+    }
+}
+
 SIGAR_DECLARE(int)
 sigar_net_interface_stat_get(sigar_t *sigar, const char *name,
                              sigar_net_interface_stat_t *ifstat)
 {
-    char *buffer = NULL;
-    ULONG buf_size = 0;
     DWORD rc, i;
     MIB_IFTABLE *ift;
     MIB_IFROW *ifr;
@@ -1829,23 +1859,11 @@ sigar_net_interface_stat_get(sigar_t *sigar, const char *name,
         return status;
     }
 
-    if (!sigar->get_if_table) {
-        return SIGAR_ENOTIMPL;
+    if ((status = sigar_get_if_table(sigar)) != SIGAR_OK) {
+        return status;
     }
 
-    rc = (*(sigar->get_if_table))((PMIB_IFTABLE)buffer, &buf_size, FALSE);
-    if (rc != ERROR_INSUFFICIENT_BUFFER) {
-        return GetLastError();
-    }
-
-    buffer = malloc(buf_size);
-    rc = (*(sigar->get_if_table))((PMIB_IFTABLE)buffer, &buf_size, FALSE);
-    if (rc != NO_ERROR) {
-        free(buffer);
-        return GetLastError();
-    }
-
-    ift = (MIB_IFTABLE *)buffer;
+    ift = (MIB_IFTABLE *)sigar->ifconf_buf;
 
     for (i=0; i<ift->dwNumEntries; i++) {
         ifr = ift->table + i;
@@ -1871,7 +1889,6 @@ sigar_net_interface_stat_get(sigar_t *sigar, const char *name,
     }
 
     if (!ifr) {
-        free(buffer);
         return ENOENT;
     }
 
@@ -1889,8 +1906,6 @@ sigar_net_interface_stat_get(sigar_t *sigar, const char *name,
     ifstat->tx_overruns   = SIGAR_FIELD_NOTIMPL;
     ifstat->tx_collisions = SIGAR_FIELD_NOTIMPL;
     ifstat->tx_carrier    = SIGAR_FIELD_NOTIMPL;
-
-    free(buffer);
 
     return SIGAR_OK;
 }
