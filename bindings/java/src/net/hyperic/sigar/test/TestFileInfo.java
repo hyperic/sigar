@@ -88,10 +88,16 @@ public class TestFileInfo extends SigarTestCase {
         
         for (int i=0; i<entries.length; i++) {
             file = entries[i];
-
+            File testFile = new File(dir, file);
+            if (!(testFile.exists() && testFile.canRead())) {
+                continue;
+            }
+            if (testFile.isHidden()) {
+                continue;
+            }
             traceln(file + ":");
             getFileInfo(sigar,
-                        new File(dir, file).getAbsolutePath());
+                        testFile.getAbsolutePath());
         }
 
         file = "NO SUCH FILE";
