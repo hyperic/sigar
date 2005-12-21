@@ -7,9 +7,9 @@
   <property name="copyright.year" value="2004,2005"/>
   <property name="version.major" value="1"/>
   <property name="version.minor" value="1"/>
-  <property name="version.maint" value="27"/>
+  <property name="version.maint" value="28"/>
   <property name="sigar.version"
-            value="${version.major}.${version.minor}.${version.maint}"/>
+            value="${version.major}.${version.minor}.${version.maint}-dev"/>
 
   <property file="${user.home}/.sigar-build.properties"/>
   <property name="project.name" value="sigar"/>
