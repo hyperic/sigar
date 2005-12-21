@@ -1725,7 +1725,8 @@ SIGAR_DECLARE(int) sigar_cpu_info_list_get(sigar_t *sigar,
 #define sigar_GetAdaptersInfo \
     sigar->iphlpapi.get_adapters_info.func
 
-static int sigar_get_adapters_info(sigar_t *sigar)
+static int sigar_get_adapters_info(sigar_t *sigar,
+                                   PIP_ADAPTER_INFO *adapter)
 {
     ULONG size = sigar->ifconf_len;
     DWORD rc;
@@ -1736,8 +1737,8 @@ static int sigar_get_adapters_info(sigar_t *sigar)
         return SIGAR_ENOTIMPL;
     }
 
-    rc = sigar_GetAdaptersInfo((PIP_ADAPTER_INFO)sigar->ifconf_buf,
-                               &size);
+    *adapter = (PIP_ADAPTER_INFO)sigar->ifconf_buf;
+    rc = sigar_GetAdaptersInfo(*adapter, &size);
 
     if (rc == ERROR_BUFFER_OVERFLOW) {
         sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
@@ -1748,8 +1749,8 @@ static int sigar_get_adapters_info(sigar_t *sigar)
         sigar->ifconf_buf = realloc(sigar->ifconf_buf,
                                     sigar->ifconf_len);
 
-        rc = sigar_GetAdaptersInfo((PIP_ADAPTER_INFO)sigar->ifconf_buf,
-                                   &size);
+        *adapter = (PIP_ADAPTER_INFO)sigar->ifconf_buf;
+        rc = sigar_GetAdaptersInfo(*adapter, &size);
     }
 
     if (rc != NO_ERROR) {
@@ -1801,11 +1802,9 @@ SIGAR_DECLARE(int) sigar_net_info_get(sigar_t *sigar,
     
     free(info);
 
-    if (sigar_get_adapters_info(sigar) != SIGAR_OK) {
+    if (sigar_get_adapters_info(sigar, &adapter) != SIGAR_OK) {
         return SIGAR_OK;
     }
-
-    adapter = (PIP_ADAPTER_INFO)sigar->ifconf_buf;
 
     while (adapter) {
         /* should only be 1 */
