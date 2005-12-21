@@ -1887,7 +1887,7 @@ SIGAR_DECLARE(int) sigar_net_route_list_get(sigar_t *sigar,
 #define sigar_GetIfTable \
     sigar->iphlpapi.get_if_table.func
 
-static int sigar_get_if_table(sigar_t *sigar)
+static int sigar_get_if_table(sigar_t *sigar, PMIB_IFTABLE *iftable)
 {
     ULONG size = sigar->ifconf_len;
     DWORD rc;
@@ -1898,8 +1898,8 @@ static int sigar_get_if_table(sigar_t *sigar)
         return SIGAR_ENOTIMPL;
     }
 
-    rc = sigar_GetIfTable((PMIB_IFTABLE)sigar->ifconf_buf,
-                          &size, FALSE);
+    *iftable = (PMIB_IFTABLE)sigar->ifconf_buf;
+    rc = sigar_GetIfTable(*iftable, &size, FALSE);
 
     if (rc == ERROR_INSUFFICIENT_BUFFER) {
         sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
@@ -1910,8 +1910,8 @@ static int sigar_get_if_table(sigar_t *sigar)
         sigar->ifconf_buf = realloc(sigar->ifconf_buf,
                                     sigar->ifconf_len);
 
-        rc = sigar_GetIfTable((PMIB_IFTABLE)sigar->ifconf_buf,
-                              &size, FALSE);
+        *iftable = (PMIB_IFTABLE)sigar->ifconf_buf;
+        rc = sigar_GetIfTable(*iftable, &size, FALSE);
     }
 
     if (rc != NO_ERROR) {
@@ -1936,11 +1936,9 @@ sigar_net_interface_stat_get(sigar_t *sigar, const char *name,
         return status;
     }
 
-    if ((status = sigar_get_if_table(sigar)) != SIGAR_OK) {
+    if ((status = sigar_get_if_table(sigar, &ift)) != SIGAR_OK) {
         return status;
     }
-
-    ift = (MIB_IFTABLE *)sigar->ifconf_buf;
 
     for (i=0; i<ift->dwNumEntries; i++) {
         ifr = ift->table + i;
