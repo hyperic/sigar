@@ -1725,9 +1725,45 @@ SIGAR_DECLARE(int) sigar_cpu_info_list_get(sigar_t *sigar,
 #define sigar_GetAdaptersInfo \
     sigar->iphlpapi.get_adapters_info.func
 
+static int sigar_get_adapters_info(sigar_t *sigar)
+{
+    ULONG size = sigar->ifconf_len;
+    DWORD rc;
+
+    DLLMOD_INIT(iphlpapi, FALSE);
+
+    if (!sigar_GetAdaptersInfo) {
+        return SIGAR_ENOTIMPL;
+    }
+
+    rc = sigar_GetAdaptersInfo((PIP_ADAPTER_INFO)sigar->ifconf_buf,
+                               &size);
+
+    if (rc == ERROR_BUFFER_OVERFLOW) {
+        sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
+                         "GetAdaptersInfo "
+                         "realloc ifconf_buf old=%d, new=%d",
+                         sigar->ifconf_len, size);
+        sigar->ifconf_len = size;
+        sigar->ifconf_buf = realloc(sigar->ifconf_buf,
+                                    sigar->ifconf_len);
+
+        rc = sigar_GetAdaptersInfo((PIP_ADAPTER_INFO)sigar->ifconf_buf,
+                                   &size);
+    }
+
+    if (rc != NO_ERROR) {
+        return GetLastError();
+    }
+    else {
+        return SIGAR_OK;
+    }
+}
+
 SIGAR_DECLARE(int) sigar_net_info_get(sigar_t *sigar,
                                       sigar_net_info_t *netinfo)
 {
+    PIP_ADAPTER_INFO adapter;
     FIXED_INFO *info;
     ULONG len = 0;
     IP_ADDR_STRING *ip;
@@ -1765,40 +1801,25 @@ SIGAR_DECLARE(int) sigar_net_info_get(sigar_t *sigar,
     
     free(info);
 
-    if (sigar_GetAdaptersInfo) {
-        PIP_ADAPTER_INFO buffer, info;
-        len = 0;
-        rc = sigar_GetAdaptersInfo(NULL, &len);
+    if (sigar_get_adapters_info(sigar) != SIGAR_OK) {
+        return SIGAR_OK;
+    }
 
-        if (rc != ERROR_BUFFER_OVERFLOW) {
-            return rc;
+    adapter = (PIP_ADAPTER_INFO)sigar->ifconf_buf;
+
+    while (adapter) {
+        /* should only be 1 */
+        if (adapter->GatewayList.IpAddress.String[0]) {
+            SIGAR_SSTRCPY(netinfo->default_gateway,
+                          adapter->GatewayList.IpAddress.String);
         }
-        buffer = malloc(len);
-
-        rc = sigar_GetAdaptersInfo(buffer, &len);
-        if (rc != NO_ERROR) {
-            free(buffer);
-            return rc;
-        }
-
-        info = buffer;
-
-        while (info) {
-            /* should only be 1 */
-            if (info->GatewayList.IpAddress.String[0]) {
-                SIGAR_SSTRCPY(netinfo->default_gateway,
-                              info->GatewayList.IpAddress.String);
-            }
 #if 0
-            if (info->DhcpEnabled) {
-                SIGAR_SSTRCPY(netinfo->dhcp_server,
-                              info->DhcpServer.IpAddress.String);
-            }
-#endif
-            info = info->Next;
+        if (apapters->DhcpEnabled) {
+            SIGAR_SSTRCPY(netinfo->dhcp_server,
+                          apdaters->DhcpServer.IpAddress.String);
         }
-
-        free(buffer);
+#endif
+        adapter = adapter->Next;
     }
 
     return SIGAR_OK;
@@ -1883,6 +1904,7 @@ static int sigar_get_if_table(sigar_t *sigar)
 
     if (rc == ERROR_INSUFFICIENT_BUFFER) {
         sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
+                         "GetIfTable "
                          "realloc ifconf_buf old=%d, new=%d",
                          sigar->ifconf_len, size);
         sigar->ifconf_len = size;
