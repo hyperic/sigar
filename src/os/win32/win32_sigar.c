@@ -226,7 +226,7 @@ static sigar_psapi_t sigar_winsta = {
 };
 
 #define DLLMOD_COPY(name) \
-    memcpy(&(*sigar)->##name, &sigar_##name, sizeof(sigar_##name))
+    memcpy(&(sigar->##name), &sigar_##name, sizeof(sigar_##name))
 
 #define DLLMOD_INIT(name, all) \
     sigar_dllmod_init(sigar, (sigar_dll_module_t *)&(sigar->##name), all)
@@ -304,19 +304,20 @@ static int sigar_dllmod_init(sigar_t *sigar,
     return SIGAR_OK;
 }
 
-int sigar_os_open(sigar_t **sigar)
+int sigar_os_open(sigar_t **sigar_ptr)
 {
     LONG result;
     HINSTANCE h;
     OSVERSIONINFO version;
     int i;
+    sigar_t *sigar;
 
-    *sigar = malloc(sizeof(**sigar));
-    (*sigar)->machine = ""; /* local machine */
-    (*sigar)->using_wide = 0; /*XXX*/
+    *sigar_ptr = sigar = malloc(sizeof(*sigar));
+    sigar->machine = ""; /* local machine */
+    sigar->using_wide = 0; /*XXX*/
 
-    (*sigar)->perfbuf = NULL;
-    (*sigar)->perfbuf_size = 0;
+    sigar->perfbuf = NULL;
+    sigar->perfbuf_size = 0;
 
     version.dwOSVersionInfoSize = sizeof(version);
     GetVersionEx(&version);
@@ -325,24 +326,24 @@ int sigar_os_open(sigar_t **sigar)
      * 4 == NT 4.0
      * 5 == 2000, XP, 2003 Server
      */
-    (*sigar)->winnt = (version.dwMajorVersion == 4);
+    sigar->winnt = (version.dwMajorVersion == 4);
 
-    if (USING_WIDE_S(*sigar)) {
+    if (USING_WIDE_S(sigar)) {
         WCHAR wmachine[MAX_PATH+1];
 
-        SIGAR_A2W((*sigar)->machine, wmachine, sizeof(wmachine));
+        SIGAR_A2W(sigar->machine, wmachine, sizeof(wmachine));
 
         result = RegConnectRegistryW(wmachine,
                                      HKEY_PERFORMANCE_DATA,
-                                     &(*sigar)->handle);
+                                     &sigar->handle);
     }
     else {
-        result = RegConnectRegistryA((*sigar)->machine,
+        result = RegConnectRegistryA(sigar->machine,
                                      HKEY_PERFORMANCE_DATA,
-                                     &(*sigar)->handle);
+                                     &sigar->handle);
     }
 
-    get_sysinfo(*sigar);
+    get_sysinfo(sigar);
 
     DLLMOD_COPY(wtsapi);
     DLLMOD_COPY(iphlpapi);
@@ -351,16 +352,16 @@ int sigar_os_open(sigar_t **sigar)
     DLLMOD_COPY(psapi);
     DLLMOD_COPY(winsta);
 
-    (*sigar)->log_level = -1; /* else below segfaults */
+    sigar->log_level = -1; /* else below segfaults */
     /* XXX init early for use by javasigar.c */
-    sigar_dllmod_init(*sigar,
-                      (sigar_dll_module_t *)&(*sigar)->advapi,
+    sigar_dllmod_init(sigar,
+                      (sigar_dll_module_t *)&sigar->advapi,
                       FALSE);
 
-    (*sigar)->pinfo.pid = -1;
-    (*sigar)->ws_version = 0;
-    (*sigar)->ncpu = 0;
-    (*sigar)->peb = NULL;
+    sigar->pinfo.pid = -1;
+    sigar->ws_version = 0;
+    sigar->ncpu = 0;
+    sigar->peb = NULL;
 
     return result;
 }
