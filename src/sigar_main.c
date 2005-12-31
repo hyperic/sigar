@@ -1,12 +1,30 @@
+#define WIN32
+#if defined(WIN32)
+#define WINDOWS_LEAN_AND_MEAN
+#define FILESEP '\\'
+#define LIBPRE ""
+#include "windows.h"
+#else
+#define FILESEP '/'
+#define LIBPRE "lib"
 #include <dlfcn.h>
+#include <strings.h>
+#include <unistd.h>
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <strings.h>
 #include <sys/types.h>
-#include <unistd.h>
 #include "sigar.h"
 #include "sigar_fileinfo.h"
+
+#if defined(WIN32)
+#  define LIBEXT "dll"
+#elif defined(DARWIN)
+#  define LIBEXT "dylib"
+#else
+#  define LIBEXT "so"
+#endif
 
 typedef struct {
     const char *name;
@@ -31,23 +49,23 @@ struct {
     
     struct {
         const char *name;
-        int (*func)(sigar_t *, pid_t, sigar_proc_exe_t *);
+        int (*func)(sigar_t *, sigar_pid_t, sigar_proc_exe_t *);
     } proc_exe;
     struct {
         const char *name;
-        int (*func)(sigar_t *, pid_t, sigar_proc_args_t *);
+        int (*func)(sigar_t *, sigar_pid_t, sigar_proc_args_t *);
     } proc_args;
     struct {
         const char *name;
-        int (*func)(sigar_t *, pid_t, sigar_proc_env_t *);
+        int (*func)(sigar_t *, sigar_pid_t, sigar_proc_env_t *);
     } proc_env;
     struct {
         const char *name;
-        int (*func)(sigar_t *, pid_t, sigar_proc_modules_t *);
+        int (*func)(sigar_t *, sigar_pid_t, sigar_proc_modules_t *);
     } proc_modules;
     struct {
         const char *name;
-        int (*func)(sigar_t *, pid_t, sigar_proc_fd_t *);
+        int (*func)(sigar_t *, sigar_pid_t, sigar_proc_fd_t *);
     } proc_fd;
     struct {
         const char *name;
@@ -82,6 +100,7 @@ static int sigar_main(char *argv0)
 {
     int status;
     sigar_t *sigar;
+    char *errmsg;
     char *ptr;
     char sigarlib[8096], archlib[512];
     void *handle;
@@ -89,35 +108,67 @@ static int sigar_main(char *argv0)
         (sigar_callback_t *)&sigar_callbacks;
 
     strcpy(sigarlib, argv0);
-    ptr = rindex(sigarlib, '/');
+#ifdef WIN32
+    if ((ptr = strstr(sigarlib, ".exe"))) {
+        *ptr = '\0';
+    }
+#endif
+    ptr = strrchr(sigarlib, FILESEP);
     if (ptr) {
         ++ptr;
-        sprintf(archlib, "lib%s.so", ptr);
-        strcpy(ptr, archlib);
     }
+    else {
+        ptr = sigarlib;
+    }
+
+    sprintf(archlib, LIBPRE "%s." LIBEXT, ptr);
+    strcpy(ptr, archlib);
 
 #if defined(__sun)
     dlopen("/usr/lib/libnsl.so", RTLD_NOW|RTLD_GLOBAL);
 #endif
 
+#if defined(WIN32)
+    if (!(handle = LoadLibrary(sigarlib))) {
+        errmsg = "XXX FormatMessage";
+    }
+#else
     if (!(handle = dlopen(sigarlib, RTLD_LAZY))) {
+        errmsg = dlerror();
+    }
+#endif
+
+    if (!handle) {
         fprintf(stderr, "Error opening '%s': %s\n",
-                sigarlib, dlerror());
+                sigarlib, errmsg);
         exit(1);
     }
 
     while (callbacks->name) {
+#if defined(WIN32)
+        callbacks->func = GetProcAddress(handle, callbacks->name);
+#else
         callbacks->func = dlsym(handle, callbacks->name);
+#endif
         callbacks++;
     }
 
     if (isatty(fileno(stdin))) {
-        sigar_version_t *version =
-            sigar_callbacks.version.func();
+        sigar_version_t *version;
+
+        if (!sigar_callbacks.version.func) {
+            exit(1);
+        }
+
+        version = sigar_callbacks.version.func();
 
         printf("version=%s, build date=%s\n",
                version->version, version->build_date);
+#if defined(WIN32)
+        FreeLibrary(handle);
+#else
         dlclose(handle);
+#endif
         exit(0);
     }
 
@@ -131,8 +182,11 @@ static int sigar_main(char *argv0)
     /* XXX pipe loop */
 
     sigar_callbacks.close.func(sigar);
+#if defined(WIN32)
+    FreeLibrary(handle);
+#else
     dlclose(handle);
-
+#endif
     return 0;
 }
 

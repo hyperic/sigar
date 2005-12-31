@@ -206,9 +206,8 @@
   </target>
 
   <target name="sigar-exe-cpptasks">
-    <!-- XXX fuckers complain about '.' in libname -->
     <cc outtype="executable"
-	outfile="${jni.objdir}/lib/${jni.libname}"
+	outfile="${jni.bin}/lib/${jni.libname}"
 	objdir="${jni.objdir}">
 
       <compiler name="${jni.compiler}" debug="${jni.debug}"/>
@@ -217,6 +216,8 @@
         <libset dir="${jni.bin}/lib"
                 libs="${jni.libname}"/>
       </linker>
+
+      <includepath location="../../include"/>
 
       <fileset dir="${jni.source.dir}">
         <include name="src/sigar_main.c"/>
