@@ -1269,6 +1269,7 @@ JNIEXPORT jlong SIGAR_JNI(ResourceLimit_INFINITY)
 #ifdef WIN32
     return 0x7fffffff;
 #else
+#include <sys/time.h>
 #include <sys/resource.h>
     return RLIM_INFINITY;
 #endif

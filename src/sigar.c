@@ -1028,6 +1028,10 @@ typedef struct {
 
 #define RLIMIT_PSIZE (RLIM_NLIMITS+3)
 
+#ifndef RLIMIT_AS
+#define RLIMIT_AS RLIMIT_VMEM
+#endif
+
 static rlimit_field_t sigar_rlimits[] = {
     { RLIMIT_CPU,    1,    RlimitOffsets(cpu) },
     { RLIMIT_FSIZE,  1024, RlimitOffsets(file_size) },
