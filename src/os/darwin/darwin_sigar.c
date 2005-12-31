@@ -529,7 +529,7 @@ int sigar_loadavg_get(sigar_t *sigar,
 int sigar_proc_list_get(sigar_t *sigar,
                         sigar_proc_list_t *proclist)
 {
-#if 1 /*def DARWIN*/ /* XXX dont think this works on freebsd 4.x */
+#if defined(DARWIN) || defined(SIGAR_FREEBSD5)
     int mib[4] = { CTL_KERN, KERN_PROC, KERN_PROC_PROC, 0 };
     int i, num;
     size_t len;
