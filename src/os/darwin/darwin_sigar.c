@@ -495,6 +495,43 @@ int sigar_cpu_get(sigar_t *sigar, sigar_cpu_t *cpu)
 
 int sigar_cpu_list_get(sigar_t *sigar, sigar_cpu_list_t *cpulist)
 {
+#ifdef DARWIN
+    kern_return_t status;
+    mach_msg_type_number_t count;
+    processor_cpu_load_info_data_t *cpuload;
+    natural_t i, ncpu;
+
+    status = host_processor_info(mach_host_self(),
+                                 PROCESSOR_CPU_LOAD_INFO,
+                                 &ncpu,
+                                 (processor_info_array_t*)&cpuload,
+                                 &count);
+
+    if (status != KERN_SUCCESS) {
+        return errno;
+    }
+
+    sigar_cpu_list_create(cpulist);
+
+    for (i=0; i<ncpu; i++) {
+        sigar_cpu_t *cpu;
+
+        SIGAR_CPU_LIST_GROW(cpulist);
+
+        cpu = &cpulist->data[cpulist->number++];
+
+        cpu->user = cpuload[i].cpu_ticks[CPU_STATE_USER];
+        cpu->sys  = cpuload[i].cpu_ticks[CPU_STATE_SYSTEM];
+        cpu->idle = cpuload[i].cpu_ticks[CPU_STATE_IDLE];
+        cpu->nice = cpuload[i].cpu_ticks[CPU_STATE_NICE];
+        cpu->wait = 0; /*N/A*/
+        cpu->total = cpu->user + cpu->nice + cpu->sys + cpu->idle;
+    }
+
+    vm_deallocate(mach_task_self(), (vm_address_t)cpuload, count);
+
+    return SIGAR_OK;
+#else
     sigar_cpu_t *cpu;
 
     sigar_cpu_list_create(cpulist);
@@ -503,6 +540,7 @@ int sigar_cpu_list_get(sigar_t *sigar, sigar_cpu_list_t *cpulist)
     cpu = &cpulist->data[cpulist->number++];
 
     return sigar_cpu_get(sigar, cpu);
+#endif
 }
 
 int sigar_uptime_get(sigar_t *sigar,
