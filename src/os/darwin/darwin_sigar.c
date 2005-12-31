@@ -215,17 +215,19 @@ int sigar_mem_get(sigar_t *sigar, sigar_mem_t *mem)
     mach_msg_type_number_t count = sizeof(vmstat) / sizeof(integer_t);
 #endif
     int mib[2];
-    int value;
-    size_t len = sizeof(value);
+    unsigned long value;
+    size_t len;
 
     mib[0] = CTL_HW;
 
     mib[1] = HW_PAGESIZE;
+    len = sizeof(sigar->pagesize);
     if (sysctl(mib, NMIB(mib), &sigar->pagesize, &len, NULL, 0) < 0) {
         return errno;
     }
 
     mib[1] = HW_PHYSMEM;
+    len = sizeof(value);
     if (sysctl(mib, NMIB(mib), &value, &len, NULL, 0) < 0) {
         return errno;
     }
