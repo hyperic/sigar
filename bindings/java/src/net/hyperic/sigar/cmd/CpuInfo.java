@@ -62,8 +62,10 @@ public class CpuInfo extends SigarCommandBase {
             output(cpus[i]);
         }
 
-        println("Totals........");
-        output(this.sigar.getCpuPerc());
+        if (infos.length > 1) {
+            println("Totals........");
+            output(this.sigar.getCpuPerc());
+        }
     }
 
     public static void main(String[] args) throws Exception {
