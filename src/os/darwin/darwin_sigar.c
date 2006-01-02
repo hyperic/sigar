@@ -48,6 +48,7 @@
 
 #ifdef SIGAR_FREEBSD5
 
+#define KI_FD   ki_fd
 #define KI_PID  ki_pid
 #define KI_PPID ki_ppid
 #define KI_PRI  ki_pri.pri_user
@@ -65,8 +66,10 @@
 #define KI_SSZ  ki_ssize
 #define KI_FLAG ki_flag
 #define KI_START ki_start
+
 #else
 
+#define KI_FD   kp_proc.p_fd
 #define KI_PID  kp_proc.p_pid
 #define KI_PPID kp_eproc.e_ppid
 #define KI_PRI  kp_proc.p_priority
@@ -84,6 +87,7 @@
 #define KI_SSZ  kp_eproc.e_vm.vm_ssize
 #define KI_FLAG kp_eproc.e_flag
 #define KI_START kp_proc.p_starttime
+
 #endif
 
 #ifndef DARWIN
@@ -1984,7 +1988,7 @@ int sigar_net_connection_list_get(sigar_t *sigar,
     return SIGAR_OK;
 }
 
-#if defined(SIGAR_FREEBSD5)
+#ifndef DARWIN
 
 #define _KERNEL
 #include <sys/file.h>
@@ -2054,12 +2058,12 @@ int sigar_proc_port_get(sigar_t *sigar, int protocol,
         if (pinfo[i].KI_FLAG & P_SYSTEM) {
             continue;
         }
-        if (pinfo[i].ki_fd) {
+        if (pinfo[i].KI_FD) {
             struct filedesc pfd;
             struct file **ofiles, ofile;
             int j, osize;
 
-            status = kread(sigar, &pfd, sizeof(pfd), (long)pinfo[i].ki_fd);
+            status = kread(sigar, &pfd, sizeof(pfd), (long)pinfo[i].KI_FD);
             if (status != SIGAR_OK) {
                 return status;
             }
@@ -2094,7 +2098,7 @@ int sigar_proc_port_get(sigar_t *sigar, int protocol,
                 if (ofile.f_type == DTYPE_SOCKET &&
                     (struct socket *)ofile.f_data == sockp)
                 {
-                    *pid = pinfo[i].ki_pid;
+                    *pid = pinfo[i].KI_PID;
                     free(ofiles);
                     return SIGAR_OK;
                 }
