@@ -521,14 +521,30 @@ int sigar_cpu_list_get(sigar_t *sigar, sigar_cpu_list_t *cpulist)
 
     return SIGAR_OK;
 #else
+    int status, i;
     sigar_cpu_t *cpu;
 
     sigar_cpu_list_create(cpulist);
 
-    /* XXX multi cpu */
+    /* XXX howto multi cpu in freebsd?
+     * for now just report all metrics on the 1st cpu
+     * 0's for the rest
+     */
     cpu = &cpulist->data[cpulist->number++];
 
-    return sigar_cpu_get(sigar, cpu);
+    status = sigar_cpu_get(sigar, cpu);
+    if (status != SIGAR_OK) {
+        return status;
+    }
+
+    for (i=1; i<sigar->ncpu; i++) {
+        SIGAR_CPU_LIST_GROW(cpulist);
+
+        cpu = &cpulist->data[cpulist->number++];
+        SIGAR_ZERO(cpu);
+    }
+
+    return SIGAR_OK;
 #endif
 }
 
