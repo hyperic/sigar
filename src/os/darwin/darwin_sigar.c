@@ -1512,7 +1512,6 @@ int sigar_cpu_info_list_get(sigar_t *sigar,
 int sigar_net_route_list_get(sigar_t *sigar,
                              sigar_net_route_list_t *routelist)
 {
-#if defined(SIGAR_FREEBSD5) || defined(DARWIN)
     size_t needed;
     int bit;
     char *buf, *next, *lim;
@@ -1584,9 +1583,6 @@ int sigar_net_route_list_get(sigar_t *sigar,
     free(buf);
 
     return SIGAR_OK;
-#else
-    return SIGAR_ENOTIMPL;
-#endif
 }
 
 typedef enum {
