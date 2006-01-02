@@ -233,6 +233,7 @@ int sigar_mem_get(sigar_t *sigar, sigar_mem_t *mem)
     }
 
     mem->total = value;
+
 #ifdef DARWIN
     status = host_statistics(sigar->mach_port, HOST_VM_INFO,
                              (host_info_t)&vmstat, &count);
@@ -253,20 +254,6 @@ int sigar_mem_get(sigar_t *sigar, sigar_mem_t *mem)
         mem->free = value * sigar->pagesize;
     }
 #endif
-    /*
-    int status;
-    struct vmmeter vmem;
-
-    status = kread(sigar, &vmem, sizeof(vmem),
-                   sigar->koffsets[KOFFSET_VMMETER]);
-
-    if (status != SIGAR_OK) {
-        return status;
-    }    
-
-    mem->total = vmem.v_page_count * sigar->pagesize;
-    mem->free  = vmem.v_free_count * sigar->pagesize;
-    */
 
     mem->used = mem->total - mem->free;
     mem->shared = SIGAR_FIELD_NOTIMPL; /*XXX*/
