@@ -42,6 +42,8 @@
 
 #if defined (__FreeBSD__) && (__FreeBSD_version >= 500013)
 #define SIGAR_FREEBSD5
+#else
+#define SIGAR_FREEBSD4
 #endif
 
 #ifdef SIGAR_FREEBSD5
@@ -961,6 +963,9 @@ static int get_proc_times(sigar_pid_t pid, sigar_proc_time_t *time)
 int sigar_proc_time_get(sigar_t *sigar, sigar_pid_t pid,
                         sigar_proc_time_t *proctime)
 {
+#ifdef SIGAR_FREEBSD4
+    struct user user;
+#endif
     int status = sigar_get_pinfo(sigar, pid);
     struct kinfo_proc *pinfo = sigar->pinfo;
 
@@ -973,16 +978,29 @@ int sigar_proc_time_get(sigar_t *sigar, sigar_pid_t pid,
         return status;
     }
     proctime->start_time = tv2sec(pinfo->KI_START) * 1000;
-    return SIGAR_OK;
 #elif defined(SIGAR_FREEBSD5)
     proctime->user  = tv2sec(pinfo->ki_rusage.ru_utime);
     proctime->sys   = tv2sec(pinfo->ki_rusage.ru_stime);
     proctime->total = proctime->user + proctime->sys;
     proctime->start_time = tv2sec(pinfo->KI_START) * 1000;
-    return SIGAR_OK;
 #else
-    return SIGAR_ENOTIMPL;
+    if (!sigar->kmem) {
+        return SIGAR_ENOTIMPL;
+    }
+
+    status = kread(sigar, &user, sizeof(user),
+                   (u_long)pinfo->kp_proc.p_addr);
+    if (status != SIGAR_OK) {
+        return status;
+    }
+
+    proctime->user  = tv2sec(user.u_stats.p_ru.ru_utime);
+    proctime->sys   = tv2sec(user.u_stats.p_ru.ru_stime);
+    proctime->total = proctime->user + proctime->sys;
+    proctime->start_time = tv2sec(user.u_stats.p_start) * 1000;
 #endif
+
+    return SIGAR_OK;
 }
 
 int sigar_proc_state_get(sigar_t *sigar, sigar_pid_t pid,
