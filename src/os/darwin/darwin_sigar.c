@@ -1204,7 +1204,7 @@ int sigar_proc_env_get(sigar_t *sigar, sigar_pid_t pid,
 int sigar_proc_fd_get(sigar_t *sigar, sigar_pid_t pid,
                       sigar_proc_fd_t *procfd)
 {
-#if defined(SIGAR_FREEBSD5)
+#ifndef DARWIN
     int status;
     struct kinfo_proc *pinfo;
     struct filedesc filed;
@@ -1222,7 +1222,7 @@ int sigar_proc_fd_get(sigar_t *sigar, sigar_pid_t pid,
     }
     pinfo = sigar->pinfo;
 
-    status = kread(sigar, &filed, sizeof(filed), (u_long)pinfo->ki_fd);
+    status = kread(sigar, &filed, sizeof(filed), (u_long)pinfo->KI_FD);
     if (status != SIGAR_OK) {
         return status;
     }
