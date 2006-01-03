@@ -431,6 +431,48 @@ void sigar_cpu_model_adjust(sigar_t *sigar, sigar_cpu_info_t *info)
     strcpy(info->model, ptr);
 }
 
+/* attempt to derive MHz from model name
+ * currently works for certain intel strings
+ * see exp/intel_amd_cpu_models.txt
+ */ 
+int sigar_cpu_mhz_from_model(char *model)
+{
+    int mhz = SIGAR_FIELD_NOTIMPL;
+    char *ptr = model;
+
+    while (*ptr && (ptr = strchr(ptr, ' '))) {
+        while(*ptr && !sigar_isdigit(*ptr)) {
+            ptr++;
+        }
+        mhz = sigar_strtoul(ptr);
+
+        if (*ptr == '.') {
+            /* e.g. "2.40GHz" */
+            ++ptr;
+            mhz *= 100;
+            mhz += sigar_strtoul(ptr);
+            break;
+        }
+        else if (strnEQ(ptr, "GHz", 3) ||
+                 strnEQ(ptr, "MHz", 3))
+        {
+            /* e.g. "1500MHz" */
+            break;
+        }
+        else {
+            mhz = SIGAR_FIELD_NOTIMPL;
+        }
+    }
+
+    if (mhz != SIGAR_FIELD_NOTIMPL) {
+        if (strnEQ(ptr, "GHz", 3)) {
+            mhz *= 10;
+        }
+    }
+
+    return mhz;
+}
+
 #if !defined(WIN32) && !defined(NETWARE)
 #include <netdb.h>
 #include <rpc/rpc.h>
