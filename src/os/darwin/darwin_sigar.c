@@ -1107,8 +1107,8 @@ int sigar_proc_args_get(sigar_t *sigar, sigar_pid_t pid,
     }
 
     return SIGAR_OK;
-#elif defined (__FreeBSD__) && (__FreeBSD_version >= 500013)
-    char buffer[8096], *ptr=buffer;
+#else
+    char buffer[ARG_MAX+1], *ptr=buffer;
     size_t len = sizeof(buffer);
     int mib[4] = { CTL_KERN, KERN_PROC, KERN_PROC_ARGS, 0 };
 
@@ -1140,8 +1140,6 @@ int sigar_proc_args_get(sigar_t *sigar, sigar_pid_t pid,
     }
 
     return SIGAR_OK;
-#else
-    return PROCFS_STATUS(sigar_procfs_args_get(sigar, pid, procargs));
 #endif
 }
 
