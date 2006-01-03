@@ -1136,6 +1136,10 @@ int sigar_proc_args_get(sigar_t *sigar, sigar_pid_t pid,
 
         procargs->data[procargs->number++] = arg;
 
+        len -= alen;
+        if (len <= 0) {
+            break;
+        }
         ptr += alen;
     }
 
