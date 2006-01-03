@@ -1456,6 +1456,11 @@ int sigar_cpu_info_list_get(sigar_t *sigar,
         }
     }
 
+    if (mhz == SIGAR_FIELD_NOTIMPL) {
+        /* freebsd4 */
+        mhz = sigar_cpu_mhz_from_model(model);
+    }
+
     if ((ptr = strchr(model, ' '))) {
         *ptr = '\0';
         if (strstr(model, "Intel")) {
