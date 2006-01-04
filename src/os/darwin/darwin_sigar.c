@@ -288,18 +288,7 @@ int sigar_mem_get(sigar_t *sigar, sigar_mem_t *mem)
 
 #define SWI_MAXMIB 3
 
-#ifndef XSWDEV_VERSION
-#define XSWDEV_VERSION  1
-struct xswdev {
-    u_int   xsw_version;
-    udev_t  xsw_dev;
-    int     xsw_flags;
-    int     xsw_nblks;
-    int     xsw_used;
-};
-#endif
-
-#ifdef __FreeBSD__
+#ifdef SIGAR_FREEBSD5
 /* code in this function is based on FreeBSD 5.3 kvm_getswapinfo.c */
 static int getswapinfo_sysctl(struct kvm_swap *swap_ary,
                               int swap_max) 
@@ -365,6 +354,8 @@ static int getswapinfo_sysctl(struct kvm_swap *swap_ary,
 
     return SIGAR_OK;
 }
+#else
+#define getswapinfo_sysctl(swap_ary, swap_max) SIGAR_ENOTIMPL
 #endif
 
 int sigar_swap_get(sigar_t *sigar, sigar_swap_t *swap)
