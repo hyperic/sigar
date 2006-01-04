@@ -197,6 +197,9 @@ int sigar_os_close(sigar_t *sigar)
     if (sigar->pinfo) {
         free(sigar->pinfo);
     }
+    if (sigar->kmem) {
+        kvm_close(sigar->kmem);
+    }
     free(sigar);
     return SIGAR_OK;
 }
