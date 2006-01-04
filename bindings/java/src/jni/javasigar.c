@@ -110,8 +110,20 @@ static void sigar_throw_notimpl(JNIEnv *env, char *msg)
 static void sigar_throw_error(JNIEnv *env, jni_sigar_t *jsigar, int err)
 {
     jclass errorClass;
+    int err_type = err;
 
-    switch (err) {
+    /* 
+     * support:
+     * #define SIGAR_EPERM_KMEM (SIGAR_OS_START_ERROR+EACCES)
+     * this allows for os impl specific message
+     * (e.g. Failed to open /dev/kmem) but still map to the proper
+     * Sigar*Exception
+     */
+    if (err_type > SIGAR_OS_START_ERROR) {
+        err_type -= SIGAR_OS_START_ERROR;
+    }
+
+    switch (err_type) {
       case SIGAR_ENOENT:
         errorClass = SIGAR_FIND_CLASS("SigarFileNotFoundException");
         break;
