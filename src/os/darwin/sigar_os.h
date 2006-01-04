@@ -32,7 +32,7 @@ struct sigar_t {
 #endif
 };
 
-#define SIGAR_EPERM_KMEM (SIGAR_OS_START_ERROR+1)
+#define SIGAR_EPERM_KMEM (SIGAR_OS_START_ERROR+EACCES)
 #define SIGAR_EPROC_NOENT (SIGAR_OS_START_ERROR+2)
 
 #endif /* SIGAR_OS_H */
