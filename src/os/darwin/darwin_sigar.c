@@ -992,7 +992,7 @@ int sigar_proc_time_get(sigar_t *sigar, sigar_pid_t pid,
     proctime->start_time = tv2sec(pinfo->KI_START) * 1000;
 #else
     if (!sigar->kmem) {
-        return SIGAR_ENOTIMPL;
+        return SIGAR_EPERM_KMEM;
     }
 
     status = kread(sigar, &user, sizeof(user),
@@ -1161,7 +1161,7 @@ int sigar_proc_env_get(sigar_t *sigar, sigar_pid_t pid,
     int num;
 
     if (!sigar->kmem) {
-        return SIGAR_ENOTIMPL;
+        return SIGAR_EPERM_KMEM;
     }
 
     pinfo = kvm_getprocs(sigar->kmem, KERN_PROC_PID, pid, &num);
@@ -1219,7 +1219,7 @@ int sigar_proc_fd_get(sigar_t *sigar, sigar_pid_t pid,
     size_t size;
 #endif
     if (!sigar->kmem) {
-        return SIGAR_ENOTIMPL;
+        return SIGAR_EPERM_KMEM;
     }
 
     if ((status = sigar_get_pinfo(sigar, pid)) != SIGAR_OK) {
@@ -2022,7 +2022,7 @@ int sigar_proc_port_get(sigar_t *sigar, int protocol,
     }
 
     if (!sigar->kmem) {
-        return EPERM;
+        return SIGAR_EPERM_KMEM;
     }
 
     nl[0].n_name = "_tcb"; /* XXX cache */
