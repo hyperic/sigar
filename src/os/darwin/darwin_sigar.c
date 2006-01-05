@@ -40,10 +40,12 @@
 
 #define NMIB(mib) (sizeof(mib)/sizeof(mib[0]))
 
-#if defined (__FreeBSD__) && (__FreeBSD_version >= 500013)
-#define SIGAR_FREEBSD5
-#else
-#define SIGAR_FREEBSD4
+#ifdef __FreeBSD__
+#  if (__FreeBSD_version >= 500013)
+#    define SIGAR_FREEBSD5
+#  else
+#    define SIGAR_FREEBSD4
+#  endif
 #endif
 
 #ifdef SIGAR_FREEBSD5
@@ -197,9 +199,11 @@ int sigar_os_close(sigar_t *sigar)
     if (sigar->pinfo) {
         free(sigar->pinfo);
     }
+#ifndef DARWIN
     if (sigar->kmem) {
         kvm_close(sigar->kmem);
     }
+#endif
     free(sigar);
     return SIGAR_OK;
 }
