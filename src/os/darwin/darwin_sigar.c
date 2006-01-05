@@ -503,7 +503,7 @@ int sigar_cpu_list_get(sigar_t *sigar, sigar_cpu_list_t *cpulist)
     processor_cpu_load_info_data_t *cpuload;
     natural_t i, ncpu;
 
-    status = host_processor_info(mach_host_self(),
+    status = host_processor_info(sigar->mach_port,
                                  PROCESSOR_CPU_LOAD_INFO,
                                  &ncpu,
                                  (processor_info_array_t*)&cpuload,
