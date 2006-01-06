@@ -226,9 +226,11 @@ int sigar_mem_get(sigar_t *sigar, sigar_mem_t *mem)
     vm_statistics_data_t vmstat;
     kern_return_t status;
     mach_msg_type_number_t count = sizeof(vmstat) / sizeof(integer_t);
+    uint64_t value64;
+#else
+    unsigned long value;
 #endif
     int mib[2];
-    unsigned long value;
     size_t len;
 
     mib[0] = CTL_HW;
@@ -239,13 +241,19 @@ int sigar_mem_get(sigar_t *sigar, sigar_mem_t *mem)
         return errno;
     }
 
+#ifdef DARWIN
+    mib[1] = HW_MEMSIZE;
+#   define MEM_VAL value64
+#else
     mib[1] = HW_PHYSMEM;
-    len = sizeof(value);
-    if (sysctl(mib, NMIB(mib), &value, &len, NULL, 0) < 0) {
+#   define MEM_VAL value
+#endif
+    len = sizeof(MEM_VAL);
+    if (sysctl(mib, NMIB(mib), &MEM_VAL, &len, NULL, 0) < 0) {
         return errno;
     }
 
-    mem->total = value;
+    mem->total = MEM_VAL;
 
 #ifdef DARWIN
     status = host_statistics(sigar->mach_port, HOST_VM_INFO,
