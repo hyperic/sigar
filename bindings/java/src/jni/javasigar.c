@@ -1286,3 +1286,31 @@ JNIEXPORT jlong SIGAR_JNI(ResourceLimit_INFINITY)
     return RLIM_INFINITY;
 #endif
 }
+
+JNIEXPORT jstring SIGAR_JNI(win32_Win32_findExecutable)
+(JNIEnv *env, jclass sigar_class, jstring jname)
+{
+#ifdef WIN32
+#include "shellapi.h"
+    const char *name;
+    jboolean is_copy;
+    char exe[MAX_PATH];
+    LONG result;
+    jstring jexe = NULL;
+
+    name = JENV->GetStringUTFChars(env, jname, &is_copy);
+
+    if ((result = (LONG)FindExecutable(name, ".", exe)) > 32) {
+        jexe = JENV->NewStringUTF(env, exe);
+    }
+
+    if (is_copy) {
+        JENV->ReleaseStringUTFChars(env, jname, name);
+    }
+
+    return jexe;
+#else
+    sigar_throw_notimpl(env, "win32 only");
+    return NULL;
+#endif
+}
