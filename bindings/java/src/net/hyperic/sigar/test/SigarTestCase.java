@@ -17,7 +17,9 @@ public abstract class SigarTestCase extends TestCase {
     private static Sigar sigar = null;
     private Properties props = new Properties();
 
-    private static boolean verbose = false;
+    private static boolean verbose =
+        "true".equals(System.getProperty("sigar.testVerbose"));
+
     private static PrintStream out = System.out;
 
     public SigarTestCase(String name) {
