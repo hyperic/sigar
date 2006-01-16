@@ -34,7 +34,7 @@ public abstract class Win32 {
 
         String exe;
         try {
-            exe = findExecutable(name);
+            exe = findExecutable(new File(name).getAbsolutePath());
         } catch (SigarException e) {
             return null;
         }
