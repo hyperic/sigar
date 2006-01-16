@@ -102,6 +102,17 @@ JNIEXPORT jlong SIGAR_JNI(win32_Pdh_pdhAddCounter)
 
     /* Add the counter that created the data in the log file. */
     status = PdhAddCounter(h_query, counter_path, 0, &h_counter);
+
+    if (status == PDH_CSTATUS_NO_COUNTER) {
+        /* if given counter does not exist,
+         * try the same name w/ "/sec" appended
+         */
+        char counter_sec[MAX_PATH];
+        strcpy(counter_sec, counter_path);
+        strcat(counter_sec, "/sec");
+        status = PdhAddCounter(h_query, counter_sec, 0, &h_counter);
+    }
+
     JENV->ReleaseStringUTFChars(env, cp, counter_path);
 
     if (status != ERROR_SUCCESS) {
