@@ -54,10 +54,12 @@ public class TestProcExe extends SigarTestCase {
 
             traceln("exe='" + exe.getName() + "'");
 
-            assertTrue(exeFile.exists());
+            if (exe.getName().length() > 0) {
+                assertTrue(exeFile.exists());
 
-            //win32 has .exe
-            assertTrue(exeFile.getName().startsWith("java"));
+                //win32 has .exe
+                assertTrue(exeFile.getName().startsWith("java"));
+            }
         } catch (SigarNotImplementedException e) {
             //ok
         }
