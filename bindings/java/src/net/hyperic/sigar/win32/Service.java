@@ -262,6 +262,30 @@ public class Service extends Win32 {
         }
     }
 
+    public void pause() throws Win32Exception
+    {
+        control(CONTROL_PAUSE);
+    }
+
+    public void pause(long timeout) throws Win32Exception
+    {
+        long status;
+        
+        pause();
+
+        Waiter waiter =
+            new Waiter(this, timeout, SERVICE_PAUSED, SERVICE_PAUSE_PENDING);
+
+        if (!waiter.sleep()) {
+            throw new Win32Exception("Failed to pause service");
+        }
+    }
+
+    public void resume() throws Win32Exception
+    {
+        control(CONTROL_RESUME);
+    }
+
     public ServiceConfig getConfig() throws Win32Exception {
         ServiceConfig config = new ServiceConfig();
         QueryServiceConfig(this.service, config);

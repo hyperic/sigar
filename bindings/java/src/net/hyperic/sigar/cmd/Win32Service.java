@@ -15,6 +15,8 @@ public class Win32Service extends SigarCommandBase {
             "state",
             "start",
             "stop",
+            "pause",
+            "resume",
             "restart",
         });
     
@@ -66,6 +68,12 @@ public class Win32Service extends SigarCommandBase {
             }
             else if (cmd.equals("stop")) {
                 service.stop();
+            }
+            else if (cmd.equals("pause")) {
+                service.pause();
+            }
+            else if (cmd.equals("resume")) {
+                service.resume();
             }
             else if (cmd.equals("delete")) {
                 service.delete();
