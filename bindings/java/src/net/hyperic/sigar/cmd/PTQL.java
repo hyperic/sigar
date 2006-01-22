@@ -1,13 +1,10 @@
 package net.hyperic.sigar.cmd;
 
-import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Map;
 import java.lang.reflect.Method;
 
-import net.hyperic.sigar.Sigar;
 import net.hyperic.sigar.SigarException;
-import net.hyperic.sigar.SigarProxy;
 
 import net.hyperic.sigar.util.GetlineCompleter;
 
@@ -30,10 +27,6 @@ public class PTQL
     implements GetlineCompleter {
 
     private Shell shell;
-    private PrintStream out = System.out;
-    private Sigar sigar;
-    private SigarProxy proxy;
-    private long[] foundPids = null;
     private Ps ps;
     private GetlineCompleter m_completer;
     private Map methods;
@@ -42,9 +35,6 @@ public class PTQL
 
     public PTQL(Shell shell) {
         this.shell = shell;
-        this.out   = shell.getOutStream();
-        this.sigar = shell.getSigar();
-        this.proxy = shell.getSigarProxy();
         this.ps    = new Ps(this.shell);
         this.methods = ProcessQueryBuilder.getMethods();
         this.m_completer =

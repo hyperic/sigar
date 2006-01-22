@@ -16,8 +16,6 @@ import net.hyperic.sigar.FileWatcherThread;
 public class Tail {
 
     public static void main(String[] args) throws SigarException {
-        final String pattern;
-
         Sigar sigar = new Sigar();
 
         FileWatcherThread watcherThread = 

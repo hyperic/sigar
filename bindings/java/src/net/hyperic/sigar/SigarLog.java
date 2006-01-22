@@ -12,7 +12,6 @@ public class SigarLog {
     private static final int LOG_WARN   = 2;
     private static final int LOG_INFO   = 3;
     private static final int LOG_DEBUG  = 4;
-    private static final int LOG_TRACE  = 5;
 
     private static native void setLogger(Sigar sigar, Logger log);
 

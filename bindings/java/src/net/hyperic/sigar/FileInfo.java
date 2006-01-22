@@ -16,8 +16,6 @@ public class FileInfo extends FileAttrs {
     private boolean lstat;
     private FileInfo oldInfo = null;
 
-    private static char DIFF_SEP = '|';
-
     /**
      * No file type determined.
      */

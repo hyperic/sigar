@@ -27,8 +27,6 @@ public abstract class FileTail extends FileWatcher {
     }
 
     public void onChange(FileInfo info) {
-        long len = info.size;
- 
         Reader reader = null;
         String name = info.getName();
 

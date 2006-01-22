@@ -41,7 +41,6 @@ public class NetServices {
             String line;
             while ((line = reader.readLine()) != null) {
                 String name, protocol;
-                Long port;
     
                 line = line.trim();
                 if ((line.length() == 0) || (line.charAt(0) == '#')) {

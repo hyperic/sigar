@@ -585,7 +585,6 @@ public class ProcessQueryBuilder {
                                 long val, double dval, int ival)
         throws MalformedQueryException {
 
-        short opcode;
         HashMap nops;
 
         if ((type == Type.INT) ||
@@ -633,7 +632,6 @@ public class ProcessQueryBuilder {
         throws MalformedQueryException {
 
         long longVal;
-        short opcode;
         HashMap nops = LNUMOPS;
 
         if (val.equals("$$")) {

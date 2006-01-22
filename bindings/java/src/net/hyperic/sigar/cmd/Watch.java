@@ -3,7 +3,6 @@ package net.hyperic.sigar.cmd;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Date;
 
 import net.hyperic.sigar.Sigar;

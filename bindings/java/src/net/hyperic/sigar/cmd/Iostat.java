@@ -118,10 +118,6 @@ public class Iostat extends SigarCommandBase {
         printf(items);
     }
 
-    private static String formatSize(long size) {
-        return Sigar.formatSize(size * 1024);
-    }
-
     public static void main(String[] args) throws Exception {
         new Iostat().processCommand(args);
     }

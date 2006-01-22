@@ -3,8 +3,6 @@ package net.hyperic.sigar.cmd;
 import java.io.IOException;
 import java.io.File;
 
-import java.util.ArrayList;
-
 import net.hyperic.sigar.Sigar;
 import net.hyperic.sigar.SigarException;
 import net.hyperic.sigar.SigarPermissionDeniedException;
@@ -36,7 +34,6 @@ public class Shell extends ShellBase {
     private Sigar sigar = new Sigar();
     private SigarProxy proxy = SigarProxyCache.newInstance(this.sigar);
     private long[] foundPids = new long[0];
-    private ArrayList completions = new ArrayList();
     private boolean isInteractive = false;
 
     public Shell() {

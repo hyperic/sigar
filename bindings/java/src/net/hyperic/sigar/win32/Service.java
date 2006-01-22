@@ -231,8 +231,6 @@ public class Service extends Win32 {
 
     public void stop(long timeout) throws Win32Exception
     {
-        long status;
-        
         stop();
 
         Waiter waiter =
@@ -250,8 +248,6 @@ public class Service extends Win32 {
 
     public void start(long timeout) throws Win32Exception
     {
-        long status;
-
         start();
 
         Waiter waiter =
@@ -269,8 +265,6 @@ public class Service extends Win32 {
 
     public void pause(long timeout) throws Win32Exception
     {
-        long status;
-        
         pause();
 
         Waiter waiter =

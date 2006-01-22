@@ -203,7 +203,7 @@ public class SigarInvoker {
         throws SigarException, SigarNotImplementedException {
 
         Method typeGetter, attrGetter;
-        Object typeObject, attrObject;
+        Object typeObject;
 
         typeGetter = getTypeMethod(args);
         if (this.hasArrayIdx) {

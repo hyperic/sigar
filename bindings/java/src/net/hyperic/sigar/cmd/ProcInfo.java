@@ -44,7 +44,6 @@ public class ProcInfo extends SigarCommandBase {
     }
 
     public void output(long pid) throws SigarException {
-        String state, mem, time, cred, credname;
         println("pid=" + pid);
         try {
             println("state=" + sigar.getProcState(pid));
