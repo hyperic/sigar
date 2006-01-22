@@ -65,4 +65,35 @@ public class ProcUtil {
 
         return null;
     }
+
+    public static String getDescription(SigarProxy sigar, long pid)
+        throws SigarException {
+
+        String[] args;
+        ProcState state = sigar.getProcState(pid);
+        String name = state.getName();
+
+        try {
+            args = sigar.getProcArgs(pid);
+        } catch (SigarException e) {
+            args = new String[0];
+        }
+
+        if (name.equals("java") || name.equals("javaw")) {
+            String className = null;
+            try {
+                className = getJavaMainClass(sigar, pid);
+            } catch (SigarException e) {}
+            if (className != null) {
+                name += ":" + className;
+            }
+        }
+        else {
+            if (args.length != 0) {
+                name = args[0];
+            }
+        }
+
+        return name;
+    }
 }

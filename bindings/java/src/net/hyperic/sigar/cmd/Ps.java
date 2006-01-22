@@ -120,25 +120,7 @@ public class Ps extends SigarCommandBase {
             info.add(unknown);
         }
 
-        String name = state.getName();
-        if (name.equals("java") || name.equals("javaw")) {
-            String className = null;
-            try {
-                className = ProcUtil.getJavaMainClass(sigar, pid);
-            } catch (SigarException e) {}
-            if (className != null) {
-                name += ":" + className;
-            }
-        }
-        else {
-            try {
-                String[] args = sigar.getProcArgs(pid);
-                if (args.length != 0) {
-                    name = args[0];
-                }
-            } catch (SigarException e) {}
-        }
-
+        String name = ProcUtil.getDescription(sigar, pid);
         info.add(name);
 
         return info;
