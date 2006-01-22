@@ -25,13 +25,18 @@ public class NetStat {
     
         stat(flags);
     }
-    
-    public static class IpEntry {
-        int count;
 
-        IpEntry() {
-            this.count = 0;
+    public static int[] newTcpStateArray() {
+        int[] states = new int[NetFlags.TCP_UNKNOWN];
+        for (int i=0; i<states.length; i++) {
+            states[i] = 0;
         }
+        return states;
+    }
+
+    public static class IpEntry {
+        int[] states = newTcpStateArray();
+        int count=0, inbound=0, outbound=0;
 
         public String toString() {
             return "count:" + this.count;
@@ -42,10 +47,7 @@ public class NetStat {
         this.tcpInbound = new HashMap();
         this.tcpOutbound = new HashMap();
         this.tcpInboundTotal = this.tcpOutboundTotal = 0;
-        this.tcpStates = new int[NetFlags.TCP_UNKNOWN];
-        for (int i=0; i<this.tcpStates.length; i++) {
-            this.tcpStates[i] = 0;
-        }
+        this.tcpStates = newTcpStateArray();
 
         NetConnection[] connections =
             this.sigar.getNetConnectionList(flags);
@@ -71,8 +73,9 @@ public class NetStat {
         //second pass, get addresses connected to listening ports
         for (int i=0; i<connections.length; i++) {
             NetConnection conn = connections[i];
+            int state = conn.getState();
 
-            if (conn.getState() == NetFlags.TCP_LISTEN) {
+            if (state == NetFlags.TCP_LISTEN) {
                 continue;
             }
 
@@ -101,6 +104,7 @@ public class NetStat {
                 addresses.put(ip, entry);
             }
             entry.count++;
+            entry.states[state]++;
         }
     }
     
