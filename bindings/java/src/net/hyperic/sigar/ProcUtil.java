@@ -88,10 +88,17 @@ public class ProcUtil {
                 name += ":" + className;
             }
         }
+        else if (args.length != 0) {
+            name = args[0];
+        }
         else {
-            if (args.length != 0) {
-                name = args[0];
-            }
+            try {
+                String exe =
+                    sigar.getProcExe(pid).getName();
+                if (exe.length() != 0) {
+                    name = exe;
+                }
+            } catch (SigarException e) {}
         }
 
         return name;
