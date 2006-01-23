@@ -139,17 +139,6 @@ public class Sigar implements SigarProxy {
         }
     }
 
-    /**
-     * Convenience method to keep a sigar instance alive.
-     * This instance is safe to share between threads.
-     */
-    public static synchronized SigarProxy getInstance() {
-        if (instance == null) {
-            instance = new SynchronizedSigar();
-        }
-        return instance;
-    }
-
     protected void finalize() {
         close();
     }
