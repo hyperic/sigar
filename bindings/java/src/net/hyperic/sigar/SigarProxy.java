@@ -123,6 +123,9 @@ public interface SigarProxy {
 
     public String[] getNetInterfaceList() throws SigarException;
 
+    public NetConnection[] getNetConnectionList(int flags)
+        throws SigarException;
+
     public NetStat getNetStat() throws SigarException;
 
     public Who[] getWhoList() throws SigarException;
