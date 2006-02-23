@@ -1552,6 +1552,24 @@ static int fqdn_ip_get(sigar_t *sigar, char *name)
 #include <netdb.h>
 #endif
 
+#define GETHOSTBYNAME_LEN 512
+
+static struct hostent *sigar_gethostbyname(const char *name)
+{
+    char buffer[GETHOSTBYNAME_LEN];
+    struct hostent hs, *hp;
+    int err;
+
+#if defined(__linux__)
+    gethostbyname_r(name, &hs, buffer, sizeof(buffer),
+                    &hp, &err);
+#else
+    hp = gethostbyname(name);
+#endif
+
+    return hp;
+}
+
 #define IS_FQDN(name) \
     (name && strchr(name, '.'))
 
@@ -1588,7 +1606,7 @@ SIGAR_DECLARE(int) sigar_fqdn_get(sigar_t *sigar, char *name, int namelen)
     }
 
     /* XXX use _r versions of these functions. */
-    if (!(p = gethostbyname(name))) {
+    if (!(p = sigar_gethostbyname(name))) {
         if (SIGAR_LOG_IS_DEBUG(sigar)) {
             sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
                              "[fqdn] gethostbyname(%s) failed: %s",
