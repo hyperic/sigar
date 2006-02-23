@@ -1563,6 +1563,9 @@ static struct hostent *sigar_gethostbyname(const char *name)
 #if defined(__linux__)
     gethostbyname_r(name, &hs, buffer, sizeof(buffer),
                     &hp, &err);
+#elif defined(__sun)
+    hp = gethostbyname_r(name, &hs, buffer, sizeof(buffer),
+                         &err);
 #else
     hp = gethostbyname(name);
 #endif
