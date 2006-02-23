@@ -127,7 +127,11 @@ int sigar_os_open(sigar_t **sigar)
 
     (*sigar)->last_proc_stat.pid = -1;
 
+#ifdef __LP64__
+    (*sigar)->ht_enabled = 0;
+#else
     (*sigar)->ht_enabled = -1;
+#endif
 
     if (stat(PROC_DISKSTATS, &sb) == 0) {
         (*sigar)->iostat = IOSTAT_DISKSTATS;
@@ -162,17 +166,74 @@ char *sigar_os_error_string(sigar_t *sigar, int err)
     return NULL;
 }
 
+#define INTEL_ID 0x756e6547
+
+static void sigar_cpuid(unsigned long request,
+                        unsigned long *eax,
+                        unsigned long *ebx,
+                        unsigned long *ecx,
+                        unsigned long *edx)
+{
+#if 0
+    /* does not compile w/ -fPIC */
+    /* can't find a register in class `BREG' while reloading `asm' */
+    asm volatile ("cpuid" :
+                  "=a" (*eax),
+                  "=b" (*ebx),
+                  "=c" (*ecx),
+                  "=d" (*edx)
+                  : "a" (request));
+#else
+    /* derived from: */
+    /* http://svn.red-bean.com/repos/minor/trunk/gc/barriers-ia-32.c */
+    asm volatile ("mov %%ebx, %%esi\n\t"
+                  "cpuid\n\t"
+                  "xchgl %%ebx, %%esi"
+                  : "=a" (*eax),
+                  "=S" (*ebx),
+                  "=c" (*ecx),
+                  "=d" (*edx)
+                  : "0" (request)
+                  : "memory");
+#endif
+}
+
 static int is_ht_enabled(sigar_t *sigar)
 {
-    if (sigar->ht_enabled == -1) {
+    unsigned long eax, ebx, ecx, edx;
+
+    if (sigar->ht_enabled != -1) {
         /* only check once */
-        sigar_cpu_info_list_t cpuinfos;
+        return sigar->ht_enabled;
+    }
 
-        if (sigar_cpu_info_list_get(sigar, &cpuinfos) != SIGAR_OK) {
-            sigar->ht_enabled = 0; /* chances we reach here: slim..none */
+    sigar->ht_enabled = 0;
+    sigar->lcpu = 0;
+
+    sigar_cpuid(0, &eax, &ebx, &ecx, &edx);
+
+    if (ebx == INTEL_ID) {
+        sigar_cpuid(1, &eax, &ebx, &ecx, &edx);
+
+        if (edx & (1<<28)) {
+            sigar->lcpu = (ebx & 0x00FF0000) >> 16;
+
+            if (sigar->lcpu > 1) {
+                sigar->ht_enabled = 1;
+                sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
+                                 "[cpu] HT enabled, siblings: %d",
+                                 sigar->lcpu);
+            }
+            else {
+                sigar_log(sigar, SIGAR_LOG_DEBUG,
+                          "[cpu] HT supported, not enabled.");
+            }
         }
-
-        sigar_cpu_info_list_destroy(sigar, &cpuinfos);
+    }
+    else {
+        sigar_log(sigar, SIGAR_LOG_DEBUG,
+                  "[cpu] HT not supported.");
+        sigar->lcpu = 1;
     }
 
     return sigar->ht_enabled;
@@ -1347,23 +1408,17 @@ static SIGAR_INLINE void cpu_info_strcpy(char *ptr, char *buf, int len)
 }
 
 static int get_cpu_info(sigar_t *sigar, sigar_cpu_info_t *info,
-                        FILE *fp, int *id)
+                        FILE *fp)
 {
     char buffer[BUFSIZ], *ptr;
 
-    int found = 0, siblings = 0;
-
-    *id = -1;
+    int found = 0;
 
     while ((ptr = fgets(buffer, sizeof(buffer), fp))) {
         switch (*ptr) {
           case 'p': /* processor	: 0 */
             if (strnEQ(ptr, "processor", 9)) {
                 found = 1;
-            }
-            else if (strnEQ(ptr, "physical id", 11)) {
-                ptr = cpu_info_strval(ptr);
-                *id = atoi(ptr);
             }
             break;
           case 'v':
@@ -1393,30 +1448,6 @@ static int get_cpu_info(sigar_t *sigar, sigar_cpu_info_t *info,
                 info->cache_size = sigar_strtoul(ptr);
             }
             break;
-          case 's':
-            /* this is horseshit.  why doesn't linux have a real api
-             * like every other operation system.  if siblings == 1
-             * then hyperthreading is disabled, so we shouldn't fold
-             * the dups based on physical id attribute.
-             */
-            if (strnEQ(ptr, "siblings", 8)) {
-                ptr = cpu_info_strval(ptr);
-                siblings = atoi(ptr);
-                if (siblings == 1) {
-                    *id = -1;
-                }
-            }
-            break;
-          case 't':
-            /* same as siblings, renamed in new kernels */
-            if (strnEQ(ptr, "threads", 7)) {
-                ptr = cpu_info_strval(ptr);
-                siblings = atoi(ptr);
-                if (siblings == 1) {
-                    *id = -1;
-                }
-            }
-            break;
            /* lone \n means end of info for this processor */
           case '\n':
             return found;
@@ -1430,55 +1461,17 @@ int sigar_cpu_info_list_get(sigar_t *sigar,
                             sigar_cpu_info_list_t *cpu_infos)
 {
     FILE *fp;
-    int id, fake_id = -1;
-    int cpu_id[36], cpu_ix=0;
-    /* in the event that a box has > 36 cpus */
-    int cpu_id_max = sizeof(cpu_id)/sizeof(int);
+    int hthread = is_ht_enabled(sigar), i=0;
 
     if (!(fp = fopen(PROC_FS_ROOT "cpuinfo", "r"))) {
         return errno;
     }
 
-    sigar->ht_enabled = 0; /* figure out below */
-
     sigar_cpu_info_list_create(cpu_infos);
-    memset(&cpu_id[0], -1, sizeof(cpu_id));
 
-    while (get_cpu_info(sigar, &cpu_infos->data[cpu_infos->number], fp, &id)) {
-        fake_id++;
-
-        if (id >= 0) {
-            int i, fold=0;
-            for (i=0; (i<cpu_ix) && (i<cpu_id_max); i++) {
-                if (cpu_id[i] == id) {
-                    fold = 1;
-                    break;
-                }
-            }
-
-            /* e.g. each Intel Xeon cpu is reported twice */
-            /* fold dups based on physical id */
-            if (fold) {
-                sigar->ht_enabled = 1;
-                sigar->lcpu = 2; /* XXX assume 2 for now */
-                continue;
-            }
-            else {
-                if (cpu_ix < cpu_id_max) {
-                    cpu_id[cpu_ix++] = id;
-                }
-            }
-        }
-        else if (strEQ(cpu_infos->data[cpu_infos->number].model, "Xeon")) {
-            /* Redhat AS 2.1 /proc/cpuinfo does not have any of the
-             * attributes we use to detect hyperthreading, in this case
-             * if model Xeon, assume HT enabled.  FUCK IT.
-             */
-            if (fake_id % 2) {
-                sigar->ht_enabled = 1;
-                sigar->lcpu = 2; /* XXX assume 2 for now */
-                continue;
-            }
+    while (get_cpu_info(sigar, &cpu_infos->data[cpu_infos->number], fp)) {
+        if (hthread && (i++ % sigar->lcpu)) {
+            continue; /* fold logical processors if HT */
         }
 
         ++cpu_infos->number;
