@@ -1553,19 +1553,28 @@ static int fqdn_ip_get(sigar_t *sigar, char *name)
 #endif
 
 #define GETHOSTBYNAME_LEN 512
+#if defined(__hpux) || defined(_AIX)
+#define HAS_HOSTENT_DATA
+#endif
 
 static struct hostent *sigar_gethostbyname(const char *name)
 {
     char buffer[GETHOSTBYNAME_LEN];
     struct hostent hs, *hp;
     int err;
-
+#if defined(HAS_HOSTENT_DATA)
+    struct hostent_data hd;
+#endif
+ 
 #if defined(__linux__)
     gethostbyname_r(name, &hs, buffer, sizeof(buffer),
                     &hp, &err);
 #elif defined(__sun)
     hp = gethostbyname_r(name, &hs, buffer, sizeof(buffer),
                          &err);
+#elif defined(HAS_HOSTENT_DATA)
+    gethostbyname_r(name, &hs, &hd);
+    hp = &hs;
 #else
     hp = gethostbyname(name);
 #endif
