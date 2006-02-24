@@ -1,3 +1,20 @@
+2006-02-23  Doug MacEachern  <dougm@hyperic.net>
+
+        * Use asm/cpuid instead of /proc/cpuinfo to detect
+          HyperThreading on Linux 
+
+        * Use gethostbyname_r in sigar_fqdn_get
+
+2006-01-10  Doug MacEachern  <dougm@hyperic.net>
+
+        * Add ProcUtil class
+        
+        * Pdh: if counter name does not exist, try appending "/sec"
+
+        * Add Win32.findExecutable method
+
+        * Add win32.Service.{pause,resume} methods
+
 2006-01-04  Doug MacEachern  <dougm@hyperic.net>
 
         * Fix cpu_list on Darwin
