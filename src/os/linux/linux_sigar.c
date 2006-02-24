@@ -229,10 +229,12 @@ static int is_ht_enabled(sigar_t *sigar)
                           "[cpu] HT supported, not enabled.");
             }
         }
+        else {
+            sigar_log(sigar, SIGAR_LOG_DEBUG,
+                      "[cpu] HT not supported.");
+        }
     }
     else {
-        sigar_log(sigar, SIGAR_LOG_DEBUG,
-                  "[cpu] HT not supported.");
         sigar->lcpu = 1;
     }
 
