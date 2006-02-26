@@ -510,7 +510,10 @@ static int get_sockaddr(struct sockaddr_in *addr, char *host)
     return SIGAR_OK;
 }
 
-SIGAR_DECLARE(int) sigar_nfs_ping(char *host)
+SIGAR_DECLARE(int) sigar_rpc_ping(char *host,
+                                  int protocol,
+                                  unsigned long program,
+                                  unsigned long version)
 {
     CLIENT *client;
     struct sockaddr_in addr;
@@ -527,7 +530,7 @@ SIGAR_DECLARE(int) sigar_nfs_ping(char *host)
     interval.tv_usec = 0;
     addr.sin_port = htons(port);
     sock = RPC_ANYSOCK;
-    client = clntudp_create(&addr, NFS_PROGRAM, NFS_VERSION,
+    client = clntudp_create(&addr, program, version,
                             interval, &sock);
     if (!client) {
         return -1;

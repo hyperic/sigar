@@ -410,8 +410,9 @@ JNIEXPORT jobjectArray SIGAR_JNI(Sigar_getFileSystemListNative)
     return fsarray;
 }
 
-JNIEXPORT jboolean SIGAR_JNI(NfsFileSystem_ping)
-(JNIEnv *env, jclass cls_obj, jstring jhostname)
+JNIEXPORT jboolean SIGAR_JNI(RPC_ping)
+(JNIEnv *env, jclass cls_obj, jstring jhostname,
+ jint protocol, jlong program, jlong version)
 {
 #ifdef WIN32
     return JNI_FALSE; /*XXX*/
@@ -426,7 +427,9 @@ JNIEXPORT jboolean SIGAR_JNI(NfsFileSystem_ping)
 
     hostname = JENV->GetStringUTFChars(env, jhostname, &is_copy);
 
-    retval = (sigar_nfs_ping((char *)hostname) == SIGAR_OK);
+    retval =
+        (sigar_rpc_ping((char *)hostname,
+                        protocol, program, version) == SIGAR_OK);
 
     if (is_copy) {
         JENV->ReleaseStringUTFChars(env, jhostname, hostname);

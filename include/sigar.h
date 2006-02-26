@@ -615,7 +615,10 @@ SIGAR_DECLARE(int) sigar_inet_ntoa(sigar_t *sigar,
 
 SIGAR_DECLARE(int) sigar_fqdn_get(sigar_t *sigar, char *name, int namelen);
 
-SIGAR_DECLARE(int) sigar_nfs_ping(char *hostname);
+SIGAR_DECLARE(int) sigar_rpc_ping(char *hostname,
+                                  int protocol,
+                                  unsigned long program,
+                                  unsigned long version);
 
 SIGAR_DECLARE(char *) sigar_password_get(const char *prompt);
 

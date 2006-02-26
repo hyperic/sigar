@@ -5,8 +5,6 @@ import java.net.UnknownHostException;
 
 public class NfsFileSystem extends FileSystem {
 
-    public static native boolean ping(String hostname);
-
     String hostname = null;
 
     public String getHostname() {
@@ -30,7 +28,7 @@ public class NfsFileSystem extends FileSystem {
     }
 
     public boolean ping() {
-        return ping(getHostname());
+        return RPC.ping(getHostname(), RPC.NFS);
     }
 
     public String getUnreachableMessage() {
@@ -43,6 +41,6 @@ public class NfsFileSystem extends FileSystem {
 
     public static void main(String[] args) throws Exception {
         Sigar.load();
-        System.out.println(NfsFileSystem.ping(args[0]));
+        System.out.println(RPC.ping(args[0], RPC.NFS));
     }
 }

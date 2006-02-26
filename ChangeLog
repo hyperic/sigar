@@ -1,3 +1,7 @@
+2006-02-26  Doug MacEachern <dougm@hyperic.net>
+
+        * Replace sigar_nfs_ping with generic sigar_rpc_ping
+
 2006-02-23  Doug MacEachern  <dougm@hyperic.net>
 
         * Use asm/cpuid instead of /proc/cpuinfo to detect
