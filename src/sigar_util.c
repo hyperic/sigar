@@ -501,7 +501,7 @@ static int get_sockaddr(struct sockaddr_in *addr, char *host)
     addr->sin_family = AF_INET;
 
     if ((addr->sin_addr.s_addr = inet_addr(host)) == -1) {
-        if (!(hp = gethostbyname(host))) {
+        if (!(hp = sigar_gethostbyname(host))) {
             return -1;
         }
         memcpy(&addr->sin_addr, hp->h_addr, hp->h_length);

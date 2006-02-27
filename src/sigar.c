@@ -1557,7 +1557,7 @@ static int fqdn_ip_get(sigar_t *sigar, char *name)
 #define HAS_HOSTENT_DATA
 #endif
 
-static struct hostent *sigar_gethostbyname(const char *name)
+struct hostent *sigar_gethostbyname(const char *name)
 {
     char buffer[GETHOSTBYNAME_LEN];
     struct hostent hs, *hp;
