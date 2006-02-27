@@ -4,6 +4,8 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.StringTokenizer;
@@ -27,37 +29,42 @@ public class NetServices {
         SERVICE_FILE =
             System.getProperty("sigar.net.services.file", defaultFile);
     }
-    
-    private static void parseServices(String type, Map services) {
-        File file = new File(SERVICE_FILE);
+
+    private interface EntryReader {
+        public void process(String name, String port, List aliases);
+    }
+
+    private static void parse(String fileName, EntryReader entry) {
+        File file = new File(fileName);
         if (!file.exists()) {
             return;
         }
-    
         BufferedReader reader = null;
-    
+        ArrayList aliases = new ArrayList();
+
         try {
             reader = new BufferedReader(new FileReader(file));
             String line;
             while ((line = reader.readLine()) != null) {
-                String name, protocol;
-    
                 line = line.trim();
                 if ((line.length() == 0) || (line.charAt(0) == '#')) {
                     continue;
                 }
-    
-                StringTokenizer st = new StringTokenizer(line, " \t/#");
-                if (st.countTokens() < 3) {
+                aliases.clear();
+                int ix = line.indexOf("#");
+                if (ix != -1) {
+                    line = line.substring(0, ix);
+                }
+                StringTokenizer st = new StringTokenizer(line, " \t");
+                if (st.countTokens() < 2) {
                     continue;
                 }
-                name = st.nextToken().trim();
-                String pnum = st.nextToken().trim();
-                protocol = st.nextToken().trim();
-                if (!type.equals(protocol)) {
-                    continue;
+                String name = st.nextToken().trim();
+                String port = st.nextToken().trim();
+                while (st.hasMoreTokens()) {
+                    aliases.add(st.nextToken().trim());
                 }
-                services.put(Long.valueOf(pnum), name);
+                entry.process(name, port, aliases);
             }
         } catch (IOException e) {
             return;
@@ -68,6 +75,33 @@ public class NetServices {
                 } catch (IOException e) { }
             }
         }
+    }
+
+    private static class ServicesReader implements EntryReader {
+        private String protocol;
+        private Map services;
+
+        private ServicesReader(String protocol, Map services) {
+            this.protocol = protocol;
+            this.services = services;
+        }
+
+        public void process(String name, String port, List aliases) {
+            String pnum, protocol;
+            int ix = port.indexOf('/');
+            if (ix == -1) {
+                return;
+            }
+            pnum = port.substring(0, ix);
+            protocol = port.substring(ix+1);
+            if (this.protocol.equals(protocol)) {
+                this.services.put(Long.valueOf(pnum), name);
+            }
+        }
+    }
+
+    private static void parseServices(String type, Map services) {
+        parse(SERVICE_FILE, new ServicesReader(type, services));
     }
 
     public static String getName(String protocol, long port) {
