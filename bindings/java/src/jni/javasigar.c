@@ -439,6 +439,16 @@ JNIEXPORT jint SIGAR_JNI(RPC_ping)
 #endif
 }
 
+JNIEXPORT jstring SIGAR_JNI(RPC_strerror)
+(JNIEnv *env, jclass cls_obj, jint err)
+{
+#ifdef WIN32
+    return NULL;
+#else
+    return JENV->NewStringUTF(env, sigar_rpc_strerror(err));
+#endif
+}
+
 JNIEXPORT jobjectArray SIGAR_JNI(Sigar_getCpuInfoList)
 (JNIEnv *env, jobject sigar_obj)
 {

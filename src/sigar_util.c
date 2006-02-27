@@ -510,6 +510,11 @@ static enum clnt_stat get_sockaddr(struct sockaddr_in *addr, char *host)
     return RPC_SUCCESS;
 }
 
+char *sigar_rpc_strerror(int err)
+{
+    return clnt_sperrno(err);
+}
+
 SIGAR_DECLARE(int) sigar_rpc_ping(char *host,
                                   int protocol,
                                   unsigned long program,
@@ -534,7 +539,7 @@ SIGAR_DECLARE(int) sigar_rpc_ping(char *host,
     client = clntudp_create(&addr, program, version,
                             interval, &sock);
     if (!client) {
-        return RPC_FAILED;
+        return rpc_createerr.cf_stat;
     }
 
     timeout.tv_sec = 10;

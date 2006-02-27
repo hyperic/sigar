@@ -16,6 +16,8 @@ public class RPC {
                                   long program,
                                   long version);
 
+    public static native String strerror(int status);
+
     public static int ping(String hostname,
                            int protocol,
                            String program,
@@ -65,5 +67,11 @@ public class RPC {
         }
 
         return num.longValue();
+    }
+
+    public static void main(String[] args) throws Exception {
+        Sigar.load();
+        int retval = RPC.ping(args[0], args[1]);
+        System.out.println("(" + retval + ") " + RPC.strerror(retval));
     }
 }
