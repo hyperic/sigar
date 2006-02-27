@@ -523,7 +523,7 @@ SIGAR_DECLARE(int) sigar_rpc_ping(char *host,
     CLIENT *client;
     struct sockaddr_in addr;
     int sock;
-    struct timeval timeout, interval;
+    struct timeval timeout;
     unsigned short port = 0;
     enum clnt_stat rpc_stat; 
 
@@ -532,15 +532,15 @@ SIGAR_DECLARE(int) sigar_rpc_ping(char *host,
         return rpc_stat;
     }
 
-    interval.tv_sec = 2;
-    interval.tv_usec = 0;
+    timeout.tv_sec = 2;
+    timeout.tv_usec = 0;
     addr.sin_port = htons(port);
     sock = RPC_ANYSOCK;
     
     if (protocol == SIGAR_NETCONN_UDP) {
         client =
             clntudp_create(&addr, program, version,
-                           interval, &sock);
+                           timeout, &sock);
     }
     else if (protocol == SIGAR_NETCONN_TCP) {
         client =
