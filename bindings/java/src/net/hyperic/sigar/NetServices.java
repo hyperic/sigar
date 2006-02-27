@@ -30,11 +30,11 @@ public class NetServices {
             System.getProperty("sigar.net.services.file", defaultFile);
     }
 
-    private interface EntryReader {
+    interface EntryReader {
         public void process(String name, String port, List aliases);
     }
 
-    private static void parse(String fileName, EntryReader entry) {
+    static void parse(String fileName, EntryReader entry) {
         File file = new File(fileName);
         if (!file.exists()) {
             return;
