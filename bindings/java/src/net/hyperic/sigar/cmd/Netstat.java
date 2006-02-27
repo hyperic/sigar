@@ -113,7 +113,7 @@ public class Netstat extends SigarCommandBase {
         if (isNumeric) {
             address = ip;
         }
-        else if (ip.equals("0.0.0.0")) {
+        else if (ip.equals(NetFlags.ANY_ADDR)) {
             address = "*";
         }
         else {

@@ -12,6 +12,8 @@ public class NetFlags {
      */
     public final static String NULL_HWADDR = "00:00:00:00:00:00";
 
+    public static final String ANY_ADDR = "0.0.0.0";
+
     /**
      * interface is up
      */
