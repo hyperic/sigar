@@ -536,8 +536,21 @@ SIGAR_DECLARE(int) sigar_rpc_ping(char *host,
     interval.tv_usec = 0;
     addr.sin_port = htons(port);
     sock = RPC_ANYSOCK;
-    client = clntudp_create(&addr, program, version,
-                            interval, &sock);
+    
+    if (protocol == SIGAR_NETCONN_UDP) {
+        client =
+            clntudp_create(&addr, program, version,
+                           interval, &sock);
+    }
+    else if (protocol == SIGAR_NETCONN_TCP) {
+        client =
+            clnttcp_create(&addr, program, version,
+                           &sock, 0, 0);
+    }
+    else {
+        return RPC_UNKNOWNPROTO;
+    }
+
     if (!client) {
         return rpc_createerr.cf_stat;
     }
