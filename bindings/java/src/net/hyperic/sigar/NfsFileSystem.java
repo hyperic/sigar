@@ -30,7 +30,7 @@ public class NfsFileSystem extends FileSystem {
     }
 
     public boolean ping() {
-        return RPC.ping(getHostname(), NFS_PROGRAM);
+        return RPC.ping(getHostname(), NFS_PROGRAM) == 0;
     }
 
     public String getUnreachableMessage() {

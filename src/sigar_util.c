@@ -493,7 +493,7 @@ int sigar_cpu_mhz_from_model(char *model)
 #include <sys/socket.h>
 #endif
 
-static int get_sockaddr(struct sockaddr_in *addr, char *host)
+static enum clnt_stat get_sockaddr(struct sockaddr_in *addr, char *host)
 {
     register struct hostent *hp;
 
@@ -502,12 +502,12 @@ static int get_sockaddr(struct sockaddr_in *addr, char *host)
 
     if ((addr->sin_addr.s_addr = inet_addr(host)) == -1) {
         if (!(hp = sigar_gethostbyname(host))) {
-            return -1;
+            return RPC_UNKNOWNHOST;
         }
         memcpy(&addr->sin_addr, hp->h_addr, hp->h_length);
     }
 
-    return SIGAR_OK;
+    return RPC_SUCCESS;
 }
 
 SIGAR_DECLARE(int) sigar_rpc_ping(char *host,
@@ -517,13 +517,14 @@ SIGAR_DECLARE(int) sigar_rpc_ping(char *host,
 {
     CLIENT *client;
     struct sockaddr_in addr;
-    int sock, retval=SIGAR_OK;
+    int sock;
     struct timeval timeout, interval;
     unsigned short port = 0;
     enum clnt_stat rpc_stat; 
 
-    if (get_sockaddr(&addr, host) != SIGAR_OK) {
-        return -1;
+    rpc_stat = get_sockaddr(&addr, host);
+    if (rpc_stat != RPC_SUCCESS) {
+        return rpc_stat;
     }
 
     interval.tv_sec = 2;
@@ -533,7 +534,7 @@ SIGAR_DECLARE(int) sigar_rpc_ping(char *host,
     client = clntudp_create(&addr, program, version,
                             interval, &sock);
     if (!client) {
-        return -1;
+        return RPC_FAILED;
     }
 
     timeout.tv_sec = 10;
@@ -542,12 +543,12 @@ SIGAR_DECLARE(int) sigar_rpc_ping(char *host,
                          (xdrproc_t)xdr_void, NULL, timeout);
 
     if (rpc_stat != RPC_SUCCESS) {
-        retval = -1;
+        return rpc_stat;
     }
 
     clnt_destroy(client);
 
-    return retval;
+    return RPC_SUCCESS;
 }
 #endif
 

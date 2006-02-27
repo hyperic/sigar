@@ -11,26 +11,26 @@ public class RPC {
     public static final int UDP = NetFlags.CONN_UDP;
     public static final int TCP = NetFlags.CONN_TCP;
 
-    public static native boolean ping(String hostname,
-                                      int protocol,
-                                      long program,
-                                      long version);
+    public static native int ping(String hostname,
+                                  int protocol,
+                                  long program,
+                                  long version);
 
-    public static boolean ping(String hostname,
-                               int protocol,
-                               String program,
-                               long version) {
+    public static int ping(String hostname,
+                           int protocol,
+                           String program,
+                           long version) {
         return ping(hostname,
                     protocol,
                     getProgram(program),
                     version);
     }
 
-    public static boolean ping(String hostname, long program) {
+    public static int ping(String hostname, long program) {
         return ping(hostname, UDP, program, 2);
     }
 
-    public static boolean ping(String hostname, String program) {
+    public static int ping(String hostname, String program) {
         return ping(hostname, UDP, program, 2);
     }
 

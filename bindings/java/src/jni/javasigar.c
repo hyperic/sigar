@@ -410,7 +410,7 @@ JNIEXPORT jobjectArray SIGAR_JNI(Sigar_getFileSystemListNative)
     return fsarray;
 }
 
-JNIEXPORT jboolean SIGAR_JNI(RPC_ping)
+JNIEXPORT jint SIGAR_JNI(RPC_ping)
 (JNIEnv *env, jclass cls_obj, jstring jhostname,
  jint protocol, jlong program, jlong version)
 {
@@ -419,23 +419,23 @@ JNIEXPORT jboolean SIGAR_JNI(RPC_ping)
 #else
     jboolean is_copy;
     const char *hostname;
-    jboolean retval;
+    int status;
 
     if (!jhostname) {
-        return JNI_FALSE;
+        return 13; /* RPC_UNKNOWNHOST */
     }
 
     hostname = JENV->GetStringUTFChars(env, jhostname, &is_copy);
 
-    retval =
-        (sigar_rpc_ping((char *)hostname,
-                        protocol, program, version) == SIGAR_OK);
+    status =
+        sigar_rpc_ping((char *)hostname,
+                       protocol, program, version);
 
     if (is_copy) {
         JENV->ReleaseStringUTFChars(env, jhostname, hostname);
     }
 
-    return retval;
+    return status;
 #endif
 }
 
