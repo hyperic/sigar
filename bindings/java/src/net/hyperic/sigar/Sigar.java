@@ -659,11 +659,17 @@ public class Sigar implements SigarProxy {
             }
 
             if (conn.getLocalPort() == port) {
-                if (conn.getLocalAddress().equals(NetFlags.ANY_ADDR)) {
+                String address =
+                    conn.getLocalAddress();
+
+                if (address.equals(NetFlags.ANY_ADDR)) {
                     return NetFlags.LOOPBACK_ADDRESS;
                 }
+                else if (address.equals(NetFlags.ANY_ADDR_V6)) {
+                    return NetFlags.LOOPBACK_ADDRESS_V6;
+                }
                 else {
-                    return conn.getLocalAddress();
+                    return address;
                 }
             }
         }

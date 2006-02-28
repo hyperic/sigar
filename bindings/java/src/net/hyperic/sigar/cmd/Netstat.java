@@ -110,11 +110,11 @@ public class Netstat extends SigarCommandBase {
         String port = formatPort(proto, portnum);
         String address;
 
-        if (isNumeric) {
-            address = ip;
-        }
-        else if (ip.equals(NetFlags.ANY_ADDR)) {
+        if (NetFlags.isAnyAddress(ip)) {
             address = "*";
+        }
+        else if (isNumeric) {
+            address = ip;
         }
         else {
             try {
