@@ -512,7 +512,7 @@ static enum clnt_stat get_sockaddr(struct sockaddr_in *addr, char *host)
 
 char *sigar_rpc_strerror(int err)
 {
-    return clnt_sperrno(err);
+    return (char *)clnt_sperrno(err);
 }
 
 SIGAR_DECLARE(int) sigar_rpc_ping(char *host,
