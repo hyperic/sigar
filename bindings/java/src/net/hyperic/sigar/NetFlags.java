@@ -14,6 +14,10 @@ public class NetFlags {
 
     public static final String ANY_ADDR = "0.0.0.0";
 
+    public static final String LOOPBACK_HOSTNAME = "localhost";
+
+    public static final String LOOPBACK_ADDRESS  = "127.0.0.1";
+
     /**
      * interface is up
      */
