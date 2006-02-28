@@ -14,9 +14,13 @@ public class NetFlags {
 
     public static final String ANY_ADDR = "0.0.0.0";
 
+    public static final String ANY_ADDR_V6 = "::";
+
     public static final String LOOPBACK_HOSTNAME = "localhost";
 
     public static final String LOOPBACK_ADDRESS  = "127.0.0.1";
+
+    public static final String LOOPBACK_ADDRESS_V6 = "::1";
 
     /**
      * interface is up
@@ -164,5 +168,12 @@ public class NetFlags {
             retval += "MULTICAST ";
 
         return retval;
+    }
+
+    public static boolean isAnyAddress(String address) {
+        return
+            (address == null) ||
+            address.equals(ANY_ADDR) ||
+            address.equals(ANY_ADDR_V6);
     }
 }
