@@ -637,6 +637,46 @@ public class Sigar implements SigarProxy {
     public native NetConnection[] getNetConnectionList(int flags)
         throws SigarException;
 
+    /**
+     * Get the TCP listen address for the given port.
+     * If the port is not bound to a specific address,
+     * the loopback address will be returned.
+     * If there is not a listener on the given port, null will be returned.
+     */    
+    public String getNetListenAddress(long port)
+        throws SigarException {
+
+        int flags = NetFlags.CONN_SERVER | NetFlags.CONN_TCP;
+
+        NetConnection[] connections =
+            getNetConnectionList(flags);
+
+        for (int i=0; i<connections.length; i++) {
+            NetConnection conn = connections[i];
+
+            if (conn.getState() != NetFlags.TCP_LISTEN) {
+                continue;
+            }
+
+            if (conn.getLocalPort() == port) {
+                if (conn.getLocalAddress().equals(NetFlags.ANY_ADDR)) {
+                    return NetFlags.LOOPBACK_ADDRESS;
+                }
+                else {
+                    return conn.getLocalAddress();
+                }
+            }
+        }
+
+        return null;
+    }
+
+    public String getNetListenAddress(String port)
+        throws SigarException {
+
+        return getNetListenAddress(Long.parseLong(port));
+    }
+
     public NetStat getNetStat()
         throws SigarException {
         return new NetStat(this);
