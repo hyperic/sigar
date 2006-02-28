@@ -1,3 +1,9 @@
+2006-02-28  Doug MacEachern  <dougm@hyperic.net>
+
+        * Add Sigar.getNetListenAddress method
+        
+        * Add Sigar.getNetInterfaceConfig() method
+
 2006-02-26  Doug MacEachern <dougm@hyperic.net>
 
         * Replace sigar_nfs_ping with generic sigar_rpc_ping
