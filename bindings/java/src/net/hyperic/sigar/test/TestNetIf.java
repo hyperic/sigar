@@ -77,6 +77,8 @@ public class TestNetIf extends SigarTestCase {
         getNetIflist(sigar, false);
         getNetIflist(sigar, false);
         getNetIflist(sigar, true);
+        traceln("Default IP=" +
+                sigar.getNetInterfaceConfig().getAddress());
 
         //XXX somehow manage to trigger a segfault using the
         //1.4.1_02-b06 jdk on linux, no problem with 1.4.2_02-b03

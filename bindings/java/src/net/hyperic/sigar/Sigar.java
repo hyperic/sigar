@@ -664,6 +664,46 @@ public class Sigar implements SigarProxy {
     }
 
     /**
+     * Get default network interface configuration info.
+     * Iterates getNetInterfaceList(), returning the first
+     * available ethernet interface.
+     * @exception SigarException on failure.
+     */
+    public NetInterfaceConfig getNetInterfaceConfig()
+        throws SigarException {
+
+        String[] interfaces = getNetInterfaceList();
+
+        for (int i=0; i<interfaces.length; i++) {
+            String name = interfaces[i];
+            NetInterfaceConfig ifconfig;
+
+            try {
+                ifconfig = getNetInterfaceConfig(name);
+            } catch (SigarException e) {
+                continue;
+            }
+
+            long flags = ifconfig.getFlags();
+            if ((flags & NetFlags.IFF_UP) <= 0) {
+                continue;
+            }
+            if ((flags & NetFlags.IFF_POINTOPOINT) > 0) {
+                continue;
+            }
+            if ((flags & NetFlags.IFF_LOOPBACK) > 0) {
+                continue;
+            }
+
+            return ifconfig;
+        }
+
+        String msg =
+            "No ethernet interface available";
+        throw new SigarException(msg);
+    }
+
+    /**
      * Get network interface stats.
      * @exception SigarException on failure.
      */

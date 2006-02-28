@@ -118,6 +118,9 @@ public interface SigarProxy {
     public NetInterfaceConfig getNetInterfaceConfig(String name)
         throws SigarException;
 
+    public NetInterfaceConfig getNetInterfaceConfig()
+        throws SigarException;
+
     public NetInterfaceStat getNetInterfaceStat(String name)
         throws SigarException;
 
