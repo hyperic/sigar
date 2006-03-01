@@ -42,6 +42,12 @@ public class SigarInvokerJMX extends SigarInvoker {
 
         SigarInvokerJMX invoker;
 
+        int ix = name.indexOf(":");
+        if (ix > 0) {
+            //skip domain name
+            name = name.substring(ix + 1);
+        }
+
         if ((invoker = (SigarInvokerJMX)cache.get(name)) != null) {
             return invoker;
         }
@@ -49,12 +55,6 @@ public class SigarInvokerJMX extends SigarInvoker {
         invoker = new SigarInvokerJMX();
 
         invoker.setProxy(proxy);
-
-        int ix = name.indexOf(":");
-        if (ix > 0) {
-            //skip domain name
-            name = name.substring(ix + 1);
-        }
 
         StringTokenizer st = new StringTokenizer(name, ",");
 
