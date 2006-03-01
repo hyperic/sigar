@@ -52,7 +52,7 @@ public class SigarProxyCache
 
     //poor mans logging
     private void debug(String msg) {
-        System.out.println("[DEBUG] SigarProxyCache - " + msg);
+        SigarLog.getLogger("SigarProxyCache").debug(msg);
     }
 
     private static final Class[] VOID_SIGNATURE = new Class[0];
@@ -153,15 +153,16 @@ public class SigarProxyCache
             cacheVal.expire = this.expire;
         }
 
+        String argDebug = "";
+        if (debugEnabled) {
+            if ((args != null) && (args.length != 0)) {
+                argDebug = " with args=" +
+                    getDebugArgs(args, argKey);
+            }
+        }
+
         if (cacheVal.value != null) {
-            String argDebug = "";
-
             if (debugEnabled) {
-                if ((args != null) && (args.length != 0)) {
-                    argDebug = " with args=" +
-                        getDebugArgs(args, argKey);
-                }
-
                 debug("found " + method.getName() +
                       " in cache" + argDebug);
             }
@@ -173,6 +174,12 @@ public class SigarProxyCache
                 }
 
                 cacheVal.value = null;
+            }
+        }
+        else {
+            if (debugEnabled) {
+                debug(method.getName() +
+                      " NOT in cache" + argDebug);
             }
         }
 
