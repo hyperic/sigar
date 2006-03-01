@@ -274,7 +274,7 @@ static char *sigar_get_self_path(sigar_t *sigar)
 static int sigar_perfstat_init(sigar_t *sigar)
 {
     void *handle;
-    char libperfstat[SIGAR_PATH_MAX], *path;
+    char libperfstat[SIGAR_PATH_MAX+1], *path;
     int len;
 
     if (sigar->perfstat.avail == 1) {
@@ -287,15 +287,15 @@ static int sigar_perfstat_init(sigar_t *sigar)
     path = sigar_get_self_path(sigar);
     len = strlen(path);
 
-    memcpy(&path[0], sigar->self_path, len);
-    memcpy(&path[len], SIGAR_AIXPERFSTAT, 
+    memcpy(&libperfstat[0], path, len);
+    memcpy(&libperfstat[len], SIGAR_AIXPERFSTAT, 
            sizeof(SIGAR_AIXPERFSTAT));
 
-    if (!(handle = dlopen(path, RTLD_LOCAL|RTLD_LAZY))) {
+    if (!(handle = dlopen(libperfstat, RTLD_LOCAL|RTLD_LAZY))) {
         if (SIGAR_LOG_IS_DEBUG(sigar)) {
             sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
                              "failed to open '%s': %s",
-                             path, sigar_strerror(sigar, errno));
+                             libperfstat, sigar_strerror(sigar, errno));
         }
 
         sigar->perfstat.avail = -1;
