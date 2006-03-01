@@ -1,3 +1,7 @@
+2006-03-01  Doug MacEachern  <dougm@hyperic.net>
+
+        * 1.1.28 released
+
 2006-02-28  Doug MacEachern  <dougm@hyperic.net>
 
         * Add Sigar.getNetListenAddress method
