@@ -55,6 +55,15 @@ public class SigarProxyCache
         SigarLog.getLogger("SigarProxyCache").debug(msg);
     }
 
+    /**
+     * @deprecated
+     */
+    public static void setExpire(SigarProxy proxy,
+                                 String type,
+                                 int expire)
+        throws SigarException {
+    }
+
     public static void clear(Object proxy) {
         SigarProxyCache handler = 
             (SigarProxyCache)Proxy.getInvocationHandler(proxy);
