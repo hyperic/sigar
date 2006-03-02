@@ -57,7 +57,6 @@ public class Sigar implements SigarProxy {
     // lastCpu is used to calculate the cpuPerc;
     private Cpu lastCpu;
     private Cpu[] lastCpuList;
-    private static SigarProxy instance = null;
 
     static {
         boolean loaded = false;
