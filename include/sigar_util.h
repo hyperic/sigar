@@ -30,7 +30,8 @@
 
 char *sigar_uitoa(char *buf, unsigned int n, int *len);
 
-struct hostent *sigar_gethostbyname(const char *name);
+struct hostent *sigar_gethostbyname(const char *name,
+                                    sigar_hostent_t *data);
 
 SIGAR_INLINE char *sigar_skip_line(char *buffer, int buflen);
 

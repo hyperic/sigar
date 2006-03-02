@@ -1547,34 +1547,26 @@ static int fqdn_ip_get(sigar_t *sigar, char *name)
     return SIGAR_OK;
 }
 
-#ifdef WIN32
-#else
-#include <netdb.h>
-#endif
-
-#define GETHOSTBYNAME_LEN 512
-#if defined(__hpux) || defined(_AIX)
-#define HAS_HOSTENT_DATA
-#endif
-
-struct hostent *sigar_gethostbyname(const char *name)
+struct hostent *sigar_gethostbyname(const char *name,
+                                    sigar_hostent_t *data)
 {
-    char buffer[GETHOSTBYNAME_LEN];
-    struct hostent hs, *hp;
-    int err;
-#if defined(HAS_HOSTENT_DATA)
-    struct hostent_data hd;
-#endif
+    struct hostent *hp = NULL;
  
 #if defined(__linux__)
-    gethostbyname_r(name, &hs, buffer, sizeof(buffer),
-                    &hp, &err);
+    gethostbyname_r(name, &data->hs,
+                    data->buffer, sizeof(data->buffer),
+                    &hp, &data->error);
 #elif defined(__sun)
-    hp = gethostbyname_r(name, &hs, buffer, sizeof(buffer),
-                         &err);
-#elif defined(HAS_HOSTENT_DATA)
-    gethostbyname_r(name, &hs, &hd);
-    hp = &hs;
+    hp = gethostbyname_r(name, &data->hs,
+                         data->buffer, sizeof(data->buffer),
+                         &data->error);
+#elif defined(SIGAR_HAS_HOSTENT_DATA)
+    if (gethostbyname_r(name, &data->hs, &data->hd) == 0) {
+        hp = &data->hs;
+    }
+    else {
+        data->error = h_errno;
+    }
 #else
     hp = gethostbyname(name);
 #endif
@@ -1593,6 +1585,7 @@ struct hostent *sigar_gethostbyname(const char *name)
 
 SIGAR_DECLARE(int) sigar_fqdn_get(sigar_t *sigar, char *name, int namelen)
 {
+    sigar_hostent_t data;
     struct hostent *p;
     char domain[SIGAR_FQDN_LEN + 1];
 #ifdef WIN32
@@ -1618,7 +1611,7 @@ SIGAR_DECLARE(int) sigar_fqdn_get(sigar_t *sigar, char *name, int namelen)
     }
 
     /* XXX use _r versions of these functions. */
-    if (!(p = sigar_gethostbyname(name))) {
+    if (!(p = sigar_gethostbyname(name, &data))) {
         if (SIGAR_LOG_IS_DEBUG(sigar)) {
             sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
                              "[fqdn] gethostbyname(%s) failed: %s",
@@ -1667,7 +1660,7 @@ SIGAR_DECLARE(int) sigar_fqdn_get(sigar_t *sigar, char *name, int namelen)
         int i,j;
 
         for (i=0; p->h_addr_list[i]; i++) {
-            struct hostent *q = 
+            struct hostent *q =
                 gethostbyaddr(p->h_addr_list[i],
                               p->h_length,
                               p->h_addrtype);

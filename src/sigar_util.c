@@ -496,12 +496,13 @@ int sigar_cpu_mhz_from_model(char *model)
 static enum clnt_stat get_sockaddr(struct sockaddr_in *addr, char *host)
 {
     register struct hostent *hp;
+    sigar_hostent_t data;
 
     memset(addr, 0, sizeof(struct sockaddr_in));
     addr->sin_family = AF_INET;
 
     if ((addr->sin_addr.s_addr = inet_addr(host)) == -1) {
-        if (!(hp = sigar_gethostbyname(host))) {
+        if (!(hp = sigar_gethostbyname(host, &data))) {
             return RPC_UNKNOWNHOST;
         }
         memcpy(&addr->sin_addr, hp->h_addr, hp->h_length);

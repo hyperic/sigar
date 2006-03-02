@@ -239,4 +239,23 @@ int sigar_get_iftype(const char *name, int *type, int *inst);
 #define SIGAR_NIC_ETHERNET "Ethernet"
 #define SIGAR_NIC_NETROM   "AMPR NET/ROM"
 
+#ifdef WIN32
+#else
+#include <netdb.h>
+#endif
+
+#define SIGAR_GETHOSTBYNAME_LEN 512
+#if defined(__hpux) || defined(_AIX)
+#define SIGAR_HAS_HOSTENT_DATA
+#endif
+
+typedef struct {
+    char buffer[SIGAR_GETHOSTBYNAME_LEN];
+    struct hostent hs;
+    int error;
+#ifdef SIGAR_HAS_HOSTENT_DATA
+    struct hostent_data hd;
+#endif
+} sigar_hostent_t;
+
 #endif
