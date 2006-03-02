@@ -203,7 +203,7 @@ public class Sigar implements SigarProxy {
      * @exception SigarException on failure.
      */
     public Cpu getCpu() throws SigarException {
-        return (this.lastCpu = Cpu.fetch(this));
+        return Cpu.fetch(this);
     }
 
     static void pause(int millis) {
@@ -221,18 +221,19 @@ public class Sigar implements SigarProxy {
      * @exception SigarException on failure.
      */
     public CpuPerc getCpuPerc() throws SigarException {
-        Cpu oldCpu, curCpu;
+        Cpu oldCpu;
 
         if (this.lastCpu == null){
-            oldCpu = this.getCpu();
+            oldCpu = getCpu();
             pause();
         }
         else {
             oldCpu = this.lastCpu;
         }
 
-        curCpu = this.getCpu();
-        return CpuPerc.calculate(oldCpu, curCpu);
+        this.lastCpu = getCpu();
+
+        return CpuPerc.calculate(oldCpu, this.lastCpu);
     }
 
     /**
@@ -240,7 +241,7 @@ public class Sigar implements SigarProxy {
      * @exception SigarException on failure.
      */
     public CpuPerc[] getCpuPercList() throws SigarException {
-        Cpu[] oldCpuList, curCpuList;
+        Cpu[] oldCpuList;
 
         if (this.lastCpuList == null){
             oldCpuList = getCpuList();
@@ -250,18 +251,18 @@ public class Sigar implements SigarProxy {
             oldCpuList = this.lastCpuList;
         }
 
-        curCpuList = getCpuList();
+        this.lastCpuList = getCpuList();
 
-        int curLen = curCpuList.length, oldLen = oldCpuList.length;
+        int curLen = this.lastCpuList.length;
+        int oldLen = oldCpuList.length;
 
-        CpuPerc[] perc = new CpuPerc[curLen < oldLen ? curLen : oldLen];
+        CpuPerc[] perc =
+            new CpuPerc[curLen < oldLen ? curLen : oldLen];
         
-        for (int i=0; i<curCpuList.length; i++) {
-            Cpu curCpu = curCpuList[i], oldCpu;
- 
-            oldCpu = oldCpuList[i];
-
-            perc[i] = CpuPerc.calculate(oldCpu, curCpu);
+        for (int i=0; i<curLen; i++) {
+            perc[i] =
+                CpuPerc.calculate(oldCpuList[i],
+                                  this.lastCpuList[i]);
         }
 
         return perc;
@@ -621,7 +622,7 @@ public class Sigar implements SigarProxy {
      * @exception SigarException on failure.
      */
     public Cpu[] getCpuList() throws SigarException {
-        return (this.lastCpuList = getCpuListNative());
+        return getCpuListNative();
     }
 
     /**
