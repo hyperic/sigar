@@ -3,6 +3,7 @@ package net.hyperic.sigar.test;
 import net.hyperic.sigar.Sigar;
 import net.hyperic.sigar.SigarNotImplementedException;
 import net.hyperic.sigar.Cpu;
+import net.hyperic.sigar.CpuPerc;
 
 public class TestCpu extends SigarTestCase {
 
@@ -43,6 +44,41 @@ public class TestCpu extends SigarTestCase {
             }
         } catch (SigarNotImplementedException e) {
             //ok
+        }
+    }
+
+    private static void printCpu(String prefix, CpuPerc cpu) {
+        System.out.println(prefix +
+                           CpuPerc.format(cpu.getUser()) + "\t" +
+                           CpuPerc.format(cpu.getSys()) + "\t" +
+                           CpuPerc.format(cpu.getWait()) + "\t" +
+                           CpuPerc.format(cpu.getNice()) + "\t" +
+                           CpuPerc.format(cpu.getIdle()) + "\t" +
+                           CpuPerc.format(cpu.getCombined()));
+    }
+
+    public static void main(String[] args) throws Exception {
+        final String HEADER =
+            "   User\tSys\tWait\tNice\tIdle\tTotal";
+        int interval = 1;
+        if (args.length > 0) {
+            interval = Integer.parseInt(args[0]);
+        }
+        int sleep = 1000 * 60 * interval;
+
+        Sigar sigar = new Sigar();
+
+        while (true) {
+            System.out.println(HEADER);
+
+            printCpu("   ", sigar.getCpuPerc());
+
+            CpuPerc[] cpuList = sigar.getCpuPercList();
+
+            for (int i=0; i<cpuList.length; i++) {
+                printCpu(i+": ", cpuList[i]);
+            }
+            Thread.sleep(sleep);
         }
     }
 }
