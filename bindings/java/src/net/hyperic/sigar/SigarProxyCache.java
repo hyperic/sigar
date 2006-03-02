@@ -55,36 +55,6 @@ public class SigarProxyCache
         SigarLog.getLogger("SigarProxyCache").debug(msg);
     }
 
-    private static final Class[] VOID_SIGNATURE = new Class[0];
-
-    public static void setExpire(SigarProxy proxy,
-                                 String type,
-                                 int expire)
-        throws SigarException {
-
-        SigarProxyCache handler =
-            (SigarProxyCache)Proxy.getInvocationHandler(proxy);
-
-        Method method;
-
-        try {
-            method = Sigar.class.getMethod("get" + type, VOID_SIGNATURE);
-        } catch (Exception e) {
-            throw new SigarException("invalid type " + type);
-        }
-
-        SigarCacheObject cacheVal =
-            (SigarCacheObject)handler.cache.get(method);
-
-        if (cacheVal == null) {
-            cacheVal = new SigarCacheObject();
-        }
-
-        cacheVal.expire = expire;
-
-        handler.cache.put(method, cacheVal);
-    }
-
     public static void clear(Object proxy) {
         SigarProxyCache handler = 
             (SigarProxyCache)Proxy.getInvocationHandler(proxy);
@@ -150,7 +120,6 @@ public class SigarProxyCache
 
         if (cacheVal == null) {
             cacheVal = new SigarCacheObject();
-            cacheVal.expire = this.expire;
         }
 
         String argDebug = "";
@@ -167,7 +136,7 @@ public class SigarProxyCache
                       " in cache" + argDebug);
             }
 
-            if ((timeNow - cacheVal.timestamp) > cacheVal.expire) {
+            if ((timeNow - cacheVal.timestamp) > this.expire) {
                 if (debugEnabled) {
                     debug("expiring " + method.getName() +
                           " from cache" + argDebug);
