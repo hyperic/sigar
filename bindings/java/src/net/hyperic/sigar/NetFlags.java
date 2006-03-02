@@ -176,4 +176,11 @@ public class NetFlags {
             address.equals(ANY_ADDR) ||
             address.equals(ANY_ADDR_V6);
     }
+
+    public static boolean isLoopback(String address) {
+        return
+            address.equals(LOOPBACK_HOSTNAME) ||
+            address.equals(LOOPBACK_ADDRESS) ||
+            address.equals(LOOPBACK_ADDRESS_V6);
+    }
 }
