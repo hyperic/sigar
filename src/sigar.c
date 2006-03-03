@@ -1574,6 +1574,39 @@ struct hostent *sigar_gethostbyname(const char *name,
     return hp;
 }
 
+static struct hostent *sigar_gethostbyaddr(const char *addr,
+                                           int len, int type,
+                                           sigar_hostent_t *data)
+{
+    struct hostent *hp = NULL;
+
+#if defined(__linux__)
+    gethostbyaddr_r(addr, len, type,
+                    &data->hs,
+                    data->buffer, sizeof(data->buffer),
+                    &hp, &data->error);
+#elif defined(__sun)
+    hp = gethostbyaddr_r(addr, len, type,
+                         &data->hs,
+                         data->buffer, sizeof(data->buffer),
+                         &data->error);
+#elif defined(SIGAR_HAS_HOSTENT_DATA)
+    if (gethostbyaddr_r((char *)addr, len, type,
+                        &data->hs, &data->hd) == 0)
+    {
+        hp = &data->hs;
+    }
+    else {
+        data->error = h_errno;
+    }
+#else
+    if (!(hp = gethostbyaddr(addr, len, type))) {
+        data->error = h_errno;
+    }
+#endif
+
+    return hp;
+}
 #define IS_FQDN(name) \
     (name && strchr(name, '.'))
 
@@ -1610,7 +1643,6 @@ SIGAR_DECLARE(int) sigar_fqdn_get(sigar_t *sigar, char *name, int namelen)
         }
     }
 
-    /* XXX use _r versions of these functions. */
     if (!(p = sigar_gethostbyname(name, &data))) {
         if (SIGAR_LOG_IS_DEBUG(sigar)) {
             sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
@@ -1661,9 +1693,10 @@ SIGAR_DECLARE(int) sigar_fqdn_get(sigar_t *sigar, char *name, int namelen)
 
         for (i=0; p->h_addr_list[i]; i++) {
             struct hostent *q =
-                gethostbyaddr(p->h_addr_list[i],
-                              p->h_length,
-                              p->h_addrtype);
+                sigar_gethostbyaddr(p->h_addr_list[i],
+                                    p->h_length,
+                                    p->h_addrtype,
+                                    &data);
 
             if (!q) {
                 if (SIGAR_LOG_IS_DEBUG(sigar)) {
