@@ -1585,6 +1585,7 @@ struct hostent *sigar_gethostbyname(const char *name,
 
 SIGAR_DECLARE(int) sigar_fqdn_get(sigar_t *sigar, char *name, int namelen)
 {
+    sigar_hostent_t data;
     struct hostent *p;
     char domain[SIGAR_FQDN_LEN + 1];
 #ifdef WIN32
@@ -1610,7 +1611,7 @@ SIGAR_DECLARE(int) sigar_fqdn_get(sigar_t *sigar, char *name, int namelen)
     }
 
     /* XXX use _r versions of these functions. */
-    if (!(p = gethostbyname(name))) {
+    if (!(p = sigar_gethostbyname(name, &data))) {
         if (SIGAR_LOG_IS_DEBUG(sigar)) {
             sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
                              "[fqdn] gethostbyname(%s) failed: %s",
