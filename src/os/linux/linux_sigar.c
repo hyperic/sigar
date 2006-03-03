@@ -216,7 +216,22 @@ static int is_ht_enabled(sigar_t *sigar)
         sigar_cpuid(1, &eax, &ebx, &ecx, &edx);
 
         if (edx & (1<<28)) {
+            unsigned long apic_id =
+                (ebx & 0xFF000000) >> 24;
+            unsigned long log_id, phy_id_mask=0xFF, i=1;
+            
             sigar->lcpu = (ebx & 0x00FF0000) >> 16;
+
+            while (i < sigar->lcpu) {
+                i *= 2;
+                phy_id_mask <<= 1;
+            }
+
+            log_id = apic_id & ~phy_id_mask;
+
+            if (log_id == 0) {
+                sigar->lcpu = 1;
+            }
 
             if (sigar->lcpu > 1) {
                 sigar->ht_enabled = 1;
