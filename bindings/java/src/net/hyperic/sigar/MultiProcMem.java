@@ -14,10 +14,8 @@ public class MultiProcMem extends ProcMem {
         for (int i=0; i<pids.length; i++) {
             ProcMem pmem = sigar.getProcMem(pids[i]);
             mem.size     += pmem.size;
-            mem.vsize    += pmem.vsize;
             mem.resident += pmem.resident;
             mem.share    += pmem.share;
-            mem.rss      += pmem.rss;
         }
         
         return mem;
