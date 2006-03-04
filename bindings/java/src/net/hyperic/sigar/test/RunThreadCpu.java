@@ -62,7 +62,7 @@ public class RunThreadCpu {
             for (int i=0; i<iter; i++) {
                 s += System.getProperty("java.home");
                 for (int j=0; j<s.length(); j++) {
-                    char c = s.charAt(j);
+                    s.charAt(j);
                 }
             }
             printTimes(start);

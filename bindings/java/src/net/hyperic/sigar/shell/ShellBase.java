@@ -586,7 +586,6 @@ public abstract class ShellBase
         throws PageFetchException
     {
         PrintStream out;
-        PageControl curPage;
         PageList data;
         boolean lineNumberMode;
 

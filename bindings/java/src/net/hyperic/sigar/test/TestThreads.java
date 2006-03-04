@@ -27,8 +27,6 @@ public class TestThreads extends TestCase {
         boolean useGlobal = false;
 
         public void run() {
-            int expire = 1000;
-
             Sigar sigar;
             SigarProxy proxy;
 

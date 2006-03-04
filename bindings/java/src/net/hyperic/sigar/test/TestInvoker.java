@@ -82,7 +82,7 @@ public class TestInvoker extends SigarTestCase {
             SigarInvokerJMX invoker =
                 SigarInvokerJMX.getInstance(proxy, query[0]);
             try {
-                Object o = invoker.invoke(query[1]);
+                invoker.invoke(query[1]);
                 assertTrue(false);
             } catch (SigarException e) {
                 traceln(query[0] + ":" + query[1] + "=" + e.getMessage());

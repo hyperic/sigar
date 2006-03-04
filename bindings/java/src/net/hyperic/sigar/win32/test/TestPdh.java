@@ -2,7 +2,6 @@ package net.hyperic.sigar.win32.test;
 
 import net.hyperic.sigar.test.SigarTestCase;
 import net.hyperic.sigar.win32.Pdh;
-import net.hyperic.sigar.win32.Win32Exception;
 
 public class TestPdh extends SigarTestCase {
 
@@ -39,9 +38,7 @@ public class TestPdh extends SigarTestCase {
         */
     }
 
-    public void testPdh () throws Exception {
-
-        Pdh pdh = new Pdh();
+    public void testPdh() throws Exception {
 
         String[] iface = Pdh.getKeys("Thread");
         

@@ -24,10 +24,9 @@ public class TestProcExe extends SigarTestCase {
 
             //assertTrue(new File(cwd).isDirectory());
 
-            File exeFile = new File(exe.getName());
             traceln("exe='" + exe.getName() + "'");
 
-            //assertTrue(exeFile.exists());
+            //assertTrue(new File(exeFile).exists());
         } catch (SigarNotImplementedException e) {
             //ok
         }

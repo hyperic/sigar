@@ -228,7 +228,6 @@ public class Proxy {
             String type = method.getName().substring(3);
 
             Class attrClass = method.getReturnType();
-            Class[] paramTypes;
 
             if (isNonStringArg(method)) {
                 continue;
@@ -406,6 +405,7 @@ public class Proxy {
         } catch (SigarException e) {
             String msg =
                 type + " failed: " + e.getMessage();
+            System.err.println(msg);
             return null;
         }
     }
@@ -426,11 +426,7 @@ public class Proxy {
         output("ourPid=" + ourPid);
 
         if (args.length >= 2) {
-            String type = args[0], arg = null, attr = args[args.length - 1];
-
-            if (args.length == 3) {
-                arg  = args[1];
-            }
+            String type = args[0], attr = args[args.length - 1];
 
             if (type.equals("leaktest")) {
                 int num = Integer.parseInt(args[1]);
@@ -448,6 +444,8 @@ public class Proxy {
                         throw new SigarException(e.getMessage());
                     } catch (InvocationTargetException e) {
                         throw new SigarException(e.getMessage());
+                    } finally {
+                        s.close();
                     }
                 }
 

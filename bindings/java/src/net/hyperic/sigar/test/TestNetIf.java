@@ -52,8 +52,7 @@ public class TestNetIf extends SigarTestCase {
         //test bogus arg results in exception (and not a segfault)
         try {
             traceln("testing bogus getNetInterfaceStat");
-            NetInterfaceStat ifstat =
-                sigar.getNetInterfaceStat("were switching to night vision");
+            sigar.getNetInterfaceStat("were switching to night vision");
             fail("switched to night vision");
         } catch (SigarException e) {
             //expected
@@ -62,8 +61,7 @@ public class TestNetIf extends SigarTestCase {
         //test bogus arg results in exception (and not a segfault)
         try {
             traceln("testing bogus getNetInterfaceConfig");
-            NetInterfaceConfig ifconfig =
-                sigar.getNetInterfaceConfig("happy meal");
+            sigar.getNetInterfaceConfig("happy meal");
             fail("unexpected treat in happy meal");
         } catch (SigarException e) {
             //expected

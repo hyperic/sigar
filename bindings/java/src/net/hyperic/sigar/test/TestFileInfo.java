@@ -69,14 +69,14 @@ public class TestFileInfo extends SigarTestCase {
         }
         else {
             try {
-                DirStat stats = sigar.getDirStat(file);
+                sigar.getDirStat(file);
                 assertTrue(false);
             } catch (SigarException e) {
                 assertTrue(true);
             }
         }
 
-        FileInfo link = sigar.getLinkInfo(file);
+        sigar.getLinkInfo(file);
     }
 
     public void testCreate() throws Exception {
