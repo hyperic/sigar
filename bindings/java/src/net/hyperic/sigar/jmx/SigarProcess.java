@@ -27,12 +27,20 @@ public class SigarProcess implements SigarProcessMBean {
         this.sigarImpl.close();
     }
 
+    private RuntimeException unexpectedError(String type,
+                                             SigarException e) {
+        String msg =
+            "Unexected error in Sigar.get" + type +
+            ": " + e.getMessage();
+        return new IllegalArgumentException(msg);
+    }
+                                   
     private synchronized ProcMem getMem() {
         try {
             long pid = this.sigar.getPid();
             return this.sigar.getProcMem(pid);
         } catch (SigarException e) {
-            throw new IllegalArgumentException();
+            throw unexpectedError("Mem", e);
         }
     }
 
@@ -41,7 +49,7 @@ public class SigarProcess implements SigarProcessMBean {
             long pid = this.sigar.getPid();
             return this.sigar.getProcTime(pid);
         } catch (SigarException e) {
-            throw new IllegalArgumentException();
+            throw unexpectedError("Time", e);
         }   
     }
 
@@ -50,7 +58,7 @@ public class SigarProcess implements SigarProcessMBean {
             long pid = this.sigar.getPid();
             return this.sigar.getProcFd(pid);
         } catch (SigarException e) {
-            throw new IllegalArgumentException();
+            throw unexpectedError("Fd", e);
         }   
     }
     
