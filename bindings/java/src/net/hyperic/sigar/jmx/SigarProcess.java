@@ -27,7 +27,7 @@ public class SigarProcess implements SigarProcessMBean {
         this.sigarImpl.close();
     }
 
-    private ProcMem getMem() {
+    private synchronized ProcMem getMem() {
         try {
             long pid = this.sigar.getPid();
             return this.sigar.getProcMem(pid);
@@ -36,7 +36,7 @@ public class SigarProcess implements SigarProcessMBean {
         }
     }
 
-    private ProcTime getTime() {
+    private synchronized ProcTime getTime() {
         try {
             long pid = this.sigar.getPid();
             return this.sigar.getProcTime(pid);
@@ -45,7 +45,7 @@ public class SigarProcess implements SigarProcessMBean {
         }   
     }
 
-    private ProcFd getFd() {
+    private synchronized ProcFd getFd() {
         try {
             long pid = this.sigar.getPid();
             return this.sigar.getProcFd(pid);
