@@ -1,3 +1,9 @@
+2006-03-04  Doug MacEachern  <dougm@hyperic.net>
+
+        * Use IFMIB (GetIfEntry) rather netbios to get hwaddr on Win32
+
+        * Add net_interface_config.mtu for Win32
+
 2006-03-03  Doug MacEachern  <dougm@hyperic.net>
 
         * Removed proc_mem.vsize (same as proc_mem.size)
