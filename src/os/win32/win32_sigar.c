@@ -30,7 +30,6 @@ typedef enum {
 #define PERF_TITLE_PAGE_FAULTS 28
 #define PERF_TITLE_MEM_VSIZE  174
 #define PERF_TITLE_MEM_SIZE   180
-#define PERF_TITLE_MEM_PRIV   186
 #define PERF_TITLE_THREAD_CNT 680
 #define PERF_TITLE_HANDLE_CNT 952
 #define PERF_TITLE_PID        784
@@ -43,7 +42,6 @@ typedef enum {
     PERF_IX_PAGE_FAULTS,
     PERF_IX_MEM_VSIZE,
     PERF_IX_MEM_SIZE,
-    PERF_IX_MEM_PRIV,
     PERF_IX_THREAD_CNT,
     PERF_IX_HANDLE_CNT,
     PERF_IX_PID,
@@ -831,6 +829,10 @@ static HANDLE open_process(sigar_pid_t pid)
     return OpenProcess(PROCESS_DAC, 0, (DWORD)pid);
 }
 
+/*
+ * Pretty good explanation of counters:
+ * http://www.semack.net/wiki/default.asp?db=SemackNetWiki&o=VirtualMemory
+ */
 SIGAR_DECLARE(int) sigar_proc_mem_get(sigar_t *sigar, sigar_pid_t pid,
                                       sigar_proc_mem_t *procmem)
 {
@@ -841,14 +843,16 @@ SIGAR_DECLARE(int) sigar_proc_mem_get(sigar_t *sigar, sigar_pid_t pid,
         return status;
     }
 
-    procmem->vsize    = pinfo->vsize;
-    procmem->size     = pinfo->size;
-    procmem->resident = pinfo->resident;
+    procmem->size     = pinfo->size;     /* "Virtual Bytes" */
+    procmem->resident = pinfo->resident; /* "Working Set" */
     procmem->share    = SIGAR_FIELD_NOTIMPL;
-    procmem->rss      = pinfo->resident;
     procmem->page_faults  = pinfo->page_faults;
     procmem->minor_faults = SIGAR_FIELD_NOTIMPL;
     procmem->major_faults = SIGAR_FIELD_NOTIMPL;
+
+    /* deprecated */
+    procmem->vsize    = pinfo->size;
+    procmem->rss      = pinfo->resident;
 
     return SIGAR_OK;
 }
@@ -1049,9 +1053,6 @@ static int get_proc_info(sigar_t *sigar, sigar_pid_t pid)
           case PERF_TITLE_MEM_SIZE:
             perf_offsets[PERF_IX_MEM_SIZE] = offset;
             break;
-          case PERF_TITLE_MEM_PRIV:
-            perf_offsets[PERF_IX_MEM_PRIV] = offset;
-            break;
           case PERF_TITLE_THREAD_CNT:
             perf_offsets[PERF_IX_THREAD_CNT] = offset;
             break;
@@ -1088,9 +1089,8 @@ static int get_proc_info(sigar_t *sigar, sigar_pid_t pid)
         SIGAR_W2A(PdhInstanceName(inst),
                   pinfo->name, sizeof(pinfo->name));
 
-        pinfo->size     = PERF_VAL(PERF_IX_MEM_SIZE);
-        pinfo->vsize    = PERF_VAL(PERF_IX_MEM_VSIZE);
-        pinfo->resident = PERF_VAL(PERF_IX_MEM_PRIV);
+        pinfo->size     = PERF_VAL(PERF_IX_MEM_VSIZE);
+        pinfo->resident = PERF_VAL(PERF_IX_MEM_SIZE);
         pinfo->ppid     = PERF_VAL(PERF_IX_PPID);
         pinfo->priority = PERF_VAL(PERF_IX_PRIORITY);
         pinfo->handles  = PERF_VAL(PERF_IX_HANDLE_CNT);
