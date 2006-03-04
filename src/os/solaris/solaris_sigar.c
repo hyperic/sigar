@@ -536,9 +536,7 @@ int sigar_proc_mem_get(sigar_t *sigar, sigar_pid_t pid,
     }
 
     procmem->size     = pinfo->pr_size << 10;
-    procmem->rss      = pinfo->pr_rssize << 10;
-    procmem->resident = procmem->rss;
-    procmem->vsize    = SIGAR_FIELD_NOTIMPL;
+    procmem->resident = pinfo->pr_rssize << 10;
     procmem->share    = SIGAR_FIELD_NOTIMPL;
 
     if (sigar_proc_usage_get(sigar, &usage, pid) == SIGAR_OK) {

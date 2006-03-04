@@ -758,7 +758,7 @@ int sigar_proc_mem_get(sigar_t *sigar, sigar_pid_t pid,
     task_basic_info_data_t info;
     task_events_info_data_t events;
     mach_msg_type_number_t count;
-    vm_size_t vsize, resident, private, vprivate, shared;
+    vm_size_t vsize, private, vprivate, shared;
     shared_table table;
     vm_address_t address = 0;
     int i, split = 0;
@@ -776,7 +776,6 @@ int sigar_proc_mem_get(sigar_t *sigar, sigar_pid_t pid,
     }
 
     vsize = info.virtual_size;
-    resident = info.resident_size;
 
     count = TASK_EVENTS_INFO_COUNT;
     status = task_info(task, TASK_EVENTS_INFO, (task_info_t)&events, &count);
@@ -879,11 +878,9 @@ int sigar_proc_mem_get(sigar_t *sigar, sigar_pid_t pid,
         mach_port_deallocate(self, task);
     }
 
-    procmem->size = vprivate;
-    procmem->rss = private;
-    procmem->share = shared;
-    procmem->vsize = vsize;
-    procmem->resident = resident;
+    procmem->size     = info.virtual_size;
+    procmem->resident = info.resident_size;
+    procmem->share    = shared;
 
     return SIGAR_OK;
 #else
@@ -894,11 +891,10 @@ int sigar_proc_mem_get(sigar_t *sigar, sigar_pid_t pid,
         return status;
     }
 
-    procmem->size = procmem->vsize = 
+    procmem->size =
         (pinfo->KI_TSZ + pinfo->KI_DSZ + pinfo->KI_SSZ) * sigar->pagesize;
 
-    procmem->resident = procmem->rss =
-        pinfo->KI_RSS * sigar->pagesize;
+    procmem->resident = pinfo->KI_RSS * sigar->pagesize;
 
     procmem->share = SIGAR_FIELD_NOTIMPL;
 

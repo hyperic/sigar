@@ -733,8 +733,6 @@ int sigar_proc_mem_get(sigar_t *sigar, sigar_pid_t pid,
     int status = proc_stat_read(sigar, pid);
     linux_proc_stat_t *pstat = &sigar->last_proc_stat;
 
-    procmem->vsize = pstat->vsize;
-    procmem->rss   = pstat->rss;
     procmem->minor_faults = pstat->minor_faults;
     procmem->major_faults = pstat->major_faults;
     procmem->page_faults =

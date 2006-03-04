@@ -97,9 +97,7 @@ int sigar_proc_mem_get(sigar_t *sigar, sigar_pid_t pid,
                        sigar_proc_mem_t *procmem)
 {
     procmem->size = -1;
-    procmem->vsize = -1;
     procmem->share = -1;
-    procmem->rss = -1;
     procmem->resident = -1;
     procmem->page_faults  = -1;
     procmem->minor_faults = -1;

@@ -205,10 +205,8 @@ SIGAR_DECLARE(int) sigar_proc_stat_get(sigar_t *sigar,
 typedef struct {
     sigar_uint64_t
         size,
-        vsize,
         resident,
         share,
-        rss,
         minor_faults,
         major_faults,
         page_faults;

@@ -850,10 +850,6 @@ SIGAR_DECLARE(int) sigar_proc_mem_get(sigar_t *sigar, sigar_pid_t pid,
     procmem->minor_faults = SIGAR_FIELD_NOTIMPL;
     procmem->major_faults = SIGAR_FIELD_NOTIMPL;
 
-    /* deprecated */
-    procmem->vsize    = pinfo->size;
-    procmem->rss      = pinfo->resident;
-
     return SIGAR_OK;
 }
 

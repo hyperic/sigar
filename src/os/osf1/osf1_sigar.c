@@ -214,8 +214,7 @@ int sigar_proc_mem_get(sigar_t *sigar, sigar_pid_t pid,
     }
 
     procmem->resident = taskinfo.resident_size;
-    procmem->rss      = taskinfo.resident_size;
-    procmem->vsize    = taskinfo.virtual_size;
+    procmem->size    = taskinfo.virtual_size;
 
     status = table(TBL_UAREA, pid, &s_user, 1, sizeof(s_user));
 
@@ -225,8 +224,6 @@ int sigar_proc_mem_get(sigar_t *sigar, sigar_pid_t pid,
     }
 
     procmem->share = s_user.u_ru.ru_ixrss;
-    /*XXX*/
-    procmem->size = 1; /* 1 == let ant test pass for now */
 
     procmem->page_faults  = SIGAR_FIELD_NOTIMPL;
     procmem->minor_faults = SIGAR_FIELD_NOTIMPL;

@@ -1082,11 +1082,9 @@ int sigar_proc_mem_get(sigar_t *sigar, sigar_pid_t pid,
         return status;
     }
 
-    procmem->size  = PAGESHIFT(pinfo->pi_size);
-    procmem->vsize = PAGESHIFT(pinfo->pi_dvm);
+    procmem->size  = PAGESHIFT(pinfo->pi_size); /* XXX fold in pi_dvm ? */
     procmem->share = PAGESHIFT(pinfo->pi_sdsize);
-    procmem->rss   = PAGESHIFT(pinfo->pi_drss + pinfo->pi_trss);
-    procmem->resident = procmem->rss;
+    procmem->resident = PAGESHIFT(pinfo->pi_drss + pinfo->pi_trss);
 
     procmem->minor_faults = pinfo->pi_minflt;
     procmem->major_faults = pinfo->pi_majflt;

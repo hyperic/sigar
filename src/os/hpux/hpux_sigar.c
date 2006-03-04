@@ -262,16 +262,7 @@ int sigar_proc_mem_get(sigar_t *sigar, sigar_pid_t pid,
 
     procmem->size *= pagesize;
         
-    procmem->vsize =
-        pinfo->pst_vtsize + /* text */
-        pinfo->pst_vdsize + /* data */
-        pinfo->pst_vssize;  /* stack */
-
-    procmem->vsize *= pagesize;
-        
-    procmem->rss = pinfo->pst_rssize * pagesize;
-
-    procmem->resident = procmem->rss;
+    procmem->resident = pinfo->pst_rssize * pagesize;
 
     procmem->share = pinfo->pst_shmsize * pagesize;
 
