@@ -58,7 +58,8 @@ int sigar_wsa_init(sigar_t *sigar)
 
 #include <nb30.h>
 
-static void hwaddr_lookup(sigar_net_interface_config_t *ifconfig, int num)
+static void hwaddr_lookup_netbios(sigar_net_interface_config_t *ifconfig,
+                                  int num)
 {
     NCB ncb;
     UCHAR rc;
@@ -99,13 +100,30 @@ static void hwaddr_lookup(sigar_net_interface_config_t *ifconfig, int num)
     }
 }
 
+static void hwaddr_lookup(sigar_t *sigar,
+                          sigar_net_interface_config_t *ifconfig,
+                          int num)
+{
+    /* try IFMIB first, fallback on netbios for hwaddr */
+    if (sigar_get_ifentry_config(sigar, ifconfig) != SIGAR_OK) {
+        if (ifconfig->flags & SIGAR_IFF_LOOPBACK) {
+            sigar_hwaddr_set_null(ifconfig);
+        }
+        else {
+            hwaddr_lookup_netbios(ifconfig, num);
+        }
+    }
+}
+
 #else /* NETWARE */
 
-static void hwaddr_lookup(sigar_net_interface_config_t *ifconfig, int num)
+static void hwaddr_lookup(sigar_t *sigar,
+                          sigar_net_interface_config_t *ifconfig,
+                          int num)
 {
     uint8_t addr[6];
 
-    if (netware_net_macaddr(num, addr) == 0) {
+    if (netware_net_macaddr(num+1, addr) == 0) {
         sigar_hwaddr_format(ifconfig->hwaddr, addr);
     }
     else {
@@ -224,19 +242,16 @@ sigar_net_interface_config_get(sigar_t *sigar,
         ifconfig->flags |= SIGAR_IFF_LOOPBACK;
         ifconfig->destination = ifconfig->address;
         ifconfig->broadcast = 0;
-#ifdef NETWARE
-        hwaddr_lookup(ifconfig, i+1);
-#else
-        sigar_hwaddr_set_null(ifconfig);
-#endif
         SIGAR_SSTRCPY(ifconfig->type,
                       SIGAR_NIC_LOOPBACK);
     }
     else {
-        hwaddr_lookup(ifconfig, i);
         SIGAR_SSTRCPY(ifconfig->type,
                       SIGAR_NIC_ETHERNET);
     }
+
+    hwaddr_lookup(sigar, ifconfig, i);
+
     if (flags & IFF_POINTTOPOINT) {
         ifconfig->flags |= SIGAR_IFF_POINTOPOINT;
     }

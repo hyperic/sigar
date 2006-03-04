@@ -1919,9 +1919,9 @@ static int sigar_get_if_table(sigar_t *sigar, PMIB_IFTABLE *iftable)
     }
 }
 
-SIGAR_DECLARE(int)
-sigar_net_interface_stat_get(sigar_t *sigar, const char *name,
-                             sigar_net_interface_stat_t *ifstat)
+static int get_mib_ifrow(sigar_t *sigar,
+                         const char *name,
+                         MIB_IFROW **ifrp)
 {
     DWORD rc, i;
     MIB_IFTABLE *ift;
@@ -1964,6 +1964,42 @@ sigar_net_interface_stat_get(sigar_t *sigar, const char *name,
         return ENOENT;
     }
 
+    *ifrp = ifr;
+
+    return SIGAR_OK;
+}
+
+int sigar_get_ifentry_config(sigar_t *sigar,
+                             sigar_net_interface_config_t *ifconfig)
+{
+    MIB_IFROW *ifr;
+    int status;
+
+    status = get_mib_ifrow(sigar, ifconfig->name, &ifr);
+    if (status != SIGAR_OK) {
+        return status;
+    }
+
+    ifconfig->mtu = ifr->dwMtu;
+
+    sigar_hwaddr_format(ifconfig->hwaddr,
+                        ifr->bPhysAddr);
+
+    return SIGAR_OK;
+}
+
+SIGAR_DECLARE(int)
+sigar_net_interface_stat_get(sigar_t *sigar, const char *name,
+                             sigar_net_interface_stat_t *ifstat)
+{
+    MIB_IFROW *ifr;
+    int status;
+
+    status = get_mib_ifrow(sigar, name, &ifr);
+    if (status != SIGAR_OK) {
+        return status;
+    }
+    
     ifstat->rx_bytes    = ifr->dwInOctets;
     ifstat->rx_packets  = ifr->dwInUcastPkts + ifr->dwInNUcastPkts; 
     ifstat->rx_errors   = ifr->dwInErrors;
