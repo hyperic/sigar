@@ -1,5 +1,6 @@
 package net.hyperic.sigar.jmx;
 
+import net.hyperic.sigar.ProcFd;
 import net.hyperic.sigar.ProcMem;
 import net.hyperic.sigar.ProcTime;
 import net.hyperic.sigar.Sigar;
@@ -43,6 +44,15 @@ public class SigarProcess implements SigarProcessMBean {
             throw new IllegalArgumentException();
         }   
     }
+
+    private ProcFd getFd() {
+        try {
+            long pid = this.sigar.getPid();
+            return this.sigar.getProcFd(pid);
+        } catch (SigarException e) {
+            throw new IllegalArgumentException();
+        }   
+    }
     
     public Long getMemSize() {
         return new Long(getMem().getSize());
@@ -76,6 +86,10 @@ public class SigarProcess implements SigarProcessMBean {
         return new Long(getTime().getSys());
     }
 
+    public Long getOpenFd() {
+        return new Long(getFd().getTotal());
+    }
+
     public static void main(String args[]) {
         SigarProcessMBean proc = new SigarProcess();
         System.out.println("MemSize=" + proc.getMemSize());
@@ -84,5 +98,6 @@ public class SigarProcess implements SigarProcessMBean {
         System.out.println("MemPageFaults=" + proc.getMemPageFaults());
         System.out.println("TimeUser=" + proc.getTimeUser());
         System.out.println("TimeSys=" + proc.getTimeSys());
+        System.out.println("OpenFd=" + proc.getOpenFd());
     }
 }

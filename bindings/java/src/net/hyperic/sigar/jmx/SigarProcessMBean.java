@@ -24,4 +24,6 @@ public interface SigarProcessMBean {
     public Long getTimeUser();
 
     public Long getTimeSys();
+
+    public Long getOpenFd();
 }
