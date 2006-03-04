@@ -155,6 +155,7 @@ public class Runner {
             "net.hyperic.sigar.test.",
             "net.hyperic.sigar.",
             "net.hyperic.sigar.win32.",
+            "net.hyperic.sigar.jmx.",
         };
 
         for (int i=0; i<packages.length; i++) {
