@@ -68,7 +68,7 @@ public class Proxy {
     }
 
     private long getSize() throws SigarException {
-        return sigar.getProcMem(ourPid).getVsize();
+        return sigar.getProcMem(ourPid).getResident();
     }
 
     private boolean memstat(long i) throws SigarException {

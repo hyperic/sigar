@@ -53,8 +53,12 @@ public class SigarProcess implements SigarProcessMBean {
         return getLongValue(procMem, "Size");
     }
 
+    /**
+     * @deprecated
+     * @see getMemSize
+     */
     public Long getMemVsize() {
-        return getLongValue(procMem, "Vsize");
+        return getMemSize();
     }
 
     public Long getMemShare() {

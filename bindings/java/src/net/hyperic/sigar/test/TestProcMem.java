@@ -22,10 +22,8 @@ public class TestProcMem extends SigarTestCase {
 
         traceln("Pid=" + pid);
         traceln("Size=" + Sigar.formatSize(procMem.getSize()));
-        traceln("Vsize=" + Sigar.formatSize(procMem.getVsize()));
         traceln("Resident=" + Sigar.formatSize(procMem.getResident()));
         traceln("Share=" + Sigar.formatSize(procMem.getShare()));
-        traceln("Rss=" + Sigar.formatSize(procMem.getRss()));
         traceln("MinorFaults=" + procMem.getMinorFaults());
         traceln("MajorFaults=" + procMem.getMajorFaults());
         traceln("PageFaults=" + procMem.getPageFaults());

@@ -23,7 +23,7 @@ public class TestInvoker extends SigarTestCase {
         { "sigar:Type=LoadAverage", "1" },
         { "sigar:Type=LoadAverage", "2" },
         { "sigar:Type=ProcMem,Arg=$$", "Size" },
-        { "sigar:Type=ProcMem,Arg=$$", "Vsize" },
+        { "sigar:Type=ProcMem,Arg=$$", "Resident" },
         { "sigar:Type=ProcTime,Arg=$$", "Sys" },
         { "sigar:Type=ProcTime,Arg=$$", "User" },
         { "sigar:Type=ProcTime,Arg=$$", "Total" },

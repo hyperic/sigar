@@ -44,8 +44,7 @@ public class MultiPs extends SigarCommandBase {
 
         ProcMem mem = this.proxy.getMultiProcMem(query);
         println("Size: " + Sigar.formatSize(mem.getSize()));
-        println("Vsize: " + Sigar.formatSize(mem.getVsize()));
-        println("Rss: " + Sigar.formatSize(mem.getRss()));
+        println("Resident: " + Sigar.formatSize(mem.getResident()));
         println("Share: " + Sigar.formatSize(mem.getShare()));
     }
 

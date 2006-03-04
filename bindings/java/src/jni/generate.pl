@@ -237,28 +237,18 @@ my %classes = (
     ProcMem => [
       {
          name => 'size', type => 'Long',
-         desc => 'Total process memory',
-         plat => 'AFHLSW'
-      },
-      {
-         name => 'vsize', type => 'Long',
          desc => 'Total process virtual memory',
-         plat => 'AFHLSW'
+         plat => '*'
       },
       {
          name => 'resident', type => 'Long',
-         desc => 'Total process non-swapped memory',
+         desc => 'Total process resident memory',
          plat => '*'
       },
       {
          name => 'share', type => 'Long',
          desc => 'Total process shared memory',
          plat => 'AHLS'
-      },
-      {
-         name => 'rss', type => 'Long',
-         desc => 'Process resident set size',
-         plat => '*'
       },
       {
          name => 'minor_faults', type => 'Long',
@@ -1202,6 +1192,18 @@ EOF
     public static final char STOP   = 'T';
     public static final char ZOMBIE = 'Z';
     public static final char IDLE   = 'D';
+EOF
+    ProcMem => <<'EOF',
+    /**
+     * @deprecated
+     * @see getResident
+     */
+    public long getRss() { return getResident(); }
+    /**
+     * @deprecated
+     * @see getSize
+     */
+    public long getVsize() { return getSize(); }
 EOF
 );
 

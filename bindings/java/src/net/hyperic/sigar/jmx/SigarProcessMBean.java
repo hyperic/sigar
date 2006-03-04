@@ -9,6 +9,10 @@ public interface SigarProcessMBean {
 
     public Long getMemSize();
 
+    /**
+     * @deprecated
+     * @see getMemSize
+     */
     public Long getMemVsize();
 
     public Long getMemShare();

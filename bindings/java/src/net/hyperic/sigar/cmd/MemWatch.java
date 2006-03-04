@@ -57,16 +57,6 @@ public class MemWatch {
             buf.append("size=" + diff);
         }
 
-        diff = cur.getVsize() - last.getVsize();
-        if (diff != 0) {
-            buf.append(", vsize=" + diff);
-        }
-
-        diff = cur.getRss() - last.getRss();
-        if (diff != 0) {
-            buf.append(", rss=" + diff);
-        }
-
         diff = cur.getResident() - last.getResident();
         if (diff != 0) {
             buf.append(", resident=" + diff);
