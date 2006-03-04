@@ -61,8 +61,16 @@ public class SigarProcess implements SigarProcessMBean {
         return getMemSize();
     }
 
+    public Long getMemResident() {
+        return getLongValue(procMem, "Resident");
+    }
+
     public Long getMemShare() {
         return getLongValue(procMem, "Share");
+    }
+
+    public Long getMemPageFaults() {
+        return getLongValue(procMem, "PageFaults");
     }
 
     public Long getTimeUser() {
@@ -71,5 +79,15 @@ public class SigarProcess implements SigarProcessMBean {
 
     public Long getTimeSys() {
         return getLongValue(procTime, "Sys");
+    }
+
+    public static void main(String args[]) {
+        SigarProcessMBean proc = new SigarProcess();
+        System.out.println("MemSize=" + proc.getMemSize());
+        System.out.println("MemResident=" + proc.getMemResident());
+        System.out.println("MemShared=" + proc.getMemShare());
+        System.out.println("MemPageFaults=" + proc.getMemPageFaults());
+        System.out.println("TimeUser=" + proc.getTimeUser());
+        System.out.println("TimeSys=" + proc.getTimeSys());
     }
 }

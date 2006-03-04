@@ -15,7 +15,11 @@ public interface SigarProcessMBean {
      */
     public Long getMemVsize();
 
+    public Long getMemResident();
+
     public Long getMemShare();
+
+    public Long getMemPageFaults();
 
     public Long getTimeUser();
 
