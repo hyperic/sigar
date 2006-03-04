@@ -75,6 +75,10 @@ public class Ifconfig extends SigarCommandBase {
             hwaddr = " HWaddr " + ifconfig.getHwaddr();
         }
 
+        if (!ifconfig.getName().equals(ifconfig.getDescription())) {
+            println(ifconfig.getDescription());
+        }
+
         println(ifconfig.getName() + "\t" +
                 "Link encap:" + ifconfig.getType() +
                 hwaddr);

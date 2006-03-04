@@ -681,6 +681,11 @@ my %classes = (
          plat => '*'
       },
       {
+         name => 'description', type => 'String',
+         desc => '',
+         plat => '*'
+      },
+      {
          name => 'address', type => 'NetAddr',
          desc => '',
          plat => '*'

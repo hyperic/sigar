@@ -1,5 +1,7 @@
 2006-03-04  Doug MacEachern  <dougm@hyperic.net>
 
+        * Add net_interface_config.description
+
         * Use IFMIB (GetIfEntry) rather netbios to get hwaddr on Win32
 
         * Add net_interface_config.mtu for Win32

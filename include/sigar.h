@@ -459,6 +459,7 @@ typedef struct {
     char name[16];
     char hwaddr[64];
     char type[64];
+    char description[256];
     sigar_uint64_t
         address,
         destination,

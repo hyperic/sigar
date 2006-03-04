@@ -1985,6 +1985,9 @@ int sigar_get_ifentry_config(sigar_t *sigar,
     sigar_hwaddr_format(ifconfig->hwaddr,
                         ifr->bPhysAddr);
 
+    SIGAR_SSTRCPY(ifconfig->description,
+                  ifr->bDescr);
+
     return SIGAR_OK;
 }
 

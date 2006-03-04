@@ -250,6 +250,12 @@ sigar_net_interface_config_get(sigar_t *sigar,
                       SIGAR_NIC_ETHERNET);
     }
 
+    /* should be overridden w/ better description
+     * using MIB_IFROW.bDescr when hwaddr is lookedup
+     */
+    SIGAR_SSTRCPY(ifconfig->description,
+                  ifconfig->name);
+
     hwaddr_lookup(sigar, ifconfig, i);
 
     if (flags & IFF_POINTTOPOINT) {

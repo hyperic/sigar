@@ -1798,6 +1798,10 @@ int sigar_net_interface_config_get(sigar_t *sigar, const char *name,
 
     close(sock);
 
+    /* XXX can we get a better description like win32? */
+    SIGAR_SSTRCPY(ifconfig->description,
+                  ifconfig->name);
+
     return SIGAR_OK;
 }
 
