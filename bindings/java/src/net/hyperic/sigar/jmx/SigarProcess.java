@@ -1,5 +1,7 @@
 package net.hyperic.sigar.jmx;
 
+import net.hyperic.sigar.ProcMem;
+import net.hyperic.sigar.ProcTime;
 import net.hyperic.sigar.Sigar;
 import net.hyperic.sigar.SigarException;
 import net.hyperic.sigar.SigarProxy;
@@ -12,45 +14,38 @@ import net.hyperic.sigar.SigarProxyCache;
 
 public class SigarProcess implements SigarProcessMBean {
 
-    private Sigar sigar;
-    private SigarProxy sigarProxy;
-
-    private static final String procMemName =
-        SigarInvokerJMX.getObjectName("ProcMem", "$$");
-
-    private static final String procTimeName =
-        SigarInvokerJMX.getObjectName("ProcTime", "$$");
-
-    private SigarInvokerJMX procMem, procTime;
+    private Sigar sigarImpl;
+    private SigarProxy sigar;
 
     public SigarProcess() {
-        this(null);
-    }
-
-    public SigarProcess(String path) {
-        sigar = new Sigar();
-        sigarProxy = SigarProxyCache.newInstance(sigar);
-
-        procMem = SigarInvokerJMX.getInstance(sigarProxy,
-                                              procMemName);
-
-        procTime = SigarInvokerJMX.getInstance(sigarProxy,
-                                               procTimeName);
+        this.sigarImpl = new Sigar();
+        this.sigar = SigarProxyCache.newInstance(sigarImpl);
     }
 
     public void close() {
+        this.sigarImpl.close();
     }
 
-    private synchronized Long getLongValue(SigarInvokerJMX invoker, String attr) {
+    private ProcMem getMem() {
         try {
-            return (Long)invoker.invoke(attr);
+            long pid = this.sigar.getPid();
+            return this.sigar.getProcMem(pid);
         } catch (SigarException e) {
-            return new Long(-1);
+            throw new IllegalArgumentException();
         }
     }
 
+    private ProcTime getTime() {
+        try {
+            long pid = this.sigar.getPid();
+            return this.sigar.getProcTime(pid);
+        } catch (SigarException e) {
+            throw new IllegalArgumentException();
+        }   
+    }
+    
     public Long getMemSize() {
-        return getLongValue(procMem, "Size");
+        return new Long(getMem().getSize());
     }
 
     /**
@@ -62,23 +57,23 @@ public class SigarProcess implements SigarProcessMBean {
     }
 
     public Long getMemResident() {
-        return getLongValue(procMem, "Resident");
+        return new Long(getMem().getResident());
     }
 
     public Long getMemShare() {
-        return getLongValue(procMem, "Share");
+        return new Long(getMem().getShare());
     }
 
     public Long getMemPageFaults() {
-        return getLongValue(procMem, "PageFaults");
+        return new Long(getMem().getPageFaults());
     }
 
     public Long getTimeUser() {
-        return getLongValue(procTime, "User");
+        return new Long(getTime().getUser());
     }
 
     public Long getTimeSys() {
-        return getLongValue(procTime, "Sys");
+        return new Long(getTime().getSys());
     }
 
     public static void main(String args[]) {
