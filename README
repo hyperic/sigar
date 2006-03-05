@@ -1,6 +1,6 @@
 sigar - System Info Gather And Reporter
 
-The Sigar api provides a portable interface for gathering system
+The Sigar API provides a portable interface for gathering system
 information such as:
 
 - system memory, swap, cpu, load average, uptime
@@ -17,21 +17,23 @@ implemented for Java, Perl and C#.
 
 The following platforms are currently supported:
 
-- Linux (2.2, 2.4, 2.6 kernels)
+- Linux [x86] (2.2, 2.4, 2.6 kernels)
 
-- Win32 (NT 4.0 sp6, 2000 Pro/Server, 2003 Server, XP)
+- Linux [amd64] (2.6 kernel)
 
-- Solaris (2.6, 7, 8, 9, 10)
+- Win32 [x86] (NT 4.0 sp6, 2000 Pro/Server, 2003 Server, XP)
 
-- Solaris x86 (8, 9, 10)
+- Solaris [sparc] (2.6, 7, 8, 9, 10)
 
-- HP/UX (11)
+- Solaris [x86] (8, 9, 10)
 
-- AIX (4.3, 5.1, 5.2)
+- HP/UX [PA-RISC] (11)
 
-- FreeBSD (4.x, 5.x)
+- AIX [PowerPC] (4.3, 5.1, 5.2, 5.3)
 
-- Mac OS X (10.4)
+- FreeBSD [x86] (4.x, 5.x, 6.x)
+
+- Mac OS X [PowerPC] (10.4)
 
 To test drive run the following command:
 
@@ -42,10 +44,6 @@ The shell and commands are implemented in Java, the source code is
 located in examples/java.
 
 Javadocs are located in docs/javadoc.
-
-Note that this is a BETA release of Sigar.  Hyperic HQ uses Sigar in
-production, however not all of the Sigar functionality is currently
-used by HQ.
 
 Perl and C# interfaces are still a work in progress.
 
