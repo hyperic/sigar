@@ -467,7 +467,8 @@ typedef struct {
         netmask,
         flags,
         mtu,
-        metric;
+        metric,
+        speed;
 } sigar_net_interface_config_t;
 
 SIGAR_DECLARE(int)

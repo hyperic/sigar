@@ -255,6 +255,8 @@ sigar_net_interface_config_get(sigar_t *sigar,
      */
     SIGAR_SSTRCPY(ifconfig->description,
                   ifconfig->name);
+    
+    ifconfig->speed = SIGAR_FIELD_NOTIMPL;
 
     hwaddr_lookup(sigar, ifconfig, i);
 

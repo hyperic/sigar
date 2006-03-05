@@ -1981,6 +1981,7 @@ int sigar_get_ifentry_config(sigar_t *sigar,
     }
 
     ifconfig->mtu = ifr->dwMtu;
+    ifconfig->speed = ifr->dwSpeed;
 
     sigar_hwaddr_format(ifconfig->hwaddr,
                         ifr->bPhysAddr);

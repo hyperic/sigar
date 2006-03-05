@@ -1206,6 +1206,7 @@ int sigar_net_interface_config_get(sigar_t *sigar, const char *name,
 
     SIGAR_SSTRCPY(ifconfig->name, name);
     SIGAR_SSTRCPY(ifr.ifr_name, name);
+    ifconfig->speed = SIGAR_FIELD_NOTIMPL;
 
 #define ifr_s_addr(ifr) \
     ((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr.s_addr
