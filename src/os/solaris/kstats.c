@@ -182,6 +182,7 @@ static char *kstat_keys_hme[] = {
     "oflo", /* TX_OVERRUNS */
     "collisions", /* TX_COLLISIONS */
     "nocarrier", /* TX_CARRIER */
+    "ifspeed", /* SPEED */
     NULL
 };
 
@@ -199,6 +200,7 @@ static char *kstat_keys_dmfe[] = {
     "oflo", /* TX_OVERRUNS */
     "collisions", /* TX_COLLISIONS */
     "nocarrier", /* TX_CARRIER */
+    "ifspeed", /* SPEED */
     NULL
 };
 
@@ -216,6 +218,7 @@ static char *kstat_keys_ge[] = {
     "toolong_errors", /* TX_OVERRUNS */
     "collisions", /* TX_COLLISIONS */
     "nocarrier", /* TX_CARRIER */
+    "ifspeed", /* SPEED */
     NULL
 };
 
@@ -233,6 +236,7 @@ static char *kstat_keys_eri[] = {
     "rx_overflow", /* TX_OVERRUNS */
     "collisions", /* TX_COLLISIONS */
     "nocarrier", /* TX_CARRIER */
+    "ifspeed", /* SPEED */
     NULL
 };
 

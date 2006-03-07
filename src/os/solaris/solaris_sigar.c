@@ -1661,6 +1661,7 @@ static int sigar_net_ifstat_get_hme(sigar_t *sigar, const char *name,
     ifstat->tx_overruns   = kHME(KSTAT_HME_TX_OVERRUNS); /*XXX*/
     ifstat->tx_collisions = kHME(KSTAT_HME_TX_COLLISIONS);
     ifstat->tx_carrier    = kHME(KSTAT_HME_TX_CARRIER);
+    ifstat->speed         = kHME(KSTAT_HME_SPEED);
 
     return SIGAR_OK;
 }
@@ -1700,6 +1701,8 @@ static int sigar_net_ifstat_get_dmfe(sigar_t *sigar, const char *name,
     ifstat->tx_collisions = kDMFE(KSTAT_DMFE_TX_COLLISIONS);
     ifstat->tx_carrier    = kDMFE(KSTAT_DMFE_TX_CARRIER);
 
+    ifstat->speed         = kDMFE(KSTAT_DMFE_SPEED);
+
     return SIGAR_OK;
 }
 
@@ -1738,6 +1741,8 @@ static int sigar_net_ifstat_get_ge(sigar_t *sigar, const char *name,
     ifstat->tx_collisions = kGE(KSTAT_GE_TX_COLLISIONS);
     ifstat->tx_carrier    = kGE(KSTAT_GE_TX_CARRIER);
 
+    ifstat->speed         = kGE(KSTAT_GE_SPEED);
+
     return SIGAR_OK;
 }
 
@@ -1775,6 +1780,8 @@ static int sigar_net_ifstat_get_eri(sigar_t *sigar, const char *name,
     ifstat->tx_overruns   = kERI(KSTAT_ERI_TX_OVERRUNS); /*XXX*/
     ifstat->tx_collisions = kERI(KSTAT_ERI_TX_COLLISIONS);
     ifstat->tx_carrier    = kERI(KSTAT_ERI_TX_CARRIER);
+
+    ifstat->speed         = kERI(KSTAT_ERI_SPEED);
 
     return SIGAR_OK;
 }
@@ -1816,6 +1823,8 @@ static int sigar_net_ifstat_get_lo(sigar_t *sigar, const char *name,
     ifstat->tx_collisions = SIGAR_FIELD_NOTIMPL;
     ifstat->tx_carrier    = SIGAR_FIELD_NOTIMPL;
 
+    ifstat->speed         = SIGAR_FIELD_NOTIMPL;
+
     return SIGAR_OK;
 }
 
@@ -1847,6 +1856,9 @@ static void ifstat_kstat_common(sigar_net_interface_stat_t *ifstat,
             }
             else if (strEQ(ptr, "ierrors")) {
                 ifstat->rx_errors = value;
+            }
+            else if (strEQ(ptr, "ifspeed")) {
+                ifstat->speed = value;
             }
             break;
           case 'f':

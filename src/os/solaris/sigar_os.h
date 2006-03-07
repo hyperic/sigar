@@ -79,6 +79,7 @@ typedef enum {
     KSTAT_HME_TX_OVERRUNS,
     KSTAT_HME_TX_COLLISIONS,
     KSTAT_HME_TX_CARRIER,
+    KSTAT_HME_SPEED,
     KSTAT_HME_MAX
 } kstat_hme_off_e;
 
@@ -96,6 +97,7 @@ typedef enum {
     KSTAT_DMFE_TX_OVERRUNS,
     KSTAT_DMFE_TX_COLLISIONS,
     KSTAT_DMFE_TX_CARRIER,
+    KSTAT_DMFE_SPEED,
     KSTAT_DMFE_MAX
 } kstat_dmfe_off_e;
 
@@ -113,6 +115,7 @@ typedef enum {
     KSTAT_GE_TX_OVERRUNS,
     KSTAT_GE_TX_COLLISIONS,
     KSTAT_GE_TX_CARRIER,
+    KSTAT_GE_SPEED,
     KSTAT_GE_MAX
 } kstat_ge_off_e;
 
@@ -130,6 +133,7 @@ typedef enum {
     KSTAT_ERI_TX_OVERRUNS,
     KSTAT_ERI_TX_COLLISIONS,
     KSTAT_ERI_TX_CARRIER,
+    KSTAT_ERI_SPEED,
     KSTAT_ERI_MAX
 } kstat_eri_off_e;
 
