@@ -1840,7 +1840,7 @@ int sigar_net_interface_stat_get(sigar_t *sigar, const char *name,
     ifstat->tx_overruns   = SIGAR_FIELD_NOTIMPL;
     ifstat->tx_carrier    = SIGAR_FIELD_NOTIMPL;
 
-    ifstat->speed         = SIGAR_FIELD_NOTIMPL;
+    ifstat->speed         = ifm->ifm_data.ifi_baudrate;
 
     return SIGAR_OK;
 }
