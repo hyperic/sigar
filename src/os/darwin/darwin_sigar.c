@@ -1756,7 +1756,6 @@ int sigar_net_interface_config_get(sigar_t *sigar, const char *name,
     ifm = iter.data.ifm;
 
     SIGAR_SSTRCPY(ifconfig->name, name);
-    ifconfig->speed = SIGAR_FIELD_NOTIMPL;
 
     sdl = (struct sockaddr_dl *)(ifm + 1);
     sigar_hwaddr_format(ifconfig->hwaddr,
