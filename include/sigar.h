@@ -491,7 +491,8 @@ typedef struct {
         tx_dropped,
         tx_overruns,
         tx_collisions,
-        tx_carrier;
+        tx_carrier,
+        speed;
 } sigar_net_interface_stat_t;
 
 SIGAR_DECLARE(int)

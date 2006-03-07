@@ -1944,6 +1944,8 @@ static int sigar_net_ifstat_get_any(sigar_t *sigar, const char *name,
 int sigar_net_interface_stat_get(sigar_t *sigar, const char *name,
                                  sigar_net_interface_stat_t *ifstat)
 {
+    ifstat->speed = SIGAR_FIELD_NOTIMPL;
+
     switch (*name) {
       case 'd':
         if (strnEQ(name, "dmfe", 4)) {

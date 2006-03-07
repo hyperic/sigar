@@ -2140,6 +2140,8 @@ int sigar_net_interface_stat_get(sigar_t *sigar, const char *name,
         ifstat->tx_collisions = data.if_collisions;
         ifstat->tx_carrier    = SIGAR_FIELD_NOTIMPL;
 
+        ifstat->speed         = SIGAR_FIELD_NOTIMPL;
+
         return SIGAR_OK;
     }
 

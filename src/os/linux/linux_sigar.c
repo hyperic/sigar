@@ -1625,6 +1625,9 @@ int sigar_net_interface_stat_get(sigar_t *sigar, const char *name,
         ifstat->tx_overruns   = sigar_strtoul(ptr);
         ifstat->tx_collisions = sigar_strtoul(ptr);
         ifstat->tx_carrier    = sigar_strtoul(ptr);
+
+        ifstat->speed         = SIGAR_FIELD_NOTIMPL;
+
         break;
     }
 
