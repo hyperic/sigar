@@ -1,3 +1,8 @@
+2006-03-14  Doug MacEachern  <dougm@hyperic.net>
+
+        * Enhance native library finder to work with -jar foo.jar and
+          within an IDE such as Eclipse
+
 2006-03-08  Doug MacEachern  <dougm@hyperic.net>
 
         * 1.1.29 released
