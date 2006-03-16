@@ -684,71 +684,6 @@ static int sigar_get_pinfo(sigar_t *sigar, sigar_pid_t pid)
     return SIGAR_OK;
 }
 
-#ifdef DARWIN
-/* this insanity if dervied from Apple's port of 'top' and libgtop patch */
-#define SHARED_TABLE_SIZE   137
-#define TEXT_SEGMENT_START  (GLOBAL_SHARED_TEXT_SEGMENT)
-#define DATA_SEGMENT_END    (GLOBAL_SHARED_DATA_SEGMENT + SHARED_DATA_REGION_SIZE)
-
-typedef struct shared_info shared_table[SHARED_TABLE_SIZE];
-typedef struct shared_info shared_info;
-
-struct shared_info {
-    unsigned obj_id;
-    unsigned share_mode;
-    unsigned page_count;
-    unsigned ref_count;
-    unsigned task_ref_count;
-    vm_size_t size;
-    shared_info *next;
-};
-
-static void shared_table_free(shared_table table)
-{
-    int i;
-
-    for (i=0; i<SHARED_TABLE_SIZE; i++) {
-        shared_info *info = table[i].next;
-
-        while (info) {
-            shared_info *next = info->next;
-            free(info);
-            info = next;
-        }
-    }
-}
-
-static void shared_table_register(shared_table table,
-                                  vm_region_top_info_data_t *top,
-                                  vm_size_t size)
-{
-    shared_info *info, *last;
-
-    info = last = &table[top->obj_id % SHARED_TABLE_SIZE];
-    while (info) {
-        if (info->obj_id == top->obj_id) {
-            info->task_ref_count++;
-            return;
-        }
-        last = info;
-        info = info->next;
-    }
-
-    info = malloc(sizeof(shared_info));
-    if (info) {
-        info->obj_id = top->obj_id;
-        info->share_mode = top->share_mode;
-        info->page_count = top->shared_pages_resident;
-        info->ref_count = top->ref_count;
-        info->task_ref_count = 1;
-        info->size = size;
-        info->next = NULL;
-        last->next = info;
-    }
-}
-
-#endif /* DARWIN */
-
 int sigar_proc_mem_get(sigar_t *sigar, sigar_pid_t pid,
                        sigar_proc_mem_t *procmem)
 {
@@ -758,10 +693,6 @@ int sigar_proc_mem_get(sigar_t *sigar, sigar_pid_t pid,
     task_basic_info_data_t info;
     task_events_info_data_t events;
     mach_msg_type_number_t count;
-    vm_size_t vsize, private, vprivate, shared;
-    shared_table table;
-    vm_address_t address = 0;
-    int i, split = 0;
 
     status = task_for_pid(self, pid, &task);
 
@@ -775,8 +706,6 @@ int sigar_proc_mem_get(sigar_t *sigar, sigar_pid_t pid,
         return errno;
     }
 
-    vsize = info.virtual_size;
-
     count = TASK_EVENTS_INFO_COUNT;
     status = task_info(task, TASK_EVENTS_INFO, (task_info_t)&events, &count);
     if (status == KERN_SUCCESS) {
@@ -789,98 +718,13 @@ int sigar_proc_mem_get(sigar_t *sigar, sigar_pid_t pid,
     procmem->minor_faults = SIGAR_FIELD_NOTIMPL;
     procmem->major_faults = SIGAR_FIELD_NOTIMPL;
 
-    private = vprivate = shared = 0;
-    memset(table, 0, sizeof(table));
-
-    while (1) {
-        vm_region_basic_info_data_64_t basic;
-        vm_region_top_info_data_t top;
-        mach_port_t object_name;
-        vm_size_t size;
-
-        count = VM_REGION_BASIC_INFO_COUNT_64;
-        if (vm_region_64(task, &address, &size, VM_REGION_BASIC_INFO,
-                         (vm_region_info_t)&basic,
-                         &count, &object_name))
-        {
-            break;
-        }
-
-        count = VM_REGION_TOP_INFO_COUNT;
-        if (vm_region_64(task, &address, &size, VM_REGION_TOP_INFO,
-                         (vm_region_info_t)&top,
-                         &count, &object_name))
-        {
-            break;
-        }
-
-        if ((address >= TEXT_SEGMENT_START) &&
-            (address < DATA_SEGMENT_END))
-        {
-            if (!split && (top.share_mode == SM_EMPTY)) {
-                if (basic.reserved) {
-                    split = 1;
-                }
-            }
-            if (top.share_mode != SM_PRIVATE) {
-                address += size;
-                continue;
-            }
-        }
-
-        switch (top.share_mode) {
-          case SM_COW:
-            if (top.ref_count == 1) {
-                private += top.private_pages_resident * vm_page_size;
-                private += top.shared_pages_resident * vm_page_size;
-                vprivate += size;
-            }
-            else {
-                shared_table_register(table, &top, size);
-                vprivate += top.private_pages_resident * vm_page_size;
-            }
-            break;
-          case SM_PRIVATE:
-            private += top.private_pages_resident * vm_page_size;
-            vprivate += size;
-            break;
-          case SM_SHARED:
-            shared_table_register(table, &top, size);
-            break;
-        }
-
-        address += size;
-    }
-
-    for (i=0; i<SHARED_TABLE_SIZE; i++) {
-        shared_info *sinfo = &table[i];
-
-        while (sinfo) {
-            if ((sinfo->share_mode == SM_SHARED) &&
-                (sinfo->ref_count == sinfo->task_ref_count))
-            {
-                private += sinfo->page_count * vm_page_size;
-                vprivate += sinfo->size;
-            }
-            else {
-                shared += sinfo->page_count * vm_page_size;
-            }
-            sinfo = sinfo->next;
-        }
-    }
-    shared_table_free(table);
-
-    if (split) {
-        vsize -= (DATA_SEGMENT_END - TEXT_SEGMENT_START);
-    }
-
     if (task != self) {
         mach_port_deallocate(self, task);
     }
 
     procmem->size     = info.virtual_size;
     procmem->resident = info.resident_size;
-    procmem->share    = shared;
+    procmem->share    = SIGAR_FIELD_NOTIMPL;
 
     return SIGAR_OK;
 #else
