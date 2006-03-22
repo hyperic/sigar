@@ -1,6 +1,7 @@
 package net.hyperic.sigar.test;
 
 import net.hyperic.sigar.Sigar;
+import net.hyperic.sigar.SigarException;
 import net.hyperic.sigar.SigarNotImplementedException;
 import net.hyperic.sigar.Cpu;
 import net.hyperic.sigar.CpuPerc;
@@ -26,6 +27,14 @@ public class TestCpu extends SigarTestCase {
 
         traceln("Total.." + cpu.getTotal());
         assertTrue(cpu.getTotal() > 0);
+
+        try {
+            long current =
+                getSigar().getProcState("$$").getProcessor();
+            traceln("last run cpu=" + current);
+        } catch (SigarException e) {
+            e.printStackTrace();
+        }
     }
 
     public void testCreate() throws Exception {
