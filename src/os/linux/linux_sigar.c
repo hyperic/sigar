@@ -216,12 +216,14 @@ static int is_ht_enabled(sigar_t *sigar)
         sigar_cpuid(1, &eax, &ebx, &ecx, &edx);
 
         if (edx & (1<<28)) {
+#ifdef DETECT_HT_ENABLED
             unsigned long apic_id =
                 (ebx & 0xFF000000) >> 24;
             unsigned long log_id, phy_id_mask=0xFF, i=1;
-            
+#endif
             sigar->lcpu = (ebx & 0x00FF0000) >> 16;
-
+#ifdef DETECT_HT_ENABLED
+            /* XXX disabled. process affinity mask can throw this off? */
             while (i < sigar->lcpu) {
                 i *= 2;
                 phy_id_mask <<= 1;
@@ -232,7 +234,7 @@ static int is_ht_enabled(sigar_t *sigar)
             if (log_id == 0) {
                 sigar->lcpu = 1;
             }
-
+#endif
             if (sigar->lcpu > 1) {
                 sigar->ht_enabled = 1;
                 sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
