@@ -269,6 +269,7 @@ public class OperatingSystem {
             new GenericVendor("fedora-release", "Fedora"),
             new RedHatVendor("redhat-release", "Red Hat"),
             new VMwareVendor("/proc/vmware/version", "VMware"),
+            new UbuntuVendor("lsb-release", "Ubuntu"),
         };
 
         for (int i=0; i<info.length; i++) {
@@ -364,6 +365,34 @@ public class OperatingSystem {
         public void parse(String line, OperatingSystem os) {
             os.vendor = this.name;
             os.vendorVersion = "ESX 2.x"; //XXX
+        }
+    }
+
+    private class UbuntuVendor extends GenericVendor {
+        public UbuntuVendor(String file, String name) {
+            super(file, name);
+        }
+
+        public void parse(String line, OperatingSystem os) {
+            int ix;
+            while ((ix = line.indexOf("\n")) != -1) {
+                String ent = line.substring(0, ix);
+                line = line.substring(ix+1);
+
+                if ((ix = ent.indexOf("=")) != -1) {
+                    String key = ent.substring(0, ix);
+                    String val = ent.substring(ix+1);
+                    if (key.equals("DISTRIB_ID")) {
+                        os.vendor = val;
+                    }
+                    else if (key.equals("DISTRIB_RELEASE")) {
+                        os.vendorVersion = val;
+                    }
+                    else if (key.equals("DISTRIB_CODENAME")) {
+                        os.vendorCodeName = val;
+                    }
+                }
+            }
         }
     }
 
