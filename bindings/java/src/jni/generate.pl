@@ -1201,12 +1201,12 @@ EOF
     ProcMem => <<'EOF',
     /**
      * @deprecated
-     * @see getResident
+     * @see #getResident()
      */
     public long getRss() { return getResident(); }
     /**
      * @deprecated
-     * @see getSize
+     * @see #getSize()
      */
     public long getVsize() { return getSize(); }
 EOF
