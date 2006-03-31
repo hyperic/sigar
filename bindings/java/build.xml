@@ -398,6 +398,9 @@
      <fileset dir="src/net/hyperic/sigar/cmd">
        <include name="*.java"/>
      </fileset>
+     <fileset dir="examples">
+       <include name="*.java"/>
+     </fileset>
    </copy>
 
    <copy toDir="${dist}/examples/perl" overwrite="true">
