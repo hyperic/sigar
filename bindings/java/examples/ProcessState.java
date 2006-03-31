@@ -1,6 +1,9 @@
 import net.hyperic.sigar.*;
 
 /*
+
+Example to show the process state for a given pid.
+
 Compile the example:
 % javac -classpath sigar-bin/lib/sigar.jar ProcessState.java
 
@@ -15,6 +18,9 @@ bash: Sleeping
 State of emacs editor used to write the example:
 % java -classpath sigar-bin/lib/sigar.jar:. ProcessState 2673
 emacs: Suspended
+
+See also: examples/Ps.java, examples/Top.java
+
 */
 
 public class ProcessState {
@@ -51,7 +57,6 @@ public class ProcessState {
 
         ProcState procState = sigar.getProcState(pid);
         String state;
-
 
         System.out.println(procState.getName() + ": " +
                            getStateString(procState.getState()));
