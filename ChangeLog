@@ -1,3 +1,7 @@
+2006-03-31  Doug MacEachern  <dougm@hyperic.net>
+
+        * Added binary for FreeBSD 6.x
+
 2006-03-16  Doug MacEachern  <dougm@hyperic.net>
 
         * Remove Darwin proc_mem.shared impl.  More trouble that it is
