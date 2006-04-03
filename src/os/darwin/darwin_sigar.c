@@ -984,7 +984,7 @@ int sigar_proc_args_get(sigar_t *sigar, sigar_pid_t pid,
 
     buffer[len] = '\0';
 
-    while (*ptr) {
+    while (len > 0) {
         int alen = strlen(ptr)+1;
         char *arg = malloc(alen);
 
@@ -994,10 +994,9 @@ int sigar_proc_args_get(sigar_t *sigar, sigar_pid_t pid,
         procargs->data[procargs->number++] = arg;
 
         len -= alen;
-        if (len <= 0) {
-            break;
+        if (len > 0) {
+            ptr += alen;
         }
-        ptr += alen;
     }
 
     return SIGAR_OK;
