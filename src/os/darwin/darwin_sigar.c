@@ -963,7 +963,9 @@ int sigar_proc_args_get(sigar_t *sigar, sigar_pid_t pid,
 
     return SIGAR_OK;
 #else
-    char buffer[ARG_MAX+1], *ptr=buffer;
+    /* ARG_MAX in FreeBSD 6.0 == 262144, which blows up the stack */
+#define SIGAR_ARG_MAX 65536
+    char buffer[SIGAR_ARG_MAX+1], *ptr=buffer;
     size_t len = sizeof(buffer);
     int mib[4] = { CTL_KERN, KERN_PROC, KERN_PROC_ARGS, 0 };
 
