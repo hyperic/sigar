@@ -7,6 +7,7 @@ import net.hyperic.sigar.Sigar;
 import net.hyperic.sigar.SigarException;
 import net.hyperic.sigar.SigarLoader;
 import net.hyperic.sigar.SigarNotImplementedException;
+import net.hyperic.sigar.SigarPermissionDeniedException;
 
 public class TestProcFd extends SigarTestCase {
 
@@ -41,6 +42,8 @@ public class TestProcFd extends SigarTestCase {
             assertEqualsTrace("Total", total,
                               sigar.getProcFd(pid).getTotal());
         } catch (SigarNotImplementedException e) {
+            //ok
+        } catch (SigarPermissionDeniedException e) {
             //ok
         }
     }

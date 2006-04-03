@@ -6,6 +6,7 @@ import java.util.Map;
 import net.hyperic.sigar.Sigar;
 import net.hyperic.sigar.SigarException;
 import net.hyperic.sigar.SigarNotImplementedException;
+import net.hyperic.sigar.SigarPermissionDeniedException;
 
 public class TestProcEnv extends SigarTestCase {
 
@@ -45,6 +46,8 @@ public class TestProcEnv extends SigarTestCase {
             val = sigar.getProcEnv(pid, key);
             assertTrue(val == null);
         } catch (SigarNotImplementedException e) {
+            //ok
+        } catch (SigarPermissionDeniedException e) {
             //ok
         }
     }
