@@ -1,3 +1,7 @@
+2006-04-03  Doug MacEachern  <dougm@hyperic.net>
+
+        * Fix sigar_proc_args_get linux when argv has an empty "" arg
+
 2006-03-31  Doug MacEachern  <dougm@hyperic.net>
 
         * Added binary for FreeBSD 6.x
