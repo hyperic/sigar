@@ -269,7 +269,7 @@ int sigar_procfs_args_get(sigar_t *sigar, sigar_pid_t pid,
     buf[total] = '\0';
     ptr = buf;
 
-    while (*ptr) {
+    while (total > 0) {
         int alen = strlen(ptr)+1;
         char *arg = malloc(alen);
 
@@ -279,10 +279,9 @@ int sigar_procfs_args_get(sigar_t *sigar, sigar_pid_t pid,
         procargs->data[procargs->number++] = arg;
 
         total -= alen;
-        if (total <= 0) {
-            break;
+        if (total > 0) {
+            ptr += alen;
         }
-        ptr += alen;
     }
 
     free(buf);
