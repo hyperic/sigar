@@ -35,6 +35,8 @@ The following platforms are currently supported:
 
 - Mac OS X [PowerPC] (10.4)
 
+- Mac OS X [x86] (10.4)
+
 To test drive run the following command:
 
 % java -jar sigar-bin/lib/sigar.jar
