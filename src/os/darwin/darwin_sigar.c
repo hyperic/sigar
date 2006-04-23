@@ -949,7 +949,7 @@ int sigar_proc_args_get(sigar_t *sigar, sigar_pid_t pid,
 
     sigar_proc_args_create(procargs);
 
-    while (*ptr && (nargs-- > 0)) {
+    while ((ptr < end) && (nargs-- > 0)) {
         int alen = strlen(ptr)+1;
         char *arg = malloc(alen);
 
