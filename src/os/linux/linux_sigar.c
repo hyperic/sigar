@@ -1638,11 +1638,21 @@ int sigar_net_interface_stat_get(sigar_t *sigar, const char *name,
     return found ? SIGAR_OK : ENXIO;
 }
 
+#define IS_NULL_PTR(ptr) ((ptr == NULL) || (*(ptr) == '\0'))
+#define HEX_ENT_LEN 8
+
 static SIGAR_INLINE int ip_format(char *buffer, int buflen, char *ptr)
 {
-    int alen = strlen(ptr);
+    int alen;
 
-    if (alen > 8) {
+    if (IS_NULL_PTR(ptr)) {
+        alen = 0;
+    }
+    else {
+        alen = strlen(ptr);
+    }
+
+    if (alen > HEX_ENT_LEN) {
         struct in6_addr addr;
         int i;
         for (i=0; i<=3; i++, ptr+=8) {
@@ -1654,7 +1664,7 @@ static SIGAR_INLINE int ip_format(char *buffer, int buflen, char *ptr)
     }
     else {
         struct in_addr addr;
-        addr.s_addr = hex2int(ptr);
+        addr.s_addr = (alen == HEX_ENT_LEN) ? hex2int(ptr) : 0;
         if (!inet_ntop(AF_INET, &addr, buffer, buflen)) {
             return errno;
         }
@@ -1690,12 +1700,22 @@ static int proc_net_read(net_conn_getter_t *getter,
         char *laddr, *raddr;
         int status;
 
+        SIGAR_SKIP_SPACE(ptr);
+        if (IS_NULL_PTR(ptr)) {
+            continue;
+        }
+
         ptr = sigar_skip_token(ptr); /* skip number */
         while (isspace(*ptr)) {
             ptr++;
         }
+        if (IS_NULL_PTR(ptr)) {
+            continue;
+        }
 
-        port = strchr(ptr, ':');
+        if (!(port = strchr(ptr, ':'))) {
+            continue;
+        }
         *port = '\0';
         ++port;
 
@@ -1706,8 +1726,13 @@ static int proc_net_read(net_conn_getter_t *getter,
         while (isspace(*ptr)) {
             ptr++;
         }
+        if (IS_NULL_PTR(ptr)) {
+            continue;
+        }
 
-        port = strchr(ptr, ':');
+        if (!(port = strchr(ptr, ':'))) {
+            continue;
+        }
         *port = '\0';
         ++port;
 
@@ -1717,6 +1742,9 @@ static int proc_net_read(net_conn_getter_t *getter,
         ptr = port;
         while (isspace(*ptr)) {
             ptr++;
+        }
+        if (IS_NULL_PTR(ptr)) {
+            continue;
         }
 
         if (!((conn.remote_port && (flags & SIGAR_NETCONN_CLIENT)) ||
@@ -1747,18 +1775,36 @@ static int proc_net_read(net_conn_getter_t *getter,
         sscanf(ptr, "%2x", &conn.state);
         ptr = sigar_skip_token(ptr);
         SIGAR_SKIP_SPACE(ptr);
+        if (IS_NULL_PTR(ptr)) {
+            continue;
+        }
+
+        if (strlen(ptr) < ((HEX_ENT_LEN*2) + 1)) {
+            continue;
+        }
 
         conn.send_queue = hex2int(ptr);
-        ptr += 9; /* tx + ':' */;
+        ptr += HEX_ENT_LEN+1; /* tx + ':' */;
+
         conn.receive_queue = hex2int(ptr);
-        ptr += 8;
+        ptr += HEX_ENT_LEN;
+
         SIGAR_SKIP_SPACE(ptr);
+        if (IS_NULL_PTR(ptr)) {
+            continue;
+        }
 
         ptr = sigar_skip_multiple_token(ptr, 2); /* tr:tm->when retrnsmt */
+        if (IS_NULL_PTR(ptr)) {
+            continue;
+        }
 
         conn.uid = sigar_strtoul(ptr);
 
         ptr = sigar_skip_token(ptr);
+        if (IS_NULL_PTR(ptr)) {
+            continue;
+        }
 
         conn.inode = sigar_strtoul(ptr);
 
