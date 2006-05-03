@@ -64,6 +64,7 @@ int sigar_os_open(sigar_t **sig)
     sigar->cpulist.size = 0;
     sigar->ncpu = 0;
     sigar->ks.cpu = NULL;
+    sigar->ks.cpu_info = NULL;
     sigar->ks.cpuid = NULL;
     sigar->ks.lcpu = 0;
 
@@ -129,6 +130,7 @@ int sigar_os_close(sigar_t *sigar)
     }
     if (sigar->ks.lcpu) {
         free(sigar->ks.cpu);
+        free(sigar->ks.cpu_info);
         free(sigar->ks.cpuid);
     }
     if (sigar->pinfo) {
@@ -224,6 +226,34 @@ int sigar_swap_get(sigar_t *sigar, sigar_swap_t *swap)
     swap->used  <<= sigar->pagesize;
 
     return SIGAR_OK;
+}
+
+static int get_chip_id(sigar_t *sigar, int processor)
+{
+    kstat_t *ksp = sigar->ks.cpu_info[processor];
+    kstat_named_t *chipid;
+
+    if (ksp &&
+        (kstat_read(sigar->kc, ksp, NULL) != -1) &&
+        (chipid = (kstat_named_t *)kstat_data_lookup(ksp, "chip_id")))
+    {
+        return chipid->value.i32;
+    }
+    else {
+        return -1;
+    }
+}
+
+static int is_same_chip(sigar_t *sigar, int processor, int num)
+{
+    int chip_id = get_chip_id(sigar, processor);
+
+    if ((chip_id == -1) || (chip_id != (num-1))) {
+        return 0;
+    }
+    else {
+        return 1;
+    }
 }
 
 int sigar_cpu_get(sigar_t *sigar, sigar_cpu_t *cpu)
@@ -322,16 +352,22 @@ int sigar_cpu_list_get(sigar_t *sigar, sigar_cpu_list_t *cpulist)
         buf += sizeof(kmutex_t);
         memcpy(&cpuinfo[0], buf, sizeof(cpuinfo));
 
-        SIGAR_CPU_LIST_GROW(cpulist);
+        if (is_same_chip(sigar, i, cpulist->number)) {
+            /* merge times of logical processors */
+            cpu = &cpulist->data[cpulist->number-1];
+        }
+        else {
+            SIGAR_CPU_LIST_GROW(cpulist);
+            cpu = &cpulist->data[cpulist->number++];
+            SIGAR_ZERO(cpu);
+        }
 
-        cpu = &cpulist->data[cpulist->number++];
-
-        cpu->user = SIGAR_TICK2SEC(cpuinfo[CPU_USER]);
-        cpu->sys  = SIGAR_TICK2SEC(cpuinfo[CPU_KERNEL]);
-        cpu->idle = SIGAR_TICK2SEC(cpuinfo[CPU_IDLE]);
-        cpu->wait = SIGAR_TICK2SEC(cpuinfo[CPU_WAIT]);
-        cpu->nice = 0; /* no cpu->nice */
-        cpu->total = cpu->user + cpu->sys + cpu->idle + cpu->wait;
+        cpu->user += SIGAR_TICK2SEC(cpuinfo[CPU_USER]);
+        cpu->sys  += SIGAR_TICK2SEC(cpuinfo[CPU_KERNEL]);
+        cpu->idle += SIGAR_TICK2SEC(cpuinfo[CPU_IDLE]);
+        cpu->wait += SIGAR_TICK2SEC(cpuinfo[CPU_WAIT]);
+        cpu->nice += 0; /* no cpu->nice */
+        cpu->total += cpu->user + cpu->sys + cpu->idle + cpu->wait;
     }
     
     return SIGAR_OK;
@@ -1529,10 +1565,13 @@ int sigar_cpu_info_list_get(sigar_t *sigar,
     for (i=0; i<sigar->ncpu; i++) {
         sigar_cpu_info_t *info;
 
+        if (is_same_chip(sigar, i, cpu_infos->number)) {
+            continue;
+        }
+
         SIGAR_CPU_INFO_LIST_GROW(cpu_infos);
 
         info = &cpu_infos->data[cpu_infos->number++];
-
 
         SIGAR_SSTRCPY(info->model, stats.pi_processor_type);
 

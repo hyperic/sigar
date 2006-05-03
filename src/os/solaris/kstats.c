@@ -53,6 +53,7 @@ int sigar_get_kstats(sigar_t *sigar)
             /* init */
             sigar->ks.lcpu = ncpu;
             sigar->ks.cpu = malloc(sizeof(*(sigar->ks.cpu)) * ncpu);
+            sigar->ks.cpu_info = malloc(sizeof(*(sigar->ks.cpu_info)) * ncpu);
             sigar->ks.cpuid = malloc(sizeof(*(sigar->ks.cpuid)) * ncpu);
         }
         else {
@@ -63,6 +64,8 @@ int sigar_get_kstats(sigar_t *sigar)
                 /* one or more cpus have been added */
                 sigar->ks.cpu = realloc(sigar->ks.cpu,
                                         sizeof(*(sigar->ks.cpu)) * ncpu);
+                sigar->ks.cpu_info = realloc(sigar->ks.cpu_info,
+                                             sizeof(*(sigar->ks.cpu_info)) * ncpu);
                 sigar->ks.cpuid = realloc(sigar->ks.cpuid,
                                           sizeof(*(sigar->ks.cpuid)) * ncpu);
                 sigar->ks.lcpu = ncpu;
@@ -74,6 +77,7 @@ int sigar_get_kstats(sigar_t *sigar)
 
         for (i=0, ksp=kc->kc_chain; i<ncpu; ksp=ksp->ks_next) {
             char *id;
+            kstat_t *cpu_info;
 
             if (!ksp) {
                 break;
@@ -97,6 +101,9 @@ int sigar_get_kstats(sigar_t *sigar)
 
             sigar->ks.cpu[i] = ksp;
             sigar->ks.cpuid[i] = atoi(id);
+            if ((cpu_info = kstat_lookup(kc, "cpu_info", sigar->ks.cpuid[i], NULL))) {
+                sigar->ks.cpu_info[i] = cpu_info;
+            }
             if (is_debug) {
                 sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
                                  "cpu %d id=%d", i, sigar->ks.cpuid[i]);

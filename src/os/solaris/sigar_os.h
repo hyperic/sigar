@@ -190,6 +190,7 @@ struct sigar_t {
     /* kstat_lookup() as needed */
     struct {
         kstat_t **cpu;
+        kstat_t **cpu_info;
         processorid_t *cpuid;
         unsigned int lcpu; /* number malloced slots in the cpu array above */
         kstat_t *system;
