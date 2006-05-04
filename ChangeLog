@@ -1,6 +1,14 @@
+2006-05-04  Doug MacEachern  <dougm@hyperic.net>
+
+        * Fold UltraSPARC-T1 virtual cpus into physical cpus
+        
+        * Fix net_connection_list on linux to handle invalid /proc/net/tcp entries
+
+        * Switch to universal binary for osx
+
 2006-04-03  Doug MacEachern  <dougm@hyperic.net>
 
-        * Fix sigar_proc_args_get linux when argv has an empty "" arg
+        * Fix sigar_proc_args_get on linux and osx when argv has an empty "" arg
 
 2006-03-31  Doug MacEachern  <dougm@hyperic.net>
 
