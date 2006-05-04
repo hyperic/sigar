@@ -73,6 +73,7 @@ public class TestInvoker extends SigarTestCase {
             } catch (SigarNotImplementedException e) {
                 traceln(query[0] + " NotImplemented");
             } catch (SigarException e) {
+                traceln(query[0] + ":" + query[1] + "=" + e.getMessage());
                 assertTrue(false);
             }
         }
