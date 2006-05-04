@@ -7,7 +7,7 @@
 	<classpathentry kind="lib" path="lib/junit.jar"/>
 	<classpathentry kind="lib" path="hyperic_jni/lib/cpptasks.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry kind="lib" path="C:/ant/lib/ant.jar"/>
+	<classpathentry kind="lib" path="/Developer/Java/Ant/lib/ant.jar"/>
 	<classpathentry kind="lib" path="lib/log4j.jar"/>
 	<classpathentry kind="lib" path="sigar-bin/lib/sigar.jar"/>
 	<classpathentry kind="output" path="build/classes"/>
