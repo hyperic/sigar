@@ -7,7 +7,7 @@
   <property name="copyright.year" value="2004-2006"/>
   <property name="version.major" value="1"/>
   <property name="version.minor" value="1"/>
-  <property name="version.maint" value="29.4"/>
+  <property name="version.maint" value="29.5"/>
   <property name="sigar.version"
             value="${version.major}.${version.minor}.${version.maint}"/>
 
