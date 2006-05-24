@@ -9,6 +9,10 @@ public class ProcUtil {
 
     private static boolean isClassName(String name) {
         int len = name.length();
+        if (len == 0) {
+            return false;
+        }
+
         for (int i=0; i<len; i++) {
             char c = name.charAt(i);
             if (!((c == '.') || Character.isLetter(c))) {
@@ -28,7 +32,7 @@ public class ProcUtil {
         String[] args = sigar.getProcArgs(pid);
         for (int i=1; i<args.length; i++) {
             String arg = args[i];
-            if (isClassName(arg)) {
+            if (isClassName(arg.trim())) {
                 //example: "java:weblogic.Server"
                 return arg;
             }
