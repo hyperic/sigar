@@ -288,7 +288,7 @@ int sigar_mem_get(sigar_t *sigar, sigar_mem_t *mem)
 }
 
 #define SIGAR_FS_BLOCKS_TO_BYTES(buf, f) \
-    ((buf.f * (buf.f_bsize / 512)) >> 1)
+    (((sigar_uint64_t)buf.f * (buf.f_bsize / 512)) >> 1)
 
 #define VM_DIR "/private/var/vm"
 #define SWAPFILE "swapfile"

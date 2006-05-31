@@ -1574,7 +1574,7 @@ int sigar_file_system_list_get(sigar_t *sigar,
 /* XXX this is exactly the same as linux and hpux, solaris is darn close */
 
 #define SIGAR_FS_BLOCKS_TO_BYTES(buf, f) \
-    ((buf.f * (buf.f_bsize / 512)) >> 1)
+    (((sigar_uint64_t)buf.f * (buf.f_bsize / 512)) >> 1)
 
 #define LSPV_CMD "/usr/sbin/lspv"
 

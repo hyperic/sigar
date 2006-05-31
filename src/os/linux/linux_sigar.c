@@ -1343,7 +1343,7 @@ static int get_iostat_procp(sigar_t *sigar,
 #include <sys/vfs.h>
 
 #define SIGAR_FS_BLOCKS_TO_BYTES(buf, f) \
-    ((buf.f * (buf.f_bsize / 512)) >> 1)
+    (((sigar_uint64_t)buf.f * (buf.f_bsize / 512)) >> 1)
 
 int sigar_file_system_usage_get(sigar_t *sigar,
                                 const char *dirname,

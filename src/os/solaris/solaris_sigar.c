@@ -1241,7 +1241,7 @@ int sigar_file_system_list_get(sigar_t *sigar,
 #include <sys/statvfs.h>
 
 #define SIGAR_FS_BLOCKS_TO_BYTES(buf, f) \
-    ((buf.f * (buf.f_frsize / 512)) >> 1)
+    (((sigar_uint64_t)buf.f * (buf.f_frsize / 512)) >> 1)
 
 typedef struct {
     char device[PATH_MAX];
