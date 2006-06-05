@@ -1,3 +1,11 @@
+2006-05-30  Doug MacEachern  <dougm@hyperic.com>
+
+        * Prevent possible integer overflow in filesystem_usage
+
+2006-05-24  Doug MacEachern  <dougm@hyperic.com>
+
+        * ProcUtil.getJavaMainClass improvements
+
 2006-05-04  Doug MacEachern  <dougm@hyperic.net>
 
         * Fold UltraSPARC-T1 virtual cpus into physical cpus
