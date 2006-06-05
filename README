@@ -54,7 +54,12 @@ To try the Perl examples:
 % perl Makefile.PL && make
 % perl -Mblib ../../examples/perl/ifconfig.pl
 
-Support questions should be posted to the support forum:
-http://www.hyperic.net/forums/index.jsp
+Mailing lists:
+http://mail.hyperic.org/mailman/listinfo/sigar-users
+http://mail.hyperic.org/mailman/listinfo/sigar-dev
 
+Forums:
+http://forums.hyperic.org/
 
+Bugs:
+http://jira.hyperic.com/browse/SIGAR
