@@ -55,8 +55,8 @@ To try the Perl examples:
 % perl -Mblib ../../examples/perl/ifconfig.pl
 
 Mailing lists:
-http://mail.hyperic.org/mailman/listinfo/sigar-users
-http://mail.hyperic.org/mailman/listinfo/sigar-dev
+mailto:sigar-users-subscribe@hyperic.org
+mailto:sigar-dev-subscribe@hyperic.org
 
 Forums:
 http://forums.hyperic.org/
