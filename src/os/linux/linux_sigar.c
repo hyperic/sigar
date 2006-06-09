@@ -258,58 +258,6 @@ static int is_ht_enabled(sigar_t *sigar)
     return sigar->ht_enabled;
 }
 
-static int get_ram(sigar_t *sigar, sigar_mem_t *mem)
-{
-    char buffer[BUFSIZ], *ptr;
-    FILE *fp;
-    int total = 0;
-
-    if (sigar->ram > 0) {
-        /* return cached value */
-        mem->ram = sigar->ram;
-        return SIGAR_OK;
-    }
-
-    if (sigar->ram == 0) {
-        return ENOENT;
-    }
-
-    /*
-     * Memory Type Range Registers
-     * write-back registers add up to the total.
-     */
-    if (!(fp = fopen("/proc/mtrr", "r"))) {
-        return errno;
-    }
-
-    while ((ptr = fgets(buffer, sizeof(buffer), fp))) {
-        if (!(ptr = strstr(ptr, "size="))) {
-            continue;
-        }
-
-        if (!strstr(ptr, "write-back")) {
-            continue;
-        }
-
-        ptr += 5;
-        while (sigar_isspace(*ptr)) {
-            ++ptr;
-        }
-
-        total += atoi(ptr);
-    }
-
-    fclose(fp);
-
-    if (total == 0) {
-        return ENOENT;
-    }
-
-    mem->ram = sigar->ram = total;
-
-    return SIGAR_OK;
-}
-
 #define MEMINFO_PARAM(a) a ":", SSTRLEN(a ":")
 
 static SIGAR_INLINE sigar_uint64_t sigar_meminfo(char *buffer,
@@ -360,10 +308,7 @@ int sigar_mem_get(sigar_t *sigar, sigar_mem_t *mem)
 
     mem->shared = SIGAR_FIELD_NOTIMPL; /* XXX where did this go in 2.6?? */
 
-    if (get_ram(sigar, mem) != SIGAR_OK) {
-        /* XXX other options on failure? */
-        sigar_mem_calc_ram(sigar, mem);
-    }
+    sigar_mem_calc_ram(sigar, mem);
 
     return SIGAR_OK;
 }
