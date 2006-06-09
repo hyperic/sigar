@@ -1,3 +1,8 @@
+2006-06-09  Doug MacEachern  <dougm@hyperic.com>
+
+        * [SIGAR-5] Fix netinfo default gateway where the first gateway in the routing table
+          had been selected without checking for the default destination == 0.0.0.0
+
 2006-05-30  Doug MacEachern  <dougm@hyperic.com>
 
         * Prevent possible integer overflow in filesystem_usage

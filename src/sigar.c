@@ -927,7 +927,9 @@ static int sigar_get_default_gateway(sigar_t *sigar,
     }
 
     for (i=0; i<routelist.number; i++) {
-        if (routelist.data[i].flags & SIGAR_RTF_GATEWAY) {
+        if ((routelist.data[i].flags & SIGAR_RTF_GATEWAY) &&
+            (routelist.data[i].destination == 0))
+        {
             sigar_inet_ntoa(sigar,
                             routelist.data[i].gateway, gateway);
             break;
