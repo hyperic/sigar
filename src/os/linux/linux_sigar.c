@@ -264,6 +264,7 @@ static int get_ram(sigar_t *sigar, sigar_mem_t *mem)
     char buffer[BUFSIZ], *ptr;
     FILE *fp;
     int total = 0;
+    sigar_uint64_t sys_total = (mem->total / (1024 * 1024));
 
     if (sigar->ram > 0) {
         /* return cached value */
@@ -295,26 +296,27 @@ static int get_ram(sigar_t *sigar, sigar_mem_t *mem)
             continue;
         }
 
-        if (total) {
-            /* punt if there is more than 1 write-back register */
-            total = 0;
-            break;
-        }
-
         ptr += 5;
         while (sigar_isspace(*ptr)) {
             ++ptr;
         }
 
-        total = atoi(ptr);
+        total += atoi(ptr);
     }
 
     fclose(fp);
 
+    if ((total - sys_total) > 256) {
+        /* mtrr write-back registers are way off
+         * kernel should not be using more that 256MB of mem
+         */
+        total = 0; /* punt */
+    }
+
     if (total == 0) {
         return ENOENT;
     }
-
+ 
     mem->ram = sigar->ram = total;
 
     return SIGAR_OK;
