@@ -16,7 +16,7 @@ public class ProcessQueryHelper {
         stringMatchers.put("ne", new StringNeMatcher());
         stringMatchers.put("sw", new StringSwMatcher());
         stringMatchers.put("ew", new StringEwMatcher());
-        //stringMatchers.put("re", new StringReMatcher());
+        stringMatchers.put("re", new StringReMatcher());
         stringMatchers.put("ct", new StringCtMatcher());
     }
 
@@ -104,14 +104,12 @@ public class ProcessQueryHelper {
         }
     }
 
-    //XXX requires jdk 1.4+ to compile
-    /*
     static class StringReMatcher implements StringMatcher {
         public boolean match(String left, String right) {
-            return left.matches(right);
+            return StringPattern.matches(left, right);
         }
     }
-    */
+
     public static boolean argsMatch(SigarProxy proxy, long pid,
                                     String value, String op)
         throws SigarException, SigarNotImplementedException {
