@@ -16,6 +16,7 @@
 #define pageshift(x) ((x) << PAGE_SHIFT)
 
 #define PROC_MEMINFO PROC_FS_ROOT "meminfo"
+#define PROC_MTRR    PROC_FS_ROOT "mtrr"
 #define PROC_STAT    PROC_FS_ROOT "stat"
 #define PROC_UPTIME  PROC_FS_ROOT "uptime"
 #define PROC_LOADAVG PROC_FS_ROOT "loadavg"
@@ -258,6 +259,67 @@ static int is_ht_enabled(sigar_t *sigar)
     return sigar->ht_enabled;
 }
 
+static int get_ram(sigar_t *sigar, sigar_mem_t *mem)
+{
+    char buffer[BUFSIZ], *ptr;
+    FILE *fp;
+    int total = 0;
+
+    if (sigar->ram > 0) {
+        /* return cached value */
+        mem->ram = sigar->ram;
+        return SIGAR_OK;
+    }
+
+    if (sigar->ram == 0) {
+        return ENOENT;
+    }
+
+    /*
+     * Memory Type Range Registers
+     * write-back registers add up to the total.
+     * Well, they are supposed to add up, but seen
+     * at least one configuration where that is not the
+     * case.
+     */
+    if (!(fp = fopen(PROC_MTRR, "r"))) {
+        return errno;
+    }
+
+    while ((ptr = fgets(buffer, sizeof(buffer), fp))) {
+        if (!(ptr = strstr(ptr, "size="))) {
+            continue;
+        }
+
+        if (!strstr(ptr, "write-back")) {
+            continue;
+        }
+
+        if (total) {
+            /* punt if there is more than 1 write-back register */
+            total = 0;
+            break;
+        }
+
+        ptr += 5;
+        while (sigar_isspace(*ptr)) {
+            ++ptr;
+        }
+
+        total = atoi(ptr);
+    }
+
+    fclose(fp);
+
+    if (total == 0) {
+        return ENOENT;
+    }
+
+    mem->ram = sigar->ram = total;
+
+    return SIGAR_OK;
+}
+
 #define MEMINFO_PARAM(a) a ":", SSTRLEN(a ":")
 
 static SIGAR_INLINE sigar_uint64_t sigar_meminfo(char *buffer,
@@ -308,7 +370,10 @@ int sigar_mem_get(sigar_t *sigar, sigar_mem_t *mem)
 
     mem->shared = SIGAR_FIELD_NOTIMPL; /* XXX where did this go in 2.6?? */
 
-    sigar_mem_calc_ram(sigar, mem);
+    if (get_ram(sigar, mem) != SIGAR_OK) {
+        /* XXX other options on failure? */
+        sigar_mem_calc_ram(sigar, mem);
+    }
 
     return SIGAR_OK;
 }

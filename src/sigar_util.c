@@ -312,12 +312,12 @@ int sigar_proc_count(sigar_t *sigar, sigar_uint64_t *total)
 
 int sigar_mem_calc_ram(sigar_t *sigar, sigar_mem_t *mem)
 {
-    sigar_uint64_t total = (mem->total / (1024 * 1024));
-    int size = (int)total; /* must cast after division */
-    int ram;
+    sigar_uint64_t lram = (mem->total / (1024 * 1024));
+    int ram = (int)lram; /* must cast after division */
+    int remainder = ram % 8;
 
-    for (ram=1; size; size >>= 1) {
-        ram <<= 1;
+    if (remainder > 0) {
+        ram += (8 - remainder);
     }
 
     mem->ram = ram;
