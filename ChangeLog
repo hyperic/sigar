@@ -1,6 +1,7 @@
 2006-06-09  Doug MacEachern  <dougm@hyperic.com>
 
-        * [SIGAR-6] Use rounding for mem.ram on Linux rather than /proc/mtrr
+        * [SIGAR-6] Use rounding for mem.ram on Linux rather than
+          /proc/mtrr if write-back registers don't add up to a reasonable number
 
         * [SIGAR-5] Fix netinfo default gateway where the first gateway in the routing table
           had been selected without checking for the default destination == 0.0.0.0
