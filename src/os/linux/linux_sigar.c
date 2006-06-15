@@ -1691,14 +1691,36 @@ typedef struct {
     unsigned long port;
 } net_conn_getter_t;
 
-#define CONN_GET_DONE -2
+static int proc_net_walker(sigar_net_connection_walker_t *walker,
+                           sigar_net_connection_t *conn)
+{
+    net_conn_getter_t *getter =
+        (net_conn_getter_t *)walker->data;
 
-static int proc_net_read(net_conn_getter_t *getter,
+    if (getter->connlist) {
+        SIGAR_NET_CONNLIST_GROW(getter->connlist);
+        memcpy(&getter->connlist->data[getter->connlist->number++],
+               conn, sizeof(*conn));
+    }
+    else {
+        if ((getter->port == conn->local_port) &&
+            (conn->remote_port == 0))
+        {
+            memcpy(getter->conn, conn, sizeof(*conn));
+            return !SIGAR_OK; /* break loop */
+        }
+    }
+
+    return SIGAR_OK; /* continue loop */
+}
+
+static int proc_net_read(sigar_net_connection_walker_t *walker,
                          const char *fname,
-                         int flags, int type)
+                         int type)
 {
     FILE *fp;
     char buffer[8192], *ptr;
+    int flags = walker->flags;
 
     if (!(fp = fopen(fname, "r"))) {
         return errno;
@@ -1710,7 +1732,7 @@ static int proc_net_read(net_conn_getter_t *getter,
         sigar_net_connection_t conn;
         char *port = NULL;
         char *laddr, *raddr;
-        int status;
+        int status, more;
 
         SIGAR_SKIP_SPACE(ptr);
         if (IS_NULL_PTR(ptr)) {
@@ -1820,19 +1842,10 @@ static int proc_net_read(net_conn_getter_t *getter,
 
         conn.inode = sigar_strtoul(ptr);
 
-        if (getter->connlist) {
-            SIGAR_NET_CONNLIST_GROW(getter->connlist);
-            memcpy(&getter->connlist->data[getter->connlist->number++],
-                   &conn, sizeof(conn));
-        }
-        else {
-            if ((getter->port == conn.local_port) &&
-                (conn.remote_port == 0))
-            {
-                memcpy(getter->conn, &conn, sizeof(conn));
-                fclose(fp);
-                return CONN_GET_DONE;
-            }
+        more = walker->add_connection(walker, &conn);
+        if (more != SIGAR_OK) {
+            fclose(fp);
+            return SIGAR_OK;
         }
     }
 
@@ -1841,24 +1854,23 @@ static int proc_net_read(net_conn_getter_t *getter,
     return SIGAR_OK;
 }
 
-static int net_conn_get(sigar_t *sigar,
-                        net_conn_getter_t *getter,
-                        int flags)
+static int net_conn_get(sigar_net_connection_walker_t *walker)
 {
+    int flags = walker->flags;
     int status;
 
     if (flags & SIGAR_NETCONN_TCP) {
-        status = proc_net_read(getter,
+        status = proc_net_read(walker,
                                PROC_FS_ROOT "net/tcp",
-                               flags, SIGAR_NETCONN_TCP);
+                               SIGAR_NETCONN_TCP);
 
         if (status != SIGAR_OK) {
             return status;
         }
 
-        status = proc_net_read(getter,
+        status = proc_net_read(walker,
                                PROC_FS_ROOT "net/tcp6",
-                               flags, SIGAR_NETCONN_TCP);
+                               SIGAR_NETCONN_TCP);
 
         if (!((status == SIGAR_OK) || (status == ENOENT))) {
             return status;
@@ -1866,17 +1878,17 @@ static int net_conn_get(sigar_t *sigar,
     }
 
     if (flags & SIGAR_NETCONN_UDP) {
-        status = proc_net_read(getter,
+        status = proc_net_read(walker,
                                PROC_FS_ROOT "net/udp",
-                               flags, SIGAR_NETCONN_UDP);
+                               SIGAR_NETCONN_UDP);
 
         if (status != SIGAR_OK) {
             return status;
         }
 
-        status = proc_net_read(getter,
+        status = proc_net_read(walker,
                                PROC_FS_ROOT "net/udp6",
-                               flags, SIGAR_NETCONN_UDP);
+                               SIGAR_NETCONN_UDP);
 
         if (!((status == SIGAR_OK) || (status == ENOENT))) {
             return status;
@@ -1884,17 +1896,17 @@ static int net_conn_get(sigar_t *sigar,
     }
 
     if (flags & SIGAR_NETCONN_RAW) {
-        status = proc_net_read(getter,
+        status = proc_net_read(walker,
                                PROC_FS_ROOT "net/raw",
-                               flags, SIGAR_NETCONN_RAW);
-
+                               SIGAR_NETCONN_RAW);
+        
         if (status != SIGAR_OK) {
             return status;
         }
 
-        status = proc_net_read(getter,
+        status = proc_net_read(walker,
                                PROC_FS_ROOT "net/raw6",
-                               flags, SIGAR_NETCONN_RAW);
+                               SIGAR_NETCONN_RAW);
 
         if (!((status == SIGAR_OK) || (status == ENOENT))) {
             return status;
@@ -1911,6 +1923,7 @@ int sigar_net_connection_list_get(sigar_t *sigar,
                                   int flags)
 {
     int status;
+    sigar_net_connection_walker_t walker;
     net_conn_getter_t getter;
 
     sigar_net_connection_list_create(connlist);
@@ -1918,7 +1931,12 @@ int sigar_net_connection_list_get(sigar_t *sigar,
     getter.conn = NULL;
     getter.connlist = connlist;
 
-    status = net_conn_get(sigar, &getter, flags);
+    walker.sigar = sigar;
+    walker.flags = flags;
+    walker.data = &getter;
+    walker.add_connection = proc_net_walker;
+
+    status = net_conn_get(&walker);
 
     if (status != SIGAR_OK) {
         sigar_net_connection_list_destroy(sigar, connlist);
@@ -1933,17 +1951,19 @@ static int sigar_net_connection_get(sigar_t *sigar,
                                     int flags)
 {
     int status;
+    sigar_net_connection_walker_t walker;
     net_conn_getter_t getter;
 
     getter.conn = netconn;
     getter.connlist = NULL;
     getter.port = port;
 
-    status = net_conn_get(sigar, &getter, flags);
+    walker.sigar = sigar;
+    walker.flags = flags;
+    walker.data = &getter;
+    walker.add_connection = proc_net_walker;
 
-    if (status == CONN_GET_DONE) {
-        return SIGAR_OK;
-    }
+    status = net_conn_get(&walker);
 
     return status;
 }

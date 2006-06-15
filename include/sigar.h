@@ -567,6 +567,17 @@ SIGAR_DECLARE(int)
 sigar_net_connection_list_destroy(sigar_t *sigar,
                                   sigar_net_connection_list_t *connlist);
 
+typedef struct sigar_net_connection_walker_t sigar_net_connection_walker_t;
+
+/* alternative to sigar_net_connection_list_get */
+struct sigar_net_connection_walker_t {
+    sigar_t *sigar;
+    int flags;
+    void *data; /* user data */
+    int (*add_connection)(sigar_net_connection_walker_t *walker,
+                          sigar_net_connection_t *connection);
+};
+
 SIGAR_DECLARE(const char *)sigar_net_connection_type_get(int type);
 
 SIGAR_DECLARE(const char *)sigar_net_connection_state_get(int state);
