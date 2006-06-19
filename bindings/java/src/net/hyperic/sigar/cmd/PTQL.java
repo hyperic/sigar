@@ -58,11 +58,11 @@ public class PTQL
         String attr = line.substring(ix+1, line.length());
 
         Method method = (Method)this.methods.get(attrClass);
-        Class subtype = method.getReturnType();
-
         if (method == null) {
             return line;
         }
+
+        Class subtype = method.getReturnType();
 
         boolean isSigarClass = ProcessQueryBuilder.isSigarClass(subtype);
 
