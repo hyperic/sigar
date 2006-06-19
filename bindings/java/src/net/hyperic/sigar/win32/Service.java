@@ -322,6 +322,7 @@ public class Service extends Win32 {
 
     public void list(PrintStream out) throws Win32Exception {
         ServiceConfig config = getConfig();
+        out.println("name..........[" + config.getName() + "]");
         out.println("display.......[" + config.getDisplayName() + "]");
         out.println("description...[" + config.getDescription() + "]");
         out.println("status........[" + getStatusString() + "]");
