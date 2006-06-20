@@ -824,6 +824,43 @@ JNIEXPORT jobjectArray SIGAR_JNI(Sigar_getNetConnectionList)
     return connarray;
 }
 
+#if defined(__linux__) /* XXX other platforms need sigar_net_connection_walker */
+JNIEXPORT void SIGAR_JNI(NetStat_nstat)
+(JNIEnv *env, jobject obj, jobject sigar_obj, jint flags)
+{
+    int status;
+    sigar_net_stat_t netstat;
+    jclass cls;
+    jfieldID id;
+    jintArray states;
+
+    dSIGAR_VOID;
+
+    status = sigar_net_stat_get(sigar, &netstat, flags);
+    if (status != SIGAR_OK) {
+        sigar_throw_error(env, jsigar, status);
+        return;
+    }
+
+    cls = JENV->GetObjectClass(env, obj);
+
+    id = JENV->GetFieldID(env, cls, "tcpInboundTotal", "I");
+    JENV->SetIntField(env, obj, id, netstat.tcp_inbound_total);
+
+    id = JENV->GetFieldID(env, cls, "tcpOutboundTotal", "I");
+    JENV->SetIntField(env, obj, id, netstat.tcp_outbound_total);
+
+    states = JENV->NewIntArray(env, SIGAR_TCP_UNKNOWN);
+    JENV->SetIntArrayRegion(env, states, 0,
+                            SIGAR_TCP_UNKNOWN, netstat.tcp_states);
+
+    id = JENV->GetFieldID(env, cls, "tcpStates", "[I");
+    JENV->SetObjectField(env, obj, id, states);
+
+    return;
+}
+#endif
+
 JNIEXPORT jstring SIGAR_JNI(NetConnection_getTypeString)
 (JNIEnv *env, jobject obj)
 {
