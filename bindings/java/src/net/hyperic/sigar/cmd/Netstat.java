@@ -21,10 +21,11 @@ public class Netstat extends SigarCommandBase {
         "Proto",
         "Local Address",
         "Foreign Address",
-        "State"
+        "State",
+        ""
     };
 
-    private static boolean isNumeric;
+    private static boolean isNumeric, wantPid;
 
     public Netstat(Shell shell) {
         super(shell);
@@ -46,6 +47,7 @@ public class Netstat extends SigarCommandBase {
     public static int getFlags(String[] args, int flags) {
         int proto_flags = 0;
         isNumeric = false;
+        wantPid = false;
 
         for (int i=0; i<args.length; i++) {
             String arg = args[i];
@@ -64,6 +66,9 @@ public class Netstat extends SigarCommandBase {
                     break;
                   case 'n':
                     isNumeric = true;
+                    break;
+                  case 'p':
+                    wantPid = true;
                     break;
                   case 't':
                     proto_flags |= NetFlags.CONN_TCP;
@@ -167,6 +172,31 @@ public class Netstat extends SigarCommandBase {
                                     conn.getRemotePort(),
                                     RADDR_LEN));
             items.add(state);
+
+            String process = null;
+            if (wantPid &&
+                //XXX only works w/ listen ports
+                (conn.getState() == NetFlags.TCP_LISTEN))
+            {
+                try {
+                    long pid =
+                        this.sigar.getProcPort(conn.getType(),
+                                               conn.getLocalPort());
+                    if (pid != 0) { //XXX another bug
+                        String name =
+                            this.sigar.getProcState(pid).getName();
+                        process = pid + "/" + name;
+                    }
+                } catch (SigarException e) {
+                }
+            }
+
+            if (process == null) {
+                process = "";
+            }
+
+            items.add(process);
+
             printf(items);
         }
     }
