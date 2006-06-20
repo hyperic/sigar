@@ -1854,7 +1854,7 @@ static int proc_net_read(sigar_net_connection_walker_t *walker,
     return SIGAR_OK;
 }
 
-static int net_conn_get(sigar_net_connection_walker_t *walker)
+int sigar_net_connection_walk(sigar_net_connection_walker_t *walker)
 {
     int flags = walker->flags;
     int status;
@@ -1936,7 +1936,7 @@ int sigar_net_connection_list_get(sigar_t *sigar,
     walker.data = &getter;
     walker.add_connection = proc_net_walker;
 
-    status = net_conn_get(&walker);
+    status = sigar_net_connection_walk(&walker);
 
     if (status != SIGAR_OK) {
         sigar_net_connection_list_destroy(sigar, connlist);
@@ -1963,7 +1963,7 @@ static int sigar_net_connection_get(sigar_t *sigar,
     walker.data = &getter;
     walker.add_connection = proc_net_walker;
 
-    status = net_conn_get(&walker);
+    status = sigar_net_connection_walk(&walker);
 
     return status;
 }
