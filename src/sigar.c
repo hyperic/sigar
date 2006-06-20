@@ -718,7 +718,80 @@ SIGAR_DECLARE(const char *)sigar_net_connection_state_get(int state)
         return "UNKNOWN";
     }
 }
+#if defined(__linux__) /* XXX need to implement walker on other platforms */
+typedef struct {
+    sigar_net_stat_t *netstat;
+    sigar_cache_t *listen_ports;
+    sigar_net_connection_list_t *connlist;
+} net_stat_getter_t;
 
+static void listen_port_free(void *ptr)
+{
+    /*noop*/
+}
+
+static int net_stat_walker(sigar_net_connection_walker_t *walker,
+                           sigar_net_connection_t *conn)
+{
+    int state = conn->state;
+    net_stat_getter_t *getter =
+        (net_stat_getter_t *)walker->data;
+
+    if (conn->type == SIGAR_NETCONN_TCP) {
+        getter->netstat->tcp_states[state]++;
+
+        if (state == SIGAR_TCP_LISTEN) {
+            sigar_cache_entry_t *entry =
+                sigar_cache_get(getter->listen_ports,
+                                conn->local_port);
+
+            entry->value = (void*)conn->local_port;
+        }
+        else {
+            if (sigar_cache_find(getter->listen_ports,
+                                 conn->local_port))
+            {
+                getter->netstat->tcp_inbound_total++;
+            }
+            else {
+                getter->netstat->tcp_outbound_total++;
+            }
+        }
+    }
+    else if (conn->type == SIGAR_NETCONN_UDP) {
+        /*XXX*/
+    }
+
+    return SIGAR_OK;
+}
+
+int sigar_net_stat_get(sigar_t *sigar,
+                       sigar_net_stat_t *netstat,
+                       int flags)
+{
+    int status;
+    sigar_net_connection_walker_t walker;
+    net_stat_getter_t getter;
+
+    SIGAR_ZERO(netstat);
+
+    getter.netstat = netstat;
+    getter.listen_ports = sigar_cache_new(32);
+    getter.listen_ports->free_value = listen_port_free;
+    
+    walker.sigar = sigar;
+    walker.data = &getter;
+    walker.add_connection = net_stat_walker;
+
+    walker.flags = flags;
+
+    status = sigar_net_connection_walk(&walker);
+
+    sigar_cache_destroy(getter.listen_ports);
+
+    return status;
+}
+#endif
 int sigar_who_list_create(sigar_who_list_t *wholist)
 {
     wholist->number = 0;
