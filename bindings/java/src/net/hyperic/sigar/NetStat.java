@@ -11,6 +11,11 @@ public class NetStat {
     private Map tcpOutbound;
     private int[] tcpStates;
     private int tcpInboundTotal, tcpOutboundTotal;
+    //XXX not implemented on all platforms yet
+    private static final boolean hasNstat =
+        "true".equals(System.getProperty("sigar.netstat.native"));
+
+    private native void nstat(Sigar sigar, int flags) throws SigarException;
 
     public NetStat() {
         this.sigar = new Sigar();
@@ -22,8 +27,13 @@ public class NetStat {
         int flags =
             NetFlags.CONN_SERVER | NetFlags.CONN_CLIENT |
             NetFlags.CONN_TCP;
-    
-        stat(flags);
+
+        if (hasNstat) {
+            nstat(sigar, flags);
+        }
+        else {
+            stat(flags);
+        }
     }
 
     public static int[] newTcpStateArray() {
