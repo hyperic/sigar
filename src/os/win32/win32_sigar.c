@@ -2148,7 +2148,7 @@ static int net_conn_get_udp(sigar_t *sigar,
 
     DLLMOD_INIT(iphlpapi, FALSE);
 
-    if (!sigar_GetTcpTable) {
+    if (!sigar_GetUdpTable) {
         return SIGAR_ENOTIMPL;
     }
 
