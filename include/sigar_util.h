@@ -107,6 +107,9 @@ sigar_cache_t *sigar_cache_new(int size);
 sigar_cache_entry_t *sigar_cache_get(sigar_cache_t *table,
                                      sigar_uint64_t key);
 
+sigar_cache_entry_t *sigar_cache_find(sigar_cache_t *table,
+                                      sigar_uint64_t key);
+
 void sigar_cache_destroy(sigar_cache_t *table);
 
 #endif /* SIGAR_UTIL_H */

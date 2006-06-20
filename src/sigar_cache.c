@@ -85,6 +85,24 @@ static void sigar_cache_rehash(sigar_cache_t *table)
 #define SIGAR_CACHE_IX(t, k) \
     t->entries + (k % t->size)
 
+sigar_cache_entry_t *sigar_cache_find(sigar_cache_t *table,
+                                      sigar_uint64_t key)
+{
+    sigar_cache_entry_t *entry, **ptr;
+
+    for (ptr = SIGAR_CACHE_IX(table, key), entry = *ptr;
+         entry;
+         ptr = &entry->next, entry = *ptr)
+    {
+        if (entry->id == key) {
+            return entry;
+        }
+    }
+
+    return NULL;
+}
+
+/* create entry if it does not exist */
 sigar_cache_entry_t *sigar_cache_get(sigar_cache_t *table,
                                      sigar_uint64_t key)
 {
