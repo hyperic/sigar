@@ -1120,8 +1120,14 @@ static char *get_fsdev(sigar_t *sigar,
     sigar_cache_entry_t *entry;
     struct stat sb;
     sigar_uint64_t id;
+    int debug = SIGAR_LOG_IS_DEBUG(sigar);
 
     if (stat(dirname, &sb) < 0) {
+        if (debug) {
+            sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
+                             "[fsdev] stat(%s) failed",
+                             dirname);
+        }
         return NULL;
     }
 
@@ -1140,6 +1146,9 @@ static char *get_fsdev(sigar_t *sigar,
         int i;
 
         if (status != SIGAR_OK) {
+            sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
+                             "[fsdev] file_system_list failed: %s",
+                             sigar_strerror(sigar, status));
             return NULL;
         }
 
@@ -1152,6 +1161,11 @@ static char *get_fsdev(sigar_t *sigar,
                 char *ptr;
 
                 if (retval < 0) {
+                    if (debug) {
+                        sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
+                                         "[fsdev] inode stat(%s) failed",
+                                         fsp->dir_name);
+                    }
                     return NULL; /* cant cache w/o inode */
                 }
 
@@ -1164,6 +1178,11 @@ static char *get_fsdev(sigar_t *sigar,
                 if (strnEQ(ptr, "/dev/", 5)) {
                     ptr += 5;
                     ent->value = sigar_strdup(ptr);
+                    if (debug) {
+                        sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
+                                         "[fsdev] map %s -> %s",
+                                         fsp->dir_name, (char*)ent->value);
+                    }
                     continue;
                 }
 
