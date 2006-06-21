@@ -1287,9 +1287,17 @@ static int get_iostat_proc_dstat(sigar_t *sigar,
                          "%lu %lu %lu %lu "
                          "%lu %lu %lu %lu "
                          "%lu %lu %lu",
-                         &rio, &rmerge, &rsect, &ruse,
-                         &wio, &wmerge, &wsect, &wuse,
-                         &running, &use, &aveq);
+                         &rio,     /* 1  # reads issued */
+                         &rmerge,  /* 2  # reads merged */
+                         &rsect,   /* 3  # sectors read */
+                         &ruse,    /* 4  # millis spent reading */
+                         &wio,     /* 5  # writes completed */
+                         &wmerge,  /* 6  # writes merged */
+                         &wsect,   /* 7  # sectors written */
+                         &wuse,    /* 8  # millis spent writing */
+                         &running, /* 9  # I/Os currently in progress */
+                         &use,     /* 10 # millis spent doing I/Os */
+                         &aveq);   /* 11 # of millis spent doing I/Os (weighted) */
 
             if (num == 11) {
                 fsusage->disk_queue  = aveq / 1000;
