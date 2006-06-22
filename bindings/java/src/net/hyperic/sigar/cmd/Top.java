@@ -27,8 +27,6 @@ public class Top {
     private static final String HEADER =
         "PID\tUSER\tSTIME\tSIZE\tRSS\tSHARE\tSTATE\tTIME\t%CPU\tCOMMAND";
 
-    private static final String CLEAR_SCREEN = "\033[2J";
-
     public static void main(String[] args) throws Exception {
         Sigar sigarImpl = new Sigar();
 
@@ -36,7 +34,7 @@ public class Top {
             SigarProxyCache.newInstance(sigarImpl, SLEEP_TIME);
 
         while (true) {
-            System.out.print(CLEAR_SCREEN);
+            Shell.clearScreen();
 
             System.out.println(Uptime.getInfo(sigar));
 

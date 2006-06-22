@@ -30,6 +30,7 @@ import net.hyperic.sigar.util.Getline;
 public class Shell extends ShellBase {
 
     public static final String RCFILE_NAME = ".sigar_shellrc";
+    private static final String CLEAR_SCREEN = "\033[2J";
 
     private Sigar sigar = new Sigar();
     private SigarProxy proxy = SigarProxyCache.newInstance(this.sigar);
@@ -37,6 +38,10 @@ public class Shell extends ShellBase {
     private boolean isInteractive = false;
 
     public Shell() {
+    }
+
+    public static void clearScreen() {
+        System.out.print(CLEAR_SCREEN);
     }
 
     public SigarProxy getSigarProxy() {
