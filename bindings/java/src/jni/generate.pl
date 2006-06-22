@@ -1,6 +1,8 @@
 use strict;
 use File::Path;
 
+my $package = 'net.hyperic.sigar';
+
 my %platforms = (
     A => "AIX",
     D => "Darwin",
@@ -1235,7 +1237,7 @@ while (my($class, $fields) = each %classes) {
 print HFH "#define JSIGAR_FIELDS_MAX $i\n";
 
 while (my($name, $fields) = each %classes) {
-    my $java_class = "net.hyperic.sigar.$name";
+    my $java_class = "$package.$name";
     (my $jni_prefix = "Java.$java_class") =~ s/\./_/g;
     my $class = $name;
     my $cname;
@@ -1332,7 +1334,7 @@ EOF
     my $cache_field_ids = 1;
 
     print JFH <<EOF;
-package net.hyperic.sigar;
+package $package;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -1350,7 +1352,7 @@ public class $name {
      * This method is not intended to be called directly.
      * use Sigar.get$name() instead.
      * \@exception SigarException on failure.
-     * \@see net.hyperic.sigar.Sigar#get$name
+     * \@see $package.Sigar#get$name
      */
     static $name fetch($jargs_proto) throws SigarException {
         $name $jname = new $name();
