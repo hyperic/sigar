@@ -1317,6 +1317,10 @@ static int get_iostat_proc_dstat(sigar_t *sigar,
             fsusage->disk_read_bytes  = rsect;
             fsusage->disk_write_bytes = wsect;
 
+            /* convert sectors to bytes (512 is fixed size in 2.6 kernels) */
+            fsusage->disk_read_bytes  *= 512;
+            fsusage->disk_write_bytes *= 512;
+
             fclose(fp);
             return status;
         }
@@ -1368,6 +1372,10 @@ static int get_iostat_procp(sigar_t *sigar,
             ptr = sigar_skip_multiple_token(ptr, 3);
             fsusage->disk_queue       = sigar_strtoul(ptr); /* aveq */
             fsusage->disk_queue /= 1000;
+
+            /* convert sectors to bytes (512 is fixed size in 2.6 kernels) */
+            fsusage->disk_read_bytes  *= 512;
+            fsusage->disk_write_bytes *= 512;
 
             fclose(fp);
             return SIGAR_OK;

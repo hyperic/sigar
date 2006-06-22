@@ -1,3 +1,8 @@
+2006-06-21  Doug MacEachern  <dougm@hyperic.com>
+
+        * [SIGAR-7] Convert sectors to bytes in Linux file system
+          read/write bytes metrics
+
 2006-06-09  Doug MacEachern  <dougm@hyperic.com>
 
         * [SIGAR-6] Use rounding for mem.ram on Linux rather than
