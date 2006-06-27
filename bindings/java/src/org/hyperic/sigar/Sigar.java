@@ -8,8 +8,8 @@ import java.io.InputStreamReader;
 import java.util.List;
 import java.util.Map;
 
-import net.hyperic.jni.ArchLoaderException;
-import net.hyperic.jni.ArchNotSupportedException;
+import org.hyperic.jni.ArchLoaderException;
+import org.hyperic.jni.ArchNotSupportedException;
 
 /**
  * The Sigar class provides access to the sigar objects containing

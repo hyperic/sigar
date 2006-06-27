@@ -1,9 +1,9 @@
 package org.hyperic.sigar;
 
-import net.hyperic.jni.ArchLoader;
-import net.hyperic.jni.ArchLoaderException;
-import net.hyperic.jni.ArchName;
-import net.hyperic.jni.ArchNotSupportedException;
+import org.hyperic.jni.ArchLoader;
+import org.hyperic.jni.ArchLoaderException;
+import org.hyperic.jni.ArchName;
+import org.hyperic.jni.ArchNotSupportedException;
 
 public class SigarLoader extends ArchLoader {
 
