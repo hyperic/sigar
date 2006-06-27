@@ -1,7 +1,7 @@
 import java.util.Arrays;
 import java.util.List;
-import net.hyperic.sigar.win32.Service;
-import net.hyperic.sigar.win32.Win32Exception;
+import org.hyperic.sigar.win32.Service;
+import org.hyperic.sigar.win32.Win32Exception;
 
 /*
 

@@ -1,7 +1,7 @@
 use strict;
 use File::Path;
 
-my $package = 'net.hyperic.sigar';
+my $package = 'org.hyperic.sigar';
 
 my %platforms = (
     A => "AIX",
@@ -1122,7 +1122,7 @@ print "generating $cfile\n";
 
 chdir $build_src;
 
-my $jsrc = 'net/hyperic/sigar';
+my $jsrc = 'org/hyperic/sigar';
 mkpath([$jsrc], 0, 0755) unless -d $jsrc;
 
 open CFH, ">$cfile" or die "open $cfile: $!";
@@ -1547,7 +1547,7 @@ my $jsigar = "../../src/jni/javasigar.c";
 open JSIGAR, $jsigar or die "open $jsigar: $!";
 while (<JSIGAR>) {
     next unless /SIGAR_JNI\(([A-Za-z_]+)\)/;
-    print DFH "Java_net_hyperic_sigar_$1\n";
+    print DFH "Java_org_hyperic_sigar_$1\n";
 }
 
 close CFH;

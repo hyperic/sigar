@@ -59,8 +59,8 @@
 
   <target name="javadoc" depends="javadoc_check">
     <mkdir dir="${build.javadoc}"/>
-    <javadoc packagenames="net.hyperic.sigar.*"
-             excludepackagenames="net.hyperic.sigar.test.*,net.hyperic.jni.*,net.hyperic.sigar.pager.*,net.hyperic.sigar.jmx.*,net.hyperic.sigar.win32.test.*"
+    <javadoc packagenames="org.hyperic.sigar.*"
+             excludepackagenames="org.hyperic.sigar.test.*,org.hyperic.jni.*,org.hyperic.sigar.pager.*,org.hyperic.sigar.jmx.*,org.hyperic.sigar.win32.test.*"
              useexternalfile="yes"
              sourcepathref="javadoc.path"
              destdir="${build.javadoc}"
@@ -68,10 +68,10 @@
              version="false"
              windowtitle="Sigar API"
              doctitle="Sigar">
-      <group title="Sigar" packages="net.hyperic.sigar" />
+      <group title="Sigar" packages="org.hyperic.sigar" />
       <classpath refid="libjars"/>
       <classpath><path path="${env.ANT_HOME}/lib/ant.jar"/></classpath> 
-     <bottom>Copyright &#169; ${copyright.year} <![CDATA[<a target="_top" href="http://www.hyperic.net/">Hyperic, LLC</a>]]>. All Rights Reserved.</bottom>
+     <bottom>Copyright &#169; ${copyright.year} <![CDATA[<a target="_top" href="http://www.hyperic.com/">Hyperic</a>]]>. All Rights Reserved.</bottom>
     </javadoc>
   </target>
 
@@ -118,7 +118,7 @@
 
     <antcall target="version-file">
        <param name="version.file"
-              value="src/net/hyperic/sigar/SigarVersion.java"/>
+              value="src/org/hyperic/sigar/SigarVersion.java"/>
     </antcall>
 
     <antcall target="version-file">
@@ -263,7 +263,7 @@
 
       <manifest>
         <attribute name="Main-Class"
-                   value="net.hyperic.sigar.cmd.Runner"/>
+                   value="org.hyperic.sigar.cmd.Runner"/>
       </manifest>
     </jar>
   </target>
@@ -291,8 +291,8 @@
 
      <batchtest fork="yes" todir="${build}/testresults">
        <fileset dir="${src}">
-         <include name="net/hyperic/sigar/test/Test*.java"/>
-         <include name="net/hyperic/sigar/${win32.test}/Test*.java"/>
+         <include name="org/hyperic/sigar/test/Test*.java"/>
+         <include name="org/hyperic/sigar/${win32.test}/Test*.java"/>
          <exclude name="**/.java"/>
          <!-- slow; run by hand with bin/run_tests.sh Threads -->
          <exclude name="**/TestThreads*.java"/>
@@ -395,7 +395,7 @@
    <mkdir dir="${dist}/examples/csharp"/>
 
    <copy toDir="${dist}/examples/java" overwrite="true">
-     <fileset dir="src/net/hyperic/sigar/cmd">
+     <fileset dir="src/org/hyperic/sigar/cmd">
        <include name="*.java"/>
      </fileset>
      <fileset dir="examples">

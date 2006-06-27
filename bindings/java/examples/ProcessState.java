@@ -1,4 +1,4 @@
-import net.hyperic.sigar.*;
+import org.hyperic.sigar.*;
 
 /*
 

@@ -1,8 +1,0 @@
-package net.hyperic.sigar;
-
-class SigarVersion {
-
-    static final String BUILD_DATE = "@@BUILD_DATE@@";
-
-    static final String VERSION_STRING = "@@VERSION_STRING@@";
-}
