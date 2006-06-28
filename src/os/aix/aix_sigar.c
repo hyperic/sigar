@@ -46,9 +46,6 @@
 #include <sys/cfgdb.h>
 #include <cf.h>
 
-#include "user_v5.h"
-#include "utmp_v5.h"
-
 #include <sys/ldr.h>
 
 /* not defined in aix 4.3 */
@@ -791,65 +788,28 @@ int sigar_cpu_list_get(sigar_t *sigar, sigar_cpu_list_t *cpulist)
     }
 }
 
-static int boot_time_v4(int fd, time_t *time)
+static int boot_time(sigar_t *sigar, time_t *time)
 {
+    int fd;
     struct utmp data;
+
+    if ((fd = open(UTMP_FILE, O_RDONLY)) < 0) {
+        return errno;
+    }
 
     do {
         if (read(fd, &data, sizeof(data)) != sizeof(data)) {
-            return errno;
+            int status = errno;
+            close(fd);
+            return status;
         }
     } while (data.ut_type != BOOT_TIME);
 
     *time = data.ut_time;
 
-    return SIGAR_OK;
-}
-
-static int boot_time_v5(int fd, time_t *time)
-{
-    struct utmp_v5 data;
-
-    do {
-        if (read(fd, &data, sizeof(data)) != sizeof(data)) {
-            return errno;
-        }
-    } while (data.ut_type != BOOT_TIME);
-
-    if (data.ut_time != 0) {
-        *time = data.ut_time;
-    }
-    else {
-        /* XXX: dunno wtf is going on here.
-         * this exact code above works as expected
-         * in a standalone program.
-         * sizeof(utmp_v5) is the same if compiled on 4.3
-         * or 5.2, this workaround hack will have todo for now.
-         */
-        *time = data.__time_t_space;
-    }
+    close(fd);
 
     return SIGAR_OK;
-}
-
-static int boot_time(sigar_t *sigar, time_t *time)
-{
-    int utmp, status;
-
-    if ((utmp = open(UTMP_FILE, O_RDONLY)) < 0) {
-        return errno;
-    }
-
-    if (sigar->aix_version == 4) {
-        status = boot_time_v4(utmp, time);
-    }
-    else {
-        status = boot_time_v5(utmp, time);
-    }
-
-    close(utmp);
-
-    return status;
 }
 
 int sigar_uptime_get(sigar_t *sigar,
@@ -874,84 +834,42 @@ int sigar_uptime_get(sigar_t *sigar,
 #define WHOCPY(dest, src) \
     SIGAR_SSTRCPY(dest, src); \
     if (sizeof(src) < sizeof(dest)) \
-        dest[sizeof(src)] = '\0'
-
-static int who_v4(sigar_t *sigar, sigar_who_list_t *wholist, FILE *fp)
-{
-    struct utmp ut;
-
-    while (fread(&ut, sizeof(ut), 1, fp) == 1) {
-        sigar_who_t *who;
-
-        if (*ut.ut_name == '\0') {
-            continue;
-        }
-
-        if (ut.ut_type != USER_PROCESS) {
-            continue;
-        }
-
-        SIGAR_WHO_LIST_GROW(wholist);
-        who = &wholist->data[wholist->number++];
-
-        WHOCPY(who->user, ut.ut_user);
-        WHOCPY(who->device, ut.ut_line);
-        WHOCPY(who->host, ut.ut_host);
-
-        who->time = ut.ut_time;
-    }
-
-    return SIGAR_OK;
-}
-
-static int who_v5(sigar_t *sigar, sigar_who_list_t *wholist, FILE *fp)
-{
-    struct utmp_v5 ut;
-
-    while (fread(&ut, sizeof(ut), 1, fp) == 1) {
-        sigar_who_t *who;
-
-        if (*ut.ut_name == '\0') {
-            continue;
-        }
-
-        if (ut.ut_type != USER_PROCESS) {
-            continue;
-        }
-
-        SIGAR_WHO_LIST_GROW(wholist);
-        who = &wholist->data[wholist->number++];
-
-        WHOCPY(who->user, ut.ut_user);
-        WHOCPY(who->device, ut.ut_line);
-        WHOCPY(who->host, ut.ut_host);
-
-        who->time = ut.ut_time;
-    }
-
-    return SIGAR_OK;
-}
+        dest[sizeof(dest)-1] = '\0'
 
 static int sigar_who_utmp(sigar_t *sigar,
                           sigar_who_list_t *wholist)
 {
-    int status;
+    struct utmp ut;
     FILE *fp;
 
     if (!(fp = fopen(UTMP_FILE, "r"))) {
         return errno;
     }
 
-    if (sigar->aix_version == 4) {
-        status = who_v4(sigar, wholist, fp);
-    }
-    else {
-        status = who_v5(sigar, wholist, fp);
+    while (fread(&ut, sizeof(ut), 1, fp) == 1) {
+        sigar_who_t *who;
+
+        if (*ut.ut_name == '\0') {
+            continue;
+        }
+
+        if (ut.ut_type != USER_PROCESS) {
+            continue;
+        }
+
+        SIGAR_WHO_LIST_GROW(wholist);
+        who = &wholist->data[wholist->number++];
+
+        WHOCPY(who->user, ut.ut_user);
+        WHOCPY(who->device, ut.ut_line);
+        WHOCPY(who->host, ut.ut_host);
+
+        who->time = ut.ut_time;
     }
 
     fclose(fp);
 
-    return status;
+    return SIGAR_OK;
 }
 
 int sigar_who_list_get(sigar_t *sigar,
@@ -1268,44 +1186,12 @@ int sigar_proc_env_get(sigar_t *sigar, sigar_pid_t pid,
     return SIGAR_OK;
 }
 
-/*
- * V[45]_sigar_proc_fd_get routines are exactly
- * the same except for sizeof(uinfo).
- */
-static int V5_sigar_proc_fd_get(sigar_t *sigar, sigar_pid_t pid,
-                                sigar_proc_fd_t *procfd)
+int sigar_proc_fd_get(sigar_t *sigar, sigar_pid_t pid,
+                      sigar_proc_fd_t *procfd)
 {
     int i;
     struct procsinfo pinfo;
-    struct user_v5 uinfo; /* V5 */
-
-    procfd->total = 0;
-    pinfo.pi_pid = pid;
-
-    if (getuser(&pinfo, sizeof(pinfo),
-                &uinfo, sizeof(uinfo)) != 0) {
-        if (errno == EINVAL) {
-            return SIGAR_ENOTIMPL;
-        }
-        return errno;
-    }
-
-    /* see sys/user.h */
-    for (i=0; i<uinfo.U_maxofile; i++) {
-        if (uinfo.U_ufd[i].fp) {
-            procfd->total++;
-        }
-    }
-
-    return SIGAR_OK;
-}
-
-static int V4_sigar_proc_fd_get(sigar_t *sigar, sigar_pid_t pid,
-                                sigar_proc_fd_t *procfd)
-{
-    int i;
-    struct procsinfo pinfo;
-    struct user uinfo; /* V4 */
+    struct user uinfo;
 
     procfd->total = 0;
     pinfo.pi_pid = pid;
@@ -1325,30 +1211,6 @@ static int V4_sigar_proc_fd_get(sigar_t *sigar, sigar_pid_t pid,
     }
 
     return SIGAR_OK;
-}
-
-int sigar_proc_fd_get(sigar_t *sigar, sigar_pid_t pid,
-                      sigar_proc_fd_t *procfd)
-{
-    if (sigar->getprocfd == NULL) {
-        /*
-         * XXX should determine aix version in sigar_os_open
-         * and set function pointer there.  for now try v4
-         * first, if that fails try v5.  only costs 1 extra
-         * call to getuser on v5 for the lifetime of the
-         * sigar.
-         */
-        int status = V4_sigar_proc_fd_get(sigar, pid, procfd);
-
-        if (status == SIGAR_OK) {
-            sigar->getprocfd = V4_sigar_proc_fd_get;
-            return SIGAR_OK;
-        }
-
-        sigar->getprocfd = V5_sigar_proc_fd_get;
-    }
-
-    return sigar->getprocfd(sigar, pid, procfd);
 }
 
 int sigar_proc_exe_get(sigar_t *sigar, sigar_pid_t pid,
