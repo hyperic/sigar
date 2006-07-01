@@ -832,7 +832,7 @@ JNIEXPORT void SIGAR_JNI(NetStat_nstat)
     jclass cls;
     jfieldID id;
     jintArray states;
-
+    jint tcp_states[SIGAR_TCP_UNKNOWN];
     dSIGAR_VOID;
 
     status = sigar_net_stat_get(sigar, &netstat, flags);
@@ -849,9 +849,21 @@ JNIEXPORT void SIGAR_JNI(NetStat_nstat)
     id = JENV->GetFieldID(env, cls, "tcpOutboundTotal", "I");
     JENV->SetIntField(env, obj, id, netstat.tcp_outbound_total);
 
+    if (sizeof(tcp_states[0]) == sizeof(netstat.tcp_states[0])) {
+        memcpy(&tcp_states[0], &netstat.tcp_states[0],
+               sizeof(netstat.tcp_states));
+    }
+    else {
+        int i;
+        for (i=0; i<SIGAR_TCP_UNKNOWN; i++) {
+            tcp_states[i] = netstat.tcp_states[i];
+        }
+    }
+
     states = JENV->NewIntArray(env, SIGAR_TCP_UNKNOWN);
     JENV->SetIntArrayRegion(env, states, 0,
-                            SIGAR_TCP_UNKNOWN, netstat.tcp_states);
+                            SIGAR_TCP_UNKNOWN,
+                            tcp_states);
 
     id = JENV->GetFieldID(env, cls, "tcpStates", "[I");
     JENV->SetObjectField(env, obj, id, states);
