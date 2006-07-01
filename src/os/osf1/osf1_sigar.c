@@ -525,9 +525,7 @@ int sigar_net_interface_stat_get(sigar_t *sigar, const char *name,
     return SIGAR_OK;
 }
 
-int sigar_net_connection_list_get(sigar_t *sigar,
-                                  sigar_net_connection_list_t *connlist,
-                                  int flags)
+int sigar_net_connection_walk(sigar_net_connection_walker_t *walker)
 {
     return SIGAR_ENOTIMPL;
 }
