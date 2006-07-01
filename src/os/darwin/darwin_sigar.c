@@ -1695,10 +1695,10 @@ int sigar_net_interface_stat_get(sigar_t *sigar, const char *name,
 #include <netinet/tcp_var.h>
 #include <netinet/tcp_fsm.h>
 
-static int net_connection_list_get(sigar_t *sigar,
-                                   sigar_net_connection_list_t *connlist,
-                                   int flags, int proto)
+static int net_connection_get(sigar_net_connection_walker_t *walker, int proto)
 {
+    sigar_t *sigar = walker->sigar;
+    int flags = walker->flags;
     int type, istcp = 0;
     char *buf;
     const char *mibvar;
@@ -1764,62 +1764,68 @@ static int net_connection_list_get(sigar_t *sigar,
         if ((((flags & SIGAR_NETCONN_SERVER) && so->so_qlimit) ||
             ((flags & SIGAR_NETCONN_CLIENT) && !so->so_qlimit)))
         {
-            sigar_net_connection_t *conn;
+            sigar_net_connection_t conn;
 
-            SIGAR_NET_CONNLIST_GROW(connlist);
-            conn = &connlist->data[connlist->number++];
+            SIGAR_ZERO(&conn);
 
             sigar_inet_ntoa(sigar, inp->inp_laddr.s_addr,
-                            conn->local_address);
+                            conn.local_address);
             sigar_inet_ntoa(sigar, inp->inp_faddr.s_addr,
-                            conn->remote_address);
-            conn->local_port  = ntohs(inp->inp_lport);
-            conn->remote_port = ntohs(inp->inp_fport);
-            conn->receive_queue = so->so_rcv.sb_cc;
-            conn->send_queue    = so->so_snd.sb_cc;
-            conn->type = type;
+                            conn.remote_address);
+            conn.local_port  = ntohs(inp->inp_lport);
+            conn.remote_port = ntohs(inp->inp_fport);
+            conn.receive_queue = so->so_rcv.sb_cc;
+            conn.send_queue    = so->so_snd.sb_cc;
+            conn.type = type;
 
             if (!istcp) {
-                conn->state = SIGAR_TCP_UNKNOWN;
+                conn.state = SIGAR_TCP_UNKNOWN;
+                if (walker->add_connection(walker, &conn) != SIGAR_OK) {
+                    break;
+                }
                 continue;
             }
 
             switch (tp->t_state) {
               case TCPS_CLOSED:
-                conn->state = SIGAR_TCP_CLOSE;
+                conn.state = SIGAR_TCP_CLOSE;
                 break;
               case TCPS_LISTEN:
-                conn->state = SIGAR_TCP_LISTEN;
+                conn.state = SIGAR_TCP_LISTEN;
                 break;
               case TCPS_SYN_SENT:
-                conn->state = SIGAR_TCP_SYN_SENT;
+                conn.state = SIGAR_TCP_SYN_SENT;
                 break;
               case TCPS_SYN_RECEIVED:
-                conn->state = SIGAR_TCP_SYN_RECV;
+                conn.state = SIGAR_TCP_SYN_RECV;
                 break;
               case TCPS_ESTABLISHED:
-                conn->state = SIGAR_TCP_ESTABLISHED;
+                conn.state = SIGAR_TCP_ESTABLISHED;
                 break;
               case TCPS_CLOSE_WAIT:
-                conn->state = SIGAR_TCP_CLOSE_WAIT;
+                conn.state = SIGAR_TCP_CLOSE_WAIT;
                 break;
               case TCPS_FIN_WAIT_1:
-                conn->state = SIGAR_TCP_FIN_WAIT1;
+                conn.state = SIGAR_TCP_FIN_WAIT1;
                 break;
               case TCPS_CLOSING:
-                conn->state = SIGAR_TCP_CLOSING;
+                conn.state = SIGAR_TCP_CLOSING;
                 break;
               case TCPS_LAST_ACK:
-                conn->state = SIGAR_TCP_LAST_ACK;
+                conn.state = SIGAR_TCP_LAST_ACK;
                 break;
               case TCPS_FIN_WAIT_2:
-                conn->state = SIGAR_TCP_FIN_WAIT2;
+                conn.state = SIGAR_TCP_FIN_WAIT2;
                 break;
               case TCPS_TIME_WAIT:
-                conn->state = SIGAR_TCP_TIME_WAIT;
+                conn.state = SIGAR_TCP_TIME_WAIT;
                 break;
               default:
-                conn->state = SIGAR_TCP_UNKNOWN;
+                conn.state = SIGAR_TCP_UNKNOWN;
+                break;
+            }
+
+            if (walker->add_connection(walker, &conn) != SIGAR_OK) {
                 break;
             }
         }
@@ -1830,30 +1836,61 @@ static int net_connection_list_get(sigar_t *sigar,
     return SIGAR_OK;
 }
 
-int sigar_net_connection_list_get(sigar_t *sigar,
-                                  sigar_net_connection_list_t *connlist,
-                                  int flags)
+int sigar_net_connection_walk(sigar_net_connection_walker_t *walker)
 {
+    int flags = walker->flags;
     int status;
 
-    sigar_net_connection_list_create(connlist);
-
     if (flags & SIGAR_NETCONN_TCP) {
-        status = net_connection_list_get(sigar, connlist,
-                                         flags, IPPROTO_TCP);
+        status = net_connection_get(walker, IPPROTO_TCP);
         if (status != SIGAR_OK) {
             return status;
         }
     }
     if (flags & SIGAR_NETCONN_UDP) {
-        status = net_connection_list_get(sigar, connlist,
-                                         flags, IPPROTO_UDP);
+        status = net_connection_get(walker, IPPROTO_UDP);
         if (status != SIGAR_OK) {
             return status;
         }
     }
 
     return SIGAR_OK;
+}
+
+static int net_connection_list_walker(sigar_net_connection_walker_t *walker,
+                                      sigar_net_connection_t *conn)
+{
+    sigar_net_connection_list_t *connlist =
+        (sigar_net_connection_list_t *)walker->data;
+
+    SIGAR_NET_CONNLIST_GROW(connlist);
+    memcpy(&connlist->data[connlist->number++],
+           conn, sizeof(*conn));
+
+    return SIGAR_OK; /* continue loop */
+}
+
+int sigar_net_connection_list_get(sigar_t *sigar,
+                                  sigar_net_connection_list_t *connlist,
+                                  int flags)
+{
+    int status;
+    sigar_net_connection_walker_t walker;
+
+    sigar_net_connection_list_create(connlist);
+
+    walker.sigar = sigar;
+    walker.flags = flags;
+    walker.data = connlist;
+    walker.add_connection = net_connection_list_walker;
+
+    status = sigar_net_connection_walk(&walker);
+
+    if (status != SIGAR_OK) {
+        sigar_net_connection_list_destroy(sigar, connlist);
+    }
+
+    return status;
 }
 
 #ifndef DARWIN
