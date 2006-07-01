@@ -2028,12 +2028,13 @@ int sigar_net_interface_stat_get(sigar_t *sigar, const char *name,
 
 #define TCPQ_SIZE(s) ((s) >= 0 ? (s) : 0)
 
-static int tcp_connection_list_get(sigar_t *sigar,
-                                   sigar_net_connection_list_t *connlist,
-                                   int flags,
+static int tcp_connection_list_get(sigar_net_connection_walker_t *walker,
                                    struct mib2_tcpConnEntry *entry,
                                    int len)
 {
+    sigar_t *sigar = walker->sigar;
+    int flags = walker->flags;
+    int status;
     char *end = (char *)entry + len;
 
     while ((char *)entry < end) {
@@ -2042,84 +2043,90 @@ static int tcp_connection_list_get(sigar_t *sigar,
         if (((flags & SIGAR_NETCONN_SERVER) && (state == TCPS_LISTEN)) ||
             ((flags & SIGAR_NETCONN_CLIENT) && (state != TCPS_LISTEN)))
         {
-            sigar_net_connection_t *conn;
+            sigar_net_connection_t conn;
 
-            SIGAR_NET_CONNLIST_GROW(connlist);
-            conn = &connlist->data[connlist->number++];
+            SIGAR_ZERO(&conn);
 
             sigar_inet_ntoa(sigar, entry->tcpConnLocalAddress,
-                            conn->local_address);
+                            conn.local_address);
 
             sigar_inet_ntoa(sigar, entry->tcpConnRemAddress,
-                            conn->remote_address);
+                            conn.remote_address);
 
-            conn->local_port = entry->tcpConnLocalPort;
-            conn->remote_port = entry->tcpConnRemPort;
-            conn->type = SIGAR_NETCONN_TCP;
-            conn->send_queue =
+            conn.local_port = entry->tcpConnLocalPort;
+            conn.remote_port = entry->tcpConnRemPort;
+            conn.type = SIGAR_NETCONN_TCP;
+            conn.send_queue =
                 TCPQ_SIZE(entry->tcpConnEntryInfo.ce_snxt -
                           entry->tcpConnEntryInfo.ce_suna - 1);
-            conn->receive_queue =
+            conn.receive_queue =
                 TCPQ_SIZE(entry->tcpConnEntryInfo.ce_rnxt -
                           entry->tcpConnEntryInfo.ce_rack);
 
             switch (state) {
               case TCPS_CLOSED:
-                conn->state = SIGAR_TCP_CLOSE;
+                conn.state = SIGAR_TCP_CLOSE;
                 break;
               case TCPS_IDLE:
-                conn->state = SIGAR_TCP_IDLE;
+                conn.state = SIGAR_TCP_IDLE;
                 break;
               case TCPS_BOUND:
-                conn->state = SIGAR_TCP_BOUND;
+                conn.state = SIGAR_TCP_BOUND;
                 break;
               case TCPS_LISTEN:
-                conn->state = SIGAR_TCP_LISTEN;
+                conn.state = SIGAR_TCP_LISTEN;
                 break;
               case TCPS_SYN_SENT:
-                conn->state = SIGAR_TCP_SYN_SENT;
+                conn.state = SIGAR_TCP_SYN_SENT;
                 break;
               case TCPS_SYN_RCVD:
-                conn->state = SIGAR_TCP_SYN_RECV;
+                conn.state = SIGAR_TCP_SYN_RECV;
                 break;
               case TCPS_ESTABLISHED:
-                conn->state = SIGAR_TCP_ESTABLISHED;
+                conn.state = SIGAR_TCP_ESTABLISHED;
                 break;
               case TCPS_CLOSE_WAIT:
-                conn->state = SIGAR_TCP_CLOSE_WAIT;
+                conn.state = SIGAR_TCP_CLOSE_WAIT;
                 break;
               case TCPS_FIN_WAIT_1:
-                conn->state = SIGAR_TCP_FIN_WAIT1;
+                conn.state = SIGAR_TCP_FIN_WAIT1;
                 break;
               case TCPS_CLOSING:
-                conn->state = SIGAR_TCP_CLOSING;
+                conn.state = SIGAR_TCP_CLOSING;
                 break;
               case TCPS_LAST_ACK:
-                conn->state = SIGAR_TCP_LAST_ACK;
+                conn.state = SIGAR_TCP_LAST_ACK;
                 break;
               case TCPS_FIN_WAIT_2:
-                conn->state = SIGAR_TCP_FIN_WAIT2;
+                conn.state = SIGAR_TCP_FIN_WAIT2;
                 break;
               case TCPS_TIME_WAIT:
-                conn->state = SIGAR_TCP_TIME_WAIT;
+                conn.state = SIGAR_TCP_TIME_WAIT;
                 break;
               default:
-                conn->state = SIGAR_TCP_UNKNOWN;
+                conn.state = SIGAR_TCP_UNKNOWN;
                 break;
             }
+
+            status = walker->add_connection(walker, &conn);
+            if (status != SIGAR_OK) {
+                return status;
+            }
         }
+
         entry++;
     }
 
     return SIGAR_OK;
 }
 
-static int udp_connection_list_get(sigar_t *sigar,
-                                   sigar_net_connection_list_t *connlist,
-                                   int flags,
+static int udp_connection_list_get(sigar_net_connection_walker_t *walker,
                                    struct mib2_udpEntry *entry,
                                    int len)
 {
+    sigar_t *sigar = walker->sigar;
+    int flags = walker->flags;
+    int status;
     char *end = (char *)entry + len;
 
     while ((char *)entry < end) {
@@ -2129,17 +2136,21 @@ static int udp_connection_list_get(sigar_t *sigar,
         if (((flags & SIGAR_NETCONN_SERVER) && (state == MIB2_UDP_idle)) ||
             ((flags & SIGAR_NETCONN_CLIENT) && (state != MIB2_UDP_idle)))
         {
-            sigar_net_connection_t *conn;
+            sigar_net_connection_t conn;
 
-            SIGAR_NET_CONNLIST_GROW(connlist);
-            conn = &connlist->data[connlist->number++];
+            SIGAR_ZERO(&conn);
 
             sigar_inet_ntoa(sigar, entry->udpLocalAddress,
-                            conn->local_address);
-            SIGAR_SSTRCPY(conn->remote_address, "0.0.0.0");
-            conn->local_port = entry->udpLocalPort;
-            conn->remote_port = 0;
-            conn->type = SIGAR_NETCONN_UDP;
+                            conn.local_address);
+            SIGAR_SSTRCPY(conn.remote_address, "0.0.0.0");
+            conn.local_port = entry->udpLocalPort;
+            conn.remote_port = 0;
+            conn.type = SIGAR_NETCONN_UDP;
+
+            status = walker->add_connection(walker, &conn);
+            if (status != SIGAR_OK) {
+                return status;
+            }
         }
 
         entry++;
@@ -2148,33 +2159,43 @@ static int udp_connection_list_get(sigar_t *sigar,
     return SIGAR_OK;
 }
 
-int sigar_net_connection_list_get(sigar_t *sigar,
-                                  sigar_net_connection_list_t *connlist,
-                                  int flags)
+int sigar_net_connection_walk(sigar_net_connection_walker_t *walker)
 {
+    sigar_t *sigar = walker->sigar;
+    int flags = walker->flags;
+    int status;
+    int want_tcp = flags & SIGAR_NETCONN_TCP;
+    int want_udp = flags & SIGAR_NETCONN_UDP;
     char *data;
     int len;
     int rc;
     struct opthdr *op;
 
-    sigar_net_connection_list_create(connlist);
-
     while ((rc = get_mib2(&sigar->mib2, &op, &data, &len)) == GET_MIB2_OK) {
         if ((op->level == MIB2_TCP) && 
             (op->name == MIB2_TCP_13) &&
-            (flags & SIGAR_NETCONN_TCP))
+            want_tcp)
         {
-            tcp_connection_list_get(sigar, connlist, flags,
-                                    (struct mib2_tcpConnEntry *)data,
-                                    len);
+            status =
+                tcp_connection_list_get(walker,
+                                        (struct mib2_tcpConnEntry *)data,
+                                        len);
         }
         else if ((op->level == MIB2_UDP) && 
                  (op->name == MIB2_UDP_5) &&
-                 (flags & SIGAR_NETCONN_UDP))
+                 want_udp)
         {
-            udp_connection_list_get(sigar, connlist, flags,
-                                    (struct mib2_udpEntry *)data,
-                                    len);
+            status =
+                udp_connection_list_get(walker,
+                                        (struct mib2_udpEntry *)data,
+                                        len);
+        }
+        else {
+            status = SIGAR_OK;
+        }
+
+        if (status != SIGAR_OK) {
+            break;
         }
     }
 

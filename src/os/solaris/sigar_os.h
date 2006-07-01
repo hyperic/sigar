@@ -279,5 +279,7 @@ struct sigar_t {
 
 #define SIGAR_EMIB2 (SIGAR_OS_START_ERROR+1)
 
+#define SIGAR_USE_NET_CONNECTION_LIST_WALKER
+
 #endif /* SIGAR_OS_H */
 
