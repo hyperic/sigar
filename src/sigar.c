@@ -737,9 +737,10 @@ static int net_connection_list_walker(sigar_net_connection_walker_t *walker,
     return SIGAR_OK; /* continue loop */
 }
 
-int sigar_net_connection_list_get(sigar_t *sigar,
-                                  sigar_net_connection_list_t *connlist,
-                                  int flags)
+SIGAR_DECLARE(int)
+sigar_net_connection_list_get(sigar_t *sigar,
+                              sigar_net_connection_list_t *connlist,
+                              int flags)
 {
     int status;
     sigar_net_connection_walker_t walker;
