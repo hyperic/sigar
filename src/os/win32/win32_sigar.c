@@ -2031,10 +2031,10 @@ sigar_net_interface_stat_get(sigar_t *sigar, const char *name,
 #define sigar_GetTcpTable \
     sigar->iphlpapi.get_tcp_table.func
 
-static int net_conn_get_tcp(sigar_t *sigar,
-                            sigar_net_connection_list_t *connlist,
-                            int flags)
+static int net_conn_get_tcp(sigar_net_connection_walker_t *walker)
 {
+    sigar_t *sigar = walker->sigar;
+    int flags = walker->flags;
     int status;
     DWORD rc, size=0, i;
     PMIB_TCPTABLE tcp;
@@ -2119,9 +2119,9 @@ static int net_conn_get_tcp(sigar_t *sigar,
             break;
         }
 
-        SIGAR_NET_CONNLIST_GROW(connlist);
-        memcpy(&connlist->data[connlist->number++],
-               &conn, sizeof(conn));
+        if (walker->add_connection(walker, &conn) != SIGAR_OK) {
+            break;
+        }
     }
 
     free(tcp);
@@ -2137,10 +2137,10 @@ static int net_conn_get_tcp(sigar_t *sigar,
 #define sigar_GetUdpTable \
     sigar->iphlpapi.get_udp_table.func
 
-static int net_conn_get_udp(sigar_t *sigar,
-                            sigar_net_connection_list_t *connlist,
-                            int flags)
+static int net_conn_get_udp(sigar_net_connection_walker_t *walker)
 {
+    sigar_t *sigar = walker->sigar;
+    int flags = walker->flags;
     int status;
     DWORD rc, size=0, i;
     PMIB_UDPTABLE udp;
@@ -2183,9 +2183,9 @@ static int net_conn_get_udp(sigar_t *sigar,
 
         conn.send_queue = conn.receive_queue = SIGAR_FIELD_NOTIMPL;
 
-        SIGAR_NET_CONNLIST_GROW(connlist);
-        memcpy(&connlist->data[connlist->number++],
-               &conn, sizeof(conn));
+        if (walker->add_connection(walker, &conn) != SIGAR_OK) {
+            break;
+        }
     }
 
     free(udp);
@@ -2193,24 +2193,20 @@ static int net_conn_get_udp(sigar_t *sigar,
 }
 
 SIGAR_DECLARE(int)
-sigar_net_connection_list_get(sigar_t *sigar,
-                              sigar_net_connection_list_t *connlist,
-                              int flags)
+sigar_net_connection_walk(sigar_net_connection_walker_t *walker)
 {
     int status;
 
-    sigar_net_connection_list_create(connlist);
-
-    if (flags & SIGAR_NETCONN_TCP) {
-        status = net_conn_get_tcp(sigar, connlist, flags);
+    if (walker->flags & SIGAR_NETCONN_TCP) {
+        status = net_conn_get_tcp(walker);
 
         if (status != SIGAR_OK) {
             return status;
         }
     }
 
-    if (flags & SIGAR_NETCONN_UDP) {
-        status = net_conn_get_udp(sigar, connlist, flags);
+    if (walker->flags & SIGAR_NETCONN_UDP) {
+        status = net_conn_get_udp(walker);
 
         if (status != SIGAR_OK) {
             return status;
