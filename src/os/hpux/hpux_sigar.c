@@ -975,11 +975,9 @@ static int net_conn_get_tcp(sigar_net_connection_walker_t *walker)
 
 int sigar_net_connection_walk(sigar_net_connection_walker_t *walker)
 {
-    sigar_t *sigar = walker->sigar;
-    int flags = walker->flags;
     int status;
 
-    if (flags & SIGAR_NETCONN_TCP) {
+    if (walker->flags & SIGAR_NETCONN_TCP) {
         status = net_conn_get_tcp(walker);
 
         if (status != SIGAR_OK) {
@@ -987,7 +985,7 @@ int sigar_net_connection_walk(sigar_net_connection_walker_t *walker)
         }
     }
 
-    if (flags & SIGAR_NETCONN_UDP) {
+    if (walker->flags & SIGAR_NETCONN_UDP) {
         status = net_conn_get_udp(walker);
 
         if (status != SIGAR_OK) {
