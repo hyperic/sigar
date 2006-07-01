@@ -761,7 +761,7 @@ sigar_net_connection_list_get(sigar_t *sigar,
     return status;
 }
 #endif
-#if defined(__linux__) /* XXX need to implement walker on other platforms */
+
 typedef struct {
     sigar_net_stat_t *netstat;
     sigar_cache_t *listen_ports;
@@ -834,7 +834,7 @@ int sigar_net_stat_get(sigar_t *sigar,
 
     return status;
 }
-#endif
+
 int sigar_who_list_create(sigar_who_list_t *wholist)
 {
     wholist->number = 0;

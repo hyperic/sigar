@@ -824,7 +824,6 @@ JNIEXPORT jobjectArray SIGAR_JNI(Sigar_getNetConnectionList)
     return connarray;
 }
 
-#if defined(__linux__) /* XXX other platforms need sigar_net_connection_walker */
 JNIEXPORT void SIGAR_JNI(NetStat_nstat)
 (JNIEnv *env, jobject obj, jobject sigar_obj, jint flags)
 {
@@ -859,7 +858,6 @@ JNIEXPORT void SIGAR_JNI(NetStat_nstat)
 
     return;
 }
-#endif
 
 JNIEXPORT jstring SIGAR_JNI(NetConnection_getTypeString)
 (JNIEnv *env, jobject obj)
