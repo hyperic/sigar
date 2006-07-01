@@ -19,4 +19,6 @@ struct sigar_t {
 
 int hpux_get_mib_ifentry(int ppa, mib_ifEntry *mib);
 
+#define SIGAR_USE_NET_CONNECTION_LIST_WALKER
+
 #endif /* SIGAR_OS_H */

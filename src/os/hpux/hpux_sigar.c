@@ -788,10 +788,10 @@ int sigar_net_interface_stat_get(sigar_t *sigar, const char *name,
     return SIGAR_OK;
 }
 
-static int net_conn_get_udp_listen(sigar_t *sigar,
-                                   sigar_net_connection_list_t *connlist,
-                                   int flags)
+static int net_conn_get_udp_listen(sigar_net_connection_walker_t *walker)
 {
+    sigar_t *sigar = walker->sigar;
+    int flags = walker->flags;
     int status, count, i;
     unsigned int len;
     mib_udpLsnEnt *entries;
@@ -822,37 +822,38 @@ static int net_conn_get_udp_listen(sigar_t *sigar,
     }
 
     for (i=0; i<count; i++) {
-        sigar_net_connection_t *conn;
+        sigar_net_connection_t conn;
         mib_udpLsnEnt *entry = &entries[i];
 
-        SIGAR_NET_CONNLIST_GROW(connlist);
-        conn = &connlist->data[connlist->number++];
+        SIGAR_ZERO(&conn);
 
-        conn->type = SIGAR_NETCONN_UDP;
+        conn.type = SIGAR_NETCONN_UDP;
 
-        conn->local_port  = (unsigned short)entry->LocalPort;
-        conn->remote_port = 0;
+        conn.local_port  = (unsigned short)entry->LocalPort;
+        conn.remote_port = 0;
 
         sigar_inet_ntoa(sigar, entry->LocalAddress,
-                        conn->local_address);
+                        conn.local_address);
 
-        SIGAR_SSTRCPY(conn->remote_address, "0.0.0.0");
+        SIGAR_SSTRCPY(conn.remote_address, "0.0.0.0");
 
-        conn->send_queue = conn->receive_queue = SIGAR_FIELD_NOTIMPL;
+        conn.send_queue = conn.receive_queue = SIGAR_FIELD_NOTIMPL;
+
+        if (walker->add_connection(walker, &conn) != SIGAR_OK) {
+            break;
+        }
     }
 
     free(entries);
     return SIGAR_OK;
 }
 
-static int net_conn_get_udp(sigar_t *sigar,
-                            sigar_net_connection_list_t *connlist,
-                            int flags)
+static int net_conn_get_udp(sigar_net_connection_walker_t *walker)
 {
     int status = SIGAR_OK;
 
-    if (flags & SIGAR_NETCONN_SERVER) {
-        status = net_conn_get_udp_listen(sigar, connlist, flags);
+    if (walker->flags & SIGAR_NETCONN_SERVER) {
+        status = net_conn_get_udp_listen(walker);
     }
 
     return status;
@@ -864,10 +865,10 @@ static int net_conn_get_udp(sigar_t *sigar,
 #define IS_TCP_CLIENT(state, flags) \
     ((flags & SIGAR_NETCONN_CLIENT) && (state != TCLISTEN))
 
-static int net_conn_get_tcp(sigar_t *sigar,
-                            sigar_net_connection_list_t *connlist,
-                            int flags)
+static int net_conn_get_tcp(sigar_net_connection_walker_t *walker)
 {
+    sigar_t *sigar = walker->sigar;
+    int flags = walker->flags;
     int status, count, i;
     unsigned int len;
     mib_tcpConnEnt *entries;
@@ -898,7 +899,7 @@ static int net_conn_get_tcp(sigar_t *sigar,
     }
 
     for (i=0; i<count; i++) {
-        sigar_net_connection_t *conn;
+        sigar_net_connection_t conn;
         mib_tcpConnEnt *entry = &entries[i];
         int state = entry->State;
 
@@ -908,60 +909,63 @@ static int net_conn_get_tcp(sigar_t *sigar,
             continue;
         }
 
-        SIGAR_NET_CONNLIST_GROW(connlist);
-        conn = &connlist->data[connlist->number++];
+        SIGAR_ZERO(&conn);
 
         switch (state) {
           case TCCLOSED:
-            conn->state = SIGAR_TCP_CLOSE;
+            conn.state = SIGAR_TCP_CLOSE;
             break;
           case TCLISTEN:
-            conn->state = SIGAR_TCP_LISTEN;
+            conn.state = SIGAR_TCP_LISTEN;
             break;
           case TCSYNSENT:
-            conn->state = SIGAR_TCP_SYN_SENT;
+            conn.state = SIGAR_TCP_SYN_SENT;
             break;
           case TCSYNRECEIVE:
-            conn->state = SIGAR_TCP_SYN_RECV;
+            conn.state = SIGAR_TCP_SYN_RECV;
             break;
           case TCESTABLISED:
-            conn->state = SIGAR_TCP_ESTABLISHED;
+            conn.state = SIGAR_TCP_ESTABLISHED;
             break;
           case TCFINWAIT1:
-            conn->state = SIGAR_TCP_FIN_WAIT1;
+            conn.state = SIGAR_TCP_FIN_WAIT1;
             break;
           case TCFINWAIT2:
-            conn->state = SIGAR_TCP_FIN_WAIT2;
+            conn.state = SIGAR_TCP_FIN_WAIT2;
             break;
           case TCCLOSEWAIT:
-            conn->state = SIGAR_TCP_CLOSE_WAIT;
+            conn.state = SIGAR_TCP_CLOSE_WAIT;
             break;
           case TCCLOSING:
-            conn->state = SIGAR_TCP_CLOSING;
+            conn.state = SIGAR_TCP_CLOSING;
             break;
           case TCLASTACK:
-            conn->state = SIGAR_TCP_LAST_ACK;
+            conn.state = SIGAR_TCP_LAST_ACK;
             break;
           case TCTIMEWAIT:
-            conn->state = SIGAR_TCP_TIME_WAIT;
+            conn.state = SIGAR_TCP_TIME_WAIT;
             break;
           case TCDELETETCB:
           default:
-            conn->state = SIGAR_TCP_UNKNOWN;
+            conn.state = SIGAR_TCP_UNKNOWN;
             break;
         }
 
-        conn->local_port  = (unsigned short)entry->LocalPort;
-        conn->remote_port = (unsigned short)entry->RemPort;
-        conn->type = SIGAR_NETCONN_TCP;
+        conn.local_port  = (unsigned short)entry->LocalPort;
+        conn.remote_port = (unsigned short)entry->RemPort;
+        conn.type = SIGAR_NETCONN_TCP;
 
         sigar_inet_ntoa(sigar, entry->LocalAddress,
-                        conn->local_address);
+                        conn.local_address);
 
         sigar_inet_ntoa(sigar, entry->RemAddress,
-                        conn->remote_address);
+                        conn.remote_address);
 
-        conn->send_queue = conn->receive_queue = SIGAR_FIELD_NOTIMPL;
+        conn.send_queue = conn.receive_queue = SIGAR_FIELD_NOTIMPL;
+
+        if (walker->add_connection(walker, &conn) != SIGAR_OK) {
+            break;
+        }
     }
 
     free(entries);
@@ -969,16 +973,14 @@ static int net_conn_get_tcp(sigar_t *sigar,
     return SIGAR_OK;
 }
 
-int sigar_net_connection_list_get(sigar_t *sigar,
-                                  sigar_net_connection_list_t *connlist,
-                                  int flags)
+int sigar_net_connection_walk(sigar_net_connection_walker_t *walker)
 {
+    sigar_t *sigar = walker->sigar;
+    int flags = walker->flags;
     int status;
 
-    sigar_net_connection_list_create(connlist);
-
     if (flags & SIGAR_NETCONN_TCP) {
-        status = net_conn_get_tcp(sigar, connlist, flags);
+        status = net_conn_get_tcp(walker);
 
         if (status != SIGAR_OK) {
             return status;
@@ -986,7 +988,7 @@ int sigar_net_connection_list_get(sigar_t *sigar,
     }
 
     if (flags & SIGAR_NETCONN_UDP) {
-        status = net_conn_get_udp(sigar, connlist, flags);
+        status = net_conn_get_udp(walker);
 
         if (status != SIGAR_OK) {
             return status;
