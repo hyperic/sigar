@@ -93,7 +93,6 @@ int sigar_mem_get(sigar_t *sigar, sigar_mem_t *mem)
     mem->total  = info.TotalKnownSystemMemoryUnder4Gb;
     mem->used   = info.TotalWorkMemory;
     mem->free   = mem->total - mem->used;
-    mem->shared = -1;
     mem->actual_free = mem->free;
     mem->actual_used = mem->used;
 

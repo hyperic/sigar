@@ -191,10 +191,6 @@ int sigar_mem_get(sigar_t *sigar, sigar_mem_t *mem)
 
     if ((ksp = sigar->ks.mempages) && kstat_read(kc, ksp, NULL) >= 0) {
         sigar_koffsets_init_mempages(sigar, ksp);
-        
-        mem->shared = KPAGE_SHIFT(kMEMPAGES(KSTAT_MEMPAGES_EXEC));
-
-        /*mem->buffer = KPAGE_SHIFT(kMEMPAGES(KSTAT_MEMPAGES_VNODE));*/
     }
 
     mem->actual_free = mem->free;

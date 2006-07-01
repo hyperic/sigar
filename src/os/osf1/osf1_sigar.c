@@ -49,8 +49,6 @@ int sigar_mem_get(sigar_t *sigar, sigar_mem_t *mem)
 
     sigar_mem_calc_ram(sigar, mem);
 
-    mem->shared = SIGAR_FIELD_NOTIMPL;
-
     mem->actual_free = mem->free;
     mem->actual_used = mem->used;
 

@@ -116,20 +116,6 @@ my %classes = (
              Win32   => 'taskman',
          },
       },
-      {
-         name => 'shared', type => 'Long',
-         desc => 'Total shared system memory',
-         plat => 'LSW',
-         cmd  => {
-             AIX     => '',
-             Darwin  => '',
-             FreeBSD => '',
-             HPUX    => '',
-             Linux   => 'free',
-             Solaris => '',
-             Win32   => '',
-         },
-      },
     ],
     Swap => [
       {
@@ -1177,8 +1163,7 @@ EOF
             "Mem: " +
             (this.total / 1024) + "K av, " +
             (this.used / 1024) + "K used, " +
-            (this.free / 1024) + "K free, " +
-            (this.shared / 1024) + "K shrd";
+            (this.free / 1024) + "K free";
     }
 EOF
     ResourceLimit => <<'EOF',

@@ -277,7 +277,6 @@ int sigar_mem_get(sigar_t *sigar, sigar_mem_t *mem)
 #endif
 
     mem->used = mem->total - mem->free;
-    mem->shared = SIGAR_FIELD_NOTIMPL; /*XXX*/
 
     sigar_mem_calc_ram(sigar, mem);
 

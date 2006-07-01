@@ -27,7 +27,6 @@ int sigar_mem_get(sigar_t *sigar, sigar_mem_t *mem)
     mem->ram    = -1;
     mem->used   = -1;
     mem->free   = -1;
-    mem->shared = -1;
     mem->actual_free = mem->free;
     mem->actual_used = mem->used;
     return SIGAR_OK;

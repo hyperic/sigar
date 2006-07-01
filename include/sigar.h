@@ -76,7 +76,6 @@ typedef struct {
         total,
         used, 
         free,
-        shared,
         actual_used,
         actual_free;
 } sigar_mem_t;

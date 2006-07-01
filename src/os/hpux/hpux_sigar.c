@@ -65,9 +65,6 @@ int sigar_mem_get(sigar_t *sigar, sigar_mem_t *mem)
     mem->free = stats.psd_free * pagesize;
     mem->used = mem->total - mem->free;
 
-    /*XXX*/
-    mem->shared = SIGAR_FIELD_NOTIMPL;
-
     mem->actual_free = mem->free;
     mem->actual_used = mem->used;
     

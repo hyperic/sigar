@@ -412,7 +412,6 @@ SIGAR_DECLARE(int) sigar_mem_get(sigar_t *sigar, sigar_mem_t *mem)
 
     mem->total  = memstat.dwTotalPhys;
     mem->free   = memstat.dwAvailPhys;
-    mem->shared = memstat.dwTotalVirtual - memstat.dwAvailVirtual;
     mem->used   = mem->total - mem->free;
 
     sigar_mem_calc_ram(sigar, mem);

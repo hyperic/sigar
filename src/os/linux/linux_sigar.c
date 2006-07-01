@@ -370,8 +370,6 @@ int sigar_mem_get(sigar_t *sigar, sigar_mem_t *mem)
     mem->actual_free = mem->free + kern;
     mem->actual_used = mem->used - kern;
 
-    mem->shared = SIGAR_FIELD_NOTIMPL; /* XXX where did this go in 2.6?? */
-
     if (get_ram(sigar, mem) != SIGAR_OK) {
         /* XXX other options on failure? */
         sigar_mem_calc_ram(sigar, mem);
