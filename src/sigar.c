@@ -719,10 +719,10 @@ SIGAR_DECLARE(const char *)sigar_net_connection_state_get(int state)
     }
 }
 
-#ifdef SIGAR_USE_NET_CONNECTION_LIST_WALKER
+#if !defined(__linux__)
 /* 
  * implement sigar_net_connection_list_get using sigar_net_connection_walk
- * linux has its own list_get impl.  other platforms still need walker impl
+ * linux has its own list_get impl.
  */  
 static int net_connection_list_walker(sigar_net_connection_walker_t *walker,
                                       sigar_net_connection_t *conn)
