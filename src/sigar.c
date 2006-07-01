@@ -718,6 +718,48 @@ SIGAR_DECLARE(const char *)sigar_net_connection_state_get(int state)
         return "UNKNOWN";
     }
 }
+
+#ifdef SIGAR_USE_NET_CONNECTION_LIST_WALKER
+/* 
+ * implement sigar_net_connection_list_get using sigar_net_connection_walk
+ * linux has its own list_get impl.  other platforms still need walker impl
+ */  
+static int net_connection_list_walker(sigar_net_connection_walker_t *walker,
+                                      sigar_net_connection_t *conn)
+{
+    sigar_net_connection_list_t *connlist =
+        (sigar_net_connection_list_t *)walker->data;
+
+    SIGAR_NET_CONNLIST_GROW(connlist);
+    memcpy(&connlist->data[connlist->number++],
+           conn, sizeof(*conn));
+
+    return SIGAR_OK; /* continue loop */
+}
+
+int sigar_net_connection_list_get(sigar_t *sigar,
+                                  sigar_net_connection_list_t *connlist,
+                                  int flags)
+{
+    int status;
+    sigar_net_connection_walker_t walker;
+
+    sigar_net_connection_list_create(connlist);
+
+    walker.sigar = sigar;
+    walker.flags = flags;
+    walker.data = connlist;
+    walker.add_connection = net_connection_list_walker;
+
+    status = sigar_net_connection_walk(&walker);
+
+    if (status != SIGAR_OK) {
+        sigar_net_connection_list_destroy(sigar, connlist);
+    }
+
+    return status;
+}
+#endif
 #if defined(__linux__) /* XXX need to implement walker on other platforms */
 typedef struct {
     sigar_net_stat_t *netstat;

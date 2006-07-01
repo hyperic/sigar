@@ -1857,42 +1857,6 @@ int sigar_net_connection_walk(sigar_net_connection_walker_t *walker)
     return SIGAR_OK;
 }
 
-static int net_connection_list_walker(sigar_net_connection_walker_t *walker,
-                                      sigar_net_connection_t *conn)
-{
-    sigar_net_connection_list_t *connlist =
-        (sigar_net_connection_list_t *)walker->data;
-
-    SIGAR_NET_CONNLIST_GROW(connlist);
-    memcpy(&connlist->data[connlist->number++],
-           conn, sizeof(*conn));
-
-    return SIGAR_OK; /* continue loop */
-}
-
-int sigar_net_connection_list_get(sigar_t *sigar,
-                                  sigar_net_connection_list_t *connlist,
-                                  int flags)
-{
-    int status;
-    sigar_net_connection_walker_t walker;
-
-    sigar_net_connection_list_create(connlist);
-
-    walker.sigar = sigar;
-    walker.flags = flags;
-    walker.data = connlist;
-    walker.add_connection = net_connection_list_walker;
-
-    status = sigar_net_connection_walk(&walker);
-
-    if (status != SIGAR_OK) {
-        sigar_net_connection_list_destroy(sigar, connlist);
-    }
-
-    return status;
-}
-
 #ifndef DARWIN
 
 #define _KERNEL
