@@ -11,13 +11,19 @@ extern "C" {
 
 #if defined(WIN32)
 
+typedef unsigned __int32 sigar_uint32_t;
+
 typedef unsigned __int64 sigar_uint64_t;
 
 #elif ULONG_MAX > 4294967295UL
 
+typedef unsigned int sigar_uint32_t;
+
 typedef unsigned long sigar_uint64_t;
 
 #else
+
+typedef unsigned int sigar_uint32_t;
 
 typedef unsigned long long sigar_uint64_t;
 
