@@ -1545,13 +1545,13 @@ int sigar_cpu_info_list_get(sigar_t *sigar,
     return SIGAR_OK;
 }
 
-static unsigned int hex2int(const char *x)
+static SIGAR_INLINE unsigned int hex2int(const char *x, int len)
 {
-    int i, ch;
+    int i;
     unsigned int j;
 
-    for (i=0, j=0; i<8; i++) {
-        ch = x[i];
+    for (i=0, j=0; i<len; i++) {
+        register int ch = x[i];
         j <<= 4;
         if (isdigit(ch)) {
             j |= ch - '0';
@@ -1566,6 +1566,8 @@ static unsigned int hex2int(const char *x)
 
     return j;
 }
+
+#define HEX_ENT_LEN 8
 
 #ifdef __LP64__
 #define ROUTE_FMT "%16s %128s %128s %X %ld %ld %ld %128s %ld %ld %ld\n"
@@ -1611,9 +1613,9 @@ int sigar_net_route_list_get(sigar_t *sigar,
         }
 
         route->flags = flags;
-        route->destination = hex2int(net_addr);
-        route->gateway = hex2int(gate_addr);
-        route->mask = hex2int(mask_addr);
+        route->destination = hex2int(net_addr, HEX_ENT_LEN);
+        route->gateway = hex2int(gate_addr, HEX_ENT_LEN);
+        route->mask = hex2int(mask_addr, HEX_ENT_LEN);
     }
 
     fclose(fp);
@@ -1683,25 +1685,13 @@ int sigar_net_interface_stat_get(sigar_t *sigar, const char *name,
     return found ? SIGAR_OK : ENXIO;
 }
 
-#define IS_NULL_PTR(ptr) ((ptr == NULL) || (*(ptr) == '\0'))
-#define HEX_ENT_LEN 8
-
-static SIGAR_INLINE int ip_format(char *buffer, int buflen, char *ptr)
+static SIGAR_INLINE int ip_format(char *buffer, int buflen, char *ptr, int len)
 {
-    int alen;
-
-    if (IS_NULL_PTR(ptr)) {
-        alen = 0;
-    }
-    else {
-        alen = strlen(ptr);
-    }
-
-    if (alen > HEX_ENT_LEN) {
+    if (len > HEX_ENT_LEN) {
         struct in6_addr addr;
         int i;
-        for (i=0; i<=3; i++, ptr+=8) {
-            addr.s6_addr32[i] = hex2int(ptr);
+        for (i=0; i<=3; i++, ptr+=HEX_ENT_LEN) {
+            addr.s6_addr32[i] = hex2int(ptr, HEX_ENT_LEN);
         }
         if (!inet_ntop(AF_INET6, &addr, buffer, buflen)) {
             return errno;
@@ -1709,7 +1699,7 @@ static SIGAR_INLINE int ip_format(char *buffer, int buflen, char *ptr)
     }
     else {
         struct in_addr addr;
-        addr.s_addr = (alen == HEX_ENT_LEN) ? hex2int(ptr) : 0;
+        addr.s_addr = (len == HEX_ENT_LEN) ? hex2int(ptr, HEX_ENT_LEN) : 0;
         if (!inet_ntop(AF_INET, &addr, buffer, buflen)) {
             return errno;
         }
@@ -1747,12 +1737,18 @@ static int proc_net_walker(sigar_net_connection_walker_t *walker,
     return SIGAR_OK; /* continue loop */
 }
 
+#define SKIP_WHILE(p, c) while (*p == c) p++
+#define SKIP_PAST(p, c) \
+   while(*p && (*p != c)) p++; \
+   SKIP_WHILE(p, c)
+
 static int proc_net_read(sigar_net_connection_walker_t *walker,
                          const char *fname,
                          int type)
 {
     FILE *fp;
-    char buffer[8192], *ptr;
+    char buffer[8192];
+    char *ptr;
     int flags = walker->flags;
 
     if (!(fp = fopen(fname, "r"))) {
@@ -1763,56 +1759,37 @@ static int proc_net_read(sigar_net_connection_walker_t *walker,
 
     while ((ptr = fgets(buffer, sizeof(buffer), fp))) {
         sigar_net_connection_t conn;
-        char *port = NULL;
         char *laddr, *raddr;
+        int laddr_len=0, raddr_len=0;
         int status, more;
 
-        SIGAR_SKIP_SPACE(ptr);
-        if (IS_NULL_PTR(ptr)) {
-            continue;
-        }
+        /* skip leading space */
+        SKIP_WHILE(ptr, ' ');
 
-        ptr = sigar_skip_token(ptr); /* skip number */
-        while (isspace(*ptr)) {
-            ptr++;
-        }
-        if (IS_NULL_PTR(ptr)) {
-            continue;
-        }
+        /* skip "%d: " */
+        SKIP_PAST(ptr, ' ');
 
-        if (!(port = strchr(ptr, ':'))) {
-            continue;
-        }
-        *port = '\0';
-        ++port;
-
-        conn.local_port = (strtoul(port, &port, 16) & 0xffff);
         laddr = ptr;
-
-        ptr = port;
-        while (isspace(*ptr)) {
+        while (*ptr && (*ptr != ':')) {
+            laddr_len++;
             ptr++;
         }
-        if (IS_NULL_PTR(ptr)) {
-            continue;
-        }
+        SKIP_WHILE(ptr, ':');
 
-        if (!(port = strchr(ptr, ':'))) {
-            continue;
-        }
-        *port = '\0';
-        ++port;
+        conn.local_port = (strtoul(ptr, &ptr, 16) & 0xffff);
 
-        conn.remote_port = (strtoul(port, &port, 16) & 0xffff);
+        SKIP_WHILE(ptr, ' ');
+
         raddr = ptr;
-
-        ptr = port;
-        while (isspace(*ptr)) {
+        while (*ptr && (*ptr != ':')) {
+            raddr_len++;
             ptr++;
         }
-        if (IS_NULL_PTR(ptr)) {
-            continue;
-        }
+        SKIP_WHILE(ptr, ':');
+
+        conn.remote_port = (strtoul(ptr, &ptr, 16) & 0xffff);
+
+        SKIP_WHILE(ptr, ' ');
 
         if (!((conn.remote_port && (flags & SIGAR_NETCONN_CLIENT)) ||
               (!conn.remote_port && (flags & SIGAR_NETCONN_SERVER))))
@@ -1824,7 +1801,7 @@ static int proc_net_read(sigar_net_connection_walker_t *walker,
 
         status = ip_format(conn.local_address,
                            sizeof(conn.local_address),
-                           laddr);
+                           laddr, laddr_len);
 
         if (status != SIGAR_OK) {
             return status;
@@ -1832,46 +1809,30 @@ static int proc_net_read(sigar_net_connection_walker_t *walker,
 
         status = ip_format(conn.remote_address,
                            sizeof(conn.remote_address),
-                           raddr);
+                           raddr, raddr_len);
 
         if (status != SIGAR_OK) {
             return status;
         }
 
         /* SIGAR_TCP_* currently matches TCP_* in linux/tcp.h */
-        sscanf(ptr, "%2x", &conn.state);
-        ptr = sigar_skip_token(ptr);
-        SIGAR_SKIP_SPACE(ptr);
-        if (IS_NULL_PTR(ptr)) {
-            continue;
-        }
+        conn.state = hex2int(ptr, 2);
+        ptr += 2;
+        SKIP_WHILE(ptr, ' ');
 
-        if (strlen(ptr) < ((HEX_ENT_LEN*2) + 1)) {
-            continue;
-        }
-
-        conn.send_queue = hex2int(ptr);
+        conn.send_queue = hex2int(ptr, HEX_ENT_LEN);
         ptr += HEX_ENT_LEN+1; /* tx + ':' */;
 
-        conn.receive_queue = hex2int(ptr);
+        conn.receive_queue = hex2int(ptr, HEX_ENT_LEN);
         ptr += HEX_ENT_LEN;
+        SKIP_WHILE(ptr, ' ');
 
-        SIGAR_SKIP_SPACE(ptr);
-        if (IS_NULL_PTR(ptr)) {
-            continue;
-        }
-
-        ptr = sigar_skip_multiple_token(ptr, 2); /* tr:tm->when retrnsmt */
-        if (IS_NULL_PTR(ptr)) {
-            continue;
-        }
+        SKIP_PAST(ptr, ' '); /* tr:tm->whem */
+        SKIP_PAST(ptr, ' '); /* retrnsmt */
 
         conn.uid = sigar_strtoul(ptr);
 
-        ptr = sigar_skip_token(ptr);
-        if (IS_NULL_PTR(ptr)) {
-            continue;
-        }
+        SKIP_PAST(ptr, ' '); /* timeout */
 
         conn.inode = sigar_strtoul(ptr);
 
