@@ -2028,9 +2028,9 @@ int sigar_net_interface_stat_get(sigar_t *sigar, const char *name,
 
 #define TCPQ_SIZE(s) ((s) >= 0 ? (s) : 0)
 
-static int tcp_connection_list_get(sigar_net_connection_walker_t *walker,
-                                   struct mib2_tcpConnEntry *entry,
-                                   int len)
+static int tcp_connection_get(sigar_net_connection_walker_t *walker,
+                              struct mib2_tcpConnEntry *entry,
+                              int len)
 {
     sigar_t *sigar = walker->sigar;
     int flags = walker->flags;
@@ -2120,9 +2120,9 @@ static int tcp_connection_list_get(sigar_net_connection_walker_t *walker,
     return SIGAR_OK;
 }
 
-static int udp_connection_list_get(sigar_net_connection_walker_t *walker,
-                                   struct mib2_udpEntry *entry,
-                                   int len)
+static int udp_connection_get(sigar_net_connection_walker_t *walker,
+                              struct mib2_udpEntry *entry,
+                              int len)
 {
     sigar_t *sigar = walker->sigar;
     int flags = walker->flags;
@@ -2177,18 +2177,18 @@ int sigar_net_connection_walk(sigar_net_connection_walker_t *walker)
             want_tcp)
         {
             status =
-                tcp_connection_list_get(walker,
-                                        (struct mib2_tcpConnEntry *)data,
-                                        len);
+                tcp_connection_get(walker,
+                                   (struct mib2_tcpConnEntry *)data,
+                                   len);
         }
         else if ((op->level == MIB2_UDP) && 
                  (op->name == MIB2_UDP_5) &&
                  want_udp)
         {
             status =
-                udp_connection_list_get(walker,
-                                        (struct mib2_udpEntry *)data,
-                                        len);
+                udp_connection_get(walker,
+                                   (struct mib2_udpEntry *)data,
+                                   len);
         }
         else {
             status = SIGAR_OK;
