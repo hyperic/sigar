@@ -201,7 +201,7 @@ static void sigar_set_pointer(JNIEnv *env, jobject obj, const void *ptr) {
 #endif
 }
 
-JNIEXPORT jstring SIGAR_JNI(Sigar_formatSize)
+JNIEXPORT jstring SIGAR_JNIx(formatSize)
 (JNIEnv *env, jclass cls, jlong size)
 {
     char buf[56];
@@ -209,21 +209,21 @@ JNIEXPORT jstring SIGAR_JNI(Sigar_formatSize)
     return JENV->NewStringUTF(env, buf);
 }
 
-JNIEXPORT jstring SIGAR_JNI(Sigar_getNativeVersion)
+JNIEXPORT jstring SIGAR_JNIx(getNativeVersion)
 (JNIEnv *env, jclass cls)
 {
     sigar_version_t *version = sigar_version_get();
     return JENV->NewStringUTF(env, version->version);
 }
 
-JNIEXPORT jstring SIGAR_JNI(Sigar_getNativeBuildDate)
+JNIEXPORT jstring SIGAR_JNIx(getNativeBuildDate)
 (JNIEnv *env, jclass cls)
 {
     sigar_version_t *version = sigar_version_get();
     return JENV->NewStringUTF(env, version->build_date);
 }
 
-JNIEXPORT void SIGAR_JNI(Sigar_open)
+JNIEXPORT void SIGAR_JNIx(open)
 (JNIEnv *env, jobject obj)
 {
     jni_sigar_t *jsigar = malloc(sizeof(*jsigar));
@@ -242,7 +242,7 @@ JNIEXPORT void SIGAR_JNI(Sigar_open)
     }
 }
 
-JNIEXPORT jint SIGAR_JNI(Sigar_nativeClose)
+JNIEXPORT jint SIGAR_JNIx(nativeClose)
 (JNIEnv *env, jobject sigar_obj)
 {
     jint status;
@@ -278,7 +278,7 @@ JNIEXPORT jint SIGAR_JNI(Sigar_nativeClose)
     return status;
 }
 
-JNIEXPORT jlong SIGAR_JNI(Sigar_getPid)
+JNIEXPORT jlong SIGAR_JNIx(getPid)
 (JNIEnv *env, jobject sigar_obj)
 {
     dSIGAR(0);
@@ -286,7 +286,7 @@ JNIEXPORT jlong SIGAR_JNI(Sigar_getPid)
     return sigar_pid_get(sigar);
 }
 
-JNIEXPORT void SIGAR_JNI(Sigar_kill)
+JNIEXPORT void SIGAR_JNIx(kill)
 (JNIEnv *env, jobject sigar_obj, jlong pid, jint signum)
 {
     int status;
@@ -325,7 +325,7 @@ enum {
 
 #define STRING_SIG "Ljava/lang/String;"
 
-JNIEXPORT jobjectArray SIGAR_JNI(Sigar_getFileSystemListNative)
+JNIEXPORT jobjectArray SIGAR_JNIx(getFileSystemListNative)
 (JNIEnv *env, jobject sigar_obj)
 {
     int status;
@@ -449,7 +449,7 @@ JNIEXPORT jstring SIGAR_JNI(RPC_strerror)
 #endif
 }
 
-JNIEXPORT jobjectArray SIGAR_JNI(Sigar_getCpuInfoList)
+JNIEXPORT jobjectArray SIGAR_JNIx(getCpuInfoList)
 (JNIEnv *env, jobject sigar_obj)
 {
     int status;
@@ -480,7 +480,7 @@ JNIEXPORT jobjectArray SIGAR_JNI(Sigar_getCpuInfoList)
     return cpuarray;
 }
 
-JNIEXPORT jobjectArray SIGAR_JNI(Sigar_getCpuListNative)
+JNIEXPORT jobjectArray SIGAR_JNIx(getCpuListNative)
 (JNIEnv *env, jobject sigar_obj)
 {
     int status;
@@ -511,7 +511,7 @@ JNIEXPORT jobjectArray SIGAR_JNI(Sigar_getCpuListNative)
     return cpuarray;
 }
 
-JNIEXPORT jlongArray SIGAR_JNI(Sigar_getProcList)
+JNIEXPORT jlongArray SIGAR_JNIx(getProcList)
 (JNIEnv *env, jobject sigar_obj)
 {
     int status;
@@ -551,7 +551,7 @@ JNIEXPORT jlongArray SIGAR_JNI(Sigar_getProcList)
     return procarray;
 }
 
-JNIEXPORT jobjectArray SIGAR_JNI(Sigar_getProcArgs)
+JNIEXPORT jobjectArray SIGAR_JNIx(getProcArgs)
 (JNIEnv *env, jobject sigar_obj, jlong pid)
 {
     int status;
@@ -706,7 +706,7 @@ static int jni_proc_module_get(void *data,
     return SIGAR_OK;
 }
 
-JNIEXPORT jobject SIGAR_JNI(Sigar_getProcModulesNative)
+JNIEXPORT jobject SIGAR_JNIx(getProcModulesNative)
 (JNIEnv *env, jobject sigar_obj, jlong pid)
 {
     int status;
@@ -741,7 +741,7 @@ JNIEXPORT jobject SIGAR_JNI(Sigar_getProcModulesNative)
     return listobj;
 }
 
-JNIEXPORT jdoubleArray SIGAR_JNI(Sigar_getLoadAverage)
+JNIEXPORT jdoubleArray SIGAR_JNIx(getLoadAverage)
 (JNIEnv *env, jobject sigar_obj)
 {
     int status;
@@ -762,7 +762,7 @@ JNIEXPORT jdoubleArray SIGAR_JNI(Sigar_getLoadAverage)
     return avgarray;
 }
 
-JNIEXPORT jobjectArray SIGAR_JNI(Sigar_getNetRouteList)
+JNIEXPORT jobjectArray SIGAR_JNIx(getNetRouteList)
 (JNIEnv *env, jobject sigar_obj)
 {
     int status;
@@ -792,7 +792,7 @@ JNIEXPORT jobjectArray SIGAR_JNI(Sigar_getNetRouteList)
     return routearray;
 }
 
-JNIEXPORT jobjectArray SIGAR_JNI(Sigar_getNetConnectionList)
+JNIEXPORT jobjectArray SIGAR_JNIx(getNetConnectionList)
 (JNIEnv *env, jobject sigar_obj, jint flags)
 {
     int status;
@@ -888,7 +888,7 @@ JNIEXPORT jstring SIGAR_JNI(NetConnection_getStateString)
                               sigar_net_connection_state_get(state));
 }
 
-JNIEXPORT jobjectArray SIGAR_JNI(Sigar_getWhoList)
+JNIEXPORT jobjectArray SIGAR_JNIx(getWhoList)
 (JNIEnv *env, jobject sigar_obj)
 {
     int status;
@@ -975,7 +975,7 @@ JNIEXPORT void SIGAR_JNI(FileInfo_gatherLink)
     JAVA_SIGAR_SET_FIELDS_FILEATTRS(cls, obj, s);
 }
 
-JNIEXPORT jlong SIGAR_JNI(Sigar_getProcPort)
+JNIEXPORT jlong SIGAR_JNIx(getProcPort)
 (JNIEnv *env, jobject sigar_obj, jint protocol, jlong port)
 {
     int status;
@@ -992,7 +992,7 @@ JNIEXPORT jlong SIGAR_JNI(Sigar_getProcPort)
     return pid;
 }
 
-JNIEXPORT jobjectArray SIGAR_JNI(Sigar_getNetInterfaceList)
+JNIEXPORT jobjectArray SIGAR_JNIx(getNetInterfaceList)
 (JNIEnv *env, jobject sigar_obj)
 {
     int status;
@@ -1019,7 +1019,7 @@ JNIEXPORT jobjectArray SIGAR_JNI(Sigar_getNetInterfaceList)
     return ifarray;
 }
 
-JNIEXPORT jstring SIGAR_JNI(Sigar_getPasswordNative)
+JNIEXPORT jstring SIGAR_JNIx(getPasswordNative)
 (JNIEnv *env, jclass classinstance, jstring prompt)
 {
     const char *prompt_str;
@@ -1039,7 +1039,7 @@ JNIEXPORT jstring SIGAR_JNI(Sigar_getPasswordNative)
     return JENV->NewStringUTF(env, password);
 }
 
-JNIEXPORT jstring SIGAR_JNI(Sigar_getFQDN)
+JNIEXPORT jstring SIGAR_JNIx(getFQDN)
 (JNIEnv *env, jobject sigar_obj)
 {
     char fqdn[SIGAR_FQDN_LEN];
@@ -1268,7 +1268,7 @@ JNIEXPORT void SIGAR_JNI(SigarLog_setLevel)
     sigar->advapi.query_service_status.func
 #endif
 
-JNIEXPORT jlong SIGAR_JNI(Sigar_getServicePid)
+JNIEXPORT jlong SIGAR_JNIx(getServicePid)
 (JNIEnv *env, jobject sigar_obj, jstring jname)
 {
 #ifdef WIN32
