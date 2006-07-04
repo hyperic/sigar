@@ -808,9 +808,10 @@ static int net_stat_walker(sigar_net_connection_walker_t *walker,
     return SIGAR_OK;
 }
 
-int sigar_net_stat_get(sigar_t *sigar,
-                       sigar_net_stat_t *netstat,
-                       int flags)
+SIGAR_DECLARE(int)
+sigar_net_stat_get(sigar_t *sigar,
+                   sigar_net_stat_t *netstat,
+                   int flags)
 {
     int status;
     sigar_net_connection_walker_t walker;
