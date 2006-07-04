@@ -1428,15 +1428,18 @@ int sigar_net_route_list_get(sigar_t *sigar,
             }
             switch (bit) {
               case RTA_DST:
-                route->destination = rt_s_addr(sa);
+                sigar_net_address_set(route->destination,
+                                      rt_s_addr(sa));
                 break;
               case RTA_GATEWAY:
                 if (sa->sa_family == AF_INET) {
-                    route->gateway = rt_s_addr(sa);
+                    sigar_net_address_set(route->gateway,
+                                          rt_s_addr(sa));
                 }
                 break;
               case RTA_NETMASK:
-                route->mask = rt_s_addr(sa);
+                sigar_net_address_set(route->mask,
+                                      rt_s_addr(sa));
                 break;
               case RTA_IFA:
                 break;
