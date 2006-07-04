@@ -1615,26 +1615,31 @@ int sigar_net_interface_config_get(sigar_t *sigar, const char *name,
     ((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr.s_addr
 
     if (!ioctl(sock, SIOCGIFADDR, &ifr)) {
-        ifconfig->address = ifr_s_addr(ifr);
+        sigar_net_address_set(ifconfig->address,
+                              ifr_s_addr(ifr));
     }
 
     if (!ioctl(sock, SIOCGIFNETMASK, &ifr)) {
-        ifconfig->netmask = ifr_s_addr(ifr);
+        sigar_net_address_set(ifconfig->netmask,
+                              ifr_s_addr(ifr));
     }
 
     if (ifconfig->flags & IFF_LOOPBACK) {
-        ifconfig->destination = ifconfig->address;
-        ifconfig->broadcast = 0;
+        sigar_net_address_set(ifconfig->destination,
+                              ifconfig->address.addr.in);
+        sigar_net_address_set(ifconfig->broadcast, 0);
         SIGAR_SSTRCPY(ifconfig->type,
                       SIGAR_NIC_LOOPBACK);
     }
     else {
         if (!ioctl(sock, SIOCGIFDSTADDR, &ifr)) {
-            ifconfig->destination = ifr_s_addr(ifr);
+            sigar_net_address_set(ifconfig->destination,
+                                  ifr_s_addr(ifr));
         }
 
         if (!ioctl(sock, SIOCGIFBRDADDR, &ifr)) {
-            ifconfig->broadcast = ifr_s_addr(ifr);
+            sigar_net_address_set(ifconfig->broadcast,
+                                  ifr_s_addr(ifr));
         }
         SIGAR_SSTRCPY(ifconfig->type,
                       SIGAR_NIC_ETHERNET);
