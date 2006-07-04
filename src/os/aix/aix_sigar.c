@@ -2054,10 +2054,12 @@ static int net_conn_get_tcp(sigar_net_connection_walker_t *walker)
 
             conn.type = SIGAR_NETCONN_TCP;
 
-            sigar_inet_ntoa(sigar, pcb.inp_laddr.s_addr,
-                            conn.local_address);
-            sigar_inet_ntoa(sigar, pcb.inp_faddr.s_addr,
-                            conn.remote_address);
+            sigar_net_address_set(conn.local_address,
+                                  pcb.inp_laddr.s_addr);
+
+            sigar_net_address_set(conn.remote_address,
+                                  pcb.inp_faddr.s_addr);
+
             conn.local_port  = ntohs(pcb.inp_lport);
             conn.remote_port = ntohs(pcb.inp_fport);
 

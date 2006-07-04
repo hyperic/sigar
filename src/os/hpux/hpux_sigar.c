@@ -832,10 +832,10 @@ static int net_conn_get_udp_listen(sigar_net_connection_walker_t *walker)
         conn.local_port  = (unsigned short)entry->LocalPort;
         conn.remote_port = 0;
 
-        sigar_inet_ntoa(sigar, entry->LocalAddress,
-                        conn.local_address);
+        sigar_net_address_set(conn.local_address,
+                              entry->LocalAddress);
 
-        SIGAR_SSTRCPY(conn.remote_address, "0.0.0.0");
+        sigar_net_address_set(conn.remote_address, 0);
 
         conn.send_queue = conn.receive_queue = SIGAR_FIELD_NOTIMPL;
 
@@ -955,11 +955,8 @@ static int net_conn_get_tcp(sigar_net_connection_walker_t *walker)
         conn.remote_port = (unsigned short)entry->RemPort;
         conn.type = SIGAR_NETCONN_TCP;
 
-        sigar_inet_ntoa(sigar, entry->LocalAddress,
-                        conn.local_address);
-
-        sigar_inet_ntoa(sigar, entry->RemAddress,
-                        conn.remote_address);
+        sigar_net_address_set(conn.local_address, entry->LocalAddress);
+        sigar_net_address_set(conn.remote_address, entry->RemAddress);
 
         conn.send_queue = conn.receive_queue = SIGAR_FIELD_NOTIMPL;
 
