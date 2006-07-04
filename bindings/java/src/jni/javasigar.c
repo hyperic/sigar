@@ -300,15 +300,6 @@ JNIEXPORT void SIGAR_JNIx(kill)
 #define SetStringField(env, obj, fieldID, val) \
     SetObjectField(env, obj, fieldID, JENV->NewStringUTF(env, val))
 
-static jstring jinet_ntoa(JNIEnv *env, sigar_t *sigar, sigar_uint64_t val) {
-    char addr_str[SIGAR_INET_ADDR_LEN];
-    sigar_inet_ntoa(sigar, val, addr_str);
-    return JENV->NewStringUTF(env, addr_str);
-}
-
-#define SetNetAddrField(env, obj, fieldID, val) \
-    SetObjectField(env, obj, fieldID, jinet_ntoa(env, sigar, val))
-
 static jstring jnet_address_to_string(JNIEnv *env, sigar_t *sigar, sigar_net_address_t *val) {
     char addr_str[INET6_ADDRSTRLEN];
     sigar_net_address_to_string(sigar, val, addr_str);

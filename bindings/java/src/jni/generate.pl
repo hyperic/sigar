@@ -1067,10 +1067,10 @@ my %pfields = (
     Int    => "IV",
     Char   => "char",
     String => "char *",
-    NetAddr => "Sigar::NetAddr",
+    NetAddress => "Sigar::NetAddress",
 );
 
-$jfields{'NetAddress'} = $jfields{'NetAddr'} = $jfields{'String'};
+$jfields{'NetAddress'} = $jfields{'String'};
 
 my %jinit = (
     String => 'null',
@@ -1082,7 +1082,7 @@ my %jtype = (
 
 #alias
 for my $j (\%jfields, \%jinit, \%jtype) {
-    $j->{'NetAddress'} = $j->{'NetAddr'} = $j->{'String'};
+    $j->{'NetAddress'} = $j->{'String'};
 }
 
 my %func_alias = (
