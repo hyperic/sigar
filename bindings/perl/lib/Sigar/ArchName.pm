@@ -16,22 +16,22 @@ sub get_name {
     }
     elsif ($os =~ /hpux/) {
         if ($vers =~ /11\./) {
-            return 'hppa2.0-hp-hpux-11.x';
+            return 'pa-hpux-11';
         }
     }
     elsif ($os =~ /aix/) {
-        return 'powerpc-ibm-aix-4.3.x';
+        return 'ppc-aix-5';
     }
     elsif ($os =~ /solaris/) {
         if ($arch =~ /sun4/) {
-            return 'sparc-sun-solaris-2.x';
+            return 'sparc-solaris';
         }
         elsif ($arch =~ /.86/) {
-            return 'x86-sun-solaris-2.x';
+            return 'x86-solaris';
         }
     }
     elsif ($os =~ /darwin/) {
-        return 'powerpc-apple-darwin';
+        return 'universal-macosx';
     }
 
     die "Unsupported platform";

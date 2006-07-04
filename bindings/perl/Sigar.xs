@@ -6,7 +6,7 @@
 #include "sigar_fileinfo.h"
 
 typedef sigar_t * Sigar;
-typedef sigar_uint64_t Sigar__NetAddr;
+typedef sigar_net_address_t Sigar__NetAddress;
 
 /* generated list */
 typedef sigar_uptime_t * Sigar__Uptime;
@@ -34,6 +34,7 @@ typedef sigar_who_t * Sigar__Who;
 typedef sigar_thread_cpu_t * Sigar__ThreadCpu;
 typedef sigar_resource_limit_t * Sigar__ResourceLimit;
 typedef sigar_net_info_t * Sigar__NetInfo;
+typedef sigar_dir_usage_t * Sigar__DirUsage;
 
 /* Perl < 5.6 */
 #ifndef aTHX_
@@ -316,11 +317,12 @@ proc_env(sigar, pid, key=NULL)
         procenv.data = hv = newHV();
     }
     else {
+        STRLEN len = get.klen;
         procenv.type = SIGAR_PROC_ENV_KEY;
         procenv.env_getter = proc_env_getvalue;
         procenv.data = &get;
         get.val = &PL_sv_undef;
-        get.key = SvPV(key, get.klen);
+        get.key = SvPV(key, len);
         procenv.key = get.key;
         procenv.klen = get.klen;
     }

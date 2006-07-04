@@ -2,7 +2,7 @@ Sigar       T_PTROBJ
 sigar_pid_t T_UV
 sigar_uint64_t T_UV
 const char *	T_PV
-Sigar::NetAddr	T_NETADDR
+Sigar::NetAddress	T_NETADDR
 
 #generated list
 Sigar::Uptime T_PTROBJ
@@ -30,11 +30,12 @@ Sigar::Who T_PTROBJ
 Sigar::ThreadCpu T_PTROBJ
 Sigar::ResourceLimit T_PTROBJ
 Sigar::NetInfo T_PTROBJ
+Sigar::DirUsage T_PTROBJ
 
 OUTPUT
 T_NETADDR
 	{
-	    char addr_str[SIGAR_INET_ADDR_LEN];
-	    sigar_inet_ntoa(NULL, $var, addr_str);
+	    char addr_str[INET6_ADDRSTRLEN];
+	    sigar_net_address_to_string(NULL, &$var, addr_str);
 	    sv_setpv($arg, addr_str);
 	}
