@@ -481,11 +481,11 @@ typedef struct {
     char hwaddr[64];
     char type[64];
     char description[256];
+    sigar_net_address_t address;
+    sigar_net_address_t destination;
+    sigar_net_address_t broadcast;
+    sigar_net_address_t netmask;
     sigar_uint64_t
-        address,
-        destination,
-        broadcast,
-        netmask,
         flags,
         mtu,
         metric;

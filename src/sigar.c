@@ -1330,11 +1330,13 @@ int sigar_net_interface_config_get(sigar_t *sigar, const char *name,
     ((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr.s_addr
 
     if (!ioctl(sock, SIOCGIFADDR, &ifr)) {
-        ifconfig->address = ifr_s_addr(ifr);
+        sigar_net_address_set(ifconfig->address,
+                              ifr_s_addr(ifr));
     }
 
     if (!ioctl(sock, SIOCGIFNETMASK, &ifr)) {
-        ifconfig->netmask = ifr_s_addr(ifr);
+        sigar_net_address_set(ifconfig->netmask,
+                              ifr_s_addr(ifr));
     }
     
     if (!ioctl(sock, SIOCGIFFLAGS, &ifr)) {
@@ -1367,19 +1369,22 @@ int sigar_net_interface_config_get(sigar_t *sigar, const char *name,
     }
 
     if (ifconfig->flags & IFF_LOOPBACK) {
-        ifconfig->destination = ifconfig->address;
-        ifconfig->broadcast = 0;
+        sigar_net_address_set(ifconfig->destination,
+                              ifconfig->address.addr.in);
+        sigar_net_address_set(ifconfig->broadcast, 0);
         sigar_hwaddr_set_null(ifconfig);
         SIGAR_SSTRCPY(ifconfig->type,
                       SIGAR_NIC_LOOPBACK);
     }
     else {
         if (!ioctl(sock, SIOCGIFDSTADDR, &ifr)) {
-            ifconfig->destination = ifr_s_addr(ifr);
+            sigar_net_address_set(ifconfig->destination,
+                                  ifr_s_addr(ifr));
         }
 
         if (!ioctl(sock, SIOCGIFBRDADDR, &ifr)) {
-            ifconfig->broadcast = ifr_s_addr(ifr);
+            sigar_net_address_set(ifconfig->broadcast,
+                                  ifr_s_addr(ifr));
         }
 
 #if defined(SIOCGIFHWADDR)
@@ -1654,6 +1659,7 @@ SIGAR_DECLARE(int) sigar_net_address_to_string(sigar_t *sigar,
       case SIGAR_AF_INET:
         return sigar_inet_ntoa(sigar, address->addr.in, addr_str);
       case SIGAR_AF_UNSPEC:
+        return sigar_inet_ntoa(sigar, 0, addr_str); /*XXX*/
       default:
         return EINVAL;
     }
@@ -1682,7 +1688,7 @@ static int fqdn_ip_get(sigar_t *sigar, char *name)
             continue;
         }
 
-        sigar_inet_ntoa(sigar, ifconfig.address, name);
+        sigar_net_address_to_string(sigar, &ifconfig.address, name);
 
         sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
                          "[fqdn] using ip address '%s' for fqdn",

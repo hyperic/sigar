@@ -674,22 +674,22 @@ my %classes = (
          plat => '*'
       },
       {
-         name => 'address', type => 'NetAddr',
+         name => 'address', type => 'NetAddress',
          desc => '',
          plat => '*'
       },
       {
-         name => 'destination', type => 'NetAddr',
+         name => 'destination', type => 'NetAddress',
          desc => '',
          plat => '*'
       },
       {
-         name => 'broadcast', type => 'NetAddr',
+         name => 'broadcast', type => 'NetAddress',
          desc => '',
          plat => '*'
       },
       {
-         name => 'netmask', type => 'NetAddr',
+         name => 'netmask', type => 'NetAddress',
          desc => '',
          plat => '*'
       },
