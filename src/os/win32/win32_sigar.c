@@ -2071,11 +2071,11 @@ static int net_conn_get_tcp(sigar_net_connection_walker_t *walker)
 
         conn.type = SIGAR_NETCONN_TCP;
 
-        sigar_inet_ntoa(sigar, tcp->table[i].dwLocalAddr,
-                        conn.local_address);
+        sigar_net_address_set(conn.local_address,
+                              tcp->table[i].dwLocalAddr);
 
-        sigar_inet_ntoa(sigar, tcp->table[i].dwRemoteAddr,
-                        conn.remote_address);
+        sigar_net_address_set(conn.remote_address,
+                              tcp->table[i].dwRemoteAddr);
 
         conn.send_queue = conn.receive_queue = SIGAR_FIELD_NOTIMPL;
 
@@ -2176,10 +2176,10 @@ static int net_conn_get_udp(sigar_net_connection_walker_t *walker)
 
         conn.type = SIGAR_NETCONN_UDP;
 
-        sigar_inet_ntoa(sigar, udp->table[i].dwLocalAddr,
-                        conn.local_address);
+        sigar_net_address_set(conn.local_address,
+                              udp->table[i].dwLocalAddr);
 
-        SIGAR_SSTRCPY(conn.remote_address, "0.0.0.0");
+        sigar_net_address_set(conn.remote_address, 0);
 
         conn.send_queue = conn.receive_queue = SIGAR_FIELD_NOTIMPL;
 
