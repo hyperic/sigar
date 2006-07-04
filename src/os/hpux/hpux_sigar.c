@@ -697,13 +697,18 @@ int sigar_net_route_list_get(sigar_t *sigar,
         route = &routelist->data[routelist->number++];
         SIGAR_ZERO(route); /* XXX: other fields */
         
-        route->destination = ent->Dest;
-        route->mask        = ent->Mask;
-        route->gateway     = ent->NextHop;
+        sigar_net_address_set(route->destination,
+                              ent->Dest);
+
+        sigar_net_address_set(route->mask,
+                              ent->Mask);
+
+        sigar_net_address_set(route->gateway,
+                              ent->NextHop);
 
         route->flags = SIGAR_RTF_UP;
-        if ((route->destination == 0) &&
-            (route->mask == 0))
+        if ((ent->Dest == 0) &&
+            (ent->Mask == 0))
         {
             route->flags |= SIGAR_RTF_GATEWAY;
         }
