@@ -226,9 +226,12 @@ sigar_net_interface_config_get(sigar_t *sigar,
 #define if_s_addr(a) \
     ((struct sockaddr_in *)&a)->sin_addr.s_addr
 
-    ifconfig->address   = if_s_addr(if_info->iiAddress);
-    ifconfig->broadcast = if_s_addr(if_info->iiBroadcastAddress);
-    ifconfig->netmask   = if_s_addr(if_info->iiNetmask);
+    sigar_net_address_set(ifconfig->address,
+                          if_s_addr(if_info->iiAddress));
+    sigar_net_address_set(ifconfig->broadcast,
+                          if_s_addr(if_info->iiBroadcastAddress));
+    sigar_net_address_set(ifconfig->netmask,
+                          if_s_addr(if_info->iiNetmask));
 
     flags = if_info->iiFlags;
 
@@ -240,8 +243,9 @@ sigar_net_interface_config_get(sigar_t *sigar,
     }
     if (flags & IFF_LOOPBACK) {
         ifconfig->flags |= SIGAR_IFF_LOOPBACK;
-        ifconfig->destination = ifconfig->address;
-        ifconfig->broadcast = 0;
+        sigar_net_address_set(ifconfig->destination,
+                              ifconfig->address.addr.in);
+        sigar_net_address_set(ifconfig->broadcast, 0);
         SIGAR_SSTRCPY(ifconfig->type,
                       SIGAR_NIC_LOOPBACK);
     }
