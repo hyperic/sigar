@@ -1274,7 +1274,7 @@ static void hwaddr_arp_lookup(sigar_net_interface_config_t *ifconfig, int sock)
     memset(&areq, 0, sizeof(areq));
     sa = (struct sockaddr_in *)&areq.arp_pa;
     sa->sin_family = AF_INET;
-    sa->sin_addr.s_addr = ifconfig->address;
+    sa->sin_addr.s_addr = ifconfig->address.addr.in;
     
     if (ioctl(sock, SIOCGARP, &areq) < 0) {
         /* ho-hum */
