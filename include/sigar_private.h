@@ -192,6 +192,14 @@ int sigar_net_connection_list_grow(sigar_net_connection_list_t *connlist);
         sigar_net_connection_list_grow(connlist); \
     }
 
+#define sigar_net_address_set(a, val) \
+    (a).addr.in = val; \
+    (a).family = SIGAR_AF_INET
+
+#define sigar_net_address6_set(addr, val) \
+    memcpy(&((a).addr.in6), val, sizeof((a).addr.in6)); \
+    (a).family = SIGAR_AF_INET6
+
 int sigar_who_list_create(sigar_who_list_t *wholist);
 
 int sigar_who_list_grow(sigar_who_list_t *wholist);

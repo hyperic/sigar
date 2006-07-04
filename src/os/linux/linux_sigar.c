@@ -1685,27 +1685,23 @@ int sigar_net_interface_stat_get(sigar_t *sigar, const char *name,
     return found ? SIGAR_OK : ENXIO;
 }
 
-static SIGAR_INLINE int ip_format(char *buffer, int buflen, char *ptr, int len)
+static SIGAR_INLINE void convert_hex_address(sigar_net_address_t *address,
+                                             char *ptr, int len)
 {
     if (len > HEX_ENT_LEN) {
-        struct in6_addr addr;
         int i;
         for (i=0; i<=3; i++, ptr+=HEX_ENT_LEN) {
-            addr.s6_addr32[i] = hex2int(ptr, HEX_ENT_LEN);
+            address->addr.in6[i] = hex2int(ptr, HEX_ENT_LEN);
         }
-        if (!inet_ntop(AF_INET6, &addr, buffer, buflen)) {
-            return errno;
-        }
+
+        address->family = SIGAR_AF_INET6;
     }
     else {
-        struct in_addr addr;
-        addr.s_addr = (len == HEX_ENT_LEN) ? hex2int(ptr, HEX_ENT_LEN) : 0;
-        if (!inet_ntop(AF_INET, &addr, buffer, buflen)) {
-            return errno;
-        }
-    }
+        address->addr.in =
+            (len == HEX_ENT_LEN) ? hex2int(ptr, HEX_ENT_LEN) : 0;
 
-    return SIGAR_OK;
+        address->family = SIGAR_AF_INET;
+    }
 }
 
 typedef struct {
@@ -1761,7 +1757,7 @@ static int proc_net_read(sigar_net_connection_walker_t *walker,
         sigar_net_connection_t conn;
         char *laddr, *raddr;
         int laddr_len=0, raddr_len=0;
-        int status, more;
+        int more;
 
         /* skip leading space */
         SKIP_WHILE(ptr, ' ');
@@ -1799,21 +1795,11 @@ static int proc_net_read(sigar_net_connection_walker_t *walker,
 
         conn.type = type;
 
-        status = ip_format(conn.local_address,
-                           sizeof(conn.local_address),
-                           laddr, laddr_len);
+        convert_hex_address(&conn.local_address,
+                            laddr, laddr_len);
 
-        if (status != SIGAR_OK) {
-            return status;
-        }
-
-        status = ip_format(conn.remote_address,
-                           sizeof(conn.remote_address),
-                           raddr, raddr_len);
-
-        if (status != SIGAR_OK) {
-            return status;
-        }
+        convert_hex_address(&conn.remote_address,
+                            raddr, raddr_len);
 
         /* SIGAR_TCP_* currently matches TCP_* in linux/tcp.h */
         conn.state = hex2int(ptr, 2);

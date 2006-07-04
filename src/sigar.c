@@ -1634,6 +1634,32 @@ SIGAR_DECLARE(int) sigar_inet_ntoa(sigar_t *sigar,
     return SIGAR_OK;
 }
 
+SIGAR_DECLARE(int) sigar_net_address_to_string(sigar_t *sigar,
+                                               sigar_net_address_t *address,
+                                               char *addr_str)
+{
+    switch (address->family) {
+      case SIGAR_AF_INET6:
+#if defined(__linux__) /*XXX*/
+        if (inet_ntop(AF_INET6, (const void *)&address->addr.in6,
+                      addr_str, INET6_ADDRSTRLEN))
+        {
+            return SIGAR_OK;
+        }
+        else {
+            return errno;
+        }
+#endif
+      case SIGAR_AF_INET:
+        return sigar_inet_ntoa(sigar, address->addr.in, addr_str);
+      case SIGAR_AF_UNSPEC:
+      default:
+        return EINVAL;
+    }
+
+    return SIGAR_OK;
+}
+
 static int fqdn_ip_get(sigar_t *sigar, char *name)
 {
     int i, status;

@@ -783,7 +783,7 @@ my %classes = (
          plat => 'LFSW'
       },
       {
-         name => 'local_address', type => 'String',
+         name => 'local_address', type => 'NetAddress',
          desc => '',
          plat => 'LFSW'
       },
@@ -793,7 +793,7 @@ my %classes = (
          plat => 'LFSW'
       },
       {
-         name => 'remote_address', type => 'String',
+         name => 'remote_address', type => 'NetAddress',
          desc => '',
          plat => 'LFSW'
       },
@@ -1070,7 +1070,7 @@ my %pfields = (
     NetAddr => "Sigar::NetAddr",
 );
 
-$jfields{'NetAddr'} = $jfields{'String'};
+$jfields{'NetAddress'} = $jfields{'NetAddr'} = $jfields{'String'};
 
 my %jinit = (
     String => 'null',
@@ -1082,7 +1082,7 @@ my %jtype = (
 
 #alias
 for my $j (\%jfields, \%jinit, \%jtype) {
-    $j->{'NetAddr'} = $j->{'String'};
+    $j->{'NetAddress'} = $j->{'NetAddr'} = $j->{'String'};
 }
 
 my %func_alias = (

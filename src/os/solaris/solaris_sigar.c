@@ -2032,7 +2032,6 @@ static int tcp_connection_get(sigar_net_connection_walker_t *walker,
                               struct mib2_tcpConnEntry *entry,
                               int len)
 {
-    sigar_t *sigar = walker->sigar;
     int flags = walker->flags;
     int status;
     char *end = (char *)entry + len;
@@ -2047,11 +2046,8 @@ static int tcp_connection_get(sigar_net_connection_walker_t *walker,
 
             SIGAR_ZERO(&conn);
 
-            sigar_inet_ntoa(sigar, entry->tcpConnLocalAddress,
-                            conn.local_address);
-
-            sigar_inet_ntoa(sigar, entry->tcpConnRemAddress,
-                            conn.remote_address);
+            sigar_net_address_set(conn.local_address, entry->tcpConnLocalAddress);
+            sigar_net_address_set(conn.remote_address, entry->tcpConnRemAddress);
 
             conn.local_port = entry->tcpConnLocalPort;
             conn.remote_port = entry->tcpConnRemPort;
@@ -2124,7 +2120,6 @@ static int udp_connection_get(sigar_net_connection_walker_t *walker,
                               struct mib2_udpEntry *entry,
                               int len)
 {
-    sigar_t *sigar = walker->sigar;
     int flags = walker->flags;
     int status;
     char *end = (char *)entry + len;
@@ -2140,9 +2135,9 @@ static int udp_connection_get(sigar_net_connection_walker_t *walker,
 
             SIGAR_ZERO(&conn);
 
-            sigar_inet_ntoa(sigar, entry->udpLocalAddress,
-                            conn.local_address);
-            SIGAR_SSTRCPY(conn.remote_address, "0.0.0.0");
+            sigar_net_address_set(conn.local_address, entry->udpLocalAddress);
+            sigar_net_address_set(conn.remote_address, 0);
+
             conn.local_port = entry->udpLocalPort;
             conn.remote_port = 0;
             conn.type = SIGAR_NETCONN_UDP;

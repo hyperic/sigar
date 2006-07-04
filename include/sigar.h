@@ -391,6 +391,22 @@ sigar_file_system_usage_get(sigar_t *sigar,
                             const char *dirname,
                             sigar_file_system_usage_t *fsusage);
 
+typedef struct {
+    enum {
+        SIGAR_AF_UNSPEC,
+        SIGAR_AF_INET,
+        SIGAR_AF_INET6
+    } family;
+    union {
+        sigar_uint32_t in;
+        sigar_uint32_t in6[4];
+    } addr;
+} sigar_net_address_t;
+
+SIGAR_DECLARE(int) sigar_net_address_to_string(sigar_t *sigar,
+                                               sigar_net_address_t *address,
+                                               char *addr_str);
+
 #ifndef INET6_ADDRSTRLEN
 #   define INET6_ADDRSTRLEN 46
 #endif
@@ -546,9 +562,9 @@ enum {
 
 typedef struct {
     unsigned long local_port;
-    char local_address[INET6_ADDRSTRLEN];
+    sigar_net_address_t local_address;
     unsigned long remote_port;
-    char remote_address[INET6_ADDRSTRLEN];
+    sigar_net_address_t remote_address;
     sigar_uid_t uid;
     unsigned long inode;
     int type;

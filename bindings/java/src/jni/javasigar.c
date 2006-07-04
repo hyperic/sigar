@@ -309,6 +309,15 @@ static jstring jinet_ntoa(JNIEnv *env, sigar_t *sigar, sigar_uint64_t val) {
 #define SetNetAddrField(env, obj, fieldID, val) \
     SetObjectField(env, obj, fieldID, jinet_ntoa(env, sigar, val))
 
+static jstring jnet_address_to_string(JNIEnv *env, sigar_t *sigar, sigar_net_address_t *val) {
+    char addr_str[INET6_ADDRSTRLEN];
+    sigar_net_address_to_string(sigar, val, addr_str);
+    return JENV->NewStringUTF(env, addr_str);
+}
+
+#define SetNetAddressField(env, obj, fieldID, val) \
+    SetObjectField(env, obj, fieldID, jnet_address_to_string(env, sigar, &val))
+
 #include "javasigar_generated.c"
 
 #define SIGAR_ALLOC_OBJECT(name) \
