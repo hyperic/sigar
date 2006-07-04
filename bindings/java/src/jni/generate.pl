@@ -597,12 +597,12 @@ my %classes = (
     ],
     NetRoute => [
       {
-         name => 'destination', type => 'NetAddr',
+         name => 'destination', type => 'NetAddress',
          desc => '',
          plat => 'HLW'
       },
       {
-         name => 'gateway', type => 'NetAddr',
+         name => 'gateway', type => 'NetAddress',
          desc => '',
          plat => 'HLW'
       },
@@ -627,7 +627,7 @@ my %classes = (
          plat => 'L'
       },
       {
-         name => 'mask', type => 'NetAddr',
+         name => 'mask', type => 'NetAddress',
          desc => '',
          plat => 'HL'
       },

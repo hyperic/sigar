@@ -431,14 +431,14 @@ sigar_net_info_get(sigar_t *sigar,
 #define SIGAR_RTF_HOST    0x4
 
 typedef struct {
+    sigar_net_address_t destination;
+    sigar_net_address_t gateway;
+    sigar_net_address_t mask;
     sigar_uint64_t
-        destination,
-        gateway,
         flags,
         refcnt,
         use,
         metric,
-        mask,
         mtu,
         window,
         irtt;

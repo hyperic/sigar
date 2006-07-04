@@ -1045,10 +1045,11 @@ static int sigar_get_default_gateway(sigar_t *sigar,
 
     for (i=0; i<routelist.number; i++) {
         if ((routelist.data[i].flags & SIGAR_RTF_GATEWAY) &&
-            (routelist.data[i].destination == 0))
+            (routelist.data[i].destination.addr.in == 0))
         {
-            sigar_inet_ntoa(sigar,
-                            routelist.data[i].gateway, gateway);
+            sigar_net_address_to_string(sigar,
+                                        &routelist.data[i].gateway,
+                                        gateway);
             break;
         }
     }

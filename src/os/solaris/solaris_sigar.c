@@ -1633,9 +1633,15 @@ int sigar_net_route_list_get(sigar_t *sigar,
             SIGAR_NET_ROUTE_LIST_GROW(routelist);
             route = &routelist->data[routelist->number++];
 
-            route->destination = entry->ipRouteDest;
-            route->gateway     = entry->ipRouteNextHop;
-            route->mask        = entry->ipRouteMask;
+            sigar_net_address_set(route->destination,
+                                  entry->ipRouteDest);
+
+            sigar_net_address_set(route->gateway,
+                                  entry->ipRouteNextHop);
+
+            sigar_net_address_set(route->mask,
+                                  entry->ipRouteMask);
+
             route->refcnt      = entry->ipRouteInfo.re_ref;
             route->irtt        = entry->ipRouteInfo.re_rtt;
             route->metric      = entry->ipRouteMetric1;
@@ -1643,8 +1649,8 @@ int sigar_net_route_list_get(sigar_t *sigar,
             SIGAR_SSTRCPY(route->ifname, entry->ipRouteIfIndex.o_bytes);
 
             route->flags = RTF_UP;
-            if ((route->destination == 0) &&
-                (route->mask == 0))
+            if ((route->destination.addr.in == 0) &&
+                (route->mask.addr.in == 0))
             {
                 route->flags |= RTF_GATEWAY;
             }

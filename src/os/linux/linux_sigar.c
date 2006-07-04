@@ -1613,9 +1613,10 @@ int sigar_net_route_list_get(sigar_t *sigar,
         }
 
         route->flags = flags;
-        route->destination = hex2int(net_addr, HEX_ENT_LEN);
-        route->gateway = hex2int(gate_addr, HEX_ENT_LEN);
-        route->mask = hex2int(mask_addr, HEX_ENT_LEN);
+        
+        sigar_net_address_set(route->destination, hex2int(net_addr, HEX_ENT_LEN));
+        sigar_net_address_set(route->gateway, hex2int(gate_addr, HEX_ENT_LEN));
+        sigar_net_address_set(route->mask, hex2int(mask_addr, HEX_ENT_LEN));
     }
 
     fclose(fp);
