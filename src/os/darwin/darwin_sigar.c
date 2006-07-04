@@ -1697,7 +1697,6 @@ int sigar_net_interface_stat_get(sigar_t *sigar, const char *name,
 
 static int net_connection_get(sigar_net_connection_walker_t *walker, int proto)
 {
-    sigar_t *sigar = walker->sigar;
     int flags = walker->flags;
     int type, istcp = 0;
     char *buf;
@@ -1768,10 +1767,12 @@ static int net_connection_get(sigar_net_connection_walker_t *walker, int proto)
 
             SIGAR_ZERO(&conn);
 
-            sigar_inet_ntoa(sigar, inp->inp_laddr.s_addr,
-                            conn.local_address);
-            sigar_inet_ntoa(sigar, inp->inp_faddr.s_addr,
-                            conn.remote_address);
+            sigar_net_address_set(conn.local_address,
+                                  inp->inp_laddr.s_addr);
+
+            sigar_net_address_set(conn.remote_address,
+                                  inp->inp_faddr.s_addr);
+
             conn.local_port  = ntohs(inp->inp_lport);
             conn.remote_port = ntohs(inp->inp_fport);
             conn.receive_queue = so->so_rcv.sb_cc;
