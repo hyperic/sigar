@@ -1862,14 +1862,20 @@ SIGAR_DECLARE(int) sigar_net_route_list_get(sigar_t *sigar,
         route = &routelist->data[routelist->number++];
         SIGAR_ZERO(route); /* XXX: other fields */
 
-        route->destination = ipr->dwForwardDest;
-        route->mask        = ipr->dwForwardMask;
-        route->gateway     = ipr->dwForwardNextHop;
-        route->metric      = ipr->dwForwardMetric1;
+        sigar_net_address_set(route->destination,
+                              ipr->dwForwardDest);
+        
+        sigar_net_address_set(route->mask,
+                              ipr->dwForwardMask);
+        
+        sigar_net_address_set(route->gateway,
+                              ipr->dwForwardNextHop);
+
+        route->metric = ipr->dwForwardMetric1;
 
         route->flags = SIGAR_RTF_UP;
-        if ((route->destination == 0) &&
-            (route->mask == 0))
+        if ((ipr->dwForwardDest == 0) &&
+            (ipr->dwForwardMask == 0))
         {
             route->flags |= SIGAR_RTF_GATEWAY;
         }
