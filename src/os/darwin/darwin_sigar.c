@@ -1589,6 +1589,8 @@ int sigar_net_interface_config_get(sigar_t *sigar, const char *name,
         }
     }
 
+    SIGAR_ZERO(ifconfig);
+
     iter.type = IFMSG_ITER_GET;
     iter.name = name;
 
