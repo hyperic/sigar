@@ -451,11 +451,10 @@ namespace Hyperic.Sigar {
         [MarshalAs(UnmanagedType.ByValTStr, SizeConst=16)]
         public readonly string Name; //char[16]
         [MarshalAs(UnmanagedType.ByValTStr, SizeConst=64)]
-        public readonly string Hwaddr; //char[64]
-        [MarshalAs(UnmanagedType.ByValTStr, SizeConst=64)]
         public readonly string Type; //char[64]
         [MarshalAs(UnmanagedType.ByValTStr, SizeConst=256)]
         public readonly string Description; //char[256]
+        private readonly NetAddress hwaddr;
         private readonly NetAddress address;
         private readonly NetAddress destination;
         private readonly NetAddress broadcast;
@@ -504,6 +503,12 @@ namespace Hyperic.Sigar {
             Marshal.StructureToPtr(address, ptr, true);
             sigar_net_address_to_string(IntPtr.Zero, ptr, buffer);
             return buffer.ToString();
+        }
+
+        public string Hwaddr {
+            get {
+                return inet_ntoa(this.hwaddr);
+            }
         }
 
         public string Address {
