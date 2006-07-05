@@ -200,7 +200,7 @@ int sigar_net_connection_list_grow(sigar_net_connection_list_t *connlist);
     memcpy(&((a).addr.in6), val, sizeof((a).addr.in6)); \
     (a).family = SIGAR_AF_INET6
 
-#define SIGAR_IFHWADDRLEN
+#define SIGAR_IFHWADDRLEN 6
 
 #define sigar_net_address_mac_set(a, val, len) \
     if (len == 0) SIGAR_ZERO(&((a).addr.mac)); \
