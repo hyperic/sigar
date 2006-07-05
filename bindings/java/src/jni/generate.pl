@@ -1529,10 +1529,15 @@ EOF
 }
 
 my $jsigar = "../../src/jni/javasigar.c";
+my(%alias) = (x => 'Sigar');
 open JSIGAR, $jsigar or die "open $jsigar: $!";
 while (<JSIGAR>) {
-    next unless /SIGAR_JNI\(([A-Za-z_]+)\)/;
-    print DFH "Java_org_hyperic_sigar_$1\n";
+    next unless /SIGAR_JNI([a-z]?)\(([A-Za-z_]+)\)/;
+    my $class = "";
+    if ($1) {
+	$class = $alias{$1} . "_";
+    }
+    print DFH "Java_org_hyperic_sigar_$class$2\n";
 }
 
 close CFH;
