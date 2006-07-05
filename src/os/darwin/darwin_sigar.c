@@ -1316,6 +1316,19 @@ int sigar_cpu_info_list_get(sigar_t *sigar,
         mhz = sigar_cpu_mhz_from_model(model);
     }
 
+#ifdef DARWIN
+    size = sizeof(vendor);
+    if (sysctlbyname("machdep.cpu.vendor", &vendor, &size, NULL, 0) < 0) {
+        SIGAR_SSTRCPY(vendor, "Apple");
+    }
+    else {
+        /* GenuineIntel -> Intel */ 
+        if (strstr(vendor, "Intel")) {
+            SIGAR_SSTRCPY(vendor, "Intel");
+        }
+    }
+#endif
+
     if ((ptr = strchr(model, ' '))) {
         *ptr = '\0';
         if (strstr(model, "Intel")) {
@@ -1351,11 +1364,8 @@ int sigar_cpu_info_list_get(sigar_t *sigar,
         SIGAR_CPU_INFO_LIST_GROW(cpu_infos);
 
         info = &cpu_infos->data[cpu_infos->number++];
-#ifdef DARWIN
-        SIGAR_SSTRCPY(info->vendor, "Apple");
-#else
+
         SIGAR_SSTRCPY(info->vendor, vendor);
-#endif
         SIGAR_SSTRCPY(info->model, model);
         sigar_cpu_model_adjust(sigar, info);
 
