@@ -45,10 +45,7 @@ public class Version extends SigarCommandBase {
         }
     }
 
-    public static void printInfo(PrintStream os) {
-        String fqdn = getFQDN();
-        String host = getHostName();
-
+    private static void printNativeInfo(PrintStream os) {
         String version =
             "java=" + Sigar.VERSION_STRING +
             ", native=" + Sigar.NATIVE_VERSION_STRING;
@@ -60,10 +57,23 @@ public class Version extends SigarCommandBase {
         os.println("Build date.........." + build);
         os.println("Archlib............." +
                    SigarLoader.getNativeLibraryName());
+
+        String fqdn = getFQDN();
+        String host = getHostName();
+
         os.println("Current fqdn........" + fqdn);
         if (!fqdn.equals(host)) {
             os.println("Hostname............" + host);
+        }        
+    }
+    
+    public static void printInfo(PrintStream os) {
+        try {
+            printNativeInfo(os);
+        } catch (UnsatisfiedLinkError e) {
+            os.println("*******ERROR******* " + e);
         }
+
         os.println("Current user........" +
                    System.getProperty("user.name"));
         os.println("");
