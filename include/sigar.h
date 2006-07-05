@@ -395,11 +395,13 @@ typedef struct {
     enum {
         SIGAR_AF_UNSPEC,
         SIGAR_AF_INET,
-        SIGAR_AF_INET6
+        SIGAR_AF_INET6,
+        SIGAR_AF_LINK
     } family;
     union {
         sigar_uint32_t in;
         sigar_uint32_t in6[4];
+        unsigned char mac[8];
     } addr;
 } sigar_net_address_t;
 
@@ -478,9 +480,9 @@ SIGAR_DECLARE(int) sigar_net_route_list_destroy(sigar_t *sigar,
 
 typedef struct {
     char name[16];
-    char hwaddr[64];
     char type[64];
     char description[256];
+    sigar_net_address_t hwaddr;
     sigar_net_address_t address;
     sigar_net_address_t destination;
     sigar_net_address_t broadcast;

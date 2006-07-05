@@ -1210,11 +1210,12 @@ int sigar_resource_limit_get(sigar_t *sigar,
 }
 #endif
 
-void sigar_hwaddr_format(char *buff, unsigned char *ptr)
+int sigar_hwaddr_format(char *buff, unsigned char *ptr)
 {
     sprintf(buff, "%02X:%02X:%02X:%02X:%02X:%02X",
             (ptr[0] & 0377), (ptr[1] & 0377), (ptr[2] & 0377),
             (ptr[3] & 0377), (ptr[4] & 0377), (ptr[5] & 0377));
+    return SIGAR_OK;
 }
 
 #if !defined(WIN32) && !defined(DARWIN) && !defined(__FreeBSD__) && !defined(NETWARE)
@@ -1657,6 +1658,8 @@ SIGAR_DECLARE(int) sigar_net_address_to_string(sigar_t *sigar,
         return sigar_inet_ntoa(sigar, address->addr.in, addr_str);
       case SIGAR_AF_UNSPEC:
         return sigar_inet_ntoa(sigar, 0, addr_str); /*XXX*/
+      case SIGAR_AF_LINK:
+        return sigar_hwaddr_format(addr_str, &address->addr.mac[0]);
       default:
         return EINVAL;
     }

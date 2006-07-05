@@ -659,7 +659,7 @@ my %classes = (
          plat => '*'
       },
       {
-         name => 'hwaddr', type => 'String',
+         name => 'hwaddr', type => 'NetAddress',
          desc => '',
          plat => '*'
       },

@@ -1617,8 +1617,10 @@ int sigar_net_interface_config_get(sigar_t *sigar, const char *name,
     SIGAR_SSTRCPY(ifconfig->name, name);
 
     sdl = (struct sockaddr_dl *)(ifm + 1);
-    sigar_hwaddr_format(ifconfig->hwaddr,
-                        (unsigned char *)LLADDR(sdl));
+
+    sigar_net_address_mac_set(ifconfig->hwaddr,
+                              LLADDR(sdl),
+                              sdl->sdl_alen);
 
     ifconfig->flags = ifm->ifm_flags;
     ifconfig->mtu = ifm->ifm_data.ifi_mtu;

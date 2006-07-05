@@ -196,9 +196,14 @@ int sigar_net_connection_list_grow(sigar_net_connection_list_t *connlist);
     (a).addr.in = val; \
     (a).family = SIGAR_AF_INET
 
-#define sigar_net_address6_set(addr, val) \
+#define sigar_net_address6_set(a, val) \
     memcpy(&((a).addr.in6), val, sizeof((a).addr.in6)); \
     (a).family = SIGAR_AF_INET6
+
+#define sigar_net_address_mac_set(a, val, len) \
+    if (len == 0) SIGAR_ZERO(&((a).addr.mac); \
+    else memcpy(&((a).addr.mac), val, len); \
+    (a).family = SIGAR_AF_LINK
 
 int sigar_who_list_create(sigar_who_list_t *wholist);
 
@@ -209,7 +214,7 @@ int sigar_who_list_grow(sigar_who_list_t *wholist);
         sigar_who_list_grow(wholist); \
     }
 
-void sigar_hwaddr_format(char *buff, unsigned char *ptr);
+int sigar_hwaddr_format(char *buff, unsigned char *ptr);
 
 #define sigar_hwaddr_set_null(ifconfig) \
     memcpy(ifconfig->hwaddr, SIGAR_NULL_HWADDR, sizeof(SIGAR_NULL_HWADDR))
