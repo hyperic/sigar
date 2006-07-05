@@ -440,6 +440,13 @@ namespace Hyperic.Sigar {
     }
 
     [StructLayout(LayoutKind.Sequential)]
+    internal struct NetAddress {
+        internal readonly uint family;
+        [MarshalAs(UnmanagedType.ByValArray, SizeConst=4)]
+        internal readonly uint[] addr;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
     public struct NetInterfaceConfig {
         [MarshalAs(UnmanagedType.ByValTStr, SizeConst=16)]
         public readonly string Name; //char[16]
@@ -447,10 +454,12 @@ namespace Hyperic.Sigar {
         public readonly string Hwaddr; //char[64]
         [MarshalAs(UnmanagedType.ByValTStr, SizeConst=64)]
         public readonly string Type; //char[64]
-        private readonly long address;
-        private readonly long destination;
-        private readonly long broadcast;
-        private readonly long netmask;
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst=256)]
+        public readonly string Description; //char[256]
+        private readonly NetAddress address;
+        private readonly NetAddress destination;
+        private readonly NetAddress broadcast;
+        private readonly NetAddress netmask;
         public readonly long Flags;
         public readonly long Mtu;
         public readonly long Metric;
@@ -483,13 +492,17 @@ namespace Hyperic.Sigar {
 
         [DllImport(Sigar.LIBSIGAR)]
         private static extern int
-        sigar_inet_ntoa(IntPtr sigar, long address,
-                        StringBuilder addr_str);
+        sigar_net_address_to_string(IntPtr sigar,
+                                    IntPtr address,
+                                    StringBuilder addr_str);
 
-        private string inet_ntoa(long address) {
+        private string inet_ntoa(NetAddress address) {
+            //XXX seems a little stilly, we can't use &address
+            IntPtr ptr = Marshal.AllocHGlobal(Marshal.SizeOf(address));
             StringBuilder buffer = new StringBuilder();
-            buffer.Capacity = (3 * 4 + 3 + 1);
-            sigar_inet_ntoa(IntPtr.Zero, address, buffer);
+            buffer.Capacity = 46;
+            Marshal.StructureToPtr(address, ptr, true);
+            sigar_net_address_to_string(IntPtr.Zero, ptr, buffer);
             return buffer.ToString();
         }
 
