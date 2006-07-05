@@ -651,12 +651,6 @@ typedef struct {
 
 SIGAR_DECLARE(sigar_version_t *) sigar_version_get(void);
 
-#define SIGAR_INET_ADDR_LEN (3 * 4 + 3 + 1)
-
-SIGAR_DECLARE(int) sigar_inet_ntoa(sigar_t *sigar,
-                                   sigar_uint64_t address,
-                                   char *addr_str);
-
 #define SIGAR_FQDN_LEN 512
 
 SIGAR_DECLARE(int) sigar_fqdn_get(sigar_t *sigar, char *name, int namelen);

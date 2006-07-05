@@ -1606,18 +1606,14 @@ int sigar_net_interface_list_get(sigar_t *sigar,
 #endif
 
 /* threadsafe alternative to inet_ntoa (inet_ntop4 from apr) */
-SIGAR_DECLARE(int) sigar_inet_ntoa(sigar_t *sigar,
-                                   sigar_uint64_t address,
-                                   char *addr_str)
+static int sigar_inet_ntoa(sigar_t *sigar,
+                           sigar_uint32_t address,
+                           char *addr_str)
 {
     char *next=addr_str;
     int n=0;
-    const unsigned char *src;
-    struct in_addr addr;
-
-    addr.s_addr = address;
-
-    src = (const unsigned char *)&addr.s_addr;
+    const unsigned char *src =
+        (const unsigned char *)&address;
 
     do {
         unsigned char u = *src++;
