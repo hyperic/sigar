@@ -1210,14 +1210,6 @@ int sigar_resource_limit_get(sigar_t *sigar,
 }
 #endif
 
-int sigar_hwaddr_format(char *buff, unsigned char *ptr)
-{
-    sprintf(buff, "%02X:%02X:%02X:%02X:%02X:%02X",
-            (ptr[0] & 0377), (ptr[1] & 0377), (ptr[2] & 0377),
-            (ptr[3] & 0377), (ptr[4] & 0377), (ptr[5] & 0377));
-    return SIGAR_OK;
-}
-
 #if !defined(WIN32) && !defined(DARWIN) && !defined(__FreeBSD__) && !defined(NETWARE)
 
 /* XXX: prolly will be moving these stuffs into os_net.c */
@@ -1255,8 +1247,9 @@ static void hwaddr_aix_lookup(sigar_t *sigar, sigar_net_interface_config_t *ifco
         if (strEQ(ifr->ifr_name, ifconfig->name)) {
             struct sockaddr_dl *sdl = (struct sockaddr_dl *)&ifr->ifr_addr;
 
-            sigar_hwaddr_format(ifconfig->hwaddr,
-                                (unsigned char *)LLADDR(sdl));
+            sigar_net_address_mac_set(ifconfig->hwaddr,
+                                      LLADDR(sdl),
+                                      sdl->sdl_alen);
             return;
         }
     }
@@ -1280,11 +1273,13 @@ static void hwaddr_arp_lookup(sigar_net_interface_config_t *ifconfig, int sock)
     
     if (ioctl(sock, SIOCGARP, &areq) < 0) {
         /* ho-hum */
-        memset(&areq.arp_ha.sa_data, '\0', sizeof(areq.arp_ha.sa_data));
+        sigar_hwaddr_set_null(ifconfig);
     }
-
-    sigar_hwaddr_format(ifconfig->hwaddr,
-                        (unsigned char *)areq.arp_ha.sa_data);
+    else {
+        sigar_net_address_mac_set(ifconfig->hwaddr,
+                                  areq.arp_ha.sa_data,
+                                  SIGAR_IFHWADDRLEN);
+    }
 }
 
 #endif
@@ -1393,7 +1388,9 @@ int sigar_net_interface_config_get(sigar_t *sigar, const char *name,
         if (!ioctl(sock, SIOCGIFHWADDR, &ifr)) {
             get_interface_type(ifconfig,
                                ifr.ifr_hwaddr.sa_family);
-            sigar_hwaddr_format(ifconfig->hwaddr, ifr.ifr_hwaddr.sa_data);
+            sigar_net_address_mac_set(ifconfig->hwaddr,
+                                      ifr.ifr_hwaddr.sa_data,
+                                      IFHWADDRLEN);
         }
 #elif defined(_AIX) || defined(__osf__)
         hwaddr_aix_lookup(sigar, ifconfig);
@@ -1638,6 +1635,14 @@ static int sigar_inet_ntoa(sigar_t *sigar,
     return SIGAR_OK;
 }
 
+static int sigar_ether_ntoa(char *buff, unsigned char *ptr)
+{
+    sprintf(buff, "%02X:%02X:%02X:%02X:%02X:%02X",
+            (ptr[0] & 0xff), (ptr[1] & 0xff), (ptr[2] & 0xff),
+            (ptr[3] & 0xff), (ptr[4] & 0xff), (ptr[5] & 0xff));
+    return SIGAR_OK;
+}
+
 SIGAR_DECLARE(int) sigar_net_address_to_string(sigar_t *sigar,
                                                sigar_net_address_t *address,
                                                char *addr_str)
@@ -1659,7 +1664,7 @@ SIGAR_DECLARE(int) sigar_net_address_to_string(sigar_t *sigar,
       case SIGAR_AF_UNSPEC:
         return sigar_inet_ntoa(sigar, 0, addr_str); /*XXX*/
       case SIGAR_AF_LINK:
-        return sigar_hwaddr_format(addr_str, &address->addr.mac[0]);
+        return sigar_ether_ntoa(addr_str, &address->addr.mac[0]);
       default:
         return EINVAL;
     }

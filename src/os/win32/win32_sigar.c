@@ -1987,8 +1987,9 @@ int sigar_get_ifentry_config(sigar_t *sigar,
 
     ifconfig->mtu = ifr->dwMtu;
 
-    sigar_hwaddr_format(ifconfig->hwaddr,
-                        ifr->bPhysAddr);
+    sigar_net_address_mac_set(ifconfig->hwaddr,
+                              ifr->bPhysAddr,
+                              SIGAR_IFHWADDRLEN);
 
     SIGAR_SSTRCPY(ifconfig->description,
                   ifr->bDescr);

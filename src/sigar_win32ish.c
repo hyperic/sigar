@@ -92,8 +92,9 @@ static void hwaddr_lookup_netbios(sigar_net_interface_config_t *ifconfig,
     ncb.ncb_buffer = (unsigned char *)&adapter;
     ncb.ncb_length = sizeof(adapter);
     if ((rc = Netbios(&ncb)) == 0) {
-        sigar_hwaddr_format(ifconfig->hwaddr,
-                            adapter.status.adapter_address);
+        sigar_net_address_mac_set(ifconfig->hwaddr,
+                                  adapter.status.adapter_address,
+                                  SIGAR_IFHWADDRLEN);
     }
     else {
         sigar_hwaddr_set_null(ifconfig);
@@ -121,10 +122,12 @@ static void hwaddr_lookup(sigar_t *sigar,
                           sigar_net_interface_config_t *ifconfig,
                           int num)
 {
-    uint8_t addr[6];
+    uint8_t addr[SIGAR_IFHWADDRLEN];
 
     if (netware_net_macaddr(num+1, addr) == 0) {
-        sigar_hwaddr_format(ifconfig->hwaddr, addr);
+        sigar_net_address_mac_set(ifconfig->hwaddr,
+                                  addr,
+                                  sizeof(addr));
     }
     else {
         sigar_hwaddr_set_null(ifconfig);
