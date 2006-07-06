@@ -2,6 +2,10 @@
 
         * Remove mem.shared, gone in Linux 2.6 and which only left Solaris and Win32
 
+2006-06-27  Doug MacEachern  <dougm@hyperic.com>
+
+        * Java net.hyperic package renamed to org.hyperic
+
 2006-06-21  Doug MacEachern  <dougm@hyperic.com>
 
         * [SIGAR-7] Convert sectors to bytes in Linux file system
