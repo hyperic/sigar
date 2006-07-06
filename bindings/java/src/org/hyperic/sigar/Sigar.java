@@ -51,6 +51,7 @@ public class Sigar implements SigarProxy {
     private static SigarLoader loader = new SigarLoader(Sigar.class);
     private FileSystemMap mounts = null;
 
+    private boolean open = false;
     int sigarWrapper = 0; //holds the sigar_t *
     long longSigarWrapper = 0; //same, but where sizeof(void*) > sizeof(int)
 
@@ -125,6 +126,7 @@ public class Sigar implements SigarProxy {
     public Sigar() {
         try {
             open();
+            this.open = true;
         } catch (SigarException e) {
             if (enableLogging) {
                 e.printStackTrace();
@@ -151,9 +153,10 @@ public class Sigar implements SigarProxy {
      * If the close method is not called directly, the finalize method will
      * call it if the Sigar object is garbage collected.
      */
-    public void close() {
-        if (this.sigarWrapper != 0) {
+    public synchronized void close() {
+        if (this.open) {
             nativeClose();
+            this.open = false;
         }
     }
 
