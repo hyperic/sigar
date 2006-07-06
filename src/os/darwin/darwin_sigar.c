@@ -1769,7 +1769,7 @@ static int net_connection_get(sigar_net_connection_walker_t *walker, int proto)
             so = &cb->xt_socket;
         }
         else {
-            struct xinpcb *cb = (struct xincb *)xig;
+            struct xinpcb *cb = (struct xinpcb *)xig;
             inp = &cb->xi_inp;
             so = &cb->xi_socket;
         }
