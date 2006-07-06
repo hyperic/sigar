@@ -12,7 +12,7 @@
     <mkdir dir="${build}"/>
 
     <cc outtype="shared"
-	outfile="${build}/sigar_aixperfstat.so"
+	outfile="${build}/sigar_aixperfstat"
 	objdir="${build}"
 	link="shared"
 	relentless="false">
