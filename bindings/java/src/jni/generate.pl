@@ -1202,7 +1202,7 @@ EOF
 my %has_name_arg = map { $_, 1 } qw(FileSystemUsage FileAttrs DirStat DirUsage
                                     NetInterfaceConfig NetInterfaceStat);
 my %proc_no_arg = map { $_, 1 } qw(stat);
-my %get_not_impl = map { $_, 1 } qw(net_route net_connection who
+my %get_not_impl = map { $_, 1 } qw(net_address net_route net_connection who
                                     cpu_info file_system); #list funcs only
 
 my %field_cache;
@@ -1273,6 +1273,10 @@ while (my($name, $fields) = each %classes) {
         "(JNIEnv *env, jobject obj, jobject sigar_obj$args_proto)";
 
     my $jfile = "$name.java";
+    if (-e "../../src/$jsrc/$jfile") {
+        #dont generate .java if already exists
+        $jfile = "DEVNULL";
+    }
     open JFH, ">$jsrc/$jfile" or die "open $jfile: $!";
     print JFH $warning;
 
@@ -1424,6 +1428,7 @@ EOF
     for my $field (@$fields) {
         my $type = $field->{type} || 'Long';
         my $name = $field->{name};
+        my $member = $field->{member} || $name;
         my $desc = $field->{desc} || $name;
         (my $jname = $name) =~ s/_(\w)/\u$1/g;
         my $sig = qq("$jfields{$type}");
@@ -1454,7 +1459,7 @@ EOF
           "            $get_id;";
 
         push @macro,
-          qq|    $set(env, obj, $id_lookup, s.$name);|;
+          qq|    $set(env, obj, $id_lookup, s.$member);|;
 
         my $init = $jinit{$type} || '0';
         my $jtype = $jtype{$type} || lcfirst($type);
