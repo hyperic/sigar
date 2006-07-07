@@ -35,6 +35,14 @@ int sigar_perfstat_disk(perfstat_id_t *id,
     return perfstat_disk(id, disk, size, num);
 }
 
+int sigar_perfstat_netinterface(perfstat_id_t *id,
+                                perfstat_netinterface_t *netinterface)
+
+{
+    return perfstat_netinterface(id, netinterface,
+                                 sizeof(*netinterface), 1);
+}
+
 /*
  * not a perfstat function, but from libpthreads.a
  * requires the same tricks to link on 4.3 and run on 5.2
