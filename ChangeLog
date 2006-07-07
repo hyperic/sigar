@@ -2,6 +2,13 @@
 
         * [SIGAR-8] Change win32 mem_get to use GlobalMemoryStatusEx
 
+2006-07-06  Doug MacEachern  <dougm@hyperic.net>
+
+        * Change AIX impl to use libperfstat where available for net_interface_stat
+
+        * Change sigar_net_route_t, net_interface_config_t and
+          sigar_net_connection_t to use sigar_net_address_t 
+
 2006-06-30  Doug MacEachern  <dougm@hyperic.com>
 
         * Remove mem.shared, gone in Linux 2.6 and which only left Solaris and Win32
