@@ -379,6 +379,23 @@ static int sigar_perfstat_init(sigar_t *sigar)
         return ENOENT;
     }
 
+    sigar->perfstat.ifstat =
+        (perfstat_ifstat_func_t)dlsym(handle,
+                                      "sigar_perfstat_netinterface");
+
+    if (!sigar->perfstat.ifstat) {
+        if (SIGAR_LOG_IS_DEBUG(sigar)) {
+            sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
+                             "dlsym(sigar_perfstat_netinterface) failed: %s",
+                             dlerror());
+        }
+
+        dlclose(handle);
+
+        sigar->perfstat.avail = -1;
+        return ENOENT;
+    }
+
     sigar->perfstat.avail = 1;
     sigar->perfstat.handle = handle;
 
@@ -1951,13 +1968,16 @@ int sigar_net_route_list_get(sigar_t *sigar,
     return SIGAR_ENOTIMPL;
 }
 
-int sigar_net_interface_stat_get(sigar_t *sigar, const char *name,
-                                 sigar_net_interface_stat_t *ifstat)
+static int sigar_net_interface_stat_get_kmem(sigar_t *sigar,
+                                             const char *name,
+                                             sigar_net_interface_stat_t *ifstat)
 {
     int status;
     struct ifnet data;
     caddr_t offset = 0;
     char if_name[32];
+
+    sigar_log(sigar, SIGAR_LOG_DEBUG, "[ifstat] using /dev/kmem");
 
     status = kread(sigar, &offset, sizeof(offset),
                    sigar->koffsets[KOFFSET_IFNET]);
@@ -2006,6 +2026,61 @@ int sigar_net_interface_stat_get(sigar_t *sigar, const char *name,
     }
 
     return ENXIO;
+}
+
+static int sigar_net_interface_stat_get_perfstat(sigar_t *sigar,
+                                                 const char *name,
+                                                 sigar_net_interface_stat_t *ifstat)
+{
+    perfstat_id_t id;
+    perfstat_netinterface_t data;
+
+    sigar_log(sigar, SIGAR_LOG_DEBUG, "[ifstat] using libperfstat");
+
+    SIGAR_SSTRCPY(id.name, name);
+
+    if (sigar->perfstat.ifstat(&id, &data) == 1) {
+        ifstat->rx_bytes      = data.ibytes;
+        ifstat->rx_packets    = data.ipackets;
+        ifstat->rx_errors     = data.ierrors;
+        ifstat->rx_dropped    = SIGAR_FIELD_NOTIMPL;
+        ifstat->rx_overruns   = SIGAR_FIELD_NOTIMPL;
+        ifstat->rx_frame      = SIGAR_FIELD_NOTIMPL;
+
+        ifstat->tx_bytes      = data.obytes;
+        ifstat->tx_packets    = data.opackets;
+        ifstat->tx_errors     = data.oerrors;
+        ifstat->tx_dropped    = SIGAR_FIELD_NOTIMPL;
+        ifstat->tx_overruns   = SIGAR_FIELD_NOTIMPL;
+        ifstat->tx_collisions = data.collisions;
+        ifstat->tx_carrier    = SIGAR_FIELD_NOTIMPL;
+
+        ifstat->speed         = data.bitrate;
+
+        return SIGAR_OK;
+    }
+
+    if (SIGAR_LOG_IS_DEBUG(sigar)) {
+        sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
+                         "[ifstat] dev=%s query failed: %s",
+                         name,
+                         sigar_strerror(sigar, errno));
+    }
+
+    return sigar_net_interface_stat_get_kmem(sigar, name, ifstat);
+}
+
+int sigar_net_interface_stat_get(sigar_t *sigar, const char *name,
+                                 sigar_net_interface_stat_t *ifstat)
+{
+    sigar_perfstat_init(sigar);
+
+    if (sigar->perfstat.ifstat) {
+        return sigar_net_interface_stat_get_perfstat(sigar, name, ifstat);
+    }
+    else {
+        return sigar_net_interface_stat_get_kmem(sigar, name, ifstat);
+    }
 }
 
 #define IS_TCP_SERVER(state, flags) \
