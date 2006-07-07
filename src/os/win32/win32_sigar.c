@@ -223,6 +223,13 @@ static sigar_psapi_t sigar_winsta = {
     { NULL, NULL }
 };
 
+static sigar_psapi_t sigar_kernel = {
+    "kernel32.dll",
+    NULL,
+    { "GlobalMemoryStatusEx", NULL },
+    { NULL, NULL }
+};
+
 #define DLLMOD_COPY(name) \
     memcpy(&(sigar->##name), &sigar_##name, sizeof(sigar_##name))
 
@@ -349,6 +356,7 @@ int sigar_os_open(sigar_t **sigar_ptr)
     DLLMOD_COPY(ntdll);
     DLLMOD_COPY(psapi);
     DLLMOD_COPY(winsta);
+    DLLMOD_COPY(kernel);
 
     sigar->log_level = -1; /* else below segfaults */
     /* XXX init early for use by javasigar.c */
@@ -374,6 +382,7 @@ int sigar_os_close(sigar_t *sigar)
     DLLMOD_FREE(ntdll);
     DLLMOD_FREE(psapi);
     DLLMOD_FREE(winsta);
+    DLLMOD_FREE(kernel);
 
     if (sigar->perfbuf) {
         free(sigar->perfbuf);
@@ -404,15 +413,33 @@ char *sigar_os_error_string(sigar_t *sigar, int err)
     return NULL;
 }
 
+#define sigar_GlobalMemoryStatusEx \
+    sigar->kernel.memory_status.func
+
 SIGAR_DECLARE(int) sigar_mem_get(sigar_t *sigar, sigar_mem_t *mem)
 {
-    MEMORYSTATUS memstat;
+    DLLMOD_INIT(kernel, TRUE);
 
-    GlobalMemoryStatus(&memstat);
+    if (sigar_GlobalMemoryStatusEx) {
+        MEMORYSTATUSEX memstat;
 
-    mem->total  = memstat.dwTotalPhys;
-    mem->free   = memstat.dwAvailPhys;
-    mem->used   = mem->total - mem->free;
+        memstat.dwLength = sizeof(memstat);
+
+        if (!sigar_GlobalMemoryStatusEx(&memstat)) {
+            return GetLastError();
+        }
+
+        mem->total = memstat.ullTotalPhys;
+        mem->free  = memstat.ullAvailPhys;
+    }
+    else {
+        MEMORYSTATUS memstat;
+        GlobalMemoryStatus(&memstat);
+        mem->total = memstat.dwTotalPhys;
+        mem->free  = memstat.dwAvailPhys;
+    }
+
+    mem->used = mem->total - mem->free;
 
     sigar_mem_calc_ram(sigar, mem);
 

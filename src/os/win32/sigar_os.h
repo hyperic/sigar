@@ -192,6 +192,19 @@ typedef struct _WINSTATION_INFO {
 
 /* end wtsapi32.h */
 
+/* from winbase.h not in vs6.0 */
+typedef struct {
+    DWORD dwLength;
+    DWORD dwMemoryLoad;
+    DWORDLONG ullTotalPhys;
+    DWORDLONG ullAvailPhys;
+    DWORDLONG ullTotalPageFile;
+    DWORDLONG ullAvailPageFile;
+    DWORDLONG ullTotalVirtual;
+    DWORDLONG ullAvailVirtual;
+    DWORDLONG ullAvailExtendedVirtual;
+} MEMORYSTATUSEX;
+
 #include <iprtrmib.h>
 
 /* undocumented structures */
@@ -349,6 +362,9 @@ typedef BOOLEAN (CALLBACK *winsta_query_info)(HANDLE,
                                               ULONG,
                                               PULONG);
 
+/* kernel32.dll */
+typedef BOOL (CALLBACK *kernel_memory_status)(MEMORYSTATUSEX *);
+
 #define SIGAR_DLLFUNC(api, name) \
     struct { \
          const char *name; \
@@ -415,6 +431,14 @@ typedef struct {
     sigar_dll_func_t end;
 } sigar_winsta_t;
 
+typedef struct {
+    sigar_dll_handle_t handle;
+
+    SIGAR_DLLFUNC(kernel, memory_status);
+
+    sigar_dll_func_t end;
+} sigar_kernel_t;
+
 struct sigar_t {
     SIGAR_T_BASE;
     char *machine;
@@ -429,6 +453,7 @@ struct sigar_t {
     sigar_ntdll_t ntdll;
     sigar_psapi_t psapi;
     sigar_winsta_t winsta;
+    sigar_kernel_t kernel;
     sigar_win32_pinfo_t pinfo;
     WORD ws_version;
     int ws_error;
