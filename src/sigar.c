@@ -1672,6 +1672,44 @@ SIGAR_DECLARE(int) sigar_net_address_to_string(sigar_t *sigar,
     return SIGAR_OK;
 }
 
+SIGAR_DECLARE(sigar_uint32_t) sigar_net_address_hash(sigar_net_address_t *address)
+{
+    sigar_uint32_t hash = 0;
+    unsigned char *data;
+    int i=0, size, elts;
+
+    switch (address->family) {
+      case SIGAR_AF_UNSPEC:
+      case SIGAR_AF_INET:
+        return address->addr.in;
+      case SIGAR_AF_INET6:
+        data = (unsigned char *)&address->addr.in6;
+        size = sizeof(address->addr.in6);
+        elts = 4;
+        break;
+      case SIGAR_AF_LINK:
+        data = (unsigned char *)&address->addr.mac;
+        size = sizeof(address->addr.mac);
+        elts = 2;
+        break;
+      default:
+        return -1;
+    }
+
+    while (i<size) {
+        int j=0;
+        int component=0;
+        while (j<elts && i<size) {
+            component = (component << 8) + data[i];
+            j++; 
+            i++;
+        }
+        hash += component;
+    }
+
+    return hash;
+}
+
 static int fqdn_ip_get(sigar_t *sigar, char *name)
 {
     int i, status;
