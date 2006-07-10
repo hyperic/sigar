@@ -2069,8 +2069,8 @@ static int net_conn_get_tcp(sigar_net_connection_walker_t *walker)
 {
     sigar_t *sigar = walker->sigar;
     int flags = walker->flags;
-    int status;
-    DWORD rc, size=0, i;
+    int status, i;
+    DWORD rc, size=0;
     PMIB_TCPTABLE tcp;
 
     DLLMOD_INIT(iphlpapi, FALSE);
@@ -2090,7 +2090,8 @@ static int net_conn_get_tcp(sigar_net_connection_walker_t *walker)
         return GetLastError();
     }
 
-    for (i = 0; i < tcp->dwNumEntries; i++) {
+    /* go in reverse to get LISTEN states first */
+    for (i = (tcp->dwNumEntries-1); i >= 0; i--) {
         sigar_net_connection_t conn;
         DWORD state = tcp->table[i].dwState;
 
