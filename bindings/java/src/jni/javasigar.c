@@ -843,11 +843,7 @@ JNIEXPORT void SIGAR_JNI(NetStat_nstat)
 
     cls = JENV->GetObjectClass(env, obj);
 
-    id = JENV->GetFieldID(env, cls, "tcpInboundTotal", "I");
-    JENV->SetIntField(env, obj, id, netstat.tcp_inbound_total);
-
-    id = JENV->GetFieldID(env, cls, "tcpOutboundTotal", "I");
-    JENV->SetIntField(env, obj, id, netstat.tcp_outbound_total);
+    JAVA_SIGAR_SET_FIELDS_NETSTAT(cls, obj, netstat);
 
     if (sizeof(tcp_states[0]) == sizeof(netstat.tcp_states[0])) {
         memcpy(&tcp_states[0], &netstat.tcp_states[0],

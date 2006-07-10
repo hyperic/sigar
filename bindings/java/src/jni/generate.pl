@@ -818,6 +818,15 @@ my %classes = (
          plat => 'LFS'
       },
     ],
+    #only for jfieldId cache/setters
+    NetStat => [
+      {
+         name => 'tcp_inbound_total', type => 'Int',
+      },
+      {
+         name => 'tcp_outbound_total', type => 'Int',
+      },
+    ],
     ResourceLimit => [
       {
          name => 'cpu_cur',
@@ -1202,8 +1211,8 @@ EOF
 my %has_name_arg = map { $_, 1 } qw(FileSystemUsage FileAttrs DirStat DirUsage
                                     NetInterfaceConfig NetInterfaceStat);
 my %proc_no_arg = map { $_, 1 } qw(stat);
-my %get_not_impl = map { $_, 1 } qw(net_address net_route net_connection who
-                                    cpu_info file_system); #list funcs only
+my %get_not_impl = map { $_, 1 } qw(net_address net_route net_connection net_stat
+				    who cpu_info file_system); #list funcs only
 
 my %field_cache;
 my $i = 0;
