@@ -27,8 +27,10 @@ public class TestNetStat extends SigarTestCase {
         traceln("");
         assertGtEqZeroTrace("Outbound", netstat.getTcpOutboundTotal());
         assertGtEqZeroTrace("Inbound", netstat.getTcpInboundTotal());
-        assertGtEqZeroTrace("Listen", netstat.getTcpListen());
-        assertGtEqZeroTrace("Established", netstat.getTcpEstablished());
+        int[] states = netstat.getTcpStates();
+        for (int i=0; i<NetFlags.TCP_UNKNOWN; i++) {
+            assertGtEqZeroTrace(NetConnection.getStateString(i), states[i]);
+        }
 
         if (!printListeners) {
             return;
