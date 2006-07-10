@@ -1230,6 +1230,9 @@ while (my($class, $fields) = each %classes) {
 }
 print HFH "#define JSIGAR_FIELDS_MAX $i\n";
 
+my $DEVNULL = '/dev/null';
+my $has_dev_null = -e $DEVNULL;
+
 while (my($name, $fields) = each %classes) {
     my $java_class = "$package.$name";
     (my $jni_prefix = "Java.$java_class") =~ s/\./_/g;
@@ -1281,12 +1284,20 @@ while (my($name, $fields) = each %classes) {
       "JNIEXPORT void JNICALL $nativefunc",
         "(JNIEnv *env, jobject obj, jobject sigar_obj$args_proto)";
 
-    my $jfile = "$name.java";
+    my $jfile;
     if (-e "../../src/$jsrc/$jfile") {
         #dont generate .java if already exists
-        $jfile = "DEVNULL";
+	if ($has_dev_null) {
+	    $jfile = $DEVNULL;
+	}
+	else {
+	    $jfile = "$jsrc/nul"; #win32 /dev/null equiv
+	}
     }
-    open JFH, ">$jsrc/$jfile" or die "open $jfile: $!";
+    else {
+	$jfile = "$jsrc/$name.java";
+    }
+    open JFH, ">$jfile" or die "open $jfile: $!";
     print JFH $warning;
 
     my $impl = ! $get_not_impl{$cname};
