@@ -604,8 +604,8 @@ sigar_net_connection_walk(sigar_net_connection_walker_t *walker);
 
 typedef struct {
     int tcp_states[SIGAR_TCP_UNKNOWN];
-    unsigned int tcp_inbound_total;
-    unsigned int tcp_outbound_total;
+    sigar_uint32_t tcp_inbound_total;
+    sigar_uint32_t tcp_outbound_total;
 } sigar_net_stat_t;
 
 SIGAR_DECLARE(int)
