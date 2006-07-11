@@ -689,7 +689,9 @@ public class Sigar implements SigarProxy {
 
     public NetStat getNetStat()
         throws SigarException {
-        return new NetStat(this);
+        NetStat netstat = new NetStat();
+        netstat.stat(this);
+        return netstat;
     }
     
     public native Who[] getWhoList()

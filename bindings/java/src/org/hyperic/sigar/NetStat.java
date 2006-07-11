@@ -2,16 +2,14 @@ package org.hyperic.sigar;
 
 public class NetStat {
 
-    protected Sigar sigar;
-
     protected int[] tcpStates;
     protected int tcpInboundTotal, tcpOutboundTotal;
 
     public native void stat(Sigar sigar, int flags) throws SigarException;
 
-    public NetStat(Sigar sigar) throws SigarException {
-        this.sigar = sigar;
+    public NetStat() { }
 
+    public void stat(Sigar sigar) throws SigarException {
         int flags =
             NetFlags.CONN_SERVER | NetFlags.CONN_CLIENT |
             NetFlags.CONN_TCP;
