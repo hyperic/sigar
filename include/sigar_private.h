@@ -203,12 +203,12 @@ int sigar_net_connection_list_grow(sigar_net_connection_list_t *connlist);
 #define SIGAR_IFHWADDRLEN 6
 
 #define sigar_net_address_mac_set(a, val, len) \
-    if (len == 0) SIGAR_ZERO(&((a).addr.mac)); \
-    else memcpy(&((a).addr.mac), val, len); \
+    memcpy(&((a).addr.mac), val, len); \
     (a).family = SIGAR_AF_LINK
 
 #define sigar_hwaddr_set_null(ifconfig) \
-    sigar_net_address_mac_set(ifconfig->hwaddr, 0, 0)
+    SIGAR_ZERO(&ifconfig->hwaddr.addr.mac); \
+    ifconfig->hwaddr.family = SIGAR_AF_LINK
 
 int sigar_who_list_create(sigar_who_list_t *wholist);
 
