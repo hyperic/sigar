@@ -23,6 +23,8 @@
 
 2006-06-27  Doug MacEachern  <dougm@hyperic.com>
 
+        * Created SIGAR_1_1 branch, trunk is now 1.2
+
         * Java net.hyperic package renamed to org.hyperic
 
 2006-06-21  Doug MacEachern  <dougm@hyperic.com>
