@@ -1480,6 +1480,10 @@ static int get_cpu_info(sigar_t *sigar, sigar_cpu_info_t *info,
 
     int found = 0;
 
+#ifdef __powerpc64__
+    SIGAR_SSTRCPY(info->vendor, "IBM");
+#endif
+
     while ((ptr = fgets(buffer, sizeof(buffer), fp))) {
         switch (*ptr) {
           case 'p': /* processor	: 0 */
@@ -1513,6 +1517,26 @@ static int get_cpu_info(sigar_t *sigar, sigar_cpu_info_t *info,
                 ptr = cpu_info_strval(ptr);
                 info->cache_size = sigar_strtoul(ptr);
             }
+#ifdef __powerpc64__
+            /* each /proc/cpuinfo entry looks like so:
+             *   processor       : 0
+             *   cpu             : POWER5 (gr)
+             *   clock           : 1656.392000MHz
+             *   revision        : 2.2
+             */
+            else if (strnEQ(ptr, "clock", 5)) {
+                ptr = cpu_info_strval(ptr);
+                info->mhz = atoi(ptr);
+            }
+            else if (strnEQ(ptr, "cpu", 3)) {
+                cpu_info_strcpy(ptr, info->model, sizeof(info->model));
+
+                if ((ptr = strchr(info->model, ' '))) {
+                    /* "POWER5 (gr)" -> "POWER5" */
+                    *ptr = '\0';
+                }
+            }
+#endif
             break;
            /* lone \n means end of info for this processor */
           case '\n':
