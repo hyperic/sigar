@@ -824,7 +824,7 @@ JNIEXPORT jobjectArray SIGAR_JNIx(getNetConnectionList)
     return connarray;
 }
 
-JNIEXPORT void SIGAR_JNI(NetStat_nstat)
+JNIEXPORT void SIGAR_JNI(NetStat_stat)
 (JNIEnv *env, jobject obj, jobject sigar_obj, jint flags)
 {
     int status;
@@ -843,6 +843,7 @@ JNIEXPORT void SIGAR_JNI(NetStat_nstat)
 
     cls = JENV->GetObjectClass(env, obj);
 
+    JAVA_SIGAR_INIT_FIELDS_NETSTAT(cls);
     JAVA_SIGAR_SET_FIELDS_NETSTAT(cls, obj, netstat);
 
     if (sizeof(tcp_states[0]) == sizeof(netstat.tcp_states[0])) {
