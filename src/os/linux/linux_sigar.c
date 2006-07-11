@@ -128,10 +128,10 @@ int sigar_os_open(sigar_t **sigar)
 
     (*sigar)->last_proc_stat.pid = -1;
 
-#ifdef __LP64__
-    (*sigar)->ht_enabled = 0;
-#else
+#ifdef __i386__
     (*sigar)->ht_enabled = -1;
+#else
+    (*sigar)->ht_enabled = 0;
 #endif
 
     if (stat(PROC_DISKSTATS, &sb) == 0) {
@@ -167,6 +167,7 @@ char *sigar_os_error_string(sigar_t *sigar, int err)
     return NULL;
 }
 
+#ifdef __i386__
 #define INTEL_ID 0x756e6547
 
 static void sigar_cpuid(unsigned long request,
@@ -258,6 +259,9 @@ static int is_ht_enabled(sigar_t *sigar)
 
     return sigar->ht_enabled;
 }
+#else
+#define is_ht_enabled(sigar) 0
+#endif
 
 static int get_ram(sigar_t *sigar, sigar_mem_t *mem)
 {
