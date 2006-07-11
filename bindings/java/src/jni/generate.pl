@@ -1212,7 +1212,7 @@ my %has_name_arg = map { $_, 1 } qw(FileSystemUsage FileAttrs DirStat DirUsage
                                     NetInterfaceConfig NetInterfaceStat);
 my %proc_no_arg = map { $_, 1 } qw(stat);
 my %get_not_impl = map { $_, 1 } qw(net_address net_route net_connection net_stat
-				    who cpu_info file_system); #list funcs only
+                                    who cpu_info file_system); #list funcs only
 
 my %field_cache;
 my $i = 0;
@@ -1286,17 +1286,17 @@ while (my($name, $fields) = each %classes) {
 
     my $jfile;
     if (-e "../../src/$jsrc/$name.java") {
-	print "skipping $jfile\n";
+        print "skipping $jfile\n";
         #dont generate .java if already exists
-	if ($has_dev_null) {
-	    $jfile = $DEVNULL;
-	}
-	else {
-	    $jfile = "$jsrc/nul"; #win32 /dev/null equiv
-	}
+        if ($has_dev_null) {
+            $jfile = $DEVNULL;
+        }
+        else {
+            $jfile = "$jsrc/nul"; #win32 /dev/null equiv
+        }
     }
     else {
-	$jfile = "$jsrc/$name.java";
+        $jfile = "$jsrc/$name.java";
     }
     open JFH, ">$jfile" or die "open $jfile: $!";
     print JFH $warning;
@@ -1561,7 +1561,7 @@ while (<JSIGAR>) {
     next unless /SIGAR_JNI([a-z]?)\(([A-Za-z_]+)\)/;
     my $class = "";
     if ($1) {
-	$class = $alias{$1} . "_";
+        $class = $alias{$1} . "_";
     }
     print DFH "Java_org_hyperic_sigar_$class$2\n";
 }
