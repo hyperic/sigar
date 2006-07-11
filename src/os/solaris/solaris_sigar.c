@@ -162,9 +162,6 @@ char *sigar_os_error_string(sigar_t *sigar, int err)
     }
 }
 
-#define KPAGE_SHIFT(v) \
-    ((v) << sigar->pagesize)
-
 int sigar_mem_get(sigar_t *sigar, sigar_mem_t *mem)
 {
     kstat_ctl_t *kc = sigar->kc; 
@@ -173,7 +170,8 @@ int sigar_mem_get(sigar_t *sigar, sigar_mem_t *mem)
     SIGAR_ZERO(mem);
 
     /* XXX: is mem hot swappable or can we just do this during open ? */
-    mem->total = KPAGE_SHIFT((sigar_uint64_t)sysconf(_SC_PHYS_PAGES));
+    mem->total = sysconf(_SC_PHYS_PAGES);
+    mem->total <<= sigar->pagesize;
 
     sigar_mem_calc_ram(sigar, mem);
 
@@ -184,7 +182,8 @@ int sigar_mem_get(sigar_t *sigar, sigar_mem_t *mem)
     if ((ksp = sigar->ks.syspages) && kstat_read(kc, ksp, NULL) >= 0) {
         sigar_koffsets_init_syspages(sigar, ksp);
 
-        mem->free = KPAGE_SHIFT(kSYSPAGES(KSTAT_SYSPAGES_FREE));
+        mem->free = kSYSPAGES(KSTAT_SYSPAGES_FREE);
+        mem->free <<= sigar->pagesize;
 
         mem->used = mem->total - mem->free;
     }
