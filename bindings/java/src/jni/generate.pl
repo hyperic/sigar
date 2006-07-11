@@ -1285,7 +1285,8 @@ while (my($name, $fields) = each %classes) {
         "(JNIEnv *env, jobject obj, jobject sigar_obj$args_proto)";
 
     my $jfile;
-    if (-e "../../src/$jsrc/$jfile") {
+    if (-e "../../src/$jsrc/$name.java") {
+	print "skipping $jfile\n";
         #dont generate .java if already exists
 	if ($has_dev_null) {
 	    $jfile = $DEVNULL;
