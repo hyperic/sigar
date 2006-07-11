@@ -1,3 +1,7 @@
+2006-07-11  Doug MacEachern  <dougm@hyperic.com>
+
+        * Port linux impl to ppc64 arch
+
 2006-07-10  Doug MacEachern  <dougm@hyperic.com>
 
         * [SIGAR-4] Implement native sigar_net_stat_get and use w/ Java
