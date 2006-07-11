@@ -1573,7 +1573,7 @@ static SIGAR_INLINE unsigned int hex2int(const char *x, int len)
 
 #define HEX_ENT_LEN 8
 
-#ifdef __LP64__
+#ifdef SIGAR_64BIT
 #define ROUTE_FMT "%16s %128s %128s %X %ld %ld %ld %128s %ld %ld %ld\n"
 #else
 #define ROUTE_FMT "%16s %128s %128s %X %lld %lld %lld %128s %lld %lld %lld\n"

@@ -20,7 +20,7 @@
 #include "javasigar_generated.h"
 #include "javasigar.h"
 
-#if defined(__osf__) || defined(__LP64__)
+#ifdef SIGAR_64BIT
 #define SIGAR_POINTER_LONG
 #endif
 
