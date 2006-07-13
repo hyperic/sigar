@@ -93,8 +93,10 @@
     <property name="version.tofile"
               value="${build}/${version.file.dstdir}/${version.file}"/>
 
-    <copy file="${version.file.srcdir}/${version.file}.in"
-          tofile="${version.tofile}"/>
+    <!-- regenerate if version.properties changes -->
+    <copydep file="${version.file.srcdir}/${version.file}.in"
+             tofile="${version.tofile}"
+             depends="version.properties"/>
 
     <replace file="${version.tofile}">
       <replacefilter token="@@BUILD_DATE@@" value="${BUILD_DATE}"/>
