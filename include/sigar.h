@@ -648,7 +648,7 @@ typedef struct {
     const char *archname;
     const char *archlib;
     const char *binname;
-    int major, minor, maint;
+    int major, minor, maint, build;
 } sigar_version_t;
 
 SIGAR_DECLARE(sigar_version_t *) sigar_version_get(void);
