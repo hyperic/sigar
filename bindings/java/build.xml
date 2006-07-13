@@ -4,12 +4,10 @@
 
 <project name="Sigar" default="build" basedir=".">
 
-  <property name="copyright.year" value="2004-2006"/>
-  <property name="version.major" value="1"/>
-  <property name="version.minor" value="2"/>
-  <property name="version.maint" value="0"/>
+  <property file="version.properties"/>
+
   <property name="sigar.version"
-            value="${version.major}.${version.minor}.${version.maint}"/>
+            value="${version.major}.${version.minor}.${version.maint}.${version.build}"/>
 
   <property file="${user.home}/.sigar-build.properties"/>
   <property name="project.name" value="sigar"/>
@@ -107,6 +105,7 @@
       <replacefilter token="@@VERSION_MAJOR@@" value="${version.major}"/>
       <replacefilter token="@@VERSION_MINOR@@" value="${version.minor}"/>
       <replacefilter token="@@VERSION_MAINT@@" value="${version.maint}"/>
+      <replacefilter token="@@VERSION_BUILD@@" value="${version.build}"/>
       <replacefilter token="@@COPYRIGHT_YEAR@@" value="${copyright.year}"/>
     </replace>
   </target>
@@ -124,8 +123,6 @@
     <antcall target="version-file">
        <param name="version.file.srcdir"
               value="../.."/>
-       <param name="version.file.dstdir"
-              value="${jni.libarch}"/>
        <param name="version.file"
               value="src/sigar_version.c"/>
     </antcall>
@@ -160,7 +157,7 @@
       <include name="bindings/java/src/jni/*.c"/>
       <include name="bindings/java/src/${win32.jni}/*.cpp"/>
       <include name="bindings/java/src/${win32.jni}/*.c"/>
-      <include name="bindings/java/build/${jni.libarch}/src/*.c"/>
+      <include name="bindings/java/build/src/sigar_version.c"/>
     </patternset>
 
     <path id="jni.include.dirs">
