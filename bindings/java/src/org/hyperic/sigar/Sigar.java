@@ -7,6 +7,7 @@ import java.io.InputStreamReader;
 
 import java.util.List;
 import java.util.Map;
+import java.util.StringTokenizer;
 
 import org.hyperic.jni.ArchLoaderException;
 import org.hyperic.jni.ArchNotSupportedException;
@@ -60,10 +61,14 @@ public class Sigar implements SigarProxy {
     private Cpu[] lastCpuList;
 
     static {
-        boolean loaded = false;
+        String nativeVersion = "unknown";
+        String nativeBuildDate = "unknown";
+
         try {
             loadLibrary();
-            loaded = true;
+            nativeVersion = getNativeVersion();
+            nativeBuildDate = getNativeBuildDate();
+            checkVersion(nativeVersion);
         } catch (SigarException e) {
             loadError = e.getMessage();
             try {
@@ -74,12 +79,37 @@ public class Sigar implements SigarProxy {
                 e.printStackTrace();
             }
         }
-        if (loaded) {
-            NATIVE_VERSION_STRING = getNativeVersion();
-            NATIVE_BUILD_DATE = getNativeBuildDate();
-        }
-        else {
-            NATIVE_VERSION_STRING = NATIVE_BUILD_DATE = "N/A";
+
+        NATIVE_VERSION_STRING = nativeVersion;
+        NATIVE_BUILD_DATE = nativeBuildDate;
+    }
+
+    private static void checkVersion(String nativeVersionString)
+        throws SigarException {
+
+        StringTokenizer javaVersion =
+            new StringTokenizer(VERSION_STRING, ".");
+        StringTokenizer nativeVersion =
+            new StringTokenizer(nativeVersionString, ".");
+        
+        String[] desc = { "major", "minor", "maint" };
+
+        for (int i=0; i<desc.length; i++) {
+            String jv = 
+                javaVersion.hasMoreTokens() ?
+                javaVersion.nextToken() : "0";
+            String nv = 
+                nativeVersion.hasMoreTokens() ?
+                nativeVersion.nextToken() : "0";
+
+            if (!jv.equals(nv)) {
+                String msg =
+                    desc[i] + " version mismatch: (" +
+                    jv + "!=" + nv + ") " +
+                    "java=" + VERSION_STRING +
+                    ", native=" + nativeVersionString;
+                throw new SigarException(msg);
+            }
         }
     }
 

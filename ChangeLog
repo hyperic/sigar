@@ -1,3 +1,7 @@
+2006-07-13  Doug MacEachern  <dougm@hyperic.com>
+
+        * Validate that sigar.jar is binary compatible with the native library
+
 2006-07-11  Doug MacEachern  <dougm@hyperic.com>
 
         * Port linux impl to ppc64 arch
