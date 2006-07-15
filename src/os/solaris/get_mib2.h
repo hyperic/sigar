@@ -33,9 +33,10 @@
  */
 
 /*
- * Changes for sigar:
- * - remove static stuff to make thread-safe 
+ * Altered for sigar:
+ * - remove static stuff to make thread-safe by Doug MacEachern (3/11/05)
  */
+
 #if	!defined(GET_MIB2_H)
 #define	GET_MIB2_H
 

@@ -32,6 +32,11 @@
  * 4. This notice may not be removed or altered.
  */
 
+/*
+ * Altered for sigar:
+ * - remove static stuff to make thread-safe by Doug MacEachern (3/11/05)
+ */
+
 #if 0 /*ndef lint -Wall -Werror*/ 
 static char copyright[] =
 "@(#) Copyright 1995 Purdue Research Foundation.\nAll rights reserved.\n";
