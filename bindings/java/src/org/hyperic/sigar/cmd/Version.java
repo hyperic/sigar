@@ -18,6 +18,7 @@
 
 package org.hyperic.sigar.cmd;
 
+import java.io.File;
 import java.io.PrintStream;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -52,17 +53,6 @@ public class Version extends SigarCommandBase {
         }
     }
 
-    private static String getFQDN() {
-        Sigar sigar = new Sigar(); 
-        try {
-            return sigar.getFQDN();
-        } catch (SigarException e) {
-            return "unknown";
-        } finally {
-            sigar.close();
-        }
-    }
-
     private static void printNativeInfo(PrintStream os) {
         String version =
             "java=" + Sigar.VERSION_STRING +
@@ -71,13 +61,28 @@ public class Version extends SigarCommandBase {
             "java=" + Sigar.BUILD_DATE +
             ", native=" + Sigar.NATIVE_BUILD_DATE;
         
+        String archlib =
+            SigarLoader.getNativeLibraryName();
+
         os.println("Sigar version......." + version);
         os.println("Build date.........." + build);
-        os.println("Archlib............." +
-                   SigarLoader.getNativeLibraryName());
 
-        String fqdn = getFQDN();
         String host = getHostName();
+        String fqdn;
+        Sigar sigar = new Sigar(); 
+        try {
+            File lib = sigar.getNativeLibrary();
+            if (lib != null) {
+                archlib = lib.getName();
+            }
+            fqdn = sigar.getFQDN();
+        } catch (SigarException e) {
+            fqdn = "unknown";
+        } finally {
+            sigar.close();
+        }
+
+        os.println("Archlib............." + archlib);
 
         os.println("Current fqdn........" + fqdn);
         if (!fqdn.equals(host)) {
