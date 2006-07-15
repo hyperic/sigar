@@ -2,10 +2,11 @@ Hyperic SIGAR includes some third-party open source components
 in its distribution. The list below identifies the community or 
 organization and links to their appropriate license terms.
 
-As users and contributors to many open source projects, the 
-Hyperic engineering team would like to thank all the communities 
+The Hyperic team would like to thank all the communities 
 of the projects listed below for their contributions. 
 ---------------------------------------------------------------------
+
+The following components are included without modification:
 
 - BCEL -
 Information: http://jakarta.apache.org/bcel/index.html
@@ -18,3 +19,21 @@ License: http://www.apache.org/licenses/LICENSE-2.0
 - junit -
 Information: http://www.junit.org/index.htm
 License: http://www.opensource.org/licenses/cpl.php
+
+The following components are included with modification:
+
+- cpptasks -
+Information: http://ant-contrib.sourceforge.net/
+License: http://ant-contrib.sourceforge.net/LICENSE.txt
+
+- (portions of) APR -
+Information: http://apr.apache.org/
+License: http://www.apache.org/licenses/LICENSE-2.0
+
+- solaris get_mib2 -
+Information: ftp://vic.cc.purdue.edu/pub/tools/unix/solaris/get_mib2/
+License: within src/os/solaris/get_mib2.[ch]
+
+- getline by Chris Thewalt -
+Information: http://tinyurl.com/r438r
+License: within src/sigar_getline.c
