@@ -157,6 +157,10 @@ public class Sigar implements SigarProxy {
         }
     }
 
+    public File getNativeLibrary() {
+        return this.loader.getNativeLibrary();
+    }
+
     /**
      * Format size in bytes to a human readable string.
      *
