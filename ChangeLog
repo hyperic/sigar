@@ -1,5 +1,7 @@
 2006-07-15  Doug MacEachern  <dougm@hyperic.com>
 
+        * 1.2 released
+
         * [SIGAR-10] Fix sigar_net_info_get /etc/resolv.conf parsing
 
 2006-07-13  Doug MacEachern  <dougm@hyperic.com>
