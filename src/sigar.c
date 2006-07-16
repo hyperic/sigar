@@ -1168,10 +1168,10 @@ int sigar_net_info_get(sigar_t *sigar,
         int len;
 
         SIGAR_SKIP_SPACE(ptr);
-        if (!(ptr = strstr(ptr, "nameserver "))) {
+        if (!(ptr = strstr(ptr, "nameserver"))) {
             continue;
         }
-        ptr += 11;
+        ptr += 10;
         SIGAR_SKIP_SPACE(ptr);
 
         len = strlen(ptr);
