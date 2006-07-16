@@ -351,7 +351,8 @@
    <copy toDir="${dist}" overwrite="true">
      <fileset dir="../..">
        <include name="README"/>
-       <include name="LICENSE"/>
+       <include name="COPYING"/>
+       <include name="LICENSES"/>
        <include name="ChangeLog"/>
      </fileset>
    </copy>
