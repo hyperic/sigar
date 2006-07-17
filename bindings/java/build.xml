@@ -27,8 +27,10 @@
   <property name="src" location="src"/>
   <property name="build" location="build"/>
   <property name="build.javadoc" value="${build}/javadoc"/>
-  <property name="dist.name" value="hyperic-sigar-${sigar.version}"/>
-  <property name="dist" location="${build}/${dist.name}"/>
+  <property name="dist.bin.name" value="hyperic-sigar-${sigar.version}"/>
+  <property name="dist.src.name" value="${dist.bin.name}-src"/>
+  <property name="dist.bin" location="${build}/${dist.bin.name}"/>
+  <property name="dist.src" location="${build}/${dist.src.name}"/>
   <property name="perl" value="perl"/>
   <!-- trick TestFQDN into passing with: ant test -Dsigar.fdqn=foo.bar -->
   <property name="sigar.fqdn" value=""/>
@@ -302,7 +304,7 @@
 
  <target name="test" depends="build,xtest"/>
 
- <target name="dist-pack">
+ <target name="dist-pack" depends="dist-common">
    <zip destfile="${dist}.zip"
         basedir="${build}"
         includes="${dist.name}/**/*"/>
@@ -332,8 +334,8 @@
 
  <target name="dist-bin">
    <!-- binaries -->
-   <mkdir dir="${dist}/sigar-bin"/>
-   <copy toDir="${dist}/sigar-bin" overwrite="true">
+   <mkdir dir="${dist.bin}/sigar-bin"/>
+   <copy toDir="${dist.bin}/sigar-bin">
      <fileset dir="${sigar-bin-dir}">
        <include name="lib/*.jar"/>
        <include name="lib/*.dll"/>
@@ -345,9 +347,54 @@
        <include name="lib/*.jar"/>
      </fileset>
    </copy>
+
+   <!-- header files -->
+   <copy toDir="${dist.bin}/sigar-bin">
+     <fileset dir="${sigar-bin}">
+       <include name="include/*.h"/>
+     </fileset>
+   </copy>
+
+   <copy toDir="${dist.bin}/sigar-bin/lib">
+     <fileset dir=".">
+       <include name=".sigar_shellrc"/>
+     </fileset>
+   </copy>
+
+   <mkdir dir="${dist.bin}/bindings/java/examples"/>
+   <copy toDir="${dist.bin}/bindings/java/examples">
+     <fileset dir="src/org/hyperic/sigar/cmd">
+       <include name="*.java"/>
+     </fileset>
+   </copy>
  </target>
 
- <target name="dist-support" depends="javadoc">
+ <target name="dist-bindings">
+
+   <!-- bindings -->
+   <copy toDir="${dist}">
+     <fileset dir="../..">
+       <include name="bindings/java/examples/*.java"/>
+
+       <include name="bindings/perl/Makefile.PL"/>
+       <include name="bindings/perl/typemap"/>
+       <include name="bindings/perl/*.xs"/>
+       <include name="bindings/perl/**/*.pm"/>
+       <include name="bindings/perl/examples/*.pl"/>
+
+       <include name="bindings/csharp/default.build"/>
+       <include name="bindings/csharp/**/*.cs"/>
+     </fileset>
+   </copy>
+
+   <copy toDir="${dist}/bindings/perl">
+     <fileset dir="${build}/src">
+       <include name="Sigar_generated.xs"/>
+     </fileset>
+   </copy>
+ </target>
+
+ <target name="dist-common" depends="javadoc,dist-bindings">
    <copy toDir="${dist}" overwrite="true">
      <fileset dir="../..">
        <include name="README"/>
@@ -357,79 +404,49 @@
      </fileset>
    </copy>
 
-   <!-- bindings -->
-   <mkdir dir="${dist}/bindings/perl"/>
-   <copy toDir="${dist}/bindings/perl" overwrite="true">
-     <fileset dir="../perl">
-       <include name="Makefile.PL"/>
-       <include name="typemap"/>
-       <include name="*.xs"/>
-       <include name="*.pm"/>
-       <include name="lib/*.pm"/>
-       <include name="lib/Sigar/*.pm"/>
-     </fileset>
-     <fileset dir="${build}/src">
-       <include name="Sigar_generated.xs"/>
-     </fileset>
-   </copy>
-
-   <mkdir dir="${dist}/bindings/csharp"/>
-   <copy toDir="${dist}/bindings/csharp" overwrite="true">
-     <fileset dir="../dotnet">
-       <include name="default.build"/>
-       <include name="src/Sigar.cs"/>
-     </fileset>
-   </copy>
-
    <!-- docs -->
    <mkdir dir="${dist}/docs"/>
-   <copy toDir="${dist}/docs" overwrite="true">
+   <copy toDir="${dist}/docs">
      <fileset dir="${build}">
        <include name="javadoc/**"/>
      </fileset>
    </copy>
-
-   <!-- examples -->
-   <mkdir dir="${dist}/examples/java"/>
-   <mkdir dir="${dist}/examples/perl"/>
-   <mkdir dir="${dist}/examples/csharp"/>
-
-   <copy toDir="${dist}/examples/java" overwrite="true">
-     <fileset dir="src/org/hyperic/sigar/cmd">
-       <include name="*.java"/>
-     </fileset>
-     <fileset dir="examples">
-       <include name="*.java"/>
-     </fileset>
-   </copy>
-
-   <copy toDir="${dist}/examples/perl" overwrite="true">
-     <fileset dir="../perl/examples">
-       <include name="*.pl"/>
-     </fileset>
-   </copy>
-
-   <copy toDir="${dist}/examples/csharp" overwrite="true">
-     <fileset dir="../dotnet/examples">
-       <include name="*.cs"/>
-       <include name="default.build"/>
-     </fileset>
-   </copy>
-
-   <!-- header files -->
-   <copy toDir="${dist}/sigar-bin" overwrite="true">
-     <fileset dir="${sigar-bin}">
-       <include name="include/*.h"/>
-     </fileset>
-   </copy>
-
-   <copy toDir="${dist}/sigar-bin/lib" overwrite="true">
-     <fileset dir=".">
-       <include name=".sigar_shellrc"/>
-     </fileset>
-   </copy>
  </target>
 
- <target name="dist" depends="dist-bin,dist-support,dist-pack"/>
+ <target name="dist" depends="dist-bin">
 
+   <copy toDir="${dist.src}">
+     <fileset dir="../..">
+       <include name="include/*.h"/>
+       <include name="src/**/*.h"/>
+       <include name="src/**/*.c"/>
+       <include name="src/**/*.in"/>
+       <include name="bindings/java/hyperic_jni/**"/>
+       <include name="bindings/java/**/*.java"/>
+       <include name="bindings/java/**/*.java.in"/>
+       <include name="bindings/java/**/*.c"/>
+       <include name="bindings/java/**/*.h"/>
+       <include name="bindings/java/**/*.pl"/>
+       <include name="bindings/java/**/build.xml"/>
+       <include name="bindings/java/version.properties"/>
+       <include name="bindings/java/.classpath"/>
+       <include name="bindings/java/.project"/>
+       <include name="bindings/java/.sigar_shellrc"/>
+       <include name="bindings/java/lib/*.jar"/>
+       <include name="bindings/java/lib/*.dll"/>
+       <exclude name="**/.svn/**"/>
+       <exclude name="bindings/java/build/**"/>
+     </fileset>
+   </copy>
+
+    <antcall target="dist-pack">
+       <param name="dist" value="${dist.bin}"/>
+       <param name="dist.name" value="${dist.bin.name}"/>
+    </antcall>
+
+    <antcall target="dist-pack">
+       <param name="dist" value="${dist.src}"/>
+       <param name="dist.name" value="${dist.src.name}"/>
+    </antcall>
+ </target>
 </project>
