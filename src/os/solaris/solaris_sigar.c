@@ -53,6 +53,10 @@ int sigar_os_open(sigar_t **sig)
     sigar = malloc(sizeof(*sigar));
     *sig = sigar;
 
+    sigar->log_level = -1; /* log nothing by default */
+    sigar->log_impl = NULL;
+    sigar->log_data = NULL;
+
     uname(&name);
     if ((ptr = strchr(name.release, '.'))) {
         ptr++;
