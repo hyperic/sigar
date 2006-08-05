@@ -220,7 +220,11 @@ int sigar_proc_list_get(sigar_t *sigar,
 
         idx = proctab[num-1].pst_idx + 1;
     }
-     
+
+    if (proclist->number == 0) {
+        return errno;
+    }
+
     return SIGAR_OK;
 }
 
