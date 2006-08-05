@@ -495,8 +495,7 @@ int sigar_os_fs_type_get(sigar_file_system_t *fsp)
 int sigar_file_system_list_get(sigar_t *sigar,
                                sigar_file_system_list_t *fslist)
 {
-    struct mntent ent;
-    char buf[1025];
+    struct mntent *ent;
 
     FILE *fp;
     sigar_file_system_t *fsp;
@@ -507,9 +506,9 @@ int sigar_file_system_list_get(sigar_t *sigar,
 
     sigar_file_system_list_create(fslist);
 
-    while (getmntent_r(fp, &ent, buf, sizeof(buf)) == 0) {
-        if ((*(ent.mnt_type) == 's') &&
-            strEQ(ent.mnt_type, "swap"))
+    while ((ent = getmntent(fp))) {
+        if ((*(ent->mnt_type) == 's') &&
+            strEQ(ent->mnt_type, "swap"))
         {
             /*
              * in this case, devname == "...", for
@@ -523,9 +522,9 @@ int sigar_file_system_list_get(sigar_t *sigar,
 
         fsp = &fslist->data[fslist->number++];
 
-        SIGAR_SSTRCPY(fsp->dir_name, ent.mnt_dir);
-        SIGAR_SSTRCPY(fsp->dev_name, ent.mnt_fsname);
-        SIGAR_SSTRCPY(fsp->sys_type_name, ent.mnt_type);
+        SIGAR_SSTRCPY(fsp->dir_name, ent->mnt_dir);
+        SIGAR_SSTRCPY(fsp->dev_name, ent->mnt_fsname);
+        SIGAR_SSTRCPY(fsp->sys_type_name, ent->mnt_type);
         sigar_fs_type_init(fsp);
     }
 

@@ -279,7 +279,7 @@ int sigar_get_iftype(const char *name, int *type, int *inst);
 #endif
 
 #define SIGAR_HOSTENT_LEN 512
-#if defined(__hpux) || defined(_AIX)
+#if defined(_AIX)
 #define SIGAR_HAS_HOSTENT_DATA
 #endif
 
