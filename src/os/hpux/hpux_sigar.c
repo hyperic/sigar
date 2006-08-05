@@ -662,8 +662,13 @@ int sigar_cpu_info_list_get(sigar_t *sigar,
 
         info = &cpu_infos->data[cpu_infos->number++];
 
+#ifdef __ia64__
+        SIGAR_SSTRCPY(info->vendor, "Intel"); /*XXX*/
+        SIGAR_SSTRCPY(info->model, "Itanium"); /*XXX*/
+#else
         SIGAR_SSTRCPY(info->vendor, "HP"); /*XXX*/
         SIGAR_SSTRCPY(info->model, "PA RISC"); /*XXX*/
+#endif
         info->mhz = sigar->ticks * proc.psp_iticksperclktick / 1000000;
         info->cache_size = SIGAR_FIELD_NOTIMPL; /*XXX*/
     }
