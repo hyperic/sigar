@@ -583,6 +583,8 @@ static int create_fsdev_cache(sigar_t *sigar)
             ent->value = strdup(fsp->dev_name);
         }
     }
+
+    return SIGAR_OK;
 }
 
 int sigar_file_system_usage_get(sigar_t *sigar,
