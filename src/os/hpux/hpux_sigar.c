@@ -22,7 +22,9 @@
 #include "sigar_os.h"
 
 #include <sys/dk.h>
+#ifndef __ia64__
 #include <sys/lwp.h>
+#endif
 #include <sys/stat.h>
 #include <errno.h>
 
@@ -450,6 +452,13 @@ int sigar_thread_cpu_get(sigar_t *sigar,
                          sigar_uint64_t id,
                          sigar_thread_cpu_t *cpu)
 {
+#ifdef __ia64__
+    /* XXX seems _lwp funcs were for solaris compat and dont exist
+     * on itanium.  hp docs claim that have equiv functions,
+     * but wtf is it for _lwp_info?
+     */
+    return SIGAR_ENOTIMPL;
+#else
     struct lwpinfo info;
 
     if (id != 0) {
@@ -463,6 +472,7 @@ int sigar_thread_cpu_get(sigar_t *sigar,
     cpu->total = TIME_NSEC(info.lwp_utime) + TIME_NSEC(info.lwp_stime);
 
     return SIGAR_OK;
+#endif
 }
 
 #include <mntent.h>

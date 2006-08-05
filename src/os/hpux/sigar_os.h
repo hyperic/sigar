@@ -19,6 +19,10 @@
 #ifndef SIGAR_OS_H
 #define SIGAR_OS_H
 
+#if defined(__ia64) && !defined(__ia64__)
+#define __ia64__
+#endif
+
 #include <sys/pstat.h>
 #include <sys/mib.h>
 #include <stdlib.h>
