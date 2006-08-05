@@ -1,3 +1,7 @@
+2006-08-04  Doug MacEachern  <dougm@hyperic.com>
+
+        * Port hpux impl to ia64 arch
+
 2006-07-24  Doug MacEachern  <dougm@hyperic.com>
 
         * [SIGAR-11] Initialize log fields in solaris_sigar.c:sigar_os_open
