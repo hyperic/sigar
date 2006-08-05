@@ -23,6 +23,13 @@
 #define __ia64__
 #endif
 
+#ifdef __ia64__
+#ifndef _LP64
+#define _LP64
+#endif
+#define _PSTAT64
+#endif
+
 #include <sys/pstat.h>
 #include <sys/mib.h>
 #include <stdlib.h>
