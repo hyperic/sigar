@@ -1760,8 +1760,6 @@ SIGAR_DECLARE(int) sigar_net_address_to_string(sigar_t *sigar,
       default:
         return EINVAL;
     }
-
-    return SIGAR_OK;
 }
 
 SIGAR_DECLARE(sigar_uint32_t) sigar_net_address_hash(sigar_net_address_t *address)
