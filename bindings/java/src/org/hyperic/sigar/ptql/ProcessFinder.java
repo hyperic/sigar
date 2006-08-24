@@ -36,6 +36,20 @@ public class ProcessFinder {
         this.proxy.getPid();
     }
 
+    public long findSingleProcess(String query)
+        throws SigarException, SigarNotImplementedException {
+
+        try {
+            ProcessQuery processQuery =
+                ProcessQueryFactory.getInstance(query);
+            return findSingleProcess(processQuery);
+        } catch (MalformedQueryException e) {
+            throw new SigarException(e.getMessage());
+        } catch (QueryLoadException e) {
+            throw new SigarException(e.getMessage());
+        }
+    }
+
     public long findSingleProcess(ProcessQuery query)
         throws SigarException, SigarNotImplementedException,
         MalformedQueryException {
