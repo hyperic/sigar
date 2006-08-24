@@ -1,3 +1,7 @@
+2006-08-24  Doug MacEachern  <dougm@hyperic.com>
+
+        * Sigar.getProc*(String) methods now convert PTQL queries
+
 2006-08-04  Doug MacEachern  <dougm@hyperic.com>
 
         * Port hpux impl to ia64 arch

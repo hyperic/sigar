@@ -30,6 +30,8 @@ import java.util.StringTokenizer;
 import org.hyperic.jni.ArchLoaderException;
 import org.hyperic.jni.ArchNotSupportedException;
 
+import org.hyperic.sigar.ptql.ProcessFinder;
+
 /**
  * The Sigar class provides access to the sigar objects containing
  * system information.  The Sigar object itself maintains internal
@@ -77,6 +79,8 @@ public class Sigar implements SigarProxy {
     // lastCpu is used to calculate the cpuPerc;
     private Cpu lastCpu;
     private Cpu[] lastCpuList;
+
+    private ProcessFinder processFinder = null;
 
     static {
         String nativeVersion = "unknown";
@@ -365,8 +369,16 @@ public class Sigar implements SigarProxy {
         if (pid.equals("$$")) {
             return getPid();
         }
+        else if (Character.isDigit(pid.charAt(0))) {
+            return Long.parseLong(pid);
+        }
+        else {
+            if (this.processFinder == null) {
+                this.processFinder = new ProcessFinder(this);
+            }
 
-        return Long.parseLong(pid);
+            return this.processFinder.findSingleProcess(pid);
+        }
     }
 
     /**
