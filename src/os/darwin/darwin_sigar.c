@@ -992,11 +992,24 @@ int sigar_proc_args_get(sigar_t *sigar, sigar_pid_t pid,
     sigar_proc_args_create(procargs);
 
     while ((ptr < end) && (count-- > 0)) {
-        int alen = strlen(ptr)+1;
-        char *arg = malloc(alen);
+        int slen = strlen(ptr);
+        int alen = slen+1;
+        char *arg;
+
+        /*
+         * trim trailing whitespace.
+         * seen w/ postgresql, probably related
+         * to messing with argv[0]
+         */
+        while (*(ptr + (slen-1)) == ' ') {
+            --slen;
+        }
+
+        arg = malloc(slen+1);
 
         SIGAR_PROC_ARGS_GROW(procargs);
-        memcpy(arg, ptr, alen);
+        memcpy(arg, ptr, slen);
+        *(arg+slen) = '\0';
 
         procargs->data[procargs->number++] = arg;
 
