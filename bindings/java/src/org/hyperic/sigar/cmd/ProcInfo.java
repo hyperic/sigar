@@ -26,6 +26,8 @@ import org.hyperic.sigar.SigarPermissionDeniedException;
  */
 public class ProcInfo extends SigarCommandBase {
 
+    private boolean isSingleProcess;
+
     public ProcInfo(Shell shell) {
         super(shell);
     }
@@ -47,25 +49,47 @@ public class ProcInfo extends SigarCommandBase {
     }
 
     public void output(String[] args) throws SigarException {
-        long[] pids = this.shell.findPids(args);
+        this.isSingleProcess = false;
 
-        for (int i=0; i<pids.length; i++) {
-            try {
-                output(pids[i]);
-            } catch (SigarPermissionDeniedException e) {
-                println(this.shell.getUserDeniedMessage(pids[i]));
-            } catch (SigarException e) {
-                println("(" + e.getMessage() + ")");
+        if ((args.length != 0) && args[0].startsWith("-s")) {
+            this.isSingleProcess = true;
+        }
+
+        if (this.isSingleProcess) {
+            for (int i=1; i<args.length; i++) {
+                try {
+                    output(args[i]);
+                } catch (SigarException e) {
+                    println("(" + e.getMessage() + ")");
+                }
+                println("\n------------------------\n");
             }
-            println("\n------------------------\n");
+        }
+        else {
+            long[] pids = this.shell.findPids(args);
+
+            for (int i=0; i<pids.length; i++) {
+                try {
+                    output(String.valueOf(pids[i]));
+                } catch (SigarPermissionDeniedException e) {
+                    println(this.shell.getUserDeniedMessage(pids[i]));
+                } catch (SigarException e) {
+                    println("(" + e.getMessage() + ")");
+                }
+                println("\n------------------------\n");
+            }
         }
     }
 
-    public void output(long pid) throws SigarException {
+    public void output(String pid) throws SigarException {
         println("pid=" + pid);
         try {
             println("state=" + sigar.getProcState(pid));
-        } catch (SigarException e) {}
+        } catch (SigarException e) {
+            if (this.isSingleProcess) {
+                println(e.getMessage());
+            }
+        }
         try {
             println("mem=" + sigar.getProcMem(pid));
         } catch (SigarException e) {}
