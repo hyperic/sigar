@@ -1,3 +1,7 @@
+2006-08-25  Doug MacEachern  <dougm@hyperic.com>
+
+        * Implement proc_env for Darwin
+
 2006-08-24  Doug MacEachern  <dougm@hyperic.com>
 
         * Sigar.getProc*(String) methods now convert PTQL queries

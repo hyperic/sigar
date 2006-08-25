@@ -1046,7 +1046,63 @@ int sigar_proc_env_get(sigar_t *sigar, sigar_pid_t pid,
                        sigar_proc_env_t *procenv)
 {
 #ifdef DARWIN
-    return SIGAR_ENOTIMPL;
+    int status, count;
+    sigar_kern_proc_args_t kargs;
+    char *ptr, *end;
+
+    status = sigar_kern_proc_args_get(pid, &kargs);
+    if (status != SIGAR_OK) {
+        return status;
+    }
+
+    count = kargs.count;
+    ptr = kargs.ptr;
+    end = kargs.end;
+
+    /* skip over argv */
+    while ((ptr < end) && (count-- > 0)) {
+        int alen = strlen(ptr)+1;
+
+        ptr += alen;
+    }
+
+    if (ptr >= end) {
+        return ENOENT;
+    }
+
+    /* into environ */
+    while (ptr < end) {
+        char *val = strchr(ptr, '=');
+        int klen, vlen, status;
+        char key[256]; /* XXX is there a max key size? */
+
+        if (val == NULL) {
+            /* not key=val format */
+            break;
+        }
+
+        klen = val - ptr;
+        SIGAR_SSTRCPY(key, ptr);
+        key[klen] = '\0';
+        ++val;
+
+        vlen = strlen(val);
+        status = procenv->env_getter(procenv->data,
+                                     key, klen, val, vlen);
+
+        if (status != SIGAR_OK) {
+            /* not an error; just stop iterating */
+            break;
+        }
+
+        ptr += (klen + 1 + vlen + 1);
+
+        if (*ptr == '\0') {
+            break;
+        }
+    }
+
+    return SIGAR_OK;
 #else
     char **env;
     struct kinfo_proc *pinfo;
