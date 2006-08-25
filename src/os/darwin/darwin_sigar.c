@@ -976,28 +976,31 @@ int sigar_proc_args_get(sigar_t *sigar, sigar_pid_t pid,
                         sigar_proc_args_t *procargs)
 {
 #if defined(DARWIN)
-    int status;
+    int status, count;
     sigar_kern_proc_args_t kargs;
+    char *ptr, *end;
 
     status = sigar_kern_proc_args_get(pid, &kargs);
     if (status != SIGAR_OK) {
         return status;
     }
 
+    count = kargs.count;
+    ptr = kargs.ptr;
+    end = kargs.end;
+
     sigar_proc_args_create(procargs);
 
-    while ((kargs.ptr < kargs.end) &&
-           (kargs.count-- > 0))
-    {
-        int alen = strlen(kargs.ptr)+1;
+    while ((ptr < end) && (count-- > 0)) {
+        int alen = strlen(ptr)+1;
         char *arg = malloc(alen);
 
         SIGAR_PROC_ARGS_GROW(procargs);
-        memcpy(arg, kargs.ptr, alen);
+        memcpy(arg, ptr, alen);
 
         procargs->data[procargs->number++] = arg;
 
-        kargs.ptr += alen;
+        ptr += alen;
     }
 
     return SIGAR_OK;
