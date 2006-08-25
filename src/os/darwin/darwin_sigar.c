@@ -918,64 +918,86 @@ int sigar_proc_state_get(sigar_t *sigar, sigar_pid_t pid,
     return SIGAR_OK;
 }
 
-int sigar_proc_args_get(sigar_t *sigar, sigar_pid_t pid,
-                        sigar_proc_args_t *procargs)
-{
 #if defined(DARWIN)
+typedef struct {
+    char exe[PATH_MAX+1];
+    char buffer[8096], *ptr, *end;
+    int count;
+} sigar_kern_proc_args_t;
+
+/* re-usable hack for use by proc_args and proc_env */
+static int sigar_kern_proc_args_get(sigar_pid_t pid,
+                                    sigar_kern_proc_args_t *kargs)
+{
     /*
      * derived from:
      * http://darwinsource.opendarwin.org/10.4.1/adv_cmds-79.1/ps.tproj/print.c
      */
-    int mib[3], nargs;
-    char buffer[8096], *args=buffer, *ptr, *end;
-    size_t size = sizeof(buffer);
+    int mib[3], len;
+    size_t size = sizeof(kargs->buffer);
+    char *args = kargs->buffer;
 
     mib[0] = CTL_KERN;
     mib[1] = KERN_PROCARGS2;
     mib[2] = pid;
 
-    if (sysctl(mib, NMIB(mib), buffer, &size, NULL, 0) < 0) {
+    if (sysctl(mib, NMIB(mib), args, &size, NULL, 0) < 0) {
         return errno;
     }
 
-    end = &args[size];
+    kargs->end = &args[size];
 
-    memcpy(&nargs, buffer, sizeof(nargs));
-    ptr = args + sizeof(nargs);
+    memcpy(&kargs->count, args, sizeof(kargs->count));
+    kargs->ptr = args + sizeof(kargs->count);
 
-    /* full exec path */
-    for (; ptr < end; ptr++) {
-        if (*ptr == '\0') {
-            break;
-        }
-    }
+    len = strlen(kargs->ptr);
+    memcpy(&kargs->exe[0], kargs->ptr, len+1);
+    kargs->ptr += len+1;
 
-    if (ptr == end) {
+    if (kargs->ptr == kargs->end) {
         return ENOENT;
     }
 
-    for (; ptr < end; ptr++) {
-        if (*ptr != '\0') {
+    for (; kargs->ptr < kargs->end; kargs->ptr++) {
+        if (*kargs->ptr != '\0') {
             break; /* start of argv[0] */
         }
     }
 
-    if (ptr == end) {
+    if (kargs->ptr == kargs->end) {
         return ENOENT;
+    }
+
+    return SIGAR_OK;
+}
+#endif
+
+int sigar_proc_args_get(sigar_t *sigar, sigar_pid_t pid,
+                        sigar_proc_args_t *procargs)
+{
+#if defined(DARWIN)
+    int status;
+    sigar_kern_proc_args_t kargs;
+
+    status = sigar_kern_proc_args_get(pid, &kargs);
+    if (status != SIGAR_OK) {
+        return status;
     }
 
     sigar_proc_args_create(procargs);
 
-    while ((ptr < end) && (nargs-- > 0)) {
-        int alen = strlen(ptr)+1;
+    while ((kargs.ptr < kargs.end) &&
+           (kargs.count-- > 0))
+    {
+        int alen = strlen(kargs.ptr)+1;
         char *arg = malloc(alen);
 
         SIGAR_PROC_ARGS_GROW(procargs);
-        memcpy(arg, ptr, alen);
+        memcpy(arg, kargs.ptr, alen);
 
         procargs->data[procargs->number++] = arg;
-            
-        ptr += alen;
+
+        kargs.ptr += alen;
     }
 
     return SIGAR_OK;
