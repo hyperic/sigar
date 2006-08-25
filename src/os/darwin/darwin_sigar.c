@@ -1002,7 +1002,9 @@ int sigar_proc_args_get(sigar_t *sigar, sigar_pid_t pid,
          * to messing with argv[0]
          */
         while (*(ptr + (slen-1)) == ' ') {
-            --slen;
+            if (--slen <= 0) {
+                break;
+            }
         }
 
         arg = malloc(slen+1);
