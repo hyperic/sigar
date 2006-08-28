@@ -1231,7 +1231,19 @@ int sigar_proc_exe_get(sigar_t *sigar, sigar_pid_t pid,
                        sigar_proc_exe_t *procexe)
 {
 #ifdef DARWIN
-    return SIGAR_ENOTIMPL;
+    int status;
+    sigar_kern_proc_args_t kargs;
+
+    status = sigar_kern_proc_args_get(pid, &kargs);
+    if (status != SIGAR_OK) {
+        return status;
+    }
+
+    procexe->cwd[0] = '\0';
+    procexe->root[0] = '\0';
+    memcpy(&procexe->name[0], &kargs.exe[0], sizeof(kargs.exe));
+
+    return SIGAR_OK;
 #else
     int len;
     char name[1024];
