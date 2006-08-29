@@ -1262,6 +1262,30 @@ int sigar_proc_exe_get(sigar_t *sigar, sigar_pid_t pid,
     procexe->cwd[0] = '\0';
     procexe->root[0] = '\0';
 
+    /* attempt to determine cwd from $PWD */
+    status = kern_proc_args_skip_argv(&kargs);
+    if (status == SIGAR_OK) {
+        char *ptr = kargs.ptr;
+        char *end = kargs.end;
+
+        /* into environ */
+        while (ptr < end) {
+            int len = strlen(ptr);
+
+            if ((len > 4) &&
+                (ptr[0] == 'P') &&
+                (ptr[1] == 'W') &&
+                (ptr[2] == 'D') &&
+                (ptr[3] == '='))
+            {
+                memcpy(procexe->cwd, ptr+4, len-3);
+                break;
+            }
+
+            ptr += len+1;
+        }
+    }
+
     return SIGAR_OK;
 #else
     int len;
