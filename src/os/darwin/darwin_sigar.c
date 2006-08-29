@@ -972,6 +972,30 @@ static int sigar_kern_proc_args_get(sigar_pid_t pid,
 
     return SIGAR_OK;
 }
+
+static int kern_proc_args_skip_argv(sigar_kern_proc_args_t *kargs)
+{
+    char *ptr = kargs->ptr;
+    char *end = kargs->end;
+    int count = kargs->count;
+
+    /* skip over argv */
+    while ((ptr < end) && (count-- > 0)) {
+        int alen = strlen(ptr)+1;
+
+        ptr += alen;
+    }
+
+    kargs->ptr = ptr;
+    kargs->end = end;
+    kargs->count = 0;
+
+    if (ptr >= end) {
+        return ENOENT;
+    }
+
+    return SIGAR_OK;
+}
 #endif
 
 int sigar_proc_args_get(sigar_t *sigar, sigar_pid_t pid,
@@ -1075,20 +1099,14 @@ int sigar_proc_env_get(sigar_t *sigar, sigar_pid_t pid,
         return status;
     }
 
+    status = kern_proc_args_skip_argv(&kargs);
+    if (status != SIGAR_OK) {
+        return status;
+    }
+
     count = kargs.count;
     ptr = kargs.ptr;
     end = kargs.end;
-
-    /* skip over argv */
-    while ((ptr < end) && (count-- > 0)) {
-        int alen = strlen(ptr)+1;
-
-        ptr += alen;
-    }
-
-    if (ptr >= end) {
-        return ENOENT;
-    }
 
     /* into environ */
     while (ptr < end) {
