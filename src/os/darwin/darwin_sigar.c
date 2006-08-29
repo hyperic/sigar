@@ -920,13 +920,13 @@ int sigar_proc_state_get(sigar_t *sigar, sigar_pid_t pid,
 
 #if defined(DARWIN)
 typedef struct {
-    char exe[PATH_MAX+1];
     char buffer[8096], *ptr, *end;
     int count;
 } sigar_kern_proc_args_t;
 
 /* re-usable hack for use by proc_args and proc_env */
 static int sigar_kern_proc_args_get(sigar_pid_t pid,
+                                    char *exe,
                                     sigar_kern_proc_args_t *kargs)
 {
     /*
@@ -951,11 +951,13 @@ static int sigar_kern_proc_args_get(sigar_pid_t pid,
     kargs->ptr = args + sizeof(kargs->count);
 
     len = strlen(kargs->ptr);
-    memcpy(&kargs->exe[0], kargs->ptr, len+1);
+    if (exe) {
+        memcpy(exe, kargs->ptr, len+1);
+    }
     kargs->ptr += len+1;
 
     if (kargs->ptr == kargs->end) {
-        return ENOENT;
+        return exe ? SIGAR_OK : ENOENT;
     }
 
     for (; kargs->ptr < kargs->end; kargs->ptr++) {
@@ -965,7 +967,7 @@ static int sigar_kern_proc_args_get(sigar_pid_t pid,
     }
 
     if (kargs->ptr == kargs->end) {
-        return ENOENT;
+        return exe ? SIGAR_OK : ENOENT;
     }
 
     return SIGAR_OK;
@@ -980,7 +982,7 @@ int sigar_proc_args_get(sigar_t *sigar, sigar_pid_t pid,
     sigar_kern_proc_args_t kargs;
     char *ptr, *end;
 
-    status = sigar_kern_proc_args_get(pid, &kargs);
+    status = sigar_kern_proc_args_get(pid, NULL, &kargs);
     if (status != SIGAR_OK) {
         return status;
     }
@@ -1068,7 +1070,7 @@ int sigar_proc_env_get(sigar_t *sigar, sigar_pid_t pid,
     sigar_kern_proc_args_t kargs;
     char *ptr, *end;
 
-    status = sigar_kern_proc_args_get(pid, &kargs);
+    status = sigar_kern_proc_args_get(pid, NULL, &kargs);
     if (status != SIGAR_OK) {
         return status;
     }
@@ -1234,14 +1236,13 @@ int sigar_proc_exe_get(sigar_t *sigar, sigar_pid_t pid,
     int status;
     sigar_kern_proc_args_t kargs;
 
-    status = sigar_kern_proc_args_get(pid, &kargs);
+    status = sigar_kern_proc_args_get(pid, procexe->name, &kargs);
     if (status != SIGAR_OK) {
         return status;
     }
 
     procexe->cwd[0] = '\0';
     procexe->root[0] = '\0';
-    memcpy(&procexe->name[0], &kargs.exe[0], sizeof(kargs.exe));
 
     return SIGAR_OK;
 #else
