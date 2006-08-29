@@ -19,6 +19,7 @@
 package org.hyperic.sigar.cmd;
 
 import org.hyperic.sigar.SigarException;
+import org.hyperic.sigar.SigarNotImplementedException;
 import org.hyperic.sigar.SigarPermissionDeniedException;
 import org.hyperic.sigar.ProcFd;
 import org.hyperic.sigar.ProcExe;
@@ -64,11 +65,12 @@ public class ProcFileInfo extends SigarCommandBase {
     }
 
     public void output(long pid) throws SigarException {
-        ProcFd fd = sigar.getProcFd(pid);
-
         println("pid=" + pid);
 
-        println("open file descriptors=" + fd.getTotal());
+        try {
+            ProcFd fd = sigar.getProcFd(pid);
+            println("open file descriptors=" + fd.getTotal());
+        } catch (SigarNotImplementedException e) {}
 
         ProcExe exe = sigar.getProcExe(pid);
         String name = exe.getName();
