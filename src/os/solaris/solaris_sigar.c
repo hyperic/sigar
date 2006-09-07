@@ -293,7 +293,7 @@ int sigar_cpu_get(sigar_t *sigar, sigar_cpu_t *cpu)
         cpu->idle  += xcpu->idle;
         cpu->nice  += xcpu->nice;
         cpu->wait  += xcpu->wait;
-        cpu->total += xcpu->total;
+        cpu->total = xcpu->total;
     }
 
     return SIGAR_OK;
@@ -384,7 +384,7 @@ int sigar_cpu_list_get(sigar_t *sigar, sigar_cpu_list_t *cpulist)
         cpu->idle += SIGAR_TICK2SEC(cpuinfo[CPU_IDLE]);
         cpu->wait += SIGAR_TICK2SEC(cpuinfo[CPU_WAIT]);
         cpu->nice += 0; /* no cpu->nice */
-        cpu->total += cpu->user + cpu->sys + cpu->idle + cpu->wait;
+        cpu->total = cpu->user + cpu->sys + cpu->idle + cpu->wait;
     }
     
     return SIGAR_OK;

@@ -1,3 +1,7 @@
+2006-09-07  Doug MacEachern  <dougm@hyperic.com>
+
+        * [SIGAR-14] Fix sigar_cpu_t.total on Linux and Solaris with multi-core CPUs
+
 2006-08-25  Doug MacEachern  <dougm@hyperic.com>
 
         * Implement proc_env for Darwin

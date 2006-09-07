@@ -431,7 +431,7 @@ static void get_cpu_metrics(sigar_t *sigar, sigar_cpu_t *cpu, char *line)
         /* 2.6+ kernels only */
         cpu->wait += SIGAR_TICK2SEC(sigar_strtoul(ptr));
     }
-    cpu->total += cpu->user + cpu->nice + cpu->sys + cpu->idle + cpu->wait;
+    cpu->total = cpu->user + cpu->nice + cpu->sys + cpu->idle + cpu->wait;
 }
 
 int sigar_cpu_get(sigar_t *sigar, sigar_cpu_t *cpu)
