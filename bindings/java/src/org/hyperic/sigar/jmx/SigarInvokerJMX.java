@@ -67,6 +67,7 @@ public class SigarInvokerJMX extends SigarInvoker {
         }
 
         if ((invoker = (SigarInvokerJMX)cache.get(name)) != null) {
+            invoker.setProxy(proxy);
             return invoker;
         }
 
