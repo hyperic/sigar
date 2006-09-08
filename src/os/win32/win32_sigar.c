@@ -110,6 +110,26 @@ typedef enum {
 #define PERF_VAL_CPU(ix) \
     NS100_2SEC(PERF_VAL(ix))
 
+static DWORD perfbuf_init(sigar_t *sigar)
+{
+    if (!sigar->perfbuf) {
+        sigar->perfbuf = malloc(PERFBUF_SIZE);
+        sigar->perfbuf_size = PERFBUF_SIZE;
+    }
+
+    return sigar->perfbuf_size;
+}
+
+static DWORD perfbuf_grow(sigar_t *sigar)
+{
+    sigar->perfbuf_size += PERFBUF_SIZE;
+
+    sigar->perfbuf =
+        realloc(sigar->perfbuf, sigar->perfbuf_size);
+
+    return sigar->perfbuf_size;
+}
+
 static PERF_OBJECT_TYPE *get_perf_object(sigar_t *sigar, char *counter_key,
                                          DWORD *err)
 {
@@ -120,22 +140,15 @@ static PERF_OBJECT_TYPE *get_perf_object(sigar_t *sigar, char *counter_key,
 
     *err = SIGAR_OK;
 
-    if (!sigar->perfbuf) {
-        sigar->perfbuf = malloc(PERFBUF_SIZE);
-        sigar->perfbuf_size = PERFBUF_SIZE;
-    }
-
     if (USING_WIDE()) {
         SIGAR_A2W(counter_key, wcounter_key, sizeof(wcounter_key));
     }
 
-    bytes = sigar->perfbuf_size;
+    bytes = perfbuf_init(sigar);
+
     while ((retval = MyRegQueryValue()) != ERROR_SUCCESS) {
         if (retval == ERROR_MORE_DATA) {
-            sigar->perfbuf_size += PERFBUF_SIZE;
-            bytes = sigar->perfbuf_size;
-            sigar->perfbuf =
-                realloc(sigar->perfbuf, sigar->perfbuf_size);
+            bytes = perfbuf_grow(sigar);
         }
         else {
             *err = retval;
@@ -230,6 +243,7 @@ static sigar_psapi_t sigar_psapi = {
     "psapi.dll",
     NULL,
     { "EnumProcessModules", NULL },
+    { "EnumProcesses", NULL },
     { "GetModuleFileNameExA", NULL },
     { NULL, NULL }
 };
@@ -798,9 +812,10 @@ SIGAR_DECLARE(int) sigar_loadavg_get(sigar_t *sigar,
 #define get_process_object(sigar, err) \
     get_perf_object(sigar, PERF_TITLE_PROC_KEY, err)
 
-SIGAR_DECLARE(int) sigar_proc_list_get(sigar_t *sigar,
-                                       sigar_proc_list_t *proclist)
+static int sigar_proc_list_get_perf(sigar_t *sigar,
+                                    sigar_proc_list_t *proclist)
 {
+
     PERF_OBJECT_TYPE *object;
     PERF_INSTANCE_DEFINITION *inst;
     PERF_COUNTER_DEFINITION *counter;
@@ -855,6 +870,57 @@ SIGAR_DECLARE(int) sigar_proc_list_get(sigar_t *sigar,
     }
 
     return SIGAR_OK;
+}
+
+#define sigar_EnumProcesses \
+    sigar->psapi.enum_processes.func
+
+SIGAR_DECLARE(int) sigar_proc_list_get(sigar_t *sigar,
+                                       sigar_proc_list_t *proclist)
+{
+    DLLMOD_INIT(psapi, FALSE);
+
+    if (sigar_EnumProcesses) {
+        DWORD retval, *pids;
+        DWORD size = 0, i;
+
+        do {
+            /* re-use the perfbuf */
+            if (size == 0) {
+                size = perfbuf_init(sigar);
+            }
+            else {
+                size = perfbuf_grow(sigar);
+            }
+
+            if (!sigar_EnumProcesses((DWORD *)sigar->perfbuf,
+                                     sigar->perfbuf_size,
+                                     &retval))
+            {
+                return GetLastError();
+            }
+        } while (retval == sigar->perfbuf_size); //unlikely
+
+        pids = (DWORD *)sigar->perfbuf;
+
+        proclist->number = 0;
+        proclist->size = retval / sizeof(DWORD);
+        proclist->data =
+            malloc(sizeof(*(proclist->data)) * proclist->size);
+
+        for (i=0; i<proclist->size; i++) {
+            DWORD pid = pids[i];
+            if (pid == 0) {
+                continue; /* dont include the system Idle process */
+            }
+            proclist->data[proclist->number++] = pid;
+        }
+
+        return SIGAR_OK;
+    }
+    else {
+        return sigar_proc_list_get_perf(sigar, proclist);
+    }
 }
 
 SIGAR_DECLARE(int) sigar_proc_stat_get(sigar_t *sigar,

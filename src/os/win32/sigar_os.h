@@ -372,6 +372,10 @@ typedef DWORD (CALLBACK *psapi_get_module_name)(HANDLE,
                                                 LPTSTR,
                                                 DWORD);
 
+typedef BOOL (CALLBACK *psapi_enum_processes)(DWORD *,
+                                              DWORD,
+                                              DWORD *);
+
 /* winsta.dll */
 typedef BOOLEAN (CALLBACK *winsta_query_info)(HANDLE,
                                               ULONG,
@@ -436,6 +440,7 @@ typedef struct {
     sigar_dll_handle_t handle;
 
     SIGAR_DLLFUNC(psapi, enum_modules);
+    SIGAR_DLLFUNC(psapi, enum_processes);
     SIGAR_DLLFUNC(psapi, get_module_name);
 
     sigar_dll_func_t end;

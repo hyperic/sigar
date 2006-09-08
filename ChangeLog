@@ -1,3 +1,7 @@
+2006-09-08  Doug MacEachern  <dougm@hyperic.net>
+
+        * [SIGAR-13] Use EnumProcesses for sigar_proc_list_get on Win32
+
 2006-09-07  Doug MacEachern  <dougm@hyperic.com>
 
         * [SIGAR-14] Fix sigar_cpu_t.total on Linux and Solaris with multi-core CPUs
