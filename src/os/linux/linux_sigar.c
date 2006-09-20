@@ -1510,7 +1510,8 @@ static int get_cpu_info(sigar_t *sigar, sigar_cpu_info_t *info,
             }
             break;
           case 'v':
-            if (strnEQ(ptr, "vendor_id", 9)) {
+            /* "vendor_id" or "vendor" */
+            if (strnEQ(ptr, "vendor", 6)) {
                 cpu_info_strcpy(ptr, info->vendor, sizeof(info->vendor));
                 if (strEQ(info->vendor, "GenuineIntel")) {
                     SIGAR_SSTRCPY(info->vendor, "Intel");
@@ -1518,6 +1519,13 @@ static int get_cpu_info(sigar_t *sigar, sigar_cpu_info_t *info,
                 else if (strEQ(info->vendor, "AuthenticAMD")) {
                     SIGAR_SSTRCPY(info->vendor, "AMD");
                 }
+            }
+            break;
+          case 'f':
+            if (strnEQ(ptr, "family", 6)) {
+                /* IA64 version of "model name" */
+                cpu_info_strcpy(ptr, info->model, sizeof(info->model));
+                sigar_cpu_model_adjust(sigar, info);
             }
             break;
           case 'm':
