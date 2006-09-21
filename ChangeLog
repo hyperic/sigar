@@ -1,5 +1,9 @@
 2006-09-21  Doug MacEachern  <dougm@hyperic.net>
 
+        * [SIGAR-15] Fix sigar_fqdn_get so 'hostname' won't be resolved to 'localhost.localdomain'
+
+2006-09-20  Doug MacEachern  <dougm@hyperic.net>
+
         * Use kstat.cpu_info.brand to determine sigar_cpu_info_t.vendor on Solaris 10+
 
         * Fix Linux cpu_info /proc/cpuinfo parsing on ia64
