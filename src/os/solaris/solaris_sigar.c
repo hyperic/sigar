@@ -245,6 +245,52 @@ int sigar_swap_get(sigar_t *sigar, sigar_swap_t *swap)
     return SIGAR_OK;
 }
 
+static int get_chip_brand(sigar_t *sigar, int processor,
+                          sigar_cpu_info_t *info)
+{
+    kstat_t *ksp = sigar->ks.cpu_info[processor];
+    kstat_named_t *brand;
+
+    if (sigar->solaris_version < 10) {
+        /* don't bother; doesn't exist. */
+        return 0;
+    }
+
+    if (ksp &&
+        (kstat_read(sigar->kc, ksp, NULL) != -1) &&
+        (brand = (kstat_named_t *)kstat_data_lookup(ksp, "brand")))
+    {
+        /* same offset as KSTAT_NAMED_STR_PTR(brand) */
+        char *name = (char *)brand->value.i32;
+        char *vendor = "Sun";
+        char *vendors[] = {
+            "Intel", "AMD", NULL
+        };
+        int i;
+
+        if (!name) {
+            return 0;
+        }
+
+        for (i=0; vendors[i]; i++) {
+            if (strstr(name, vendors[i])) {
+                vendor = vendors[i];
+                break;
+            }
+        }
+
+        SIGAR_SSTRCPY(info->vendor, vendor);
+#if 0
+        SIGAR_SSTRCPY(info->model, name);
+        sigar_cpu_model_adjust(sigar, info);
+#endif
+        return 1;
+    }
+    else {
+        return 0;
+    }
+}
+
 static int get_chip_id(sigar_t *sigar, int processor)
 {
     kstat_t *ksp = sigar->ks.cpu_info[processor];
@@ -1551,6 +1597,7 @@ int sigar_cpu_info_list_get(sigar_t *sigar,
     processor_info_t stats;
     unsigned int i;
     int status = SIGAR_OK;
+    int brand = -1;
 
     if (sigar_kstat_update(sigar) == -1) { /* for sigar->ncpu */
         return errno;
@@ -1592,16 +1639,28 @@ int sigar_cpu_info_list_get(sigar_t *sigar,
 
         SIGAR_SSTRCPY(info->model, stats.pi_processor_type);
 
+        if (brand == -1) {
+            brand = get_chip_brand(sigar, i, info);
+        }
+
         if (strEQ(info->model, "i386")) {
-            /* XXX assuming Intel on x86 */
-            SIGAR_SSTRCPY(info->vendor, "Intel");
+            if (!brand) {
+                /* assume Intel on x86 */
+                SIGAR_SSTRCPY(info->vendor, "Intel");
+            }
             SIGAR_SSTRCPY(info->model, "x86");
         }
         else {
-            /* sparc */
-            SIGAR_SSTRCPY(info->vendor, "Sun");
+            if (!brand) {
+                /* assume Sun */
+                SIGAR_SSTRCPY(info->vendor, "Sun");
+            }
             /* s/sparc/Sparc/ */
             info->model[0] = toupper(info->model[0]);
+        }
+
+        if (brand) {
+            SIGAR_SSTRCPY(info->vendor, cpu_infos->data[0].vendor);
         }
 
         info->mhz = stats.pi_clock;
