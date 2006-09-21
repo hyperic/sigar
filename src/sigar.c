@@ -1901,9 +1901,6 @@ static struct hostent *sigar_gethostbyaddr(const char *addr,
 #define IS_FQDN_MATCH(lookup, name) \
     (IS_FQDN(lookup) && strnEQ(lookup, name, strlen(name)))
 
-#define H_ALIAS_MATCH(alias, name) \
-    (IS_FQDN(alias) && name && strnEQ(alias, name, strlen(name)))
-
 #define FQDN_SET(fqdn) \
     SIGAR_STRNCPY(name, fqdn, namelen)
 
@@ -1930,7 +1927,7 @@ SIGAR_DECLARE(int) sigar_fqdn_get(sigar_t *sigar, char *name, int namelen)
     else {
         if (is_debug) {
             sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
-                             "[fqdn] gethostname() returned: '%s'",
+                             "[fqdn] gethostname()=='%s'",
                              name);
         }
     }
@@ -1966,13 +1963,18 @@ SIGAR_DECLARE(int) sigar_fqdn_get(sigar_t *sigar, char *name, int namelen)
         int i;
 
         for (i=0; p->h_aliases[i]; i++) {
-            if (H_ALIAS_MATCH(p->h_aliases[i], p->h_name)) {
+            if (IS_FQDN_MATCH(p->h_aliases[i], name)) {
                 FQDN_SET(p->h_aliases[i]);
 
                 sigar_log(sigar, SIGAR_LOG_DEBUG,
                           "[fqdn] resolved using gethostbyname.h_aliases");
 
                 return SIGAR_OK;
+            }
+            else if (is_debug) {
+                sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
+                                 "[fqdn] gethostbyname(%s).alias[%d]=='%s'",
+                                 name, i, p->h_aliases[i]);
             }
         }
     }
@@ -2007,11 +2009,6 @@ SIGAR_DECLARE(int) sigar_fqdn_get(sigar_t *sigar, char *name, int namelen)
                 }
                 continue;
             }
-            else if (is_debug) {
-                sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
-                                 "[fqdn] gethostbyaddr(%s) returned: %s",
-                                 addr, q->h_name);
-            }
 
             if (IS_FQDN_MATCH(q->h_name, name)) {
                 FQDN_SET(q->h_name);
@@ -2022,8 +2019,14 @@ SIGAR_DECLARE(int) sigar_fqdn_get(sigar_t *sigar, char *name, int namelen)
                 return SIGAR_OK;
             }
             else {
+                if (is_debug) {
+                    sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
+                                     "[fqdn] gethostbyaddr(%s)=='%s'",
+                                     addr, q->h_name);
+                }
+
                 for (j=0; q->h_aliases[j]; j++) {
-                    if (H_ALIAS_MATCH(q->h_aliases[j], q->h_name)) {
+                    if (IS_FQDN_MATCH(q->h_aliases[j], name)) {
                         FQDN_SET(q->h_aliases[j]);
 
                         sigar_log(sigar, SIGAR_LOG_DEBUG,
@@ -2034,7 +2037,7 @@ SIGAR_DECLARE(int) sigar_fqdn_get(sigar_t *sigar, char *name, int namelen)
                     }
                     else if (is_debug) {
                         sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
-                                         "[fqdn] gethostbyaddr(%s) alias[%d]==%s",
+                                         "[fqdn] gethostbyaddr(%s).alias[%d]=='%s'",
                                          addr, j, q->h_aliases[j]);
                     }
                 }
