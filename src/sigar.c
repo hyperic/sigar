@@ -1898,6 +1898,9 @@ static struct hostent *sigar_gethostbyaddr(const char *addr,
 #define IS_FQDN(name) \
     (name && strchr(name, '.'))
 
+#define IS_FQDN_MATCH(lookup, name) \
+    (IS_FQDN(lookup) && strnEQ(lookup, name, strlen(name)))
+
 #define H_ALIAS_MATCH(alias, name) \
     (IS_FQDN(alias) && name && strnEQ(alias, name, strlen(name)))
 
@@ -1906,6 +1909,7 @@ static struct hostent *sigar_gethostbyaddr(const char *addr,
 
 SIGAR_DECLARE(int) sigar_fqdn_get(sigar_t *sigar, char *name, int namelen)
 {
+    register int is_debug = SIGAR_LOG_IS_DEBUG(sigar);
     sigar_hostent_t data;
     struct hostent *p;
     char domain[SIGAR_FQDN_LEN + 1];
@@ -1924,7 +1928,7 @@ SIGAR_DECLARE(int) sigar_fqdn_get(sigar_t *sigar, char *name, int namelen)
         return errno;
     }
     else {
-        if (SIGAR_LOG_IS_DEBUG(sigar)) {
+        if (is_debug) {
             sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
                              "[fqdn] gethostname() returned: '%s'",
                              name);
@@ -1932,7 +1936,7 @@ SIGAR_DECLARE(int) sigar_fqdn_get(sigar_t *sigar, char *name, int namelen)
     }
 
     if (!(p = sigar_gethostbyname(name, &data))) {
-        if (SIGAR_LOG_IS_DEBUG(sigar)) {
+        if (is_debug) {
             sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
                              "[fqdn] gethostbyname(%s) failed: %s",
                              name, sigar_strerror(sigar, errno));
@@ -1945,7 +1949,7 @@ SIGAR_DECLARE(int) sigar_fqdn_get(sigar_t *sigar, char *name, int namelen)
         return SIGAR_OK;
     }
 
-    if (IS_FQDN(p->h_name)) {
+    if (IS_FQDN_MATCH(p->h_name, name)) {
         FQDN_SET(p->h_name);
 
         sigar_log(sigar, SIGAR_LOG_DEBUG,
@@ -1980,20 +1984,22 @@ SIGAR_DECLARE(int) sigar_fqdn_get(sigar_t *sigar, char *name, int namelen)
         int i,j;
 
         for (i=0; p->h_addr_list[i]; i++) {
+            char addr[INET6_ADDRSTRLEN];
+            struct in_addr *in =
+                (struct in_addr *)p->h_addr_list[i];
+
             struct hostent *q =
                 sigar_gethostbyaddr(p->h_addr_list[i],
                                     p->h_length,
                                     p->h_addrtype,
                                     &data);
 
+            if (is_debug) {
+                sigar_inet_ntoa(sigar, in->s_addr, addr);
+            }
+
             if (!q) {
-                if (SIGAR_LOG_IS_DEBUG(sigar)) {
-                    char addr[INET6_ADDRSTRLEN];
-                    struct in_addr *in =
-                        (struct in_addr *)p->h_addr_list[i];
-
-                    sigar_inet_ntoa(sigar, in->s_addr, addr);
-
+                if (is_debug) {
                     sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
                                      "[fqdn] gethostbyaddr(%s) failed: %s",
                                      addr,
@@ -2001,8 +2007,13 @@ SIGAR_DECLARE(int) sigar_fqdn_get(sigar_t *sigar, char *name, int namelen)
                 }
                 continue;
             }
+            else if (is_debug) {
+                sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
+                                 "[fqdn] gethostbyaddr(%s) returned: %s",
+                                 addr, q->h_name);
+            }
 
-            if (IS_FQDN(q->h_name)) {
+            if (IS_FQDN_MATCH(q->h_name, name)) {
                 FQDN_SET(q->h_name);
 
                 sigar_log(sigar, SIGAR_LOG_DEBUG,
@@ -2020,6 +2031,11 @@ SIGAR_DECLARE(int) sigar_fqdn_get(sigar_t *sigar, char *name, int namelen)
                                   "gethostbyaddr.h_aliases");
 
                         return SIGAR_OK;
+                    }
+                    else if (is_debug) {
+                        sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
+                                         "[fqdn] gethostbyaddr(%s) alias[%d]==%s",
+                                         addr, j, q->h_aliases[j]);
                     }
                 }
             }
