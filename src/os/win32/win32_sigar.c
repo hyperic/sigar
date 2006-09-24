@@ -2726,3 +2726,9 @@ int sigar_who_list_get_win32(sigar_t *sigar,
 
     return SIGAR_OK;
 }
+
+int sigar_os_sys_info_get(sigar_t *sigar,
+                          sigar_sys_info_t *sysinfo)
+{
+    return SIGAR_OK;
+}

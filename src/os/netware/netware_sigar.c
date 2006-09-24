@@ -434,3 +434,11 @@ int sigar_nfs_ping(char *host)
 {
     return SIGAR_ENOTIMPL;
 }
+
+int sigar_os_sys_info_get(sigar_t *sigar,
+                          sigar_sys_info_t *sysinfo)
+{
+    SIGAR_SSTRCPY(sysinfo->vendor, "Novell");
+
+    return SIGAR_OK;
+}

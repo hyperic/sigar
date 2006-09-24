@@ -133,6 +133,10 @@ int sigar_os_close(sigar_t *sigar);
 
 char *sigar_os_error_string(sigar_t *sigar, int err);
 
+int sigar_sys_info_get_uname(sigar_sys_info_t *sysinfo);
+
+int sigar_os_sys_info_get(sigar_t *sigar, sigar_sys_info_t *sysinfo);
+
 int sigar_proc_list_create(sigar_proc_list_t *proclist);
 
 int sigar_proc_list_grow(sigar_proc_list_t *proclist);

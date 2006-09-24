@@ -2293,3 +2293,12 @@ int sigar_proc_port_get(sigar_t *sigar, int protocol,
 {
     return SIGAR_ENOTIMPL;
 }
+
+int sigar_os_ys_info_get(sigar_t *sigar,
+                         sigar_sys_info_t *sysinfo)
+{
+    SIGAR_SSTRCPY(sysinfo->name, "Solaris");
+    SIGAR_SSTRCPY(sysinfo->vendor, "Sun Microsystems");
+
+    return SIGAR_OK;
+}

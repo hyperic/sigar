@@ -2181,3 +2181,27 @@ int sigar_proc_port_get(sigar_t *sigar, int protocol,
 }
 
 #endif
+
+int sigar_os_sys_info_get(sigar_t *sigar,
+                          sigar_sys_info_t *sysinfo)
+{
+#ifdef DARWIN
+    char *codename = NULL;
+    SIGAR_SSTRCPY(sysinfo->name, "MacOSX");
+    SIGAR_SSTRCPY(sysinfo->vendor, "Apple");
+
+    if (strnEQ(sysinfo->version, "10.4", 4)) {
+        codename = "Tiger";
+    }
+    else if (strnEQ(sysinfo->version, "10.3", 4)) {
+        codename = "Panther";
+    }
+
+    if (codename) {
+        SIGAR_SSTRCPY(sysinfo->vendor_code_name, codename);
+    }
+#else
+#endif
+
+    return SIGAR_OK;
+}

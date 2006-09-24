@@ -2108,3 +2108,171 @@ int sigar_proc_port_get(sigar_t *sigar, int protocol,
 
     return SIGAR_OK;
 }
+
+static void generic_vendor_parse(char *line, sigar_sys_info_t *info)
+{
+    char *ptr;
+    int len = 0;
+        
+    while (*line) {
+        SIGAR_SKIP_SPACE(line);
+        if (!isdigit(*line)) {
+            ++line;
+            continue;
+        }
+
+        ptr = line;
+        while ((isdigit(*ptr) || (*ptr == '.'))) {
+            ++ptr;
+            ++len;
+        }
+
+        if (len) {
+            /* sanity check */
+            if (len > sizeof(info->vendor_version)) {
+                continue;
+            }
+            memcpy(info->vendor_version, line, len);/*XXX*/
+            info->vendor_version[len] = '\0';
+            return;
+        }
+    }
+}
+
+static void redhat_vendor_parse(char *line, sigar_sys_info_t *info)
+{
+    char *start, *end;
+
+    generic_vendor_parse(line, info); /* super.parse */
+
+    if ((start = strchr(line, '('))) {
+        ++start;
+        if ((end = strchr(start, ')'))) {
+            int len = end-start;
+            memcpy(info->vendor_code_name, start, len);/*XXX*/
+            info->vendor_code_name[len] = '\0';
+        }
+    }
+
+#define RHEL_PREFIX "Red Hat Enterprise Linux "
+#define CENTOS_VENDOR "CentOS"
+    if (strnEQ(line, RHEL_PREFIX, sizeof(RHEL_PREFIX)-1)) {
+        /*XXX*/
+    }
+    else if (strnEQ(line, CENTOS_VENDOR, sizeof(CENTOS_VENDOR)-1)) {
+        SIGAR_SSTRCPY(info->vendor, CENTOS_VENDOR);
+    }
+}
+
+static void lsb_vendor_parse(char *data, sigar_sys_info_t *info)
+{
+    char *ptr = data;
+    int len = strlen(data);
+    char *end = data+len;
+
+    while (ptr < end) {
+        char *val = strchr(ptr, '=');
+        int klen, vlen;
+        char key[256], *ix;
+
+        if (!val) {
+            continue;
+        }
+        klen = val - ptr;
+        SIGAR_SSTRCPY(key, ptr);
+        key[klen] = '\0';
+        ++val;
+
+        if ((ix = strchr(val, '\n'))) {
+            *ix = '\0';
+        }
+        vlen = strlen(val);
+
+        if (strEQ(key, "DISTRIB_ID")) {
+            SIGAR_SSTRCPY(info->vendor, val);
+        }
+        else if (strEQ(key, "DISTRIB_RELEASE")) {
+            SIGAR_SSTRCPY(info->vendor_version, val);
+        }
+        else if (strEQ(key, "DISTRIB_CODENAME")) {
+            SIGAR_SSTRCPY(info->vendor_code_name, val);
+        }
+
+        ptr += (klen + 1 + vlen + 1);
+    }
+}
+
+typedef struct {
+    const char *name;
+    const char *file;
+    void (*parse)(char *, sigar_sys_info_t *);
+} linux_vendor_info_t;
+
+static linux_vendor_info_t linux_vendors[] = {
+    { "Red Hat",   "/etc/redhat-release", redhat_vendor_parse },
+    { "Fedora",    "/etc/fedora-release", NULL },
+    { "SuSE",      "/etc/SuSE-release", NULL },
+    { "Debian",    "/etc/debian_version", NULL },
+    { "Gentoo",    "/etc/gentoo-release", NULL },
+    { "Slackware", "/etc/slackware-version", NULL },
+    { "Mandrake",  "/etc/mandrake-release", NULL },
+    { "VMware",    "/proc/vmware/version", NULL },
+    { "lsb",       "/etc/lsb-release", lsb_vendor_parse },
+    { NULL }
+};
+
+static int get_linux_vendor_info(sigar_sys_info_t *info)
+{
+    int i, status = ENOENT;
+    /* env vars for testing */
+    const char *release_file = getenv("SIGAR_OS_RELEASE_FILE");
+    const char *vendor_name  = getenv("SIGAR_OS_VENDOR_NAME");
+    char buffer[8192], *data;
+    linux_vendor_info_t *vendor = NULL;
+
+    for (i=0; linux_vendors[i].name; i++) {
+        struct stat sb;
+        vendor = &linux_vendors[i];
+
+        if (release_file && vendor_name) {
+            if (!strEQ(vendor->name, vendor_name)) {
+                continue;
+            }
+        }
+        else {
+            if (stat(vendor->file, &sb) < 0) {
+                continue;
+            }
+            release_file = vendor->file;
+        }
+
+        status =
+            sigar_file2str(release_file, buffer, sizeof(buffer)-1);
+
+        break;
+    }
+
+    if (status != SIGAR_OK) {
+        return status;
+    }
+
+    data = buffer;
+
+    if (vendor->parse) {
+        vendor->parse(data, info);
+    }
+    else {
+        generic_vendor_parse(data, info);
+    }
+
+    return SIGAR_OK;
+}
+
+int sigar_os_sys_info_get(sigar_t *sigar,
+                          sigar_sys_info_t *sysinfo)
+{
+
+    get_linux_vendor_info(sysinfo);
+
+    return SIGAR_OK;
+}

@@ -1041,3 +1041,12 @@ int sigar_proc_port_get(sigar_t *sigar, int protocol,
 {
     return SIGAR_ENOTIMPL;
 }
+
+int sigar_os_sys_info_get(sigar_t *sigar,
+                          sigar_sys_info_t *sysinfo)
+{
+    SIGAR_SSTRCPY(sysinfo->name, "HPUX");
+    SIGAR_SSTRCPY(sysinfo->vendor, "Hewlett-Packard");
+    /* XXX fixup version */
+    return SIGAR_OK;
+}

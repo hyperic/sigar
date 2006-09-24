@@ -671,6 +671,22 @@ typedef struct {
 
 SIGAR_DECLARE(sigar_version_t *) sigar_version_get(void);
 
+#define SIGAR_SYS_INFO_LEN SIGAR_MAXHOSTNAMELEN /* more than enough */
+
+typedef struct {
+    char name[SIGAR_SYS_INFO_LEN]; /* canonicalized sysname */
+    char version[SIGAR_SYS_INFO_LEN]; /* utsname.release */
+    char arch[SIGAR_SYS_INFO_LEN];
+    char description[SIGAR_SYS_INFO_LEN];
+    char patch_level[SIGAR_SYS_INFO_LEN];
+    char vendor[SIGAR_SYS_INFO_LEN];
+    char vendor_version[SIGAR_SYS_INFO_LEN];
+    char vendor_name[SIGAR_SYS_INFO_LEN];  /* utsname.sysname */
+    char vendor_code_name[SIGAR_SYS_INFO_LEN];
+} sigar_sys_info_t;
+
+SIGAR_DECLARE(int) sigar_sys_info_get(sigar_t *sigar, sigar_sys_info_t *sysinfo);
+
 #define SIGAR_FQDN_LEN 512
 
 SIGAR_DECLARE(int) sigar_fqdn_get(sigar_t *sigar, char *name, int namelen);
