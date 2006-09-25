@@ -1863,6 +1863,22 @@ static int sigar_get_cpu_mhz(sigar_t *sigar)
     return sigar->cpu_mhz;
 }
 
+static char *get_cpu_arch(void)
+{
+    switch (_system_configuration.architecture) {
+        case POWER_RS:
+            return "Power Classic";
+        case POWER_PC:
+            return "PowerPC";
+            break;
+        case IA64:
+            return "IA64";
+            break;
+        default:
+            return "PowerPC"; /* what else could it be */
+    }
+}
+
 int sigar_cpu_info_list_get(sigar_t *sigar,
                             sigar_cpu_info_list_t *cpu_infos)
 {
@@ -1884,20 +1900,7 @@ int sigar_cpu_info_list_get(sigar_t *sigar,
 
         info->mhz = sigar_get_cpu_mhz(sigar);
 
-        switch (_system_configuration.architecture) {
-          case POWER_RS:
-            arch = "Power Classic";
-            break;
-          case POWER_PC:
-            arch = "PowerPC";
-            break;
-          case IA64:
-            arch = "IA64";
-            break;
-          default:
-            arch = "PowerPC"; /* what else could it be */
-            break;
-        }
+        arch = get_cpu_arch();
 
         if (*arch == 'P') {
             SIGAR_SSTRCPY(info->vendor, "IBM");
@@ -2355,7 +2358,20 @@ int sigar_proc_port_get(sigar_t *sigar, int protocol,
 int sigar_os_sys_info_get(sigar_t *sigar,
                           sigar_sys_info_t *sysinfo)
 {
+    struct utsname name;
+
+    uname(&name);
+
     SIGAR_SSTRCPY(sysinfo->vendor, "IBM");
+    SIGAR_SSTRCPY(sysinfo->arch, get_cpu_arch());
+
+    sprintf(sysinfo->version, "%s.%s",
+            name.version, name.release);
+
+    SIGAR_SSTRCPY(sysinfo->vendor_version, sysinfo->version);
+
+    sprintf(sysinfo->description, "%s %s",
+            sysinfo->name, sysinfo->version);
 
     return SIGAR_OK;
 }
