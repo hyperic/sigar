@@ -2258,12 +2258,17 @@ static int get_linux_vendor_info(sigar_sys_info_t *info)
 
     data = buffer;
 
+    SIGAR_SSTRCPY(info->vendor, vendor->name);
+
     if (vendor->parse) {
         vendor->parse(data, info);
     }
     else {
         generic_vendor_parse(data, info);
     }
+
+    sprintf(info->description, "%s %s",
+            info->vendor, info->vendor_version);
 
     return SIGAR_OK;
 }
