@@ -889,6 +889,53 @@ my %classes = (
          name => 'virtual_memory_max',
       },
     ],
+    SysInfo => [
+      {
+         name => 'name', type => 'String',
+         desc => '',
+         plat => '*'
+      },
+      {
+         name => 'version', type => 'String',
+         desc => '',
+         plat => '*'
+      },
+      {
+         name => 'arch', type => 'String',
+         desc => '',
+         plat => '*'
+      },
+      {
+         name => 'description', type => 'String',
+         desc => '',
+         plat => '*'
+      },
+      {
+         name => 'patch_level', type => 'String',
+         desc => '',
+         plat => 'W'
+      },
+      {
+         name => 'vendor', type => 'String',
+         desc => '',
+         plat => '*'
+      },
+      {
+         name => 'vendor_version', type => 'String',
+         desc => '',
+         plat => '*'
+      },
+      {
+         name => 'vendor_name', type => 'String',
+         desc => '',
+         plat => '*'
+      },
+      {
+         name => 'vendor_code_name', type => 'String',
+         desc => '',
+         plat => '*'
+      },
+    ],
     Who => [
       {
          name => 'user', type => 'String',
