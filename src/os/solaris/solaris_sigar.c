@@ -29,6 +29,7 @@
 #include <sys/proc.h>
 #include <sys/swap.h>
 #include <sys/stat.h>
+#include <sys/systeminfo.h>
 #include <sys/utsname.h>
 #include <dlfcn.h>
 
@@ -2298,6 +2299,8 @@ int sigar_os_sys_info_get(sigar_t *sigar,
                           sigar_sys_info_t *sys_info)
 {
     char *vendor_version;
+
+    sysinfo(SI_ARCHITECTURE, sys_info->arch, sizeof(sys_info->arch));
 
     SIGAR_SSTRCPY(sys_info->name, "Solaris");
     SIGAR_SSTRCPY(sys_info->vendor, "Sun Microsystems");
