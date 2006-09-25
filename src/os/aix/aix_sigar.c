@@ -1870,12 +1870,68 @@ static char *get_cpu_arch(void)
             return "Power Classic";
         case POWER_PC:
             return "PowerPC";
-            break;
         case IA64:
             return "IA64";
-            break;
         default:
             return "PowerPC"; /* what else could it be */
+    }
+}
+
+static char *get_ppc_cpu_model(void)
+{
+    switch (_system_configuration.implementation) {
+        case POWER_RS1:
+            return "RS1";
+        case POWER_RSC:
+            return "RSC";
+        case POWER_RS2:
+            return "RS2";
+        case POWER_601:
+            return "601";
+        case POWER_603:
+            return "603";
+        case POWER_604:
+            return "604";
+        case POWER_620:
+            return "620";
+        case POWER_630:
+            return "630";
+        case POWER_A35:
+            return "A35";
+        case POWER_RS64II:
+            return "RS64-II";
+        case POWER_RS64III:
+            return "RS64-III";
+        case POWER_4:
+            return "POWER4";
+        case POWER_MPC7450:
+            return "MPC7450";
+        case POWER_5:
+            return "POWER5";
+        default:
+            return "Unknown";
+    }
+}
+
+static char *get_ia64_cpu_model(void)
+{
+    switch (_system_configuration.implementation) {
+        case IA64_M1:
+            return "M1";
+        case IA64_M2:
+            return "M2";
+        default:
+            return "Unknown";
+    }
+}
+
+static char *get_cpu_model(void)
+{
+    if (_system_configuration.architecture == IA64) {
+        return get_ia64_cpu_model();
+    }
+    else {
+        return get_ppc_cpu_model();
     }
 }
 
@@ -1884,13 +1940,13 @@ int sigar_cpu_info_list_get(sigar_t *sigar,
 {
     int i;
     int ncpu = _system_configuration.ncpus; /* this can change */
+    char *arch = get_cpu_arch(), *model = get_cpu_model();
 
     /*XXX should only do this once*/
     sigar_cpu_info_list_create(cpu_infos);
 
     for (i=0; i<ncpu; i++) {
         sigar_cpu_info_t *info;
-        char *arch, *model=NULL;
 
         SIGAR_CPU_INFO_LIST_GROW(cpu_infos);
 
@@ -1900,84 +1956,18 @@ int sigar_cpu_info_list_get(sigar_t *sigar,
 
         info->mhz = sigar_get_cpu_mhz(sigar);
 
-        arch = get_cpu_arch();
-
         if (*arch == 'P') {
             SIGAR_SSTRCPY(info->vendor, "IBM");
-
-            switch (_system_configuration.implementation) {
-              case POWER_RS1:
-                model = "RS1";
-                break;
-              case POWER_RSC:
-                model = "RSC";
-                break;
-              case POWER_RS2:
-                model = "RS2";
-                break;
-              case POWER_601:
-                model = "601";
-                break;
-              case POWER_603:
-                model = "603";
-                break;
-              case POWER_604:
-                model = "604";
-                break;
-              case POWER_620:
-                model = "620";
-                break;
-              case POWER_630:
-                model = "630";
-                break;
-              case POWER_A35:
-                model = "A35";
-                break;
-              case POWER_RS64II:
-                model = "RS64-II";
-                break;
-              case POWER_RS64III:
-                model = "RS64-III";
-                break;
-              case POWER_4:
-                model = "POWER4";
-                break;
-              case POWER_MPC7450:
-                model = "MPC7450";
-                break;
-              case POWER_5:
-                model = "POWER5";
-                break;
-              default:
-                break;
-            }
         }
         else if (*arch == 'I') {
             SIGAR_SSTRCPY(info->vendor, "Intel");
-
-            switch (_system_configuration.implementation) {
-              case IA64_M1:
-                model = "M1";
-                break;
-              case IA64_M2:
-                model = "M2";
-                break;
-              default:
-                break;
-            }
         }
         else {
-            SIGAR_SSTRCPY(info->vendor, "IBM");
-            break;
+            SIGAR_SSTRCPY(info->vendor, "Unknown");
         }
 
-        if (model) {
-            snprintf(info->model, sizeof(info->model),
-                     "%s %s", arch, model);
-        }
-        else {
-            SIGAR_SSTRCPY(info->model, arch);
-        }
+        snprintf(info->model, sizeof(info->model),
+                 "%s %s", arch, model);
     }
 
     return SIGAR_OK;
@@ -2364,6 +2354,10 @@ int sigar_os_sys_info_get(sigar_t *sigar,
 
     SIGAR_SSTRCPY(sysinfo->vendor, "IBM");
     SIGAR_SSTRCPY(sysinfo->arch, get_cpu_arch());
+    /* utsname.machine is a sequence number */
+    /* XXX odm might have something better */
+    sprintf(sysinfo->machine, "%s %s",
+            sysinfo->arch, get_cpu_model());
 
     sprintf(sysinfo->version, "%s.%s",
             name.version, name.release);
