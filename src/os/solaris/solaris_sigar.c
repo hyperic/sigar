@@ -2297,8 +2297,27 @@ int sigar_proc_port_get(sigar_t *sigar, int protocol,
 int sigar_os_sys_info_get(sigar_t *sigar,
                           sigar_sys_info_t *sysinfo)
 {
+    char *vendor_version;
+
     SIGAR_SSTRCPY(sysinfo->name, "Solaris");
     SIGAR_SSTRCPY(sysinfo->vendor, "Sun Microsystems");
+
+    if (strEQ(sysinfo->version, "5.6")) {
+        vendor_version = "2.6";
+    }
+    else {
+        if ((vendor_version = strchr(sysinfo->version, '.'))) {
+            ++vendor_version;
+        }
+        else {
+            vendor_version = sysinfo->version;
+        }
+    }
+
+    SIGAR_SSTRCPY(sysinfo->vendor_version, vendor_version);
+
+    sprintf(sysinfo->description, "%s %s",
+            sysinfo->name, sysinfo->vendor_version);
 
     return SIGAR_OK;
 }
