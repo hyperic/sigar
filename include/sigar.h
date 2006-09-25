@@ -677,6 +677,7 @@ typedef struct {
     char name[SIGAR_SYS_INFO_LEN]; /* canonicalized sysname */
     char version[SIGAR_SYS_INFO_LEN]; /* utsname.release */
     char arch[SIGAR_SYS_INFO_LEN];
+    char machine[SIGAR_SYS_INFO_LEN];
     char description[SIGAR_SYS_INFO_LEN];
     char patch_level[SIGAR_SYS_INFO_LEN];
     char vendor[SIGAR_SYS_INFO_LEN];

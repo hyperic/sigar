@@ -271,6 +271,7 @@ int sigar_sys_info_get_uname(sigar_sys_info_t *sysinfo)
     SIGAR_SSTRCPY(sysinfo->version, name.release);
     SIGAR_SSTRCPY(sysinfo->vendor_name, name.sysname);
     SIGAR_SSTRCPY(sysinfo->name, name.sysname);
+    SIGAR_SSTRCPY(sysinfo->machine, name.machine);
     SIGAR_SSTRCPY(sysinfo->arch, name.machine);
     SIGAR_SSTRCPY(sysinfo->patch_level, "unknown");
 
