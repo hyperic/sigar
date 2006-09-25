@@ -906,6 +906,11 @@ my %classes = (
          plat => '*'
       },
       {
+         name => 'machine', type => 'String',
+         desc => '',
+         plat => '*'
+      },
+      {
          name => 'description', type => 'String',
          desc => '',
          plat => '*'
