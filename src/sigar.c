@@ -244,7 +244,39 @@ SIGAR_DECLARE(char *) sigar_format_size(sigar_uint64_t size, char *buf)
     } while (1);
 }
 
+SIGAR_DECLARE(int) sigar_sys_info_get(sigar_t *sigar,
+                                      sigar_sys_info_t *sysinfo)
+{
+    SIGAR_ZERO(sysinfo);
+
 #ifndef WIN32
+    sigar_sys_info_get_uname(sysinfo);
+#endif
+
+    sigar_os_sys_info_get(sigar, sysinfo);
+
+    return SIGAR_OK;
+}
+
+#ifndef WIN32
+
+#include <sys/utsname.h>
+
+int sigar_sys_info_get_uname(sigar_sys_info_t *sysinfo)
+{
+    struct utsname name;
+
+    uname(&name);
+
+    SIGAR_SSTRCPY(sysinfo->version, name.release);
+    SIGAR_SSTRCPY(sysinfo->vendor_name, name.sysname);
+    SIGAR_SSTRCPY(sysinfo->name, name.sysname);
+    SIGAR_SSTRCPY(sysinfo->arch, name.machine);
+    SIGAR_SSTRCPY(sysinfo->patch_level, "unknown");
+
+    return SIGAR_OK;
+}
+
 #include <pwd.h>
 #include <grp.h>
 
@@ -1207,40 +1239,6 @@ int sigar_net_info_get(sigar_t *sigar,
     }
 
     sigar_get_default_gateway(sigar, netinfo->default_gateway);
-
-    return SIGAR_OK;
-}
-
-#ifndef WIN32
-
-#include <sys/utsname.h>
-
-int sigar_sys_info_get_uname(sigar_sys_info_t *sysinfo)
-{
-    struct utsname name;
-
-    uname(&name);
-
-    SIGAR_SSTRCPY(sysinfo->version, name.release);
-    SIGAR_SSTRCPY(sysinfo->vendor_name, name.sysname);
-    SIGAR_SSTRCPY(sysinfo->name, name.sysname);
-    SIGAR_SSTRCPY(sysinfo->arch, name.machine);
-    SIGAR_SSTRCPY(sysinfo->patch_level, "unknown");
-
-    return SIGAR_OK;
-}
-#endif
-
-SIGAR_DECLARE(int) sigar_sys_info_get(sigar_t *sigar,
-                                      sigar_sys_info_t *sysinfo)
-{
-    SIGAR_ZERO(sysinfo);
-
-#ifndef WIN32
-    sigar_sys_info_get_uname(sysinfo);
-#endif
-
-    sigar_os_sys_info_get(sigar, sysinfo);
 
     return SIGAR_OK;
 }
