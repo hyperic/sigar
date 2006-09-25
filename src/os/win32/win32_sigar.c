@@ -2730,5 +2730,54 @@ int sigar_who_list_get_win32(sigar_t *sigar,
 int sigar_os_sys_info_get(sigar_t *sigar,
                           sigar_sys_info_t *sysinfo)
 {
+    OSVERSIONINFO version;
+    char *vendor_name, *vendor_version, *code_name=NULL;
+
+    version.dwOSVersionInfoSize = sizeof(version);
+    GetVersionEx(&version);
+
+    if (sigar->winnt) {
+        vendor_name = "Windows NT";
+        vendor_version = "NT";
+    }
+    else {
+        switch (version.dwMinorVersion) {
+          case 0:
+            vendor_name = "Windows 2000";
+            vendor_version = "2000";
+            break;
+          case 1:
+            vendor_name = "Windows XP";
+            vendor_version = "XP";
+            code_name = "Whistler";
+            break;
+          case 2:
+            vendor_name = "Windows 2003";
+            vendor_version = "2003";
+            code_name = "Whistler Server";
+            break;
+          default:
+            vendor_name = "Windows Unknown";
+            break;
+        }
+    }
+
+    SIGAR_SSTRCPY(sysinfo->name, "Win32");
+    SIGAR_SSTRCPY(sysinfo->vendor, "Microsoft");
+    SIGAR_SSTRCPY(sysinfo->vendor_name, vendor_name);
+    SIGAR_SSTRCPY(sysinfo->vendor_version, vendor_version);
+    if (code_name) {
+        SIGAR_SSTRCPY(sysinfo->vendor_code_name, code_name);
+    }
+    /* XXX only arch we currently support */
+    SIGAR_SSTRCPY(sysinfo->arch, "x86");
+
+    sprintf(sysinfo->version, "%d.%d",
+            version.dwMajorVersion,
+            version.dwMinorVersion);
+
+    SIGAR_SSTRCPY(sysinfo->patch_level,
+                  version.szCSDVersion);
+
     return SIGAR_OK;
 }
