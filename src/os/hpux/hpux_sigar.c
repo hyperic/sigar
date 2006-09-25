@@ -1042,11 +1042,49 @@ int sigar_proc_port_get(sigar_t *sigar, int protocol,
     return SIGAR_ENOTIMPL;
 }
 
+
 int sigar_os_sys_info_get(sigar_t *sigar,
                           sigar_sys_info_t *sysinfo)
 {
+    char *vendor_version, *arch;
+    long cpu = sysconf(_SC_CPU_VERSION);
+
+    switch (cpu) {
+        case CPU_PA_RISC1_0:
+            arch = "PA_RISC1.0";
+            break;
+        case CPU_PA_RISC1_1:
+            arch = "PA_RISC1.1";
+            break;
+        case CPU_PA_RISC2_0:
+            arch = "PA_RISC2.0";
+            break;
+#ifdef CPU_IA64_ARCHREV_0            
+        case CPU_IA64_ARCHREV_0:
+            arch = "ia64";
+            break;
+#endif
+        default:
+            arch = "unknown";
+            break;
+    }
+
+    SIGAR_SSTRCPY(sysinfo->arch, arch);
+
     SIGAR_SSTRCPY(sysinfo->name, "HPUX");
     SIGAR_SSTRCPY(sysinfo->vendor, "Hewlett-Packard");
-    /* XXX fixup version */
+
+    if (strstr(sysinfo->version, ".11.")) {
+        vendor_version = "11";
+    }
+    else {
+        vendor_version = sysinfo->version;
+    }
+
+    SIGAR_SSTRCPY(sysinfo->vendor_version, vendor_version);
+
+    sprintf(sysinfo->description, "%s %s",
+            sysinfo->vendor_name, sysinfo->vendor_version);
+
     return SIGAR_OK;
 }
