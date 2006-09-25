@@ -2779,5 +2779,8 @@ int sigar_os_sys_info_get(sigar_t *sigar,
     SIGAR_SSTRCPY(sysinfo->patch_level,
                   version.szCSDVersion);
 
+    sprintf(sysinfo->description, "%s %s",
+            sysinfo->vendor, sysinfo->vendor_name);
+
     return SIGAR_OK;
 }
