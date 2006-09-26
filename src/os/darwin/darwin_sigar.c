@@ -31,6 +31,7 @@
 #include <mach/task.h>
 #include <mach/vm_map.h>
 #include <mach/shared_memory_server.h>
+#include <Gestalt.h>
 #else
 #include <sys/dkstat.h>
 #include <sys/types.h>
@@ -2187,19 +2188,49 @@ int sigar_os_sys_info_get(sigar_t *sigar,
 {
 #ifdef DARWIN
     char *codename = NULL;
+    long version_major, version_minor, version_fix;
+
     SIGAR_SSTRCPY(sysinfo->name, "MacOSX");
+    SIGAR_SSTRCPY(sysinfo->vendor_name, "Mac OS X");
     SIGAR_SSTRCPY(sysinfo->vendor, "Apple");
 
-    if (strnEQ(sysinfo->version, "10.4", 4)) {
-        codename = "Tiger";
+    Gestalt(gestaltSystemVersionMajor, &version_major);
+    Gestalt(gestaltSystemVersionMinor, &version_minor);
+    Gestalt(gestaltSystemVersionBugFix, &version_fix);
+
+    sprintf(sysinfo->vendor_version, "%ld.%ld",
+            version_major, version_minor);
+
+    sprintf(sysinfo->version, "%s.%ld",
+            sysinfo->vendor_version, version_fix);
+
+    if (version_major == 10) {
+        switch (version_minor) {
+          case 2:
+            codename = "Jaguar";
+            break;
+          case 3:
+            codename = "Panther";
+            break;
+          case 4:
+            codename = "Tiger";
+            break;
+          case 5:
+            codename = "Leopard";
+            break;
+          default:
+            codename = "Unknown";
+            break;
+        }
     }
-    else if (strnEQ(sysinfo->version, "10.3", 4)) {
-        codename = "Panther";
+    else {
+        return SIGAR_ENOTIMPL;
     }
 
-    if (codename) {
-        SIGAR_SSTRCPY(sysinfo->vendor_code_name, codename);
-    }
+    SIGAR_SSTRCPY(sysinfo->vendor_code_name, codename);
+
+    sprintf(sysinfo->description, "%s %s",
+            sysinfo->vendor_name, sysinfo->vendor_code_name);
 #else
 #endif
 
