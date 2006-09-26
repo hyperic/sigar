@@ -31,7 +31,9 @@
 
 #ifndef WIN32
 #include <unistd.h>
+#ifndef DARWIN
 #include <strings.h>
+#endif
 #endif
 
 #ifdef DMALLOC
