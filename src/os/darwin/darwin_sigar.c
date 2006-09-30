@@ -2199,11 +2199,15 @@ int sigar_os_sys_info_get(sigar_t *sigar,
     Gestalt(gestaltSystemVersionMinor, &version_minor);
     Gestalt(gestaltSystemVersionBugFix, &version_fix);
 
-    sprintf(sysinfo->vendor_version, "%ld.%ld",
-            version_major, version_minor);
+    snprintf(sysinfo->vendor_version,
+             sizeof(sysinfo->vendor_version),
+             "%ld.%ld",
+             version_major, version_minor);
 
-    sprintf(sysinfo->version, "%s.%ld",
-            sysinfo->vendor_version, version_fix);
+    snprintf(sysinfo->version,
+             sizeof(sysinfo->version),
+             "%s.%ld",
+             sysinfo->vendor_version, version_fix);
 
     if (version_major == 10) {
         switch (version_minor) {
