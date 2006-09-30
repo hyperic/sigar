@@ -2235,17 +2235,25 @@ int sigar_os_sys_info_get(sigar_t *sigar,
              "%s %s",
              sysinfo->vendor_name, sysinfo->vendor_code_name);
 #else
-#endif
+    char *ptr;
+
     SIGAR_SSTRCPY(sysinfo->name, "FreeBSD");
     SIGAR_SSTRCPY(sysinfo->vendor_name, sysinfo->name);
     SIGAR_SSTRCPY(sysinfo->vendor, sysinfo->name);
     SIGAR_SSTRCPY(sysinfo->vendor_version,
                   sysinfo->version);
 
+    if ((ptr = strstr(sysinfo->vendor_version, "-"))) {
+        /* STABLE, RELEASE, CURRENT */
+        *ptr++ = '\0';
+        SIGAR_SSTRCPY(sysinfo->vendor_code_name, ptr);
+    }
+
     snprintf(sysinfo->description,
              sizeof(sysinfo->description),
              "%s %s",
-             sysinfo->name, sysinfo->vendor_version);
+             sysinfo->name, sysinfo->version);
+#endif
 
     return SIGAR_OK;
 }
