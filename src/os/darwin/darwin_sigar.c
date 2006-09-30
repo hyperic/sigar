@@ -2230,8 +2230,10 @@ int sigar_os_sys_info_get(sigar_t *sigar,
 
     SIGAR_SSTRCPY(sysinfo->vendor_code_name, codename);
 
-    sprintf(sysinfo->description, "%s %s",
-            sysinfo->vendor_name, sysinfo->vendor_code_name);
+    snprintf(sysinfo->description,
+             sizeof(sysinfo->description),
+             "%s %s",
+             sysinfo->vendor_name, sysinfo->vendor_code_name);
 #else
 #endif
     SIGAR_SSTRCPY(sysinfo->name, "FreeBSD");
