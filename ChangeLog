@@ -1,3 +1,7 @@
+2006-09-30  Doug MacEachern  <dougm@hyperic.com>
+
+        * OperatingSystem.java has been ported to the C sigar_sys_info API
+
 2006-09-21  Doug MacEachern  <dougm@hyperic.net>
 
         * [SIGAR-15] Fix sigar_fqdn_get so 'hostname' won't be resolved to 'localhost.localdomain'
