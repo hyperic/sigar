@@ -1247,7 +1247,8 @@ static int get_iostat_sys(sigar_t *sigar,
     partition = strtoul(fsdev, NULL, 0);
     *fsdev = '\0';
 
-    sprintf(stat, SYS_BLOCK "/%s/%s%d/stat", name, name, partition);
+    snprintf(stat, sizeof(stat),
+             SYS_BLOCK "/%s/%s%d/stat", name, name, partition);
 
     status = sigar_file2str(stat, dev, sizeof(dev));
     if (status != SIGAR_OK) {
@@ -2157,8 +2158,10 @@ static void redhat_vendor_parse(char *line, sigar_sys_info_t *info)
 #define RHEL_PREFIX "Red Hat Enterprise Linux "
 #define CENTOS_VENDOR "CentOS"
     if (strnEQ(line, RHEL_PREFIX, sizeof(RHEL_PREFIX)-1)) {
-        sprintf(info->vendor_version, "Enterprise Linux %c",
-                info->vendor_version[0]);
+        snprintf(info->vendor_version,
+                 sizeof(info->vendor_version),
+                 "Enterprise Linux %c",
+                 info->vendor_version[0]);
     }
     else if (strnEQ(line, CENTOS_VENDOR, sizeof(CENTOS_VENDOR)-1)) {
         SIGAR_SSTRCPY(info->vendor, CENTOS_VENDOR);
@@ -2268,8 +2271,10 @@ static int get_linux_vendor_info(sigar_sys_info_t *info)
         generic_vendor_parse(data, info);
     }
 
-    sprintf(info->description, "%s %s",
-            info->vendor, info->vendor_version);
+    snprintf(info->description,
+             sizeof(info->description),
+             "%s %s",
+             info->vendor, info->vendor_version);
 
     return SIGAR_OK;
 }

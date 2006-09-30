@@ -1516,7 +1516,8 @@ static int create_diskmap_v4(sigar_t *sigar)
             *s = '\0';
         }
         strcpy(disk, ptr);
-        sprintf(cmd, LSPV_CMD " -l %s", disk);
+        snprintf(cmd, sizeof(cmd),
+                 LSPV_CMD " -l %s", disk);
         if (!(lfp = popen(cmd, "r"))) {
             continue;
         }
@@ -1587,7 +1588,8 @@ static int create_diskmap_v5(sigar_t *sigar)
         sigar_cache_entry_t *ent;
         int j;
 
-        sprintf(query, "parent = '%s'", disk[i].vgname);
+        snprintf(query, sizeof(query),
+                 "parent = '%s'", disk[i].vgname);
 
         ptr = dv = odm_get_list(CuDv_CLASS, query, &info, 256, 1);
         if ((int)dv == -1) {
@@ -2356,16 +2358,22 @@ int sigar_os_sys_info_get(sigar_t *sigar,
     SIGAR_SSTRCPY(sysinfo->arch, get_cpu_arch());
     /* utsname.machine is a sequence number */
     /* XXX odm might have something better */
-    sprintf(sysinfo->machine, "%s %s",
-            sysinfo->arch, get_cpu_model());
+    snprintf(sysinfo->machine,
+             sizeof(sysinfo->machine),
+             "%s %s",
+             sysinfo->arch, get_cpu_model());
 
-    sprintf(sysinfo->version, "%s.%s",
-            name.version, name.release);
+    snprintf(sysinfo->version,
+             sizeof(sysinfo->version),
+             "%s.%s",
+             name.version, name.release);
 
     SIGAR_SSTRCPY(sysinfo->vendor_version, sysinfo->version);
 
-    sprintf(sysinfo->description, "%s %s",
-            sysinfo->name, sysinfo->version);
+    snprintf(sysinfo->description,
+             sizeof(sysinfo->description),
+             "%s %s",
+             sysinfo->name, sysinfo->version);
 
     return SIGAR_OK;
 }

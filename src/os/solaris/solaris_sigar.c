@@ -801,7 +801,8 @@ static int ucb_ps_args_get(sigar_t *sigar, sigar_pid_t pid,
         args = pargs->args;
     }
     else {
-        sprintf(buffer, "/usr/ucb/ps -ww %ld", pid);
+        snprintf(buffer, sizeof(buffer),
+                 "/usr/ucb/ps -ww %ld", pid);
 
         if (!(fp = popen(buffer, "r"))) {
             return errno;
@@ -2319,8 +2320,10 @@ int sigar_os_sys_info_get(sigar_t *sigar,
 
     SIGAR_SSTRCPY(sys_info->vendor_version, vendor_version);
 
-    sprintf(sys_info->description, "%s %s",
-            sys_info->name, sys_info->vendor_version);
+    snprintf(sys_info->description,
+             sizeof(sys_info->description),
+             "%s %s",
+             sys_info->name, sys_info->vendor_version);
 
     return SIGAR_OK;
 }

@@ -1083,8 +1083,10 @@ int sigar_os_sys_info_get(sigar_t *sigar,
 
     SIGAR_SSTRCPY(sysinfo->vendor_version, vendor_version);
 
-    sprintf(sysinfo->description, "%s %s",
-            sysinfo->vendor_name, sysinfo->vendor_version);
+    snprintf(sysinfo->description,
+             sizeof(sysinfo->description),
+             "%s %s",
+             sysinfo->vendor_name, sysinfo->vendor_version);
 
     return SIGAR_OK;
 }
