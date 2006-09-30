@@ -2736,11 +2736,11 @@ int sigar_os_sys_info_get(sigar_t *sigar,
     version.dwOSVersionInfoSize = sizeof(version);
     GetVersionEx(&version);
 
-    if (sigar->winnt) {
+    if (version.dwMajorVersion == 4) {
         vendor_name = "Windows NT";
         vendor_version = "NT";
     }
-    else {
+    else if (version.dwMajorVersion == 5) {
         switch (version.dwMinorVersion) {
           case 0:
             vendor_name = "Windows 2000";
@@ -2758,6 +2758,14 @@ int sigar_os_sys_info_get(sigar_t *sigar,
             break;
           default:
             vendor_name = "Windows Unknown";
+            break;
+        }
+    }
+    else if (version.dwMajorVersion == 6) {
+        switch (version.dwMinorVersion) {
+          default:
+            vendor_name = "Windows Vista";
+            vendor_version = "Vista";
             break;
         }
     }
