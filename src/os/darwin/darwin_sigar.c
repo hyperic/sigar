@@ -39,6 +39,7 @@
 #include <sys/user.h>
 #include <sys/vmmeter.h>
 #include <fcntl.h>
+#include <stdio.h>
 #endif
 
 #include <sys/ioctl.h>
@@ -2233,6 +2234,16 @@ int sigar_os_sys_info_get(sigar_t *sigar,
             sysinfo->vendor_name, sysinfo->vendor_code_name);
 #else
 #endif
+    SIGAR_SSTRCPY(sysinfo->name, "FreeBSD");
+    SIGAR_SSTRCPY(sysinfo->vendor_name, sysinfo->name);
+    SIGAR_SSTRCPY(sysinfo->vendor, sysinfo->name);
+    SIGAR_SSTRCPY(sysinfo->vendor_version,
+                  sysinfo->version);
+
+    snprintf(sysinfo->description,
+             sizeof(sysinfo->description),
+             "%s %s",
+             sysinfo->name, sysinfo->vendor_version);
 
     return SIGAR_OK;
 }
