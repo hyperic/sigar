@@ -28,6 +28,12 @@
 #include <sys/stat.h>
 #include <errno.h>
 
+#ifdef _PSTAT64
+typedef int64_t pstat_int_t;
+#else
+typedef int32_t pstat_int_t;
+#endif
+
 int sigar_os_open(sigar_t **sigar)
 {
     *sigar = malloc(sizeof(**sigar));
@@ -115,7 +121,8 @@ int sigar_swap_get(sigar_t *sigar, sigar_swap_t *swap)
 }
 
 static void get_cpu_metrics(sigar_t *sigar,
-                            sigar_cpu_t *cpu, int32_t *cpu_time)
+                            sigar_cpu_t *cpu,
+                            pstat_int_t *cpu_time)
 {
     cpu->user = SIGAR_TICK2SEC(cpu_time[CP_USER]);
 
@@ -259,7 +266,7 @@ static int sigar_pstat_getproc(sigar_t *sigar, sigar_pid_t pid)
                       sizeof(*sigar->pinfo),
                       0, pid) == -1)
     {
-        return ESRCH;
+        return errno;
     }
 
     return SIGAR_OK;
@@ -353,7 +360,9 @@ int sigar_proc_state_get(sigar_t *sigar, sigar_pid_t pid,
     procstate->threads  = pinfo->pst_nlwps;
     procstate->processor = pinfo->pst_procnum;
 
-    switch (pinfo->pst_stat) {
+    /* cast to prevent compiler warning: */
+    /* Case label too big for the type of the switch expression */
+    switch ((int32_t)pinfo->pst_stat) {
       case PS_SLEEP:
         procstate->state = 'S';
         break;
@@ -386,7 +395,7 @@ int sigar_proc_args_get(sigar_t *sigar, sigar_pid_t pid,
     struct pst_status status;
 
     if (pstat_getproc(&status, sizeof(status), 0, pid) == -1) {
-        return ESRCH;
+        return errno;
     }
 
     args = status.pst_cmd;
@@ -416,7 +425,7 @@ int sigar_proc_fd_get(sigar_t *sigar, sigar_pid_t pid,
     procfd->total = 0;
 
     if (pstat_getproc(&status, sizeof(status), 0, pid) == -1) {
-        return ESRCH;
+        return errno;
     }
 
     /* man pstat_getfile for index splaination */

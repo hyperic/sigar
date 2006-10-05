@@ -27,8 +27,9 @@
 #ifndef _LP64
 #define _LP64
 #endif
-#define _PSTAT64
 #endif
+
+#define _PSTAT64
 
 #include <sys/pstat.h>
 #include <sys/mib.h>
