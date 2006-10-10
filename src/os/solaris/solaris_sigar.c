@@ -246,6 +246,11 @@ int sigar_swap_get(sigar_t *sigar, sigar_swap_t *swap)
     return SIGAR_OK;
 }
 
+#ifndef KSTAT_NAMED_STR_PTR
+/* same offset as KSTAT_NAMED_STR_PTR(brand) */
+#define KSTAT_NAMED_STR_PTR(n) (char *)((n)->value.i32)
+#endif
+
 static int get_chip_brand(sigar_t *sigar, int processor,
                           sigar_cpu_info_t *info)
 {
@@ -261,8 +266,8 @@ static int get_chip_brand(sigar_t *sigar, int processor,
         (kstat_read(sigar->kc, ksp, NULL) != -1) &&
         (brand = (kstat_named_t *)kstat_data_lookup(ksp, "brand")))
     {
-        /* same offset as KSTAT_NAMED_STR_PTR(brand) */
-        char *name = (char *)brand->value.i32;
+        char *name = KSTAT_NAMED_STR_PTR(brand);
+
         char *vendor = "Sun";
         char *vendors[] = {
             "Intel", "AMD", NULL
