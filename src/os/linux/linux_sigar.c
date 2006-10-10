@@ -423,13 +423,13 @@ static void get_cpu_metrics(sigar_t *sigar, sigar_cpu_t *cpu, char *line)
 {
     char *ptr = sigar_skip_token(line); /* "cpu%d" */
 
-    cpu->user += SIGAR_TICK2SEC(sigar_strtoul(ptr));
-    cpu->nice += SIGAR_TICK2SEC(sigar_strtoul(ptr));
-    cpu->sys  += SIGAR_TICK2SEC(sigar_strtoul(ptr));
-    cpu->idle += SIGAR_TICK2SEC(sigar_strtoul(ptr));
+    cpu->user += SIGAR_TICK2SEC(sigar_strtoull(ptr));
+    cpu->nice += SIGAR_TICK2SEC(sigar_strtoull(ptr));
+    cpu->sys  += SIGAR_TICK2SEC(sigar_strtoull(ptr));
+    cpu->idle += SIGAR_TICK2SEC(sigar_strtoull(ptr));
     if (*ptr == ' ') {
         /* 2.6+ kernels only */
-        cpu->wait += SIGAR_TICK2SEC(sigar_strtoul(ptr));
+        cpu->wait += SIGAR_TICK2SEC(sigar_strtoull(ptr));
     }
     cpu->total = cpu->user + cpu->nice + cpu->sys + cpu->idle + cpu->wait;
 }
