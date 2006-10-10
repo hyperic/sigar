@@ -29,6 +29,9 @@
 #define sigar_strtoul(ptr) \
     strtoul(ptr, &ptr, 10)
 
+#define sigar_strtoull(ptr) \
+    strtoull(ptr, &ptr, 10)
+
 #define sigar_isspace(c) \
     (isspace(((unsigned char)(c))))
 
