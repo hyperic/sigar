@@ -715,13 +715,13 @@ static int proc_stat_read(sigar_t *sigar, sigar_pid_t pid)
     ptr = sigar_skip_token(ptr); /* (8) tty pgrp */
 
     ptr = sigar_skip_token(ptr); /* (9) flags */
-    pstat->minor_faults = sigar_strtoul(ptr); /* (10) */
+    pstat->minor_faults = sigar_strtoull(ptr); /* (10) */
     ptr = sigar_skip_token(ptr); /* (11) cmin flt */
-    pstat->major_faults = sigar_strtoul(ptr); /* (12) */
+    pstat->major_faults = sigar_strtoull(ptr); /* (12) */
     ptr = sigar_skip_token(ptr); /* (13) cmaj flt */
 
-    pstat->utime = sigar_strtoul(ptr) / sigar->ticks; /* (14) */
-    pstat->stime = sigar_strtoul(ptr) / sigar->ticks; /* (15) */
+    pstat->utime = sigar_strtoull(ptr) / sigar->ticks; /* (14) */
+    pstat->stime = sigar_strtoull(ptr) / sigar->ticks; /* (15) */
 
     ptr = sigar_skip_token(ptr); /* (16) cutime */
     ptr = sigar_skip_token(ptr); /* (17) cstime */
@@ -737,8 +737,8 @@ static int proc_stat_read(sigar_t *sigar, sigar_pid_t pid)
     pstat->start_time += sigar->boot_time; /* seconds */
     pstat->start_time *= 1000; /* milliseconds */
 
-    pstat->vsize = sigar_strtoul(ptr); /* (23) */
-    pstat->rss   = pageshift(sigar_strtoul(ptr)); /* (24) */
+    pstat->vsize = sigar_strtoull(ptr); /* (23) */
+    pstat->rss   = pageshift(sigar_strtoull(ptr)); /* (24) */
 
     ptr = sigar_skip_token(ptr); /* (25) rlim */
     ptr = sigar_skip_token(ptr); /* (26) startcode */
@@ -778,9 +778,9 @@ int sigar_proc_mem_get(sigar_t *sigar, sigar_pid_t pid,
         return status;
     }
 
-    procmem->size     = pageshift(sigar_strtoul(ptr));
-    procmem->resident = pageshift(sigar_strtoul(ptr));
-    procmem->share    = pageshift(sigar_strtoul(ptr));
+    procmem->size     = pageshift(sigar_strtoull(ptr));
+    procmem->resident = pageshift(sigar_strtoull(ptr));
+    procmem->share    = pageshift(sigar_strtoull(ptr));
 
     return SIGAR_OK;
 }
@@ -1257,9 +1257,9 @@ static int get_iostat_sys(sigar_t *sigar,
 
     ptr = dev;
     ptr = sigar_skip_token(ptr);
-    fsusage->disk_reads = sigar_strtoul(ptr);
+    fsusage->disk_reads = sigar_strtoull(ptr);
     ptr = sigar_skip_token(ptr);
-    fsusage->disk_writes = sigar_strtoul(ptr);
+    fsusage->disk_writes = sigar_strtoull(ptr);
 
     fsusage->disk_read_bytes  = SIGAR_FIELD_NOTIMPL;
     fsusage->disk_write_bytes = SIGAR_FIELD_NOTIMPL;
@@ -1381,17 +1381,17 @@ static int get_iostat_procp(sigar_t *sigar,
 
         if (strnEQ(ptr, name, len)) {
             ptr = sigar_skip_token(ptr); /* name */
-            fsusage->disk_reads = sigar_strtoul(ptr); /* rio */
+            fsusage->disk_reads = sigar_strtoull(ptr); /* rio */
             ptr = sigar_skip_token(ptr);  /* rmerge */ 
-            fsusage->disk_read_bytes  = sigar_strtoul(ptr); /* rsect */
+            fsusage->disk_read_bytes  = sigar_strtoull(ptr); /* rsect */
             ptr = sigar_skip_token(ptr);  /* ruse */ 
 
             ptr = sigar_skip_token(ptr);  /* wmerge */ 
-            fsusage->disk_write_bytes = sigar_strtoul(ptr); /* wsect */
-            fsusage->disk_writes = sigar_strtoul(ptr); /* wio */
+            fsusage->disk_write_bytes = sigar_strtoull(ptr); /* wsect */
+            fsusage->disk_writes = sigar_strtoull(ptr); /* wio */
             /* wuse, running, use */
             ptr = sigar_skip_multiple_token(ptr, 3);
-            fsusage->disk_queue       = sigar_strtoul(ptr); /* aveq */
+            fsusage->disk_queue       = sigar_strtoull(ptr); /* aveq */
             fsusage->disk_queue /= 1000;
 
             /* convert sectors to bytes (512 is fixed size in 2.6 kernels) */
@@ -1713,23 +1713,23 @@ int sigar_net_interface_stat_get(sigar_t *sigar, const char *name,
         }
 
         found = 1;
-        ifstat->rx_bytes    = sigar_strtoul(ptr);
-        ifstat->rx_packets  = sigar_strtoul(ptr);
-        ifstat->rx_errors   = sigar_strtoul(ptr);
-        ifstat->rx_dropped  = sigar_strtoul(ptr);
-        ifstat->rx_overruns = sigar_strtoul(ptr);
-        ifstat->rx_frame    = sigar_strtoul(ptr);
+        ifstat->rx_bytes    = sigar_strtoull(ptr);
+        ifstat->rx_packets  = sigar_strtoull(ptr);
+        ifstat->rx_errors   = sigar_strtoull(ptr);
+        ifstat->rx_dropped  = sigar_strtoull(ptr);
+        ifstat->rx_overruns = sigar_strtoull(ptr);
+        ifstat->rx_frame    = sigar_strtoull(ptr);
 
         /* skip: compressed multicast */
         ptr = sigar_skip_multiple_token(ptr, 2);
 
-        ifstat->tx_bytes      = sigar_strtoul(ptr);
-        ifstat->tx_packets    = sigar_strtoul(ptr);
-        ifstat->tx_errors     = sigar_strtoul(ptr);
-        ifstat->tx_dropped    = sigar_strtoul(ptr);
-        ifstat->tx_overruns   = sigar_strtoul(ptr);
-        ifstat->tx_collisions = sigar_strtoul(ptr);
-        ifstat->tx_carrier    = sigar_strtoul(ptr);
+        ifstat->tx_bytes      = sigar_strtoull(ptr);
+        ifstat->tx_packets    = sigar_strtoull(ptr);
+        ifstat->tx_errors     = sigar_strtoull(ptr);
+        ifstat->tx_dropped    = sigar_strtoull(ptr);
+        ifstat->tx_overruns   = sigar_strtoull(ptr);
+        ifstat->tx_collisions = sigar_strtoull(ptr);
+        ifstat->tx_carrier    = sigar_strtoull(ptr);
 
         ifstat->speed         = SIGAR_FIELD_NOTIMPL;
 
