@@ -67,9 +67,12 @@ int sigar_os_open(sigar_t **sig)
         sigar->solaris_version = 6;
     }
 
-    /* experimental, use /usr/ucb/ps for proc_args */
-    sigar->use_ucb_ps = 
-        getenv("SIGAR_USE_UCB_PS") ? 1 : 0;
+    if ((ptr = getenv("SIGAR_USE_UCB_PS"))) {
+        sigar->use_ucb_ps = strEQ(ptr, "true");
+    }
+    else {
+        sigar->use_ucb_ps = 1;
+    }
 
     sigar->pagesize = 0;
     i = sysconf(_SC_PAGESIZE);
@@ -867,7 +870,13 @@ int sigar_proc_args_get(sigar_t *sigar, sigar_pid_t pid,
          * punt any 64bit native process,
          * sizeof our structures can't handle.
          */
-        return EINVAL;
+        if (sigar->use_ucb_ps) {
+            return ucb_ps_args_get(sigar, pid, procargs,
+                                   pinfo->pr_start.tv_sec);
+        }
+        else {
+            return ENOTSUP;
+        }
     }
 
     argv_size = sizeof(*argvp) * pinfo->pr_argc;
