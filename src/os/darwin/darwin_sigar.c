@@ -2189,15 +2189,29 @@ int sigar_os_sys_info_get(sigar_t *sigar,
 {
 #ifdef DARWIN
     char *codename = NULL;
-    long version_major, version_minor, version_fix;
+    long version, version_major, version_minor, version_fix;
 
     SIGAR_SSTRCPY(sysinfo->name, "MacOSX");
     SIGAR_SSTRCPY(sysinfo->vendor_name, "Mac OS X");
     SIGAR_SSTRCPY(sysinfo->vendor, "Apple");
 
-    Gestalt(gestaltSystemVersionMajor, &version_major);
-    Gestalt(gestaltSystemVersionMinor, &version_minor);
-    Gestalt(gestaltSystemVersionBugFix, &version_fix);
+    if (Gestalt(gestaltSystemVersion, &version) == noErr) {
+        if (version >= 0x00001040) {
+            Gestalt('sys1' /*gestaltSystemVersionMajor*/, &version_major);
+            Gestalt('sys2' /*gestaltSystemVersionMinor*/, &version_minor);
+            Gestalt('sys3' /*gestaltSystemVersionBugFix*/, &version_fix);
+        }
+        else {
+            version_fix = version & 0xf;
+            version >>= 4;
+            version_minor = version & 0xf;
+            version >>= 4;
+            version_major = version - (version >> 4) * 6;
+        }
+    }
+    else {
+        return SIGAR_ENOTIMPL;
+    }
 
     snprintf(sysinfo->vendor_version,
              sizeof(sysinfo->vendor_version),
