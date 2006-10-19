@@ -16,6 +16,10 @@
  * USA.
  */
 
+#if defined(_M_AMD64) && (_M_AMD64 == 100)
+#define NO_ASM
+#endif
+
 /*
  * code in this file derived from:
  * http://www.intel.com/cd/ids/developer/asmo-na/eng/technologies/20438.htm
@@ -59,6 +63,7 @@ static unsigned char CPUCount(unsigned char *, unsigned char *);
 #include "sigar_private.h"
 #include "sigar_os.h"
 
+#ifndef NO_ASM
 static unsigned int HTSupported(void)
 {
     unsigned int
@@ -132,12 +137,17 @@ static unsigned char GetAPIC_ID(unsigned int ht_supported)
 
     return (unsigned char) ((Regebx & INITIAL_APIC_ID_BITS) >> 24);
 }
+#endif /* NO_ASM */
 
 static unsigned char CPUCount(unsigned char *LogicalNum,
                               unsigned char *PhysicalNum)
 {
+#ifdef NO_ASM
+    unsigned int ht_supported = 0;
+#else
     unsigned int ht_supported = HTSupported();
     unsigned char StatusFlag = 0;
+#endif
     SYSTEM_INFO info;
 
     *PhysicalNum = 0;
@@ -149,6 +159,10 @@ static unsigned char CPUCount(unsigned char *LogicalNum,
     // or in a 32-bit Intel system with Hyper-Threading technology disabled
     *PhysicalNum = (unsigned char) info.dwNumberOfProcessors;  
 
+#ifdef NO_ASM
+    *LogicalNum = 1;
+    return HT_NOT_CAPABLE;
+#else
     if (ht_supported) {
         unsigned char HT_Enabled = 0;
 
@@ -231,7 +245,6 @@ static unsigned char CPUCount(unsigned char *LogicalNum,
                 }
             }
         }
-
     }
     else {
         // Processors do not have Hyper-Threading technology
@@ -240,6 +253,7 @@ static unsigned char CPUCount(unsigned char *LogicalNum,
     }
 
     return StatusFlag;
+#endif /* NO_ASM */
 }
 
 unsigned int sigar_cpu_count(sigar_t *sigar)
