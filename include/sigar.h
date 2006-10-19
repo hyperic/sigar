@@ -429,19 +429,17 @@ SIGAR_DECLARE(int) sigar_net_address_to_string(sigar_t *sigar,
 
 SIGAR_DECLARE(sigar_uint32_t) sigar_net_address_hash(sigar_net_address_t *address);
 
-#ifndef INET6_ADDRSTRLEN
-#   define INET6_ADDRSTRLEN 46
-#endif
+#define SIGAR_INET6_ADDRSTRLEN 46
 
 #define SIGAR_MAXDOMAINNAMELEN 256
 #define SIGAR_MAXHOSTNAMELEN 256
 
 typedef struct {
-    char default_gateway[INET6_ADDRSTRLEN];
+    char default_gateway[SIGAR_INET6_ADDRSTRLEN];
     char host_name[SIGAR_MAXHOSTNAMELEN];
     char domain_name[SIGAR_MAXDOMAINNAMELEN];
-    char primary_dns[INET6_ADDRSTRLEN];
-    char secondary_dns[INET6_ADDRSTRLEN];
+    char primary_dns[SIGAR_INET6_ADDRSTRLEN];
+    char secondary_dns[SIGAR_INET6_ADDRSTRLEN];
 } sigar_net_info_t;
 
 SIGAR_DECLARE(int)

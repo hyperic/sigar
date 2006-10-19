@@ -1776,7 +1776,7 @@ SIGAR_DECLARE(int) sigar_net_address_to_string(sigar_t *sigar,
       case SIGAR_AF_INET6:
 #if defined(__linux__) /*XXX*/
         if (inet_ntop(AF_INET6, (const void *)&address->addr.in6,
-                      addr_str, INET6_ADDRSTRLEN))
+                      addr_str, SIGAR_INET6_ADDRSTRLEN))
         {
             return SIGAR_OK;
         }
@@ -2019,7 +2019,7 @@ SIGAR_DECLARE(int) sigar_fqdn_get(sigar_t *sigar, char *name, int namelen)
         int i,j;
 
         for (i=0; p->h_addr_list[i]; i++) {
-            char addr[INET6_ADDRSTRLEN];
+            char addr[SIGAR_INET6_ADDRSTRLEN];
             struct in_addr *in =
                 (struct in_addr *)p->h_addr_list[i];
 
