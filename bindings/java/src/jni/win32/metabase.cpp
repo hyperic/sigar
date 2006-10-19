@@ -9,6 +9,7 @@
 #include <iadmw.h>    // COM Interface header file. 
 #include <iiscnfg.h>  // MD_ & IIS_MD_ #defines header file.
 #include <ks.h>
+extern const CLSID CLSID_StdGlobalInterfaceTable;
 #include <atlBase.h>  // ATL support header file.
 
 #include "win32bindings.h"

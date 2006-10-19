@@ -115,23 +115,6 @@ typedef struct _IP_ADAPTER_INFO {
 
 /* end iptypes.h */
 
-/* service manager stuff not in vs6.0 */
-typedef struct _SERVICE_STATUS_PROCESS {
-    DWORD dwServiceType;
-    DWORD dwCurrentState;
-    DWORD dwControlsAccepted;
-    DWORD dwWin32ExitCode;
-    DWORD dwServiceSpecificExitCode;
-    DWORD dwCheckPoint;
-    DWORD dwWaitHint;
-    DWORD dwProcessId;
-    DWORD dwServiceFlags;
-} SERVICE_STATUS_PROCESS;
-
-typedef enum {
-    SC_STATUS_PROCESS_INFO = 0
-} SC_STATUS_TYPE;
-
 /* from wtsapi32.h not in vs6.0 */
 typedef enum {
     WTSInitialProgram,
@@ -210,6 +193,8 @@ typedef struct _WINSTATION_INFO {
 
 /* end wtsapi32.h */
 
+#if _MSC_VER <= 1200
+
 /* from winbase.h not in vs6.0 */
 typedef struct {
     DWORD dwLength;
@@ -222,6 +207,25 @@ typedef struct {
     DWORDLONG ullAvailVirtual;
     DWORDLONG ullAvailExtendedVirtual;
 } MEMORYSTATUSEX;
+
+/* service manager stuff not in vs6.0 */
+typedef struct _SERVICE_STATUS_PROCESS {
+    DWORD dwServiceType;
+    DWORD dwCurrentState;
+    DWORD dwControlsAccepted;
+    DWORD dwWin32ExitCode;
+    DWORD dwServiceSpecificExitCode;
+    DWORD dwCheckPoint;
+    DWORD dwWaitHint;
+    DWORD dwProcessId;
+    DWORD dwServiceFlags;
+} SERVICE_STATUS_PROCESS;
+
+typedef enum {
+    SC_STATUS_PROCESS_INFO = 0
+} SC_STATUS_TYPE;
+
+#endif /* _MSC_VER */
 
 #include <iprtrmib.h>
 
