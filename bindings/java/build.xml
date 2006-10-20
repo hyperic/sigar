@@ -342,6 +342,7 @@
        <include name="lib/*.sl"/>
        <include name="lib/*.so"/>
        <include name="lib/*.dylib"/>
+       <include name="lib/*.lib"/>
      </fileset>
      <fileset dir=".">
        <include name="lib/*.jar"/>
