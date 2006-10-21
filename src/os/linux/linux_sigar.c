@@ -2213,13 +2213,13 @@ typedef struct {
 } linux_vendor_info_t;
 
 static linux_vendor_info_t linux_vendors[] = {
-    { "Red Hat",   "/etc/redhat-release", redhat_vendor_parse },
     { "Fedora",    "/etc/fedora-release", NULL },
     { "SuSE",      "/etc/SuSE-release", NULL },
     { "Gentoo",    "/etc/gentoo-release", NULL },
     { "Slackware", "/etc/slackware-version", NULL },
     { "Mandrake",  "/etc/mandrake-release", NULL },
     { "VMware",    "/proc/vmware/version", NULL },
+    { "Red Hat",   "/etc/redhat-release", redhat_vendor_parse },
     { "lsb",       "/etc/lsb-release", lsb_vendor_parse },
     { "Debian",    "/etc/debian_version", NULL },
     { NULL }
