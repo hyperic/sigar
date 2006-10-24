@@ -1,3 +1,8 @@
+2006-10-24  Doug MacEachern  <dougm@hyperic.com>
+
+        * [SIGAR-20] Fix windows sigar_net_inteface_list to handle > 100
+        interfaces (internal buffer size was fixed at 8k)
+
 2006-10-10  Doug MacEachern  <dougm@hyperic.com>
 
         * [SIGAR-18] Change Linux impl to use strtoull() where appropriate

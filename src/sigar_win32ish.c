@@ -154,10 +154,25 @@ static void hwaddr_lookup(sigar_t *sigar,
 
 #endif /* WIN32 */
 
-static int get_iflist(sigar_t *sigar, char *buffer, DWORD buflen, DWORD *bytes)
+static int sigar_ioctl_iflist(sigar_t *sigar,
+                              SOCKET sock,
+                              DWORD *bytes)
+{
+    return WSAIoctl(sock,
+                    SIO_GET_INTERFACE_LIST,
+                    NULL,
+                    0,
+                    (void *)sigar->ifconf_buf,
+                    sigar->ifconf_len,
+                    bytes,
+                    NULL,
+                    NULL);
+}
+
+static int get_iflist(sigar_t *sigar, DWORD *bytes)
 {
     SOCKET sock = INVALID_SOCKET;
-    int status, rc;
+    int status, rc, limit;
 
 #ifdef WIN32
     status = sigar_wsa_init(sigar);
@@ -174,15 +189,22 @@ static int get_iflist(sigar_t *sigar, char *buffer, DWORD buflen, DWORD *bytes)
         return WSAGetLastError();
     }
 
-    rc = WSAIoctl(sock,
-                  SIO_GET_INTERFACE_LIST,
-                  NULL,
-                  0,
-                  (void *)buffer,
-                  buflen,
-                  (unsigned int*)bytes,
-                  NULL,
-                  NULL);
+    if (sigar->ifconf_len == 0) {
+        sigar->ifconf_len = 8192;
+        sigar->ifconf_buf = malloc(sigar->ifconf_len);
+    }
+
+    /*
+     * XXX We can't tell ahead of time what buffer size is required
+     * limit just incase.
+     */
+    for (limit=0; limit<100; limit++) {
+        rc = sigar_ioctl_iflist(sigar, sock, bytes);
+        if (rc && (WSAGetLastError() == WSAEFAULT)) {
+            sigar->ifconf_len += (sizeof(INTERFACE_INFO) * 16);
+            sigar->ifconf_buf = malloc(sigar->ifconf_len);
+        }
+    }
 
     status = rc ? WSAGetLastError() : SIGAR_OK;
 
@@ -196,7 +218,6 @@ sigar_net_interface_config_get(sigar_t *sigar,
                                const char *name,
                                sigar_net_interface_config_t *ifconfig)
 {
-    char buffer[8192];
     DWORD i, num, bytes;
     DWORD lo=0, eth=0;
     int status, type, inst;
@@ -206,7 +227,7 @@ sigar_net_interface_config_get(sigar_t *sigar,
     /* win32 lacks socket ioctls to query given interface.
      * so we loop through the list to find our made up ifname.
      */
-    status = get_iflist(sigar, buffer, sizeof(buffer), &bytes);
+    status = get_iflist(sigar, &bytes);
     if (status != SIGAR_OK) {
         return status;
     }
@@ -218,7 +239,7 @@ sigar_net_interface_config_get(sigar_t *sigar,
     }
 
     for (i=0; i<num ; i++) {
-        if_info = ((INTERFACE_INFO *)buffer) + i;
+        if_info = ((INTERFACE_INFO *)sigar->ifconf_buf) + i;
 
         if (if_info->iiFlags & IFF_LOOPBACK) {
             if ((type == IFTYPE_LO) && (inst == lo)) {
@@ -309,11 +330,10 @@ sigar_net_interface_list_get(sigar_t *sigar,
 {
     char eth[56], lo[56];
     int ethcnt=0, locnt=0;
-    char buffer[8192];
     DWORD i, num, bytes;
     int status;
     
-    status = get_iflist(sigar, buffer, sizeof(buffer), &bytes);
+    status = get_iflist(sigar, &bytes);
     if (status != SIGAR_OK) {
         return status;
     }
@@ -326,7 +346,8 @@ sigar_net_interface_list_get(sigar_t *sigar,
         malloc(sizeof(*(iflist->data)) * iflist->size);
 
     for (i=0; i<num ; i++) {
-        INTERFACE_INFO *if_info = ((INTERFACE_INFO *)buffer) + i;
+        INTERFACE_INFO *if_info =
+            ((INTERFACE_INFO *)sigar->ifconf_buf) + i;
         char *name;
 
         if (if_info->iiFlags & IFF_LOOPBACK) {
