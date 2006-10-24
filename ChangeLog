@@ -3,6 +3,13 @@
         * [SIGAR-20] Fix windows sigar_net_inteface_list to handle > 100
         interfaces (internal buffer size was fixed at 8k)
 
+2006-10-19  Doug MacEachern  <dougm@hyperic.com>
+
+        * Compile on Windows AMD x64
+          Submitted by: Jan Kneschke <jan.kneschke@mysql.com>
+
+        * Changes to compile with modern visual studios on Windows
+        
 2006-10-10  Doug MacEachern  <dougm@hyperic.com>
 
         * [SIGAR-18] Change Linux impl to use strtoull() where appropriate
