@@ -44,6 +44,11 @@ public abstract class FileTail extends FileWatcher {
         this.useSudo = useSudo;
     }
 
+    private void error(String name, Throwable exc) {
+        String msg = name + ": " + exc.getMessage(); 
+        SigarLog.getLogger(FileTail.class.getName()).error(msg, exc);
+    }
+
     public void onChange(FileInfo info) {
         Reader reader = null;
         String name = info.getName();
@@ -60,8 +65,7 @@ public abstract class FileTail extends FileWatcher {
             tail(info, reader);
             setOffset(info);
         } catch (IOException e) {
-            //XXX
-            e.printStackTrace();
+            error(name, e);
         } finally {
             if (reader != null) {
                 try { reader.close(); } catch (IOException e) { }
