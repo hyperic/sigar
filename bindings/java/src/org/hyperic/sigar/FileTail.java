@@ -44,7 +44,7 @@ public abstract class FileTail extends FileWatcher {
         this.useSudo = useSudo;
     }
 
-    private void error(String name, Throwable exc) {
+    static void error(String name, Throwable exc) {
         String msg = name + ": " + exc.getMessage(); 
         SigarLog.getLogger(FileTail.class.getName()).error(msg, exc);
     }

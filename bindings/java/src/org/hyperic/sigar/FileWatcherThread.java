@@ -97,7 +97,11 @@ public class FileWatcherThread implements Runnable {
                  it.hasNext();)
             {
                 FileWatcher watcher = (FileWatcher)it.next();
-                watcher.check();
+                try {
+                    watcher.check();
+                } catch (Exception e) {
+                    FileTail.error("Unexception exception", e);
+                }
             }
         }
     }
