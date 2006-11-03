@@ -341,6 +341,23 @@ static int sigar_dllmod_init(sigar_t *sigar,
     return SIGAR_OK;
 }
 
+int sigar_wsa_init(sigar_t *sigar)
+{
+    if (sigar->ws_version == 0) {
+        WSADATA data;
+
+        if (WSAStartup(MAKEWORD(2, 0), &data)) {
+            sigar->ws_error = WSAGetLastError();
+            WSACleanup();
+            return sigar->ws_error;
+        }
+
+        sigar->ws_version = data.wVersion;
+    }
+
+    return SIGAR_OK;
+}
+
 int sigar_os_open(sigar_t **sigar_ptr)
 {
     LONG result;
@@ -396,6 +413,8 @@ int sigar_os_open(sigar_t **sigar_ptr)
                       (sigar_dll_module_t *)&sigar->advapi,
                       FALSE);
 
+    sigar->netif_mib_rows = NULL;
+    sigar->netif_adapters = NULL;
     sigar->pinfo.pid = -1;
     sigar->ws_version = 0;
     sigar->ncpu = 0;
@@ -424,6 +443,14 @@ int sigar_os_close(sigar_t *sigar)
 
     if (sigar->ws_version != 0) {
         WSACleanup();
+    }
+
+    if (sigar->netif_mib_rows) {
+        sigar_cache_destroy(sigar->netif_mib_rows);
+    }
+
+    if (sigar->netif_adapters) {
+        sigar_cache_destroy(sigar->netif_adapters);
     }
 
     if (sigar->peb) {
@@ -1868,6 +1895,53 @@ static int sigar_get_adapters_info(sigar_t *sigar,
     }
 }
 
+static int sigar_get_adapter_info(sigar_t *sigar,
+                                  DWORD index,
+                                  IP_ADAPTER_INFO **adapter)
+{
+    sigar_cache_entry_t *entry;
+    *adapter = NULL;
+
+    if (sigar->netif_adapters) {
+        entry = sigar_cache_get(sigar->netif_adapters, index);
+        if (entry->value) {
+            *adapter = (IP_ADAPTER_INFO *)entry->value;
+        }
+    }
+    else {
+        int status;
+        IP_ADAPTER_INFO *info;
+
+        sigar->netif_adapters = sigar_cache_new(10);
+
+        status = sigar_get_adapters_info(sigar, &info);
+        if (status != SIGAR_OK) {
+            return status;
+        }
+
+        while (info) {
+            entry = sigar_cache_get(sigar->netif_adapters,
+                                    info->Index);
+            if (!entry->value) {
+                entry->value = malloc(sizeof(*info));
+            }
+            memcpy(entry->value, info, sizeof(*info));
+            if (info->Index == index) {
+                *adapter = info;
+            }
+
+            info = info->Next;
+        }
+    }
+
+    if (*adapter) {
+        return SIGAR_OK;
+    }
+    else {
+        return ENOENT;
+    }
+}
+
 SIGAR_DECLARE(int) sigar_net_info_get(sigar_t *sigar,
                                       sigar_net_info_t *netinfo)
 {
@@ -2039,62 +2113,103 @@ static int get_mib_ifrow(sigar_t *sigar,
                          const char *name,
                          MIB_IFROW **ifrp)
 {
-    DWORD rc, i;
-    MIB_IFTABLE *ift;
-    MIB_IFROW *ifr;
-    DWORD lo=0, eth=0;
-    int status, type, inst;
+    int status, key;
+    sigar_cache_entry_t *entry;
 
-    if ((status = sigar_get_iftype(name, &type, &inst)) != SIGAR_OK) {
-        return status;
+    if (!sigar->netif_mib_rows) {
+        status = sigar_net_interface_list_get(sigar, NULL);
+        if (status != SIGAR_OK) {
+            return status;
+        }
+    }
+    key = netif_hash(name);
+    entry = sigar_cache_get(sigar->netif_mib_rows, key);
+    if (!entry->value) {
+        return ENOENT;
+    }
+
+    /* XXX refresh */
+    *ifrp = (MIB_IFROW *)entry->value;
+
+    return SIGAR_OK;
+}
+
+static int netif_hash(char *s)
+{
+    int hash = 0;
+    while (*s) {
+        hash = 31*hash + *s++; 
+    }
+    return hash;
+}
+
+SIGAR_DECLARE(int)
+sigar_net_interface_list_get(sigar_t *sigar,
+                             sigar_net_interface_list_t *iflist)
+{
+    MIB_IFTABLE *ift;
+    int i, status;
+    int lo=0, eth=0;
+
+    if (!sigar->netif_mib_rows) {
+        sigar->netif_mib_rows = sigar_cache_new(10);
     }
 
     if ((status = sigar_get_if_table(sigar, &ift)) != SIGAR_OK) {
         return status;
     }
 
-    for (i=0; i<ift->dwNumEntries; i++) {
-        ifr = ift->table + i;
+    if (iflist) {
+        iflist->number = 0;
+        iflist->size = ift->dwNumEntries;
+        iflist->data =
+            malloc(sizeof(*(iflist->data)) * iflist->size);
+    }
 
-        if (!(ifr->dwOperStatus & MIB_IF_OPER_STATUS_OPERATIONAL)) {
-            continue;
-        }
+    for (i=0; i<ift->dwNumEntries; i++) {
+        char name[16];
+        int key;
+        MIB_IFROW *ifr = ift->table + i;
+        sigar_cache_entry_t *entry;
 
         if (ifr->dwType == MIB_IF_TYPE_LOOPBACK) {
-            if ((type == IFTYPE_LO) && (inst == lo)) {
-                break;
-            }
-            ++lo;
+            sprintf(name, "lo%d", lo++);
         }
-        else if (ifr->dwType == MIB_IF_TYPE_ETHERNET) {
-            if ((type == IFTYPE_ETH) && (inst == eth)) {
-                break;
-            }
-            ++eth;
+        else {
+            sprintf(name, "eth%d", eth++);
         }
 
-        ifr = NULL;
-    }
+        if (iflist) {
+            iflist->data[iflist->number++] = strdup(name);
+        }
 
-    if (!ifr) {
-        return ENOENT;
+        key = netif_hash(name);
+        entry = sigar_cache_get(sigar->netif_mib_rows, key);
+        if (!entry->value) {
+            entry->value = malloc(sizeof(*ifr));
+        }
+        memcpy(entry->value, ifr, sizeof(*ifr));
     }
-
-    *ifrp = ifr;
 
     return SIGAR_OK;
 }
 
-int sigar_get_ifentry_config(sigar_t *sigar,
-                             sigar_net_interface_config_t *ifconfig)
+SIGAR_DECLARE(int)
+sigar_net_interface_config_get(sigar_t *sigar,
+                               const char *name,
+                               sigar_net_interface_config_t *ifconfig)
 {
     MIB_IFROW *ifr;
     int status;
 
-    status = get_mib_ifrow(sigar, ifconfig->name, &ifr);
+    status = get_mib_ifrow(sigar, name, &ifr);
     if (status != SIGAR_OK) {
         return status;
     }
+
+    SIGAR_ZERO(ifconfig);
+
+    SIGAR_SSTRCPY(ifconfig->name, name);
 
     ifconfig->mtu = ifr->dwMtu;
 
@@ -2104,6 +2219,54 @@ int sigar_get_ifentry_config(sigar_t *sigar,
 
     SIGAR_SSTRCPY(ifconfig->description,
                   ifr->bDescr);
+
+    if (ifr->dwOperStatus & MIB_IF_OPER_STATUS_OPERATIONAL) {
+        ifconfig->flags |= SIGAR_IFF_UP|SIGAR_IFF_RUNNING;
+    }
+
+    if (ifr->dwType == MIB_IF_TYPE_LOOPBACK) {
+        ifconfig->flags |= SIGAR_IFF_LOOPBACK;
+
+        sigar_net_address_set(ifconfig->address,
+                              inet_addr("127.0.0.1")); /*XXX*/
+        sigar_net_address_set(ifconfig->netmask,
+                              inet_addr("255.0.0.0")); /*XXX*/
+        sigar_net_address_set(ifconfig->destination,
+                              ifconfig->address.addr.in);
+        sigar_net_address_set(ifconfig->broadcast, 0);
+
+        SIGAR_SSTRCPY(ifconfig->type,
+                      SIGAR_NIC_LOOPBACK);
+    }
+    else {
+        IP_ADAPTER_INFO *adapter;
+        status = sigar_get_adapter_info(sigar,
+                                        ifr->dwIndex,
+                                        &adapter);
+
+        if (status == SIGAR_OK) {
+            char *addr;
+            if (adapter->CurrentIpAddress) {
+                addr = adapter->CurrentIpAddress->IpAddress.String;
+                sigar_net_address_set(ifconfig->address,
+                                      inet_addr(addr));
+                addr = adapter->CurrentIpAddress->IpMask.String;
+                sigar_net_address_set(ifconfig->netmask,
+                                      inet_addr(addr));
+            }
+            else {
+                addr = adapter->IpAddressList.IpAddress.String;
+                sigar_net_address_set(ifconfig->address,
+                                      inet_addr(addr));
+                addr = adapter->IpAddressList.IpMask.String;
+                sigar_net_address_set(ifconfig->netmask,
+                                      inet_addr(addr));
+            }
+        }
+
+        SIGAR_SSTRCPY(ifconfig->type,
+                      SIGAR_NIC_ETHERNET);
+    }
 
     return SIGAR_OK;
 }

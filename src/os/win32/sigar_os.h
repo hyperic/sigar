@@ -32,6 +32,8 @@
 #include <errno.h>
 #include <tlhelp32.h>
 
+#include "sigar_util.h"
+
 #define INT64_C(val) val##i64
 
 /* see apr/include/arch/win32/atime.h */
@@ -482,6 +484,9 @@ struct sigar_t {
     sigar_winsta_t winsta;
     sigar_kernel_t kernel;
     sigar_win32_pinfo_t pinfo;
+    sigar_cache_t *netif_adapters;
+    sigar_cache_t *netif_mib_rows;
+
     WORD ws_version;
     int ws_error;
     LPBYTE peb; //scratch pad for getting peb info
