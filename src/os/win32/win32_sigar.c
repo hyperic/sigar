@@ -2264,6 +2264,7 @@ sigar_net_interface_config_get(sigar_t *sigar,
 
         if (status == SIGAR_OK) {
             char *addr;
+            long iaddr;
             IP_ADDR_STRING *ip = &adapter->IpAddressList;
 
             /* last address in the list is the primary */
@@ -2271,11 +2272,19 @@ sigar_net_interface_config_get(sigar_t *sigar,
                 ip = ip->Next;
             }
             addr = ip->IpAddress.String;
+            iaddr = inet_addr(addr);
             sigar_net_address_set(ifconfig->address,
-                                  inet_addr(addr));
+                                  iaddr);
+
             addr = ip->IpMask.String;
             sigar_net_address_set(ifconfig->netmask,
                                   inet_addr(addr));
+
+            if (ifr->dwType == MIB_IF_TYPE_ETHERNET) {
+                ifconfig->flags |= SIGAR_IFF_BROADCAST;
+                sigar_net_address_set(ifconfig->broadcast,
+                                      iaddr | 0xFF000000);
+            }
         }
 
         /* hack for MS_LOOPBACK_ADAPTER */
