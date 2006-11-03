@@ -2281,7 +2281,8 @@ sigar_net_interface_config_get(sigar_t *sigar,
                                   inet_addr(addr));
 
             if (ifr->dwType == MIB_IF_TYPE_ETHERNET) {
-                ifconfig->flags |= SIGAR_IFF_BROADCAST;
+                ifconfig->flags |=
+                    SIGAR_IFF_BROADCAST|SIGAR_IFF_MULTICAST;
                 sigar_net_address_set(ifconfig->broadcast,
                                       iaddr | 0xFF000000);
             }
