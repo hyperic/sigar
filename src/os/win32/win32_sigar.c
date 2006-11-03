@@ -110,6 +110,9 @@ typedef enum {
 #define PERF_VAL_CPU(ix) \
     NS100_2SEC(PERF_VAL(ix))
 
+#define MS_LOOPBACK_ADAPTER "Microsoft Loopback Adapter"
+#define NETIF_LA "la"
+
 static DWORD perfbuf_init(sigar_t *sigar)
 {
     if (!sigar->perfbuf) {
@@ -2160,7 +2163,7 @@ sigar_net_interface_list_get(sigar_t *sigar,
 {
     MIB_IFTABLE *ift;
     int i, status;
-    int lo=0, eth=0;
+    int lo=0, eth=0, la=0;
 
     if (!sigar->netif_mib_rows) {
         sigar->netif_mib_rows = sigar_cache_new(10);
@@ -2183,7 +2186,11 @@ sigar_net_interface_list_get(sigar_t *sigar,
         MIB_IFROW *ifr = ift->table + i;
         sigar_cache_entry_t *entry;
 
-        if (ifr->dwType == MIB_IF_TYPE_LOOPBACK) {
+        if (strEQ(ifr->bDescr, MS_LOOPBACK_ADAPTER)) {
+            /* special-case */
+            sprintf(name, NETIF_LA "%d", la++);
+        }
+        else if (ifr->dwType == MIB_IF_TYPE_LOOPBACK) {
             sprintf(name, "lo%d", lo++);
         }
         else {
@@ -2273,6 +2280,11 @@ sigar_net_interface_config_get(sigar_t *sigar,
                 sigar_net_address_set(ifconfig->netmask,
                                       inet_addr(addr));
             }
+        }
+
+        /* hack for MS_LOOPBACK_ADAPTER */
+        if (strnEQ(name, NETIF_LA, sizeof(NETIF_LA)-1)) {
+            ifconfig->flags |= SIGAR_IFF_LOOPBACK;
         }
 
         SIGAR_SSTRCPY(ifconfig->type,
