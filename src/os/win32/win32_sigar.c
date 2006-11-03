@@ -2246,9 +2246,9 @@ sigar_net_interface_config_get(sigar_t *sigar,
         ifconfig->flags |= SIGAR_IFF_LOOPBACK;
 
         sigar_net_address_set(ifconfig->address,
-                              inet_addr("127.0.0.1")); /*XXX*/
+                              0x0100007f); /* 127.0.0.1 */
         sigar_net_address_set(ifconfig->netmask,
-                              inet_addr("255.0.0.0")); /*XXX*/
+                              0x000000FF); /* 255.0.0.0 */
         sigar_net_address_set(ifconfig->destination,
                               ifconfig->address.addr.in);
         sigar_net_address_set(ifconfig->broadcast, 0);
