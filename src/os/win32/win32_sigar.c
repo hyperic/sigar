@@ -2074,6 +2074,9 @@ SIGAR_DECLARE(int) sigar_net_route_list_get(sigar_t *sigar,
 #define sigar_GetIfTable \
     sigar->iphlpapi.get_if_table.func
 
+#define sigar_GetIfEntry \
+    sigar->iphlpapi.get_if_entry.func
+
 static int sigar_get_if_table(sigar_t *sigar, PMIB_IFTABLE *iftable)
 {
     ULONG size = sigar->ifconf_len;
@@ -2113,10 +2116,13 @@ static int get_mib_ifrow(sigar_t *sigar,
                          const char *name,
                          MIB_IFROW **ifrp)
 {
-    int status, key;
+    int status, key, cached=0;
     sigar_cache_entry_t *entry;
 
-    if (!sigar->netif_mib_rows) {
+    if (sigar->netif_mib_rows) {
+        cached = 1;
+    }
+    else {
         status = sigar_net_interface_list_get(sigar, NULL);
         if (status != SIGAR_OK) {
             return status;
@@ -2128,8 +2134,13 @@ static int get_mib_ifrow(sigar_t *sigar,
         return ENOENT;
     }
 
-    /* XXX refresh */
     *ifrp = (MIB_IFROW *)entry->value;
+    if (cached) {
+        /* refresh */ 
+        if ((status = sigar_GetIfEntry(*ifrp)) != NO_ERROR) {
+            return status;
+        }
+    }
 
     return SIGAR_OK;
 }
