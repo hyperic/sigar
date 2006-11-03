@@ -1891,7 +1891,7 @@ static int sigar_get_adapters_info(sigar_t *sigar,
     }
 
     if (rc != NO_ERROR) {
-        return GetLastError();
+        return rc;
     }
     else {
         return SIGAR_OK;
@@ -2108,7 +2108,7 @@ static int sigar_get_if_table(sigar_t *sigar, PMIB_IFTABLE *iftable)
     }
 
     if (rc != NO_ERROR) {
-        return GetLastError();
+        return rc;
     }
     else {
         return SIGAR_OK;
