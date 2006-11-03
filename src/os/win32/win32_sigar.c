@@ -2264,22 +2264,18 @@ sigar_net_interface_config_get(sigar_t *sigar,
 
         if (status == SIGAR_OK) {
             char *addr;
-            if (adapter->CurrentIpAddress) {
-                addr = adapter->CurrentIpAddress->IpAddress.String;
-                sigar_net_address_set(ifconfig->address,
-                                      inet_addr(addr));
-                addr = adapter->CurrentIpAddress->IpMask.String;
-                sigar_net_address_set(ifconfig->netmask,
-                                      inet_addr(addr));
+            IP_ADDR_STRING *ip = &adapter->IpAddressList;
+
+            /* last address in the list is the primary */
+            while (ip->Next) {
+                ip = ip->Next;
             }
-            else {
-                addr = adapter->IpAddressList.IpAddress.String;
-                sigar_net_address_set(ifconfig->address,
-                                      inet_addr(addr));
-                addr = adapter->IpAddressList.IpMask.String;
-                sigar_net_address_set(ifconfig->netmask,
-                                      inet_addr(addr));
-            }
+            addr = ip->IpAddress.String;
+            sigar_net_address_set(ifconfig->address,
+                                  inet_addr(addr));
+            addr = ip->IpMask.String;
+            sigar_net_address_set(ifconfig->netmask,
+                                  inet_addr(addr));
         }
 
         /* hack for MS_LOOPBACK_ADAPTER */
