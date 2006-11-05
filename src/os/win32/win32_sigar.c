@@ -2359,8 +2359,9 @@ sigar_net_interface_config_get(sigar_t *sigar,
         sigar_net_address_set(ifconfig->netmask,
                               ipaddr->dwMask);
 
+        /* wtf is up w/ dwBCastAddr? */
         sigar_net_address_set(ifconfig->broadcast,
-                              ipaddr->dwBCastAddr);
+                              ipaddr->dwAddr|0xFF000000);
     }
 
     /* hack for MS_LOOPBACK_ADAPTER */
