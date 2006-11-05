@@ -1,3 +1,13 @@
+2006-11-05  Doug MacEachern  <dougm@hyperic.com>
+
+        * [SIGAR-23] Overhaul windows net_interface_* implementations to
+        ensure data is reported for the correct interface
+
+2006-11-03  Doug MacEachern  <dougm@hyperic.com>
+
+        * [SIGAR-24] Any network adapter with a description of
+        "Microsoft Loopback Adapter" is now flagged LOOPBACK
+
 2006-10-27  Doug MacEachern  <dougm@hyperic.com>
 
         * [SIGAR-22] Prevent RuntimeException in FileTail impl from
