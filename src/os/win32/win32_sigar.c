@@ -219,6 +219,7 @@ static sigar_iphlpapi_t sigar_iphlpapi = {
     { "GetIpAddrTable", NULL },
     { "GetIfTable", NULL },
     { "GetIfEntry", NULL },
+    { "GetNumberOfInterfaces", NULL },
     { "GetTcpTable", NULL },
     { "GetUdpTable", NULL },
     { "AllocateAndGetTcpExTableFromStack", NULL },
@@ -1868,6 +1869,37 @@ SIGAR_DECLARE(int) sigar_cpu_info_list_get(sigar_t *sigar,
 #define sigar_GetAdaptersInfo \
     sigar->iphlpapi.get_adapters_info.func
 
+#define sigar_GetNumberOfInterfaces \
+    sigar->iphlpapi.get_num_if.func
+
+static sigar_cache_t *sigar_netif_cache_new(sigar_t *sigar)
+{
+    DWORD num = 0;
+
+    DLLMOD_INIT(iphlpapi, FALSE);
+
+    if (sigar_GetNumberOfInterfaces) {
+        DWORD rc = sigar_GetNumberOfInterfaces(&num);
+
+        if (rc == NO_ERROR) {
+            sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
+                             "GetNumberOfInterfaces=%d",
+                             num);
+        }
+        else {
+            sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
+                             "GetNumberOfInterfaces failed: %s",
+                             sigar_strerror(sigar, rc));
+        }
+    }
+
+    if (num == 0) {
+        num = 10; /* reasonable default */
+    }
+
+    return sigar_cache_new(num);
+}
+
 static int sigar_get_adapters_info(sigar_t *sigar,
                                    PIP_ADAPTER_INFO *adapter)
 {
@@ -1921,7 +1953,8 @@ static int sigar_get_adapter_info(sigar_t *sigar,
         int status;
         IP_ADAPTER_INFO *info;
 
-        sigar->netif_adapters = sigar_cache_new(10);
+        sigar->netif_adapters =
+            sigar_netif_cache_new(sigar);
 
         status = sigar_get_adapters_info(sigar, &info);
         if (status != SIGAR_OK) {
@@ -2011,7 +2044,8 @@ static int sigar_get_netif_ipaddr(sigar_t *sigar,
         int status, i;
         MIB_IPADDRTABLE *mib;
 
-        sigar->netif_addr_rows = sigar_cache_new(10);
+        sigar->netif_addr_rows =
+            sigar_netif_cache_new(sigar);
 
         status = sigar_get_ipaddr_table(sigar, &mib);
         if (status != SIGAR_OK) {
@@ -2268,7 +2302,8 @@ sigar_net_interface_list_get(sigar_t *sigar,
     int lo=0, eth=0, la=0;
 
     if (!sigar->netif_mib_rows) {
-        sigar->netif_mib_rows = sigar_cache_new(10);
+        sigar->netif_mib_rows =
+            sigar_netif_cache_new(sigar);
     }
 
     if ((status = sigar_get_if_table(sigar, &ift)) != SIGAR_OK) {
