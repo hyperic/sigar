@@ -306,6 +306,12 @@ typedef DWORD (CALLBACK *iphlpapi_get_net_params)(PFIXED_INFO,
 typedef DWORD (CALLBACK *iphlpapi_get_adapters_info)(PIP_ADAPTER_INFO,
                                                      PULONG);
 
+typedef ULONG (CALLBACK *iphlpapi_get_adapters_addrs)(ULONG,
+                                                      ULONG,
+                                                      PVOID,
+                                                      PIP_ADAPTER_ADDRESSES,
+                                                      PULONG);
+
 /* advapi32.dll */
 typedef BOOL (CALLBACK *advapi_convert_string_sid)(LPCSTR,
                                                    PSID *);
@@ -378,6 +384,7 @@ typedef struct {
     SIGAR_DLLFUNC(iphlpapi, get_udpx_table);
     SIGAR_DLLFUNC(iphlpapi, get_net_params);
     SIGAR_DLLFUNC(iphlpapi, get_adapters_info);
+    SIGAR_DLLFUNC(iphlpapi, get_adapters_addrs);
 
     sigar_dll_func_t end;
 } sigar_iphlpapi_t;

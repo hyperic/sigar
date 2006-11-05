@@ -226,6 +226,7 @@ static sigar_iphlpapi_t sigar_iphlpapi = {
     { "AllocateAndGetUdpExTableFromStack", NULL },
     { "GetNetworkParams", NULL },
     { "GetAdaptersInfo", NULL },
+    { "GetAdaptersAddresses", NULL },
     { NULL, NULL }
 };
 
@@ -1869,6 +1870,9 @@ SIGAR_DECLARE(int) sigar_cpu_info_list_get(sigar_t *sigar,
 #define sigar_GetAdaptersInfo \
     sigar->iphlpapi.get_adapters_info.func
 
+#define sigar_GetAdaptersAddresses \
+    sigar->iphlpapi.get_adapters_addrs.func
+
 #define sigar_GetNumberOfInterfaces \
     sigar->iphlpapi.get_num_if.func
 
@@ -1981,6 +1985,52 @@ static int sigar_get_adapter_info(sigar_t *sigar,
     }
     else {
         return ENOENT;
+    }
+}
+
+static int sigar_get_adapters_addresses(sigar_t *sigar,
+                                        PIP_ADAPTER_ADDRESSES *addrs)
+{
+    ULONG size = sigar->ifconf_len;
+    ULONG rc;
+    ULONG flags = 
+        GAA_FLAG_SKIP_DNS_SERVER|GAA_FLAG_SKIP_MULTICAST;
+
+    DLLMOD_INIT(iphlpapi, FALSE);
+
+    if (!sigar_GetAdaptersAddresses) {
+        return SIGAR_ENOTIMPL;
+    }
+
+    *addrs = (PIP_ADAPTER_ADDRESSES)sigar->ifconf_buf;
+    rc = sigar_GetAdaptersAddresses(AF_UNSPEC,
+                                    flags,
+                                    NULL,
+                                    *addrs,
+                                    &size);
+
+    if (rc == ERROR_BUFFER_OVERFLOW) {
+        sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
+                         "GetAdaptersAddresses "
+                         "realloc ifconf_buf old=%d, new=%d",
+                         sigar->ifconf_len, size);
+        sigar->ifconf_len = size;
+        sigar->ifconf_buf = realloc(sigar->ifconf_buf,
+                                    sigar->ifconf_len);
+
+        *addrs = (PIP_ADAPTER_ADDRESSES)sigar->ifconf_buf;
+        rc = sigar_GetAdaptersAddresses(AF_UNSPEC,
+                                        flags,
+                                        NULL,
+                                        *addrs,
+                                        &size);
+    }
+
+    if (rc != ERROR_SUCCESS) {
+        return rc;
+    }
+    else {
+        return SIGAR_OK;
     }
 }
 
