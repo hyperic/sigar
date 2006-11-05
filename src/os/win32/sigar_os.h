@@ -319,6 +319,10 @@ typedef DWORD (CALLBACK *iphlpapi_get_ipforward_table)(PMIB_IPFORWARDTABLE,
                                                        PULONG,
                                                        BOOL);
 
+typedef DWORD (CALLBACK *iphlpapi_get_ipaddr_table)(PMIB_IPADDRTABLE,
+                                                    PULONG,
+                                                    BOOL);
+
 typedef DWORD (CALLBACK *iphlpapi_get_if_table)(PMIB_IFTABLE,
                                                 PULONG,
                                                 BOOL);
@@ -413,6 +417,7 @@ typedef struct {
     sigar_dll_handle_t handle;
 
     SIGAR_DLLFUNC(iphlpapi, get_ipforward_table);
+    SIGAR_DLLFUNC(iphlpapi, get_ipaddr_table);
     SIGAR_DLLFUNC(iphlpapi, get_if_table);
     SIGAR_DLLFUNC(iphlpapi, get_if_entry);
     SIGAR_DLLFUNC(iphlpapi, get_tcp_table);

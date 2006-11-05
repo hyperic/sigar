@@ -216,6 +216,7 @@ static sigar_iphlpapi_t sigar_iphlpapi = {
     "iphlpapi.dll",
     NULL,
     { "GetIpForwardTable", NULL },
+    { "GetIpAddrTable", NULL },
     { "GetIfTable", NULL },
     { "GetIfEntry", NULL },
     { "GetTcpTable", NULL },
@@ -1942,6 +1943,45 @@ static int sigar_get_adapter_info(sigar_t *sigar,
     }
     else {
         return ENOENT;
+    }
+}
+
+#define sigar_GetIpAddrTable \
+    sigar->iphlpapi.get_ipaddr_table.func
+
+static int sigar_get_ipaddr_table(sigar_t *sigar,
+                                  PMIB_IPADDRTABLE *ipaddr)
+{
+    ULONG size = sigar->ifconf_len;
+    DWORD rc;
+
+    DLLMOD_INIT(iphlpapi, FALSE);
+
+    if (!sigar_GetIpAddrTable) {
+        return SIGAR_ENOTIMPL;
+    }
+
+    *ipaddr = (PMIB_IPADDRTABLE)sigar->ifconf_buf;
+    rc = sigar_GetIpAddrTable(*ipaddr, &size, FALSE);
+
+    if (rc == ERROR_INSUFFICIENT_BUFFER) {
+        sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
+                         "GetIpAddrTable "
+                         "realloc ifconf_buf old=%d, new=%d",
+                         sigar->ifconf_len, size);
+        sigar->ifconf_len = size;
+        sigar->ifconf_buf = realloc(sigar->ifconf_buf,
+                                    sigar->ifconf_len);
+
+        *ipaddr = (PMIB_IPADDRTABLE)sigar->ifconf_buf;
+        rc = sigar_GetIpAddrTable(*ipaddr, &size, FALSE);
+    }
+
+    if (rc != NO_ERROR) {
+        return rc;
+    }
+    else {
+        return SIGAR_OK;
     }
 }
 
