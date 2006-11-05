@@ -2399,9 +2399,17 @@ sigar_net_interface_config_get(sigar_t *sigar,
         sigar_net_address_set(ifconfig->netmask,
                               ipaddr->dwMask);
 
-        /* wtf is up w/ dwBCastAddr? */
-        sigar_net_address_set(ifconfig->broadcast,
-                              ipaddr->dwAddr|0xFF000000);
+        if (ifr->dwType != MIB_IF_TYPE_LOOPBACK) {
+            long bcast = ipaddr->dwAddr & ipaddr->dwMask;
+
+            if (ipaddr->dwBCastAddr) {
+                bcast |= ~ipaddr->dwMask;
+                ifconfig->flags |= SIGAR_IFF_BROADCAST;
+            }
+
+            sigar_net_address_set(ifconfig->broadcast,
+                                  bcast);
+        }
     }
 
     /* hack for MS_LOOPBACK_ADAPTER */
@@ -2417,8 +2425,7 @@ sigar_net_interface_config_get(sigar_t *sigar,
     }
     else {
         if (ipaddr) {
-            ifconfig->flags |=
-                SIGAR_IFF_BROADCAST|SIGAR_IFF_MULTICAST;
+            ifconfig->flags |= SIGAR_IFF_MULTICAST;
         }
 
         SIGAR_SSTRCPY(ifconfig->type,
