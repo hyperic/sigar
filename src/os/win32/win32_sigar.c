@@ -2295,8 +2295,11 @@ sigar_net_interface_list_get(sigar_t *sigar,
         else if (ifr->dwType == MIB_IF_TYPE_LOOPBACK) {
             sprintf(name, "lo%d", lo++);
         }
-        else {
+        else if (ifr->dwType == MIB_IF_TYPE_ETHERNET) {
             sprintf(name, "eth%d", eth++);
+        }
+        else {
+            continue; /*XXX*/
         }
 
         if (iflist) {
