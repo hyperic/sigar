@@ -491,6 +491,7 @@ struct sigar_t {
     sigar_win32_pinfo_t pinfo;
     sigar_cache_t *netif_adapters;
     sigar_cache_t *netif_mib_rows;
+    sigar_cache_t *netif_addr_rows;
 
     WORD ws_version;
     int ws_error;

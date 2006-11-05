@@ -418,6 +418,7 @@ int sigar_os_open(sigar_t **sigar_ptr)
                       FALSE);
 
     sigar->netif_mib_rows = NULL;
+    sigar->netif_addr_rows = NULL;
     sigar->netif_adapters = NULL;
     sigar->pinfo.pid = -1;
     sigar->ws_version = 0;
@@ -451,6 +452,10 @@ int sigar_os_close(sigar_t *sigar)
 
     if (sigar->netif_mib_rows) {
         sigar_cache_destroy(sigar->netif_mib_rows);
+    }
+
+    if (sigar->netif_addr_rows) {
+        sigar_cache_destroy(sigar->netif_addr_rows);
     }
 
     if (sigar->netif_adapters) {
@@ -1985,6 +1990,63 @@ static int sigar_get_ipaddr_table(sigar_t *sigar,
     }
 }
 
+#ifndef MIB_IPADDR_PRIMARY
+#define MIB_IPADDR_PRIMARY 0x0001
+#endif
+
+static int sigar_get_netif_ipaddr(sigar_t *sigar,
+                                  DWORD index,
+                                  MIB_IPADDRROW **ipaddr)
+{
+    sigar_cache_entry_t *entry;
+    *ipaddr = NULL;
+
+    if (sigar->netif_addr_rows) {
+        entry = sigar_cache_get(sigar->netif_addr_rows, index);
+        if (entry->value) {
+            *ipaddr = (MIB_IPADDRROW *)entry->value;
+        }
+    }
+    else {
+        int status, i;
+        MIB_IPADDRTABLE *mib;
+
+        sigar->netif_addr_rows = sigar_cache_new(10);
+
+        status = sigar_get_ipaddr_table(sigar, &mib);
+        if (status != SIGAR_OK) {
+            return status;
+        }
+
+        for (i=0; i<mib->dwNumEntries; i++) {
+            MIB_IPADDRROW *row = &mib->table[i];
+
+            /* unused2 == wType */
+            if (!(row->unused2 & MIB_IPADDR_PRIMARY)) {
+                continue;
+            }
+
+            entry = sigar_cache_get(sigar->netif_addr_rows,
+                                    row->dwIndex);
+            if (!entry->value) {
+                entry->value = malloc(sizeof(*row));
+            }
+            memcpy(entry->value, row, sizeof(*row));
+
+            if (row->dwIndex == index) {
+                *ipaddr = row;
+            }
+        }
+    }
+
+    if (*ipaddr) {
+        return SIGAR_OK;
+    }
+    else {
+        return ENOENT;
+    }
+}
+
 SIGAR_DECLARE(int) sigar_net_info_get(sigar_t *sigar,
                                       sigar_net_info_t *netinfo)
 {
@@ -2258,6 +2320,7 @@ sigar_net_interface_config_get(sigar_t *sigar,
                                sigar_net_interface_config_t *ifconfig)
 {
     MIB_IFROW *ifr;
+    MIB_IPADDRROW *ipaddr;
     int status;
 
     status = get_mib_ifrow(sigar, name, &ifr);
@@ -2282,56 +2345,37 @@ sigar_net_interface_config_get(sigar_t *sigar,
         ifconfig->flags |= SIGAR_IFF_UP|SIGAR_IFF_RUNNING;
     }
 
+    status = sigar_get_netif_ipaddr(sigar,
+                                    ifr->dwIndex,
+                                    &ipaddr);
+
+    if (status != SIGAR_OK) {
+        return status;
+    }
+
+    sigar_net_address_set(ifconfig->address,
+                          ipaddr->dwAddr);
+
+    sigar_net_address_set(ifconfig->netmask,
+                          ipaddr->dwMask);
+
+    sigar_net_address_set(ifconfig->broadcast,
+                          ipaddr->dwBCastAddr);
+
+    /* hack for MS_LOOPBACK_ADAPTER */
+    if (strnEQ(name, NETIF_LA, sizeof(NETIF_LA)-1)) {
+        ifr->dwType = MIB_IF_TYPE_LOOPBACK;
+    }
+
     if (ifr->dwType == MIB_IF_TYPE_LOOPBACK) {
         ifconfig->flags |= SIGAR_IFF_LOOPBACK;
-
-        sigar_net_address_set(ifconfig->address,
-                              0x0100007f); /* 127.0.0.1 */
-        sigar_net_address_set(ifconfig->netmask,
-                              0x000000FF); /* 255.0.0.0 */
-        sigar_net_address_set(ifconfig->destination,
-                              ifconfig->address.addr.in);
-        sigar_net_address_set(ifconfig->broadcast, 0);
 
         SIGAR_SSTRCPY(ifconfig->type,
                       SIGAR_NIC_LOOPBACK);
     }
     else {
-        IP_ADAPTER_INFO *adapter;
-        status = sigar_get_adapter_info(sigar,
-                                        ifr->dwIndex,
-                                        &adapter);
-
-        if (status == SIGAR_OK) {
-            char *addr;
-            long iaddr;
-            IP_ADDR_STRING *ip = &adapter->IpAddressList;
-
-            /* last address in the list is the primary */
-            while (ip->Next) {
-                ip = ip->Next;
-            }
-            addr = ip->IpAddress.String;
-            iaddr = inet_addr(addr);
-            sigar_net_address_set(ifconfig->address,
-                                  iaddr);
-
-            addr = ip->IpMask.String;
-            sigar_net_address_set(ifconfig->netmask,
-                                  inet_addr(addr));
-
-            if (ifr->dwType == MIB_IF_TYPE_ETHERNET) {
-                ifconfig->flags |=
-                    SIGAR_IFF_BROADCAST|SIGAR_IFF_MULTICAST;
-                sigar_net_address_set(ifconfig->broadcast,
-                                      iaddr | 0xFF000000);
-            }
-        }
-
-        /* hack for MS_LOOPBACK_ADAPTER */
-        if (strnEQ(name, NETIF_LA, sizeof(NETIF_LA)-1)) {
-            ifconfig->flags |= SIGAR_IFF_LOOPBACK;
-        }
+        ifconfig->flags |=
+            SIGAR_IFF_BROADCAST|SIGAR_IFF_MULTICAST;
 
         SIGAR_SSTRCPY(ifconfig->type,
                       SIGAR_NIC_ETHERNET);
