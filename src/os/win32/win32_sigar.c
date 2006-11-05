@@ -2054,9 +2054,14 @@ static int sigar_get_netif_ipaddr(sigar_t *sigar,
 
         for (i=0; i<mib->dwNumEntries; i++) {
             MIB_IPADDRROW *row = &mib->table[i];
+            short type;
 
-            /* unused2 == wType */
-            if (!(row->unused2 & MIB_IPADDR_PRIMARY)) {
+#if _MSC_VER <= 1200
+            type = row->unused2;
+#else
+            type = row->wType;
+#endif
+            if (!(type & MIB_IPADDR_PRIMARY)) {
                 continue;
             }
 
