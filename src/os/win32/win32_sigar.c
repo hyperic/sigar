@@ -2352,18 +2352,16 @@ sigar_net_interface_config_get(sigar_t *sigar,
                                     ifr->dwIndex,
                                     &ipaddr);
 
-    if (status != SIGAR_OK) {
-        return status;
+    if (status == SIGAR_OK) {
+        sigar_net_address_set(ifconfig->address,
+                              ipaddr->dwAddr);
+
+        sigar_net_address_set(ifconfig->netmask,
+                              ipaddr->dwMask);
+
+        sigar_net_address_set(ifconfig->broadcast,
+                              ipaddr->dwBCastAddr);
     }
-
-    sigar_net_address_set(ifconfig->address,
-                          ipaddr->dwAddr);
-
-    sigar_net_address_set(ifconfig->netmask,
-                          ipaddr->dwMask);
-
-    sigar_net_address_set(ifconfig->broadcast,
-                          ipaddr->dwBCastAddr);
 
     /* hack for MS_LOOPBACK_ADAPTER */
     if (strnEQ(name, NETIF_LA, sizeof(NETIF_LA)-1)) {
@@ -2377,8 +2375,10 @@ sigar_net_interface_config_get(sigar_t *sigar,
                       SIGAR_NIC_LOOPBACK);
     }
     else {
-        ifconfig->flags |=
-            SIGAR_IFF_BROADCAST|SIGAR_IFF_MULTICAST;
+        if (ipaddr) {
+            ifconfig->flags |=
+                SIGAR_IFF_BROADCAST|SIGAR_IFF_MULTICAST;
+        }
 
         SIGAR_SSTRCPY(ifconfig->type,
                       SIGAR_NIC_ETHERNET);
