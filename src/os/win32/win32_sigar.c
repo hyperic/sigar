@@ -2400,15 +2400,16 @@ sigar_net_interface_config_get(sigar_t *sigar,
                               ipaddr->dwMask);
 
         if (ifr->dwType != MIB_IF_TYPE_LOOPBACK) {
-            long bcast = ipaddr->dwAddr & ipaddr->dwMask;
-
             if (ipaddr->dwBCastAddr) {
+                long bcast =
+                    ipaddr->dwAddr & ipaddr->dwMask;
+
                 bcast |= ~ipaddr->dwMask;
                 ifconfig->flags |= SIGAR_IFF_BROADCAST;
-            }
 
-            sigar_net_address_set(ifconfig->broadcast,
-                                  bcast);
+                sigar_net_address_set(ifconfig->broadcast,
+                                      bcast);
+            }
         }
     }
 
