@@ -1849,7 +1849,10 @@ static int fqdn_ip_get(sigar_t *sigar, char *name)
                                                 iflist.data[i], &ifconfig);
 
         if ((status != SIGAR_OK) ||
-            (ifconfig.flags & SIGAR_IFF_LOOPBACK))
+            (ifconfig.flags & SIGAR_IFF_LOOPBACK) ||
+            !ifconfig.address.addr.in ||  /* no ip address */
+            !ifconfig.hwaddr.addr.in ||   /* no mac address */
+            strchr(iflist.data[i], ':'))  /* alias */
         {
             continue;
         }
