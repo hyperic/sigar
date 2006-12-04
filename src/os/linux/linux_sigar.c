@@ -1036,9 +1036,6 @@ int sigar_proc_modules_get(sigar_t *sigar, sigar_pid_t pid,
     return SIGAR_OK;
 }
 
-#define TIME_NSEC(t) \
-    SIGAR_SEC2NANO(SIGAR_TICK2SEC(((sigar_uint64_t)(t))))
-
 int sigar_thread_cpu_get(sigar_t *sigar,
                          sigar_uint64_t id,
                          sigar_thread_cpu_t *cpu)
@@ -1051,9 +1048,9 @@ int sigar_thread_cpu_get(sigar_t *sigar,
 
     times(&now);
 
-    cpu->user  = TIME_NSEC(now.tms_utime);
-    cpu->sys   = TIME_NSEC(now.tms_stime);
-    cpu->total = TIME_NSEC(now.tms_utime + now.tms_stime);
+    cpu->user  = SIGAR_TICK2NSEC(now.tms_utime);
+    cpu->sys   = SIGAR_TICK2NSEC(now.tms_stime);
+    cpu->total = SIGAR_TICK2NSEC(now.tms_utime + now.tms_stime);
 
     return SIGAR_OK;
 }
