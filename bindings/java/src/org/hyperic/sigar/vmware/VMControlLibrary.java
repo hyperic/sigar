@@ -34,8 +34,10 @@ public class VMControlLibrary {
     private static final String VMCONTROL_TAR =
         getProperty("control.tar", VMWARE_LIB + "/perl/control.tar");
 
+    private static final String VMCONTROL = "vmcontrol";
+
     private static final String VMCONTROL_OBJ =
-        getProperty("vmcontrol.o", "control-only/vmcontrol.o");
+        getProperty("vmcontrol.o", "control-only/" + VMCONTROL + ".o");
 
     private static final String GCC =
         getProperty("bin.gcc", "/usr/bin/gcc");
@@ -82,12 +84,18 @@ public class VMControlLibrary {
         System.setProperty(PROP_VMCONTROL_SHLIB, lib);
     }
 
+    public static void link()
+        throws IOException {
+
+        link(VMCONTROL + ".so");
+    }
+
     public static void link(String name)
         throws IOException {
 
-        setSharedLibrary(name);
+        File out = new File(name).getAbsoluteFile();
+        setSharedLibrary(out.getPath());
 
-        File out = new File(name);
         if (out.exists()) {
             return; //already linked
         }
@@ -126,6 +134,10 @@ public class VMControlLibrary {
         };
 
         exec(link_args);
+    }
+
+    public static boolean isLoaded() {
+        return VMwareObject.LOADED;
     }
 
     public static void main(String[] args) throws Exception {
