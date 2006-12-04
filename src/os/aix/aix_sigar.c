@@ -1082,9 +1082,9 @@ int sigar_proc_time_get(sigar_t *sigar, sigar_pid_t pid,
     }
 
     proctime->start_time = pinfo->pi_start;
-    proctime->start_time *= 1000; /* convert to ms */
-    proctime->user = pinfo->pi_utime;
-    proctime->sys  = pinfo->pi_stime;
+    proctime->start_time *= SIGAR_MSEC; /* convert to ms */
+    proctime->user = pinfo->pi_utime * SIGAR_MSEC;
+    proctime->sys  = pinfo->pi_stime * SIGAR_MSEC;
     proctime->total = proctime->user + proctime->sys;
 
     return SIGAR_OK;

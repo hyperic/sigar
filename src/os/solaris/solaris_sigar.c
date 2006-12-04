@@ -681,8 +681,8 @@ int sigar_proc_cred_get(sigar_t *sigar, sigar_pid_t pid,
     return SIGAR_OK;
 }
 
-#define PRTIME_2SIGAR(t) \
-    (t.tv_sec + t.tv_nsec / NANOSEC)
+#define PRTIME_2MSEC(t) \
+    ((t.tv_sec * MILLISEC) + (t.tv_nsec / (NANOSEC/MILLISEC)))
 
 int sigar_proc_time_get(sigar_t *sigar, sigar_pid_t pid,
                         sigar_proc_time_t *proctime)
@@ -695,7 +695,7 @@ int sigar_proc_time_get(sigar_t *sigar, sigar_pid_t pid,
     }
 
     proctime->start_time = usage.pr_create.tv_sec + sigar->boot_time;
-    proctime->start_time *= 1000;
+    proctime->start_time *= MILLISEC;
 
     if (usage.pr_utime.tv_sec < 0) {
         /* XXX wtf?  seen on solaris 10, only for the self process */
@@ -712,8 +712,8 @@ int sigar_proc_time_get(sigar_t *sigar, sigar_pid_t pid,
         usage.pr_stime.tv_nsec = pstatus.pr_stime.tv_nsec;
     }
 
-    proctime->user = PRTIME_2SIGAR(usage.pr_utime);
-    proctime->sys  = PRTIME_2SIGAR(usage.pr_stime);
+    proctime->user = PRTIME_2MSEC(usage.pr_utime);
+    proctime->sys  = PRTIME_2MSEC(usage.pr_stime);
     proctime->total = proctime->user + proctime->sys;
 
     return SIGAR_OK;

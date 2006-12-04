@@ -149,7 +149,7 @@ public class Ps extends SigarCommandBase {
     }
 
     public static String getCpuTime(ProcTime time) {
-        long t = time.getTotal();
+        long t = time.getTotal() / 1000;
         return t/60 + ":" + t%60;
     }
 

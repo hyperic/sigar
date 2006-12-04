@@ -720,8 +720,8 @@ static int proc_stat_read(sigar_t *sigar, sigar_pid_t pid)
     pstat->major_faults = sigar_strtoull(ptr); /* (12) */
     ptr = sigar_skip_token(ptr); /* (13) cmaj flt */
 
-    pstat->utime = sigar_strtoull(ptr) / sigar->ticks; /* (14) */
-    pstat->stime = sigar_strtoull(ptr) / sigar->ticks; /* (15) */
+    pstat->utime = SIGAR_TICK2MSEC(sigar_strtoull(ptr)); /* (14) */
+    pstat->stime = SIGAR_TICK2MSEC(sigar_strtoull(ptr)); /* (15) */
 
     ptr = sigar_skip_token(ptr); /* (16) cutime */
     ptr = sigar_skip_token(ptr); /* (17) cstime */

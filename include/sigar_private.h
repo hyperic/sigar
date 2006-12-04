@@ -100,11 +100,16 @@
 #define strnEQ(s1, s2, n) (strncmp(s1, s2, n) == 0)
 #endif
 
+#define SIGAR_MSEC 1000L
+
 #define SIGAR_SEC2NANO(s) \
     ((sigar_uint64_t)(s) * (sigar_uint64_t)1000000000)
 
 /* cpu ticks to seconds */
 #define SIGAR_TICK2SEC(s) ((s) / sigar->ticks)
+
+/* cpu ticks to milliseconds */
+#define SIGAR_TICK2MSEC(s) ((s) * (SIGAR_MSEC / sigar->ticks))
 
 #define IFTYPE_LO  2
 #define IFTYPE_ETH 3

@@ -332,9 +332,9 @@ int sigar_proc_time_get(sigar_t *sigar, sigar_pid_t pid,
     }
 
     proctime->start_time = pinfo->pst_start;
-    proctime->start_time *= 1000;
-    proctime->user = pinfo->pst_utime;
-    proctime->sys  = pinfo->pst_stime;
+    proctime->start_time *= SIGAR_MSEC;
+    proctime->user = pinfo->pst_utime * SIGAR_MSEC;
+    proctime->sys  = pinfo->pst_stime * SIGAR_MSEC;
     proctime->total = proctime->user + proctime->sys;
 
     return SIGAR_OK;

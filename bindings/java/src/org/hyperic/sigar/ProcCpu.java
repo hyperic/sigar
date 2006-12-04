@@ -52,7 +52,7 @@ public class ProcCpu extends ProcTime {
             ptable.put(cpu, cpu);
         }
 
-        long timeNow = System.currentTimeMillis() / 1000; //seconds
+        long timeNow = System.currentTimeMillis();
         double diff = timeNow - cpu.lastTime;
         if (diff == 0) {
             return cpu; //we were just called within < 1 second ago.
