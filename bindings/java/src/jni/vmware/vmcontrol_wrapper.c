@@ -21,12 +21,13 @@
 #ifdef WIN32
 #include <windows.h>
 #else
-#include <stdio.h>
 #include <dlfcn.h>
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
 #endif
+
+#include <stdio.h>
 
 #include "vmcontrol_wrapper.h"
 
