@@ -787,7 +787,13 @@ int sigar_proc_cred_get(sigar_t *sigar, sigar_pid_t pid,
     return SIGAR_OK;
 }
 
+#define tv2sec(tv) \
+   ((sigar_uint64_t)tv.tv_sec + (((sigar_uint64_t)tv.tv_usec) / 1000000))
+
 #ifdef DARWIN
+#define tval2msec(tval) \
+   ((tval.seconds * SIGAR_MSEC) + (tval.microseconds / 1000))
+
 static int get_proc_times(sigar_pid_t pid, sigar_proc_time_t *time)
 {
     unsigned int count;
@@ -827,16 +833,13 @@ static int get_proc_times(sigar_pid_t pid, sigar_proc_time_t *time)
     time_value_add(&utime, &tti.user_time);
     time_value_add(&stime, &tti.system_time);
 
-    time->user = utime.seconds;
-    time->sys  = stime.seconds;
+    time->user = tval2msec(utime);
+    time->sys  = tval2msec(stime);
     time->total = time->user + time->sys;
 
     return SIGAR_OK;
 }
 #endif
-
-#define tv2sec(tv) \
-   ((sigar_uint64_t)tv.tv_sec + (((sigar_uint64_t)tv.tv_usec) / 1000000))
 
 int sigar_proc_time_get(sigar_t *sigar, sigar_pid_t pid,
                         sigar_proc_time_t *proctime)
