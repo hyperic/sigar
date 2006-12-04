@@ -124,19 +124,19 @@ static void get_cpu_metrics(sigar_t *sigar,
                             sigar_cpu_t *cpu,
                             pstat_int_t *cpu_time)
 {
-    cpu->user = SIGAR_TICK2SEC(cpu_time[CP_USER]);
+    cpu->user = SIGAR_TICK2MSEC(cpu_time[CP_USER]);
 
-    cpu->sys  = SIGAR_TICK2SEC(cpu_time[CP_SYS] +
-                               cpu_time[CP_SSYS] +
-                               cpu_time[CP_INTR]);
+    cpu->sys  = SIGAR_TICK2MSEC(cpu_time[CP_SYS] +
+                                cpu_time[CP_SSYS] +
+                                cpu_time[CP_INTR]);
 
-    cpu->nice = SIGAR_TICK2SEC(cpu_time[CP_NICE]);
+    cpu->nice = SIGAR_TICK2MSEC(cpu_time[CP_NICE]);
 
-    cpu->idle = SIGAR_TICK2SEC(cpu_time[CP_IDLE]);
+    cpu->idle = SIGAR_TICK2MSEC(cpu_time[CP_IDLE]);
 
-    cpu->wait = SIGAR_TICK2SEC(cpu_time[CP_WAIT] +
-                               cpu_time[CP_SWAIT] +
-                               cpu_time[CP_BLOCK]);
+    cpu->wait = SIGAR_TICK2MSEC(cpu_time[CP_WAIT] +
+                                cpu_time[CP_SWAIT] +
+                                cpu_time[CP_BLOCK]);
     
     cpu->total =
         cpu->user + cpu->sys + cpu->nice + cpu->idle + cpu->wait;
