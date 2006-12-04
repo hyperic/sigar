@@ -18,7 +18,9 @@
 
 package org.hyperic.sigar.vmware;
 
-public class VMwareException extends Exception {
+import org.hyperic.sigar.SigarException;
+
+public class VMwareException extends SigarException {
     public VMwareException() {
         super();
     }
