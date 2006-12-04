@@ -206,6 +206,8 @@ int sigar_os_open(sigar_t **sigar)
     (*sigar)->pagesize = getpagesize();
 #ifdef __FreeBSD__
     (*sigar)->ticks = 100; /* sysconf(_SC_CLK_TCK) == 128 !? */
+#else
+    (*sigar)->ticks = sysconf(_SC_CLK_TCK);
 #endif
     (*sigar)->last_pid = -1;
 
@@ -486,10 +488,10 @@ int sigar_cpu_get(sigar_t *sigar, sigar_cpu_t *cpu)
         return errno;
     }
 
-    cpu->user = cpuload.cpu_ticks[CPU_STATE_USER];
-    cpu->sys  = cpuload.cpu_ticks[CPU_STATE_SYSTEM];
-    cpu->idle = cpuload.cpu_ticks[CPU_STATE_IDLE];
-    cpu->nice = cpuload.cpu_ticks[CPU_STATE_NICE];
+    cpu->user = SIGAR_TICK2MSEC(cpuload.cpu_ticks[CPU_STATE_USER]);
+    cpu->sys  = SIGAR_TICK2MSEC(cpuload.cpu_ticks[CPU_STATE_SYSTEM]);
+    cpu->idle = SIGAR_TICK2MSEC(cpuload.cpu_ticks[CPU_STATE_IDLE]);
+    cpu->nice = SIGAR_TICK2MSEC(cpuload.cpu_ticks[CPU_STATE_NICE]);
     cpu->wait = 0; /*N/A*/
     cpu->total = cpu->user + cpu->nice + cpu->sys + cpu->idle;
 
@@ -511,10 +513,10 @@ int sigar_cpu_get(sigar_t *sigar, sigar_cpu_t *cpu)
         return status;
     }
 
-    cpu->user = SIGAR_TICK2SEC(cp_time[CP_USER]);
-    cpu->nice = SIGAR_TICK2SEC(cp_time[CP_NICE]);
-    cpu->sys  = SIGAR_TICK2SEC(cp_time[CP_SYS] + cp_time[CP_INTR]);
-    cpu->idle = SIGAR_TICK2SEC(cp_time[CP_IDLE]);
+    cpu->user = SIGAR_TICK2MSEC(cp_time[CP_USER]);
+    cpu->nice = SIGAR_TICK2MSEC(cp_time[CP_NICE]);
+    cpu->sys  = SIGAR_TICK2MSEC(cp_time[CP_SYS] + cp_time[CP_INTR]);
+    cpu->idle = SIGAR_TICK2MSEC(cp_time[CP_IDLE]);
     cpu->wait = 0; /*N/A*/
     cpu->total = cpu->user + cpu->nice + cpu->sys + cpu->idle;
 #endif
@@ -549,10 +551,10 @@ int sigar_cpu_list_get(sigar_t *sigar, sigar_cpu_list_t *cpulist)
 
         cpu = &cpulist->data[cpulist->number++];
 
-        cpu->user = cpuload[i].cpu_ticks[CPU_STATE_USER];
-        cpu->sys  = cpuload[i].cpu_ticks[CPU_STATE_SYSTEM];
-        cpu->idle = cpuload[i].cpu_ticks[CPU_STATE_IDLE];
-        cpu->nice = cpuload[i].cpu_ticks[CPU_STATE_NICE];
+        cpu->user = SIGAR_TICK2MSEC(cpuload[i].cpu_ticks[CPU_STATE_USER]);
+        cpu->sys  = SIGAR_TICK2MSEC(cpuload[i].cpu_ticks[CPU_STATE_SYSTEM]);
+        cpu->idle = SIGAR_TICK2MSEC(cpuload[i].cpu_ticks[CPU_STATE_IDLE]);
+        cpu->nice = SIGAR_TICK2MSEC(cpuload[i].cpu_ticks[CPU_STATE_NICE]);
         cpu->wait = 0; /*N/A*/
         cpu->total = cpu->user + cpu->nice + cpu->sys + cpu->idle;
     }
@@ -787,6 +789,9 @@ int sigar_proc_cred_get(sigar_t *sigar, sigar_pid_t pid,
     return SIGAR_OK;
 }
 
+#define tv2msec(tv) \
+   (((sigar_uint64_t)tv.tv_sec * SIGAR_MSEC) + (((sigar_uint64_t)tv.tv_usec) / 1000))
+
 #ifdef DARWIN
 #define tval2msec(tval) \
    ((tval.seconds * SIGAR_MSEC) + (tval.microseconds / 1000))
@@ -836,9 +841,6 @@ static int get_proc_times(sigar_pid_t pid, sigar_proc_time_t *time)
 
     return SIGAR_OK;
 }
-#else
-#define tv2msec(tv) \
-   (((sigar_uint64_t)tv.tv_sec * SIGAR_MSEC) + (((sigar_uint64_t)tv.tv_usec) / 1000))
 #endif
 
 int sigar_proc_time_get(sigar_t *sigar, sigar_pid_t pid,
