@@ -787,9 +787,6 @@ int sigar_proc_cred_get(sigar_t *sigar, sigar_pid_t pid,
     return SIGAR_OK;
 }
 
-#define tv2sec(tv) \
-   ((sigar_uint64_t)tv.tv_sec + (((sigar_uint64_t)tv.tv_usec) / 1000000))
-
 #ifdef DARWIN
 #define tval2msec(tval) \
    ((tval.seconds * SIGAR_MSEC) + (tval.microseconds / 1000))
@@ -839,6 +836,9 @@ static int get_proc_times(sigar_pid_t pid, sigar_proc_time_t *time)
 
     return SIGAR_OK;
 }
+#else
+#define tv2msec(tv) \
+   (((sigar_uint64_t)tv.tv_sec * SIGAR_MSEC) + (((sigar_uint64_t)tv.tv_usec) / 1000))
 #endif
 
 int sigar_proc_time_get(sigar_t *sigar, sigar_pid_t pid,
@@ -858,12 +858,12 @@ int sigar_proc_time_get(sigar_t *sigar, sigar_pid_t pid,
     if ((status = get_proc_times(pid, proctime)) != SIGAR_OK) {
         return status;
     }
-    proctime->start_time = tv2sec(pinfo->KI_START) * 1000;
+    proctime->start_time = tv2msec(pinfo->KI_START);
 #elif defined(SIGAR_FREEBSD5)
-    proctime->user  = tv2sec(pinfo->ki_rusage.ru_utime);
-    proctime->sys   = tv2sec(pinfo->ki_rusage.ru_stime);
+    proctime->user  = tv2msec(pinfo->ki_rusage.ru_utime);
+    proctime->sys   = tv2msec(pinfo->ki_rusage.ru_stime);
     proctime->total = proctime->user + proctime->sys;
-    proctime->start_time = tv2sec(pinfo->KI_START) * 1000;
+    proctime->start_time = tv2msec(pinfo->KI_START);
 #else
     if (!sigar->kmem) {
         return SIGAR_EPERM_KMEM;
@@ -875,10 +875,10 @@ int sigar_proc_time_get(sigar_t *sigar, sigar_pid_t pid,
         return status;
     }
 
-    proctime->user  = tv2sec(user.u_stats.p_ru.ru_utime);
-    proctime->sys   = tv2sec(user.u_stats.p_ru.ru_stime);
+    proctime->user  = tv2msec(user.u_stats.p_ru.ru_utime);
+    proctime->sys   = tv2msec(user.u_stats.p_ru.ru_stime);
     proctime->total = proctime->user + proctime->sys;
-    proctime->start_time = tv2sec(user.u_stats.p_start) * 1000;
+    proctime->start_time = tv2msec(user.u_stats.p_start);
 #endif
 
     return SIGAR_OK;
