@@ -681,7 +681,7 @@ int sigar_proc_cred_get(sigar_t *sigar, sigar_pid_t pid,
     return SIGAR_OK;
 }
 
-#define PRTIME_2MSEC(t) \
+#define TIMESTRUCT_2MSEC(t) \
     ((t.tv_sec * MILLISEC) + (t.tv_nsec / (NANOSEC/MILLISEC)))
 
 int sigar_proc_time_get(sigar_t *sigar, sigar_pid_t pid,
@@ -712,8 +712,8 @@ int sigar_proc_time_get(sigar_t *sigar, sigar_pid_t pid,
         usage.pr_stime.tv_nsec = pstatus.pr_stime.tv_nsec;
     }
 
-    proctime->user = PRTIME_2MSEC(usage.pr_utime);
-    proctime->sys  = PRTIME_2MSEC(usage.pr_stime);
+    proctime->user = TIMESTRUCT_2MSEC(usage.pr_utime);
+    proctime->sys  = TIMESTRUCT_2MSEC(usage.pr_stime);
     proctime->total = proctime->user + proctime->sys;
 
     return SIGAR_OK;
