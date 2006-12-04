@@ -23,8 +23,17 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 
 import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.hyperic.sigar.SigarLoader;
+import org.hyperic.sigar.win32.RegistryKey;
+import org.hyperic.sigar.win32.Win32Exception;
 
 public class VMControlLibrary {
+    public static final String REGISTRY_ROOT =
+        "SOFTWARE\\VMware, Inc.";
+
     public static final String PROP_VMCONTROL_SHLIB =
         "vmcontrol.shlib";
 
@@ -35,6 +44,9 @@ public class VMControlLibrary {
         getProperty("control.tar", VMWARE_LIB + "/perl/control.tar");
 
     private static final String VMCONTROL = "vmcontrol";
+
+    private static final String VMCONTROL_DLL =
+        VMCONTROL + "lib.dll";
 
     private static final String VMCONTROL_OBJ =
         getProperty("vmcontrol.o", "control-only/" + VMCONTROL + ".o");
@@ -90,8 +102,70 @@ public class VMControlLibrary {
         link(VMCONTROL + ".so");
     }
 
+    private static void linkWin32() {
+        List dlls = new ArrayList();
+
+        RegistryKey root = null;
+        try {
+            root =
+                RegistryKey.LocalMachine.openSubKey(REGISTRY_ROOT);
+
+            String[] keys = root.getSubKeyNames();
+            for (int i=0; i<keys.length; i++) {
+                String name = keys[i];
+                if (!name.startsWith("VMware ")) {
+                    continue;
+                }
+
+                RegistryKey subkey = null;
+                try {
+                    subkey = root.openSubKey(name);
+                    String path = subkey.getStringValue("InstallPath");
+                    if (path == null) {
+                        continue;
+                    }
+                    path = path.trim();
+                    if (path.length() == 0) {
+                        continue;
+                    }
+                    File dll = new File(path + VMCONTROL_DLL);
+                    if (dll.exists()) {
+                        //prefer VMware Server or VMware GSX Server
+                        if (name.endsWith(" Server")) {
+                            dlls.add(0, dll.getPath());
+                        }
+                        //Scripting API will also work
+                        else if (name.endsWith(" API")) {
+                            dlls.add(dll.getPath());
+                        }
+                    }
+                } catch (Win32Exception e) {
+
+                } finally {
+                    if (subkey != null) {
+                        subkey.close();
+                    }
+                }
+            }
+        } catch (Win32Exception e) {
+        } finally {
+            if (root != null) {
+                root.close();
+            }
+        }
+
+        if (dlls.size() != 0) {
+            setSharedLibrary((String)dlls.get(0));
+        }
+    }
+
     public static void link(String name)
         throws IOException {
+
+        if (SigarLoader.IS_WIN32) {
+            linkWin32();
+            return;
+        }
 
         File out = new File(name).getAbsoluteFile();
         setSharedLibrary(out.getPath());
@@ -141,6 +215,20 @@ public class VMControlLibrary {
     }
 
     public static void main(String[] args) throws Exception {
-        link(args[0]);
+        if (args.length == 0) {
+            link();
+        }
+        else {
+            link(args[0]);
+        }
+
+        String shlib = getSharedLibrary();
+        if (shlib == null) {
+            System.out.println("No library found");
+        }
+        else {
+            System.out.println(PROP_VMCONTROL_SHLIB + "=" + shlib +
+                               " (loaded=" + isLoaded() + ")");
+        }
     }
 }
