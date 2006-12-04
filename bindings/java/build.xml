@@ -150,7 +150,14 @@
     </exec>
 
    <condition property="win32.jni" value="jni/win32">
-      <os family="windows"/>
+     <isset property="win32"/>
+   </condition>
+
+   <condition property="vmware.jni" value="jni/vmware">
+     <or>
+       <isset property="win32"/>
+       <isset property="linux"/>
+     </or>
    </condition>
 
     <!-- include sigar *.c files rather than link against libsigar -->
@@ -161,6 +168,7 @@
       <include name="bindings/java/src/jni/*.c"/>
       <include name="bindings/java/src/${win32.jni}/*.cpp"/>
       <include name="bindings/java/src/${win32.jni}/*.c"/>
+      <include name="bindings/java/src/${vmware.jni}/*.c"/>
       <include name="bindings/java/build/src/sigar_version.c"/>
     </patternset>
 

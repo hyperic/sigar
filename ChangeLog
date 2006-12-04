@@ -1,5 +1,7 @@
 2006-12-04  Doug MacEachern  <dougm@hyperic.com>
 
+        * Added Java wrapper for VMware vmcontrol API
+
         * [SIGAR-26] Change Pdh.getFormattedValue() to collect 2 counters if needed
 
 2006-12-03  Doug MacEachern  <dougm@hyperic.com>
