@@ -360,6 +360,8 @@ int sigar_cpu_list_get(sigar_t *sigar, sigar_cpu_list_t *cpulist)
     kstat_t *ksp;
     ulong cpuinfo[CPU_STATES];
     unsigned int i;
+    int is_debug = SIGAR_LOG_IS_DEBUG(sigar);
+    int reported_virtual = 0;
 
     if (sigar_kstat_update(sigar) == -1) {
         return errno;
@@ -379,6 +381,12 @@ int sigar_cpu_list_get(sigar_t *sigar, sigar_cpu_list_t *cpulist)
         sigar_cpu_list_create(cpulist);
     }
 
+    if (is_debug) {
+        sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
+                         "[cpu_list] OS reports %d CPUs",
+                         sigar->ncpu);
+    }
+                         
     for (i=0; i<sigar->ncpu; i++) {
         sigar_cpu_t *cpu;
         char *buf;
@@ -427,6 +435,12 @@ int sigar_cpu_list_get(sigar_t *sigar, sigar_cpu_list_t *cpulist)
         if (is_same_chip(sigar, i, cpulist->number)) {
             /* merge times of logical processors */
             cpu = &cpulist->data[cpulist->number-1];
+
+            if (is_debug && !reported_virtual++) {
+                sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
+                                 "[cpu_list] Merging times of"
+                                 " logical processors");
+            }
         }
         else {
             SIGAR_CPU_LIST_GROW(cpulist);
