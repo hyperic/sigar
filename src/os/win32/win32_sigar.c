@@ -104,13 +104,11 @@ typedef enum {
     perf_offsets[ix] ? \
         *((DWORD *)((BYTE *)counter_block + perf_offsets[ix])) : 0
 
-/* 1/100ns units to seconds */
-#define NS100_2SEC(t) ((t) / 10000000)
-
+/* 1/100ns units to milliseconds */
 #define NS100_2MSEC(t) ((t) / 10000)
 
 #define PERF_VAL_CPU(ix) \
-    NS100_2SEC(PERF_VAL(ix))
+    NS100_2MSEC(PERF_VAL(ix))
 
 #define MS_LOOPBACK_ADAPTER "Microsoft Loopback Adapter"
 #define NETIF_LA "la"
@@ -606,11 +604,11 @@ static int get_idle_cpu(sigar_t *sigar, sigar_cpu_t *cpu,
             if (idx == -1) {
                 int i;
                 for (i=0; i<num; i++) {
-                    cpu->idle += NS100_2SEC(info[i].IdleTime.QuadPart);
+                    cpu->idle += NS100_2MSEC(info[i].IdleTime.QuadPart);
                 }
             }
             else if (idx < num) {
-                cpu->idle = NS100_2SEC(info[idx].IdleTime.QuadPart);
+                cpu->idle = NS100_2MSEC(info[idx].IdleTime.QuadPart);
             }
             else {
                 return ERROR_INVALID_DATA;
@@ -676,10 +674,10 @@ static int sigar_cpu_ntsys_get(sigar_t *sigar, sigar_cpu_t *cpu)
     SIGAR_ZERO(cpu);
 
     for (i=0; i<num; i++) {
-        cpu->idle += NS100_2SEC(info[i].IdleTime.QuadPart);
-        cpu->user += NS100_2SEC(info[i].UserTime.QuadPart);
-        cpu->sys  += NS100_2SEC(info[i].KernelTime.QuadPart -
-                                info[i].IdleTime.QuadPart);
+        cpu->idle += NS100_2MSEC(info[i].IdleTime.QuadPart);
+        cpu->user += NS100_2MSEC(info[i].UserTime.QuadPart);
+        cpu->sys  += NS100_2MSEC(info[i].KernelTime.QuadPart -
+                                 info[i].IdleTime.QuadPart);
         cpu->total += cpu->idle + cpu->user + cpu->sys;
     }
 
@@ -805,10 +803,10 @@ static int sigar_cpu_list_ntsys_get(sigar_t *sigar,
             SIGAR_ZERO(cpu);
         }
 
-        idle = NS100_2SEC(info[i].IdleTime.QuadPart);
-        user = NS100_2SEC(info[i].UserTime.QuadPart);
-        sys  = NS100_2SEC(info[i].KernelTime.QuadPart -
-                          info[i].IdleTime.QuadPart);
+        idle = NS100_2MSEC(info[i].IdleTime.QuadPart);
+        user = NS100_2MSEC(info[i].UserTime.QuadPart);
+        sys  = NS100_2MSEC(info[i].KernelTime.QuadPart -
+                           info[i].IdleTime.QuadPart);
         cpu->idle += idle;
         cpu->user += user;
         cpu->sys  += sys;
