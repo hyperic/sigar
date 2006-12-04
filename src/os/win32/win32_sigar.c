@@ -107,6 +107,8 @@ typedef enum {
 /* 1/100ns units to seconds */
 #define NS100_2SEC(t) ((t) / 10000000)
 
+#define NS100_2MSEC(t) ((t) / 10000)
+
 #define PERF_VAL_CPU(ix) \
     NS100_2SEC(PERF_VAL(ix))
 
@@ -1085,8 +1087,8 @@ SIGAR_DECLARE(int) sigar_proc_cred_get(sigar_t *sigar, sigar_pid_t pid,
     return SIGAR_ENOTIMPL;
 }
 
-#define FILETIME2SEC(ft) \
-    NS100_2SEC(((ft.dwHighDateTime << 32) | ft.dwLowDateTime))
+#define FILETIME2MSEC(ft) \
+    NS100_2MSEC(((ft.dwHighDateTime << 32) | ft.dwLowDateTime))
 
 SIGAR_DECLARE(int) sigar_proc_time_get(sigar_t *sigar, sigar_pid_t pid,
                                        sigar_proc_time_t *proctime)
@@ -1114,8 +1116,8 @@ SIGAR_DECLARE(int) sigar_proc_time_get(sigar_t *sigar, sigar_pid_t pid,
         proctime->start_time = 0;
     }
 
-    proctime->user = FILETIME2SEC(user_time);
-    proctime->sys  = FILETIME2SEC(system_time);
+    proctime->user = FILETIME2MSEC(user_time);
+    proctime->sys  = FILETIME2MSEC(system_time);
     proctime->total = proctime->user + proctime->sys;
 
     return SIGAR_OK;
