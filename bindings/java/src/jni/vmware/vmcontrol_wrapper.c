@@ -130,12 +130,16 @@ int vmcontrol_wrapper_api_init(const char *lib)
 {
     int i;
     char *api;
+    int dl_debug = getenv("VMCONTROL_DEBUG") != NULL;
 
     if (vmcontrol_api) {
         return 0;
     }
 
     if (!lib) { /* sanity check */
+        if (dl_debug) {
+            fprintf(stderr, "[vmcontrol_init] lib==NULL\n");
+        }
         return DL_ENOENT;
     }
 
@@ -160,25 +164,27 @@ int vmcontrol_wrapper_api_init(const char *lib)
                 (any_function_t)DL_SYM(vmcontrol_api->handle,
                                        vmcontrol_entries[i].alias);
 
-#ifdef DL_DEBUG
-            printf("%s -> %s\n",
-                   vmcontrol_entries[i].name,
-                   vmcontrol_entries[i].alias);
-#endif
+            if (dl_debug) {
+                fprintf(stderr, "[vmcontrol_init] alias %s -> %s\n",
+                        vmcontrol_entries[i].name,
+                        vmcontrol_entries[i].alias);
+            }
         }
 
         if (!*ptr) {
-#ifdef DL_DEBUG
-            printf("%s -> UNDEFINED\n", vmcontrol_entries[i].name);
-#endif
+            if (dl_debug) {
+                fprintf(stderr, "[vmcontrol_init] %s -> UNDEFINED\n",
+                        vmcontrol_entries[i].name);
+            }
             *ptr = (any_function_t)unsupported_function;
         }
     }
 
     if ((void *)vmcontrol_api->xVMControl_VMInit == (void *)&unsupported_function) {
-#ifdef DL_DEBUG
-        printf("%s unuseable\n", lib);
-#endif
+        if (dl_debug) {
+            fprintf(stderr, "[vmcontrol_init] %s unuseable\n", lib);
+        }
+
         vmcontrol_wrapper_api_shutdown();
         return DL_ENOENT;
     }
