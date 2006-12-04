@@ -1,3 +1,7 @@
+2006-12-03  Doug MacEachern  <dougm@hyperic.net>
+
+        * [SIGAR-19] Change process cpu time units to milliseconds
+
 2006-11-05  Doug MacEachern  <dougm@hyperic.com>
 
         * [SIGAR-23] Overhaul windows net_interface_* implementations to
