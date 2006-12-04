@@ -173,10 +173,19 @@ JNIEXPORT jdouble SIGAR_JNI(win32_Pdh_pdhGetValue)
     }
 
     if (fmt) {
-        status = PdhGetFormattedCounterValue(h_counter,
-                                             PDH_FMT_DOUBLE,
-                                             (LPDWORD)NULL,
-                                             &fmt_value);
+        /* may require 2 counters, see msdn docs */
+        int i=0;
+        for (i=0; i<2; i++) {
+            status = PdhGetFormattedCounterValue(h_counter,
+                                                 PDH_FMT_DOUBLE,
+                                                 (LPDWORD)NULL,
+                                                 &fmt_value);
+            if (status == ERROR_SUCCESS) {
+                break;
+            }
+
+            PdhCollectQueryData(h_query);
+        }
     }
     else {
         status = PdhGetRawCounterValue(h_counter, &type, &raw_value);
