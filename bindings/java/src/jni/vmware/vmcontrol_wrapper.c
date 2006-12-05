@@ -16,7 +16,9 @@
  * USA.
  */
 
-#if defined(WIN32) || defined(__linux__)
+#include "vmcontrol_wrapper.h"
+
+#ifdef VMCONTROL_WRAPPER_SUPPORTED
 
 #ifdef WIN32
 #include <windows.h>
@@ -28,8 +30,6 @@
 #endif
 
 #include <stdio.h>
-
-#include "vmcontrol_wrapper.h"
 
 #ifdef WIN32
 #define DL_LOAD(lib)  LoadLibrary(lib)

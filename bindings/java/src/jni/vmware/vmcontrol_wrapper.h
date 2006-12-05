@@ -19,6 +19,10 @@
 #ifndef VMCONTROL_WRAPPER_H
 #define VMCONTROL_WRAPPER_H
 
+#if defined(WIN32) || defined(__linux__) && !defined(__LP64__)
+
+#define VMCONTROL_WRAPPER_SUPPORTED
+
 /* types defined by vmcontrol.h */
 typedef struct VMControlServer VMControlServer;
 
@@ -231,5 +235,7 @@ vmcontrol_wrapper_api_t *vmcontrol_wrapper_api_get(void);
 
 #define VMControl_VMToolsLastActive \
   vmcontrol_wrapper_api_get()->xVMControl_VMToolsLastActive
+
+#endif
 
 #endif /* VMCONTROL_WRAPPER_H */

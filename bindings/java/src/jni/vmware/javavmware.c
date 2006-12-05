@@ -16,12 +16,12 @@
  * USA.
  */
 
-#if defined(WIN32) || defined(__linux__)
-
 #include <jni.h>
 #include <stdlib.h>
 
 #include "vmcontrol_wrapper.h"
+
+#ifdef VMCONTROL_WRAPPER_SUPPORTED
 
 #define JENV (*env)
 
@@ -745,4 +745,4 @@ JNIEXPORT jboolean VMWARE_JNI(VM_deviceIsConnected)
     return isConnected;
 }
 
-#endif /* WIN32 || linux */
+#endif /* VMCONTROL_WRAPPER_SUPPORTED */
