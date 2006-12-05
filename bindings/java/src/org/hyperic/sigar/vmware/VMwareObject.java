@@ -49,18 +49,25 @@ abstract class VMwareObject {
             }
 
             if (SigarLoader.IS_WIN32) {
-                File libssl =
-                    new File(new File(lib).getParent(),
-                             "ssleay32.dll");
-                if (!libssl.exists()) {
-                    return false;
-                }
+                File root = new File(lib).getParentFile();
+                String[] libs = {
+                    "libeay32.dll",
+                    "ssleay32.dll"
+                };
 
-                try {
-                    System.load(libssl.getPath());
-                } catch (UnsatisfiedLinkError e) {
-                    //e.printStackTrace();
-                    return false;
+                for (int i=0; i<libs.length; i++) {
+                    File ssllib =
+                        new File(root, libs[i]);
+                    if (!ssllib.exists()) {
+                        return false;
+                    }
+
+                    try {
+                        System.load(ssllib.getPath());
+                    } catch (UnsatisfiedLinkError e) {
+                        e.printStackTrace();
+                        return false;
+                    }
                 }
             }
 
