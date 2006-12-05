@@ -68,6 +68,7 @@ public class SigarTestRunner extends SigarCommandBase {
         TestSwap.class,
         TestThreadCpu.class,
         TestUptime.class,
+        TestVMware.class,
         TestWho.class,
     };
 
