@@ -175,10 +175,15 @@ public class VMControlLibrary {
             out = new File(out, VMCONTROL_SO);
         }
 
-        setSharedLibrary(out.getPath());
+        boolean exists = out.exists();
 
-        if (out.exists()) {
+        if (exists) {
+            setSharedLibrary(out.getPath());
             return; //already linked
+        }
+
+        if (!new File(VMCONTROL_TAR).exists()) {
+            return; //VMware not installed
         }
 
         File dir = out.getParentFile();
@@ -216,6 +221,8 @@ public class VMControlLibrary {
         };
 
         exec(link_args);
+
+        setSharedLibrary(out.getPath());
     }
 
     public static boolean isLoaded() {
