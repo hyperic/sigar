@@ -59,7 +59,7 @@ abstract class VMwareObject {
                 try {
                     System.load(libssl.getPath());
                 } catch (UnsatisfiedLinkError e) {
-                    e.printStackTrace();
+                    //e.printStackTrace();
                     return false;
                 }
             }
