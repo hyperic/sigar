@@ -48,6 +48,9 @@ public class VMControlLibrary {
     private static final String VMCONTROL_DLL =
         VMCONTROL + "lib.dll";
 
+    private static final String VMCONTROL_SO =
+        VMCONTROL + ".so";
+
     private static final String VMCONTROL_OBJ =
         getProperty("vmcontrol.o", "control-only/" + VMCONTROL + ".o");
 
@@ -99,7 +102,7 @@ public class VMControlLibrary {
     public static void link()
         throws IOException {
 
-        link(VMCONTROL + ".so");
+        link(VMCONTROL_SO);
     }
 
     private static void linkWin32() {
@@ -168,6 +171,10 @@ public class VMControlLibrary {
         }
 
         File out = new File(name).getAbsoluteFile();
+        if (out.isDirectory()) {
+            out = new File(out, VMCONTROL_SO);
+        }
+
         setSharedLibrary(out.getPath());
 
         if (out.exists()) {
@@ -185,7 +192,8 @@ public class VMControlLibrary {
             throw new FileNotFoundException(libssl.toString());
         }
 
-        if (!new File(dir, VMCONTROL_OBJ).exists()) {
+        File obj = new File(dir, VMCONTROL_OBJ);
+        if (!obj.exists()) {
             //extract vmcontrol.o
             String[] extract_args = {
                 TAR,
@@ -202,8 +210,8 @@ public class VMControlLibrary {
         String[] link_args = {
             GCC,
             "-shared",
-            "-o", name,
-            VMCONTROL_OBJ,
+            "-o", out.getPath(),
+            obj.getPath(),
             libssl.getPath()
         };
 
