@@ -159,7 +159,7 @@ public class VM extends VMwareObject {
     public native String getGuestInfo(String key)
         throws VMwareException;
 
-    public native String setGuestInfo(String key, String value)
+    public native void setGuestInfo(String key, String value)
         throws VMwareException;
 
     public native int getProductInfo(int type)
