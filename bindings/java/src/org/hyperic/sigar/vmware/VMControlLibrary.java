@@ -38,7 +38,7 @@ public class VMControlLibrary {
         "vmcontrol.shlib";
 
     private static final String VMWARE_LIB =
-        getProperty("lib.vmware", "/usr/lib/vmware");
+        getProperty("lib.vmware", getVMwareLib().getPath());
 
     private static final String VMCONTROL_TAR =
         getProperty("control.tar", VMWARE_LIB + "/perl/control.tar");
@@ -63,16 +63,42 @@ public class VMControlLibrary {
     private static final String LIBSSL =
         getProperty("libssl", "libssl.so.0.9.7");
 
+    private static final String LIBCRYPTO =
+        getProperty("libcrypto", "libcrypto.so.0.9.7");
+
+    private static boolean isDebug = false;
+
     private static String getProperty(String key, String defval) {
         return System.getProperty("vmcontrol." + key, defval);
     }
 
-    private static File getLibSSL() {
-        File libssl = new File(VMWARE_LIB, "lib/" + LIBSSL);
-        if (libssl.isDirectory()) {
-            libssl = new File(libssl, LIBSSL);
+    private static File getVMwareLib() {
+        String location = "/usr/lib/vmware";
+        File lib = new File(location);
+        if (lib.exists()) {
+            //running on a VMware host
+            return lib;
         }
-        return libssl;
+        else {
+            //remote w/ api installed
+            return new File(location + "-api");
+        }
+    }
+
+    private static File getLib(String name) {
+        File lib = new File(VMWARE_LIB, "lib/" + name);
+        if (lib.isDirectory()) {
+            lib = new File(lib, name);
+        }
+        return lib;
+    }
+
+    private static File getLibSSL() {
+        return getLib(LIBSSL);
+    }
+
+    private static File getLibCrypto() {
+        return getLib(LIBCRYPTO);
     }
 
     private static void exec(String[] args)
@@ -88,6 +114,9 @@ public class VMControlLibrary {
                 throw new IOException(msg);
             }
         } catch (InterruptedException e) {
+        }
+        if (isDebug) {
+            System.out.println("exec" + Arrays.asList(args) + " OK");
         }
     }
 
@@ -192,6 +221,7 @@ public class VMControlLibrary {
         }
 
         File libssl = getLibSSL();
+        File libcrypto = getLibCrypto();
 
         if (!libssl.exists()) {
             throw new FileNotFoundException(libssl.toString());
@@ -217,7 +247,10 @@ public class VMControlLibrary {
             "-shared",
             "-o", out.getPath(),
             obj.getPath(),
-            libssl.getPath()
+            "-Wl,-rpath", libssl.getParent(),
+            libssl.getPath(),
+            "-Wl,-rpath", libcrypto.getParent(),
+            libcrypto.getPath()
         };
 
         exec(link_args);
@@ -230,6 +263,7 @@ public class VMControlLibrary {
     }
 
     public static void main(String[] args) throws Exception {
+        isDebug = true;
         if (args.length == 0) {
             link();
         }
