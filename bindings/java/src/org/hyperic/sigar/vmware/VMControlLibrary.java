@@ -242,18 +242,32 @@ public class VMControlLibrary {
         }
 
         //create vmcontrol.so from vmcontrol.o
-        String[] link_args = {
-            GCC,
-            "-shared",
-            "-o", out.getPath(),
-            obj.getPath(),
-            "-Wl,-rpath", libssl.getParent(),
-            libssl.getPath(),
-            "-Wl,-rpath", libcrypto.getParent(),
-            libcrypto.getPath()
-        };
+        List link_args = new ArrayList();
 
-        exec(link_args);
+        link_args.add(GCC);
+        link_args.add("-shared");
+        link_args.add("-o");
+        link_args.add(out.getPath());
+        link_args.add(obj.getPath());
+
+        //Skip rpath for ESX 3.x
+        if (!new File(libssl.getParent(), "libc.so.6").exists()) {
+            final String rpath = "-Wl,-rpath";
+
+            link_args.add(rpath);
+            link_args.add(libssl.getParent());
+
+            //check if libcrypto is in a different directory
+            if (!libssl.getParent().equals(libcrypto.getParent())) {
+                link_args.add(rpath);
+                link_args.add(libcrypto.getParent());
+            }
+        }
+
+        link_args.add(libssl.getPath());
+        link_args.add(libcrypto.getPath());
+
+        exec((String[])link_args.toArray(new String[0]));
 
         setSharedLibrary(out.getPath());
     }
