@@ -31,6 +31,7 @@
 
 #ifndef WIN32
 #include <unistd.h>
+#include <stddef.h>
 #ifndef DARWIN
 #include <strings.h>
 #endif
@@ -98,6 +99,12 @@
 
 #ifndef strnEQ
 #define strnEQ(s1, s2, n) (strncmp(s1, s2, n) == 0)
+#endif
+
+#ifdef offsetof
+#define sigar_offsetof offsetof
+#else
+#define sigar_offsetof(type, field) ((size_t)(&((type *)0)->field))
 #endif
 
 #define SIGAR_MSEC 1000L
