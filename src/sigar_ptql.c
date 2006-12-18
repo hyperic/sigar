@@ -648,6 +648,16 @@ static int ptql_branch_add(ptql_parse_branch_t *parsed,
     return SIGAR_OK;
 }
 
+static int ptql_branch_compare(const void *b1, const void *b2)
+{
+    /* XXX can do better */
+    ptql_branch_t *branch1 = (ptql_branch_t *)b1;
+    ptql_branch_t *branch2 = (ptql_branch_t *)b2;
+    return
+        branch1->lookup->type -
+        branch2->lookup->type;
+}
+
 SIGAR_DECLARE(int) sigar_ptql_query_create(sigar_t *sigar,
                                            sigar_ptql_query_t **queryp,
                                            char *ptql)
@@ -699,7 +709,12 @@ SIGAR_DECLARE(int) sigar_ptql_query_create(sigar_t *sigar,
         *queryp = NULL;
     }
 
-    /* XXX qsort query->branches.data */
+    if (query->branches.number > 1) {
+        qsort(query->branches.data,
+              query->branches.number,
+              sizeof(query->branches.data[0]),
+              ptql_branch_compare);
+    }
 
     return status;
 }
