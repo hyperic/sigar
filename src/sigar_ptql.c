@@ -21,6 +21,9 @@
 #include "sigar_util.h"
 #include "sigar_ptql.h"
 
+/* XXX need more specific errors */
+#define SIGAR_PTQL_MALFORMED_QUERY 1
+
 typedef struct ptql_parse_branch_t ptql_parse_branch_t;
 typedef struct ptql_branch_t ptql_branch_t;
 
@@ -418,6 +421,25 @@ static int ptql_branch_match(ptql_branch_t *branch)
     }
 }
 
+static int ptql_args_branch_init(ptql_parse_branch_t *parsed,
+                                 ptql_branch_t *branch)
+{
+    if (strEQ(parsed->attr, "*")) {
+        branch->data = NULL;
+    }
+    else {
+        char *end;
+
+        branch->data =
+            (void*)strtol(parsed->attr, &end, 10);
+
+        if (end && *end) {
+            /* conversion failed */
+            return SIGAR_PTQL_MALFORMED_QUERY;
+        }
+    }
+    return SIGAR_OK;
+}
 static int ptql_args_match(sigar_t *sigar,
                            sigar_pid_t pid,
                            void *data)
@@ -425,7 +447,6 @@ static int ptql_args_match(sigar_t *sigar,
     ptql_branch_t *branch =
         (ptql_branch_t *)data;
     int status, matched=0;
-    char *index = branch->data;
     sigar_proc_args_t args;
 
     status = sigar_proc_args_get(sigar, pid, &args);
@@ -433,8 +454,7 @@ static int ptql_args_match(sigar_t *sigar,
         return status;
     }
 
-    /* XXX cache atoi conversion */
-    if (strEQ(index, "*")) {
+    if (!branch->data) {
         int i;
         for (i=0; i<args.number; i++) {
             matched = 
@@ -446,7 +466,7 @@ static int ptql_args_match(sigar_t *sigar,
         }
     }
     else {
-        int num = atoi(index); /* XXX validate */
+        int num = (int)branch->data;
 
         /* e.g. find last element of args: Args.-1.eq=weblogic.Server */
         if (num < 0) {
@@ -592,7 +612,7 @@ static ptql_lookup_t PTQL_Fd[] = {
 };
 
 static ptql_lookup_t PTQL_Args[] = {
-    { NULL, ptql_args_match, 0, 0, PTQL_VALUE_TYPE_ANY, ptql_branch_init_any }
+    { NULL, ptql_args_match, 0, 0, PTQL_VALUE_TYPE_ANY, ptql_args_branch_init }
 };
 
 static ptql_lookup_t PTQL_Env[] = {
@@ -611,9 +631,6 @@ static ptql_entry_t ptql_map[] = {
     { "Env",      PTQL_Env },
     { NULL }
 };
-
-/* XXX need more specific errors */
-#define SIGAR_PTQL_MALFORMED_QUERY 1
 
 static int ptql_branch_parse(char *query, ptql_parse_branch_t *branch)
 {
