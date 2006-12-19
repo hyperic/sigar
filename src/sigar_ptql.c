@@ -361,7 +361,9 @@ static int ptql_branch_list_destroy(sigar_t *sigar,
                 free(branch->data);
             }
 
-            if (branch->lookup->type == PTQL_VALUE_TYPE_STR) {
+            if (branch->lookup &&
+                (branch->lookup->type == PTQL_VALUE_TYPE_STR))
+            {
                 if (branch->value.str) {
                     free(branch->value.str);
                 }
@@ -442,6 +444,67 @@ static int ptql_args_match(sigar_t *sigar,
     return matched ? SIGAR_OK : !SIGAR_OK;
 }
 
+typedef struct {
+    const char *key;
+    int klen;
+    char *val;
+    int vlen;
+} sigar_proc_env_entry_t;
+
+static int sigar_proc_env_get_key(void *data,
+                                  const char *key, int klen,
+                                  char *val, int vlen)
+{
+    sigar_proc_env_entry_t *entry =
+        (sigar_proc_env_entry_t *)data;
+
+    if ((entry->klen == klen) &&
+        (strcmp(entry->key, key) == 0))
+    {
+        entry->val = val;
+        entry->vlen = vlen;
+        return !SIGAR_OK; /* foundit; stop iterating */
+    }
+
+    return SIGAR_OK;
+}
+
+static int ptql_env_match(sigar_t *sigar,
+                          sigar_pid_t pid,
+                          void *data)
+{
+    ptql_branch_t *branch =
+        (ptql_branch_t *)data;
+    int status, matched=0;
+    sigar_proc_env_t procenv;
+    sigar_proc_env_entry_t entry;
+
+    /* XXX ugh this is klunky */
+    entry.key = branch->data;
+    entry.klen = branch->data_size;
+    entry.val = NULL;
+
+    procenv.type = SIGAR_PROC_ENV_KEY;
+    procenv.key  = branch->data;
+    procenv.klen = branch->data_size;
+    procenv.env_getter = sigar_proc_env_get_key;
+    procenv.data = &entry;
+
+    status = sigar_proc_env_get(sigar, pid, &procenv);
+    if (status != SIGAR_OK) { 
+        return status;
+    }
+    else {
+        if (entry.val) {
+            matched = 
+                branch->match.str(entry.val,
+                                  branch->value.str);
+        }
+    }
+
+    return matched ? SIGAR_OK : !SIGAR_OK;
+}
+
 #define PTQL_LOOKUP_ENTRY(cname, member, type) \
     (ptql_get_t)sigar_##cname##_get, \
     sigar_offsetof(sigar_##cname##_t, member), \
@@ -511,6 +574,10 @@ static ptql_lookup_t PTQL_Args[] = {
     { NULL, ptql_args_match, 0, 0, PTQL_VALUE_TYPE_ANY }
 };
 
+static ptql_lookup_t PTQL_Env[] = {
+    { NULL, ptql_env_match, 0, 0, PTQL_VALUE_TYPE_ANY }
+};
+
 static ptql_entry_t ptql_map[] = {
     { "Time",     PTQL_Time },
     { "CredName", PTQL_CredName },
@@ -520,6 +587,7 @@ static ptql_entry_t ptql_map[] = {
     { "State",    PTQL_State },
     { "Fd",       PTQL_Fd },
     { "Args",     PTQL_Args },
+    { "Env",      PTQL_Env },
     { NULL }
 };
 
