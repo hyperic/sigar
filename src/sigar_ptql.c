@@ -21,7 +21,11 @@
 #include "sigar_util.h"
 #include "sigar_ptql.h"
 
+typedef struct ptql_parse_branch_t ptql_parse_branch_t;
+typedef struct ptql_branch_t ptql_branch_t;
+
 typedef int (*ptql_get_t)(sigar_t *sigar, sigar_pid_t pid, void *data);
+typedef int (*ptql_branch_init_t)(ptql_parse_branch_t *parsed, ptql_branch_t *branch);
 
 typedef int (*ptql_op_ui64_t)(sigar_uint64_t haystack, sigar_uint64_t needle);
 typedef int (*ptql_op_ui32_t)(sigar_uint32_t haystack, sigar_uint32_t needle);
@@ -36,18 +40,26 @@ typedef enum {
     PTQL_VALUE_TYPE_ANY
 } ptql_value_type_t;
 
+struct ptql_parse_branch_t {
+    char *name;
+    char *attr;
+    char *op;
+    char *value;
+};
+
 typedef struct {
     char *name;
     ptql_get_t get;
     size_t offset;
     unsigned int data_size;
     ptql_value_type_t type;
+    ptql_branch_init_t init;
 } ptql_lookup_t;
 
 #define DATA_PTR(branch) \
     ((char *)branch->data + branch->lookup->offset)
 
-typedef struct {
+struct ptql_branch_t {
     ptql_lookup_t *lookup;
     void *data;
     unsigned int data_size;
@@ -63,7 +75,7 @@ typedef struct {
         char chr[4];
         char *str;
     } value;
-} ptql_branch_t;
+};
 
 typedef struct {
     char *name;
@@ -377,6 +389,14 @@ static int ptql_branch_list_destroy(sigar_t *sigar,
     return SIGAR_OK;
 }
 
+static int ptql_branch_init_any(ptql_parse_branch_t *parsed,
+                                ptql_branch_t *branch)
+{
+    branch->data = strdup(parsed->attr);
+    branch->data_size = strlen(parsed->attr);
+    return SIGAR_OK;
+}
+
 static int ptql_branch_match(ptql_branch_t *branch)
 {
     switch (branch->lookup->type) {
@@ -509,7 +529,8 @@ static int ptql_env_match(sigar_t *sigar,
     (ptql_get_t)sigar_##cname##_get, \
     sigar_offsetof(sigar_##cname##_t, member), \
     sizeof(sigar_##cname##_t), \
-    PTQL_VALUE_TYPE_##type
+    PTQL_VALUE_TYPE_##type, \
+    NULL
 
 /* XXX uid/pid can be larger w/ 64bit mode */
 #define PTQL_VALUE_TYPE_PID PTQL_VALUE_TYPE_UI32
@@ -571,11 +592,11 @@ static ptql_lookup_t PTQL_Fd[] = {
 };
 
 static ptql_lookup_t PTQL_Args[] = {
-    { NULL, ptql_args_match, 0, 0, PTQL_VALUE_TYPE_ANY }
+    { NULL, ptql_args_match, 0, 0, PTQL_VALUE_TYPE_ANY, ptql_branch_init_any }
 };
 
 static ptql_lookup_t PTQL_Env[] = {
-    { NULL, ptql_env_match, 0, 0, PTQL_VALUE_TYPE_ANY }
+    { NULL, ptql_env_match, 0, 0, PTQL_VALUE_TYPE_ANY, ptql_branch_init_any }
 };
 
 static ptql_entry_t ptql_map[] = {
@@ -590,13 +611,6 @@ static ptql_entry_t ptql_map[] = {
     { "Env",      PTQL_Env },
     { NULL }
 };
-
-typedef struct {
-    char *value;
-    char *name;
-    char *attr;
-    char *op;
-} ptql_parse_branch_t;
 
 /* XXX need more specific errors */
 #define SIGAR_PTQL_MALFORMED_QUERY 1
@@ -677,11 +691,16 @@ static int ptql_branch_add(ptql_parse_branch_t *parsed,
         if (entry->members[0].type == PTQL_VALUE_TYPE_ANY) {
             /* Args, Env, etc. */
             lookup = &entry->members[0];
-            branch->data = strdup(parsed->attr);
-            branch->data_size = strlen(parsed->attr);
         }
         else {
             return SIGAR_PTQL_MALFORMED_QUERY;
+        }
+    }
+
+    if (lookup->init) {
+        int status = lookup->init(parsed, branch);
+        if (status != SIGAR_OK) {
+            return status;
         }
     }
 
