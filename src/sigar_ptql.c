@@ -421,6 +421,48 @@ static int ptql_branch_match(ptql_branch_t *branch)
     }
 }
 
+static int ptql_branch_init_pid(ptql_parse_branch_t *parsed,
+                                ptql_branch_t *branch)
+{
+    if (strEQ(parsed->attr, "Pid")) {
+        branch->data = (void*)atoi(parsed->value); /*XXX*/
+        return SIGAR_OK;
+    }
+    else if (strEQ(parsed->attr, "PidFile")) {
+        branch->data = strdup(parsed->value);
+        branch->data_size = strlen(parsed->value);
+        return SIGAR_OK;
+    }
+    else {
+        return SIGAR_PTQL_MALFORMED_QUERY;
+    }
+}
+
+static int ptql_pid_match(sigar_t *sigar,
+                          sigar_pid_t pid,
+                          void *data)
+{
+    ptql_branch_t *branch =
+        (ptql_branch_t *)data;
+    sigar_pid_t match_pid;
+
+    if (branch->data_size) {
+        char buffer[SIGAR_PATH_MAX+1];
+        int status =
+            sigar_file2str((const char *)branch->data,
+                           buffer, sizeof(buffer)-1);
+        if (status != SIGAR_OK) {
+            return status;
+        }
+        match_pid = strtoull(buffer, NULL, 10); /*XXX validate*/
+    }
+    else {
+        match_pid = (sigar_pid_t)branch->data;
+    }
+
+    return (pid == match_pid) ? SIGAR_OK : !SIGAR_OK;
+}
+
 static int ptql_args_branch_init(ptql_parse_branch_t *parsed,
                                  ptql_branch_t *branch)
 {
@@ -440,6 +482,7 @@ static int ptql_args_branch_init(ptql_parse_branch_t *parsed,
     }
     return SIGAR_OK;
 }
+
 static int ptql_args_match(sigar_t *sigar,
                            sigar_pid_t pid,
                            void *data)
@@ -619,6 +662,10 @@ static ptql_lookup_t PTQL_Env[] = {
     { NULL, ptql_env_match, 0, 0, PTQL_VALUE_TYPE_ANY, ptql_branch_init_any }
 };
 
+static ptql_lookup_t PTQL_Pid[] = {
+    { NULL, ptql_pid_match, 0, 0, PTQL_VALUE_TYPE_ANY, ptql_branch_init_pid }
+};
+
 static ptql_entry_t ptql_map[] = {
     { "Time",     PTQL_Time },
     { "CredName", PTQL_CredName },
@@ -629,6 +676,7 @@ static ptql_entry_t ptql_map[] = {
     { "Fd",       PTQL_Fd },
     { "Args",     PTQL_Args },
     { "Env",      PTQL_Env },
+    { "Pid",      PTQL_Pid },
     { NULL }
 };
 
