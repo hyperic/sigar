@@ -66,6 +66,7 @@ struct ptql_branch_t {
     ptql_lookup_t *lookup;
     void *data;
     unsigned int data_size;
+    unsigned int flags;
     union {
         ptql_op_ui64_t ui64;
         ptql_op_ui32_t ui32;
@@ -421,17 +422,34 @@ static int ptql_branch_match(ptql_branch_t *branch)
     }
 }
 
+enum {
+    PTQL_PID_PID,
+    PTQL_PID_FILE,
+    PTQL_PID_SERVICE
+};
+
 static int ptql_branch_init_pid(ptql_parse_branch_t *parsed,
                                 ptql_branch_t *branch)
 {
     if (strEQ(parsed->attr, "Pid")) {
+        branch->flags = PTQL_PID_PID;
         branch->data = (void*)atoi(parsed->value); /*XXX*/
         return SIGAR_OK;
     }
     else if (strEQ(parsed->attr, "PidFile")) {
+        branch->flags = PTQL_PID_FILE;
         branch->data = strdup(parsed->value);
         branch->data_size = strlen(parsed->value);
         return SIGAR_OK;
+    }
+    else if (strEQ(parsed->attr, "Service")) {
+#ifdef WIN32
+        branch->flags = PTQL_PID_SERVICE;
+        branch->data = strdup(parsed->value);
+        branch->data_size = strlen(parsed->value);
+#else
+        return SIGAR_PTQL_MALFORMED_QUERY;
+#endif
     }
     else {
         return SIGAR_PTQL_MALFORMED_QUERY;
@@ -446,7 +464,7 @@ static int ptql_pid_match(sigar_t *sigar,
         (ptql_branch_t *)data;
     sigar_pid_t match_pid;
 
-    if (branch->data_size) {
+    if (branch->flags == PTQL_PID_FILE) {
         char buffer[SIGAR_PATH_MAX+1];
         int status =
             sigar_file2str((const char *)branch->data,
@@ -455,6 +473,13 @@ static int ptql_pid_match(sigar_t *sigar,
             return status;
         }
         match_pid = strtoull(buffer, NULL, 10); /*XXX validate*/
+    }
+    else if (branch->flags == PTQL_PID_SERVICE) {
+#ifdef WIN32
+        return !SIGAR_OK; /*XXX*/
+#else
+        return !SIGAR_OK;
+#endif
     }
     else {
         match_pid = (sigar_pid_t)branch->data;
