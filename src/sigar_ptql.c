@@ -433,7 +433,12 @@ static int ptql_branch_init_pid(ptql_parse_branch_t *parsed,
 {
     if (strEQ(parsed->attr, "Pid")) {
         branch->flags = PTQL_PID_PID;
-        branch->data = (void*)atoi(parsed->value); /*XXX*/
+        if (strEQ(parsed->value, "$$")) {
+            branch->data = (void*)getpid();
+        }
+        else {
+            branch->data = (void*)atoi(parsed->value); /*XXX*/
+        }
         return SIGAR_OK;
     }
     else if (strEQ(parsed->attr, "PidFile")) {
