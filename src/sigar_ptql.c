@@ -47,11 +47,14 @@ typedef enum {
     PTQL_VALUE_TYPE_ANY
 } ptql_value_type_t;
 
+#define PTQL_OP_FLAG_PARENT 1
+
 struct ptql_parse_branch_t {
     char *name;
     char *attr;
     char *op;
     char *value;
+    unsigned int op_flags;
 };
 
 typedef struct {
@@ -71,6 +74,7 @@ struct ptql_branch_t {
     void *data;
     unsigned int data_size;
     unsigned int flags;
+    unsigned int op_flags;
     union {
         ptql_op_ui64_t ui64;
         ptql_op_ui32_t ui32;
@@ -722,6 +726,8 @@ static int ptql_branch_parse(char *query, ptql_parse_branch_t *branch)
         return SIGAR_PTQL_MALFORMED_QUERY;
     }
 
+    branch->op_flags = 0;
+
     *ptr = '\0';
     branch->value = ++ptr;
 
@@ -744,6 +750,20 @@ static int ptql_branch_parse(char *query, ptql_parse_branch_t *branch)
     }
 
     if (*query) {
+        char flag;
+
+        while (isupper((flag = *query))) {
+            switch (flag) {
+              case 'P':
+                branch->op_flags |= PTQL_OP_FLAG_PARENT;
+                break;
+              default:
+                return SIGAR_PTQL_MALFORMED_QUERY;
+            }
+
+            ++query;
+        }
+
         branch->op = query;
     }
     else {
@@ -763,6 +783,7 @@ static int ptql_branch_add(ptql_parse_branch_t *parsed,
 
     branch->data = NULL;
     branch->data_size = 0;
+    branch->op_flags = parsed->op_flags;
 
     op = ptql_op_code_get(parsed->op);
     if (op == PTQL_OP_MAX) {
@@ -916,14 +937,26 @@ SIGAR_DECLARE(int) sigar_ptql_query_destroy(sigar_t *sigar,
 
 SIGAR_DECLARE(int) sigar_ptql_query_match(sigar_t *sigar,
                                           sigar_ptql_query_t *query,
-                                          sigar_pid_t pid)
+                                          sigar_pid_t query_pid)
 {
     int i;
 
     for (i=0; i<query->branches.number; i++) {
+        sigar_pid_t pid = query_pid;
         int status, matched=0;
         ptql_branch_t *branch = &query->branches.data[i];
         ptql_lookup_t *lookup = branch->lookup;
+
+        if (branch->op_flags & PTQL_OP_FLAG_PARENT) {
+            sigar_proc_state_t state;
+
+            status = sigar_proc_state_get(sigar, pid, &state);
+            if (status != SIGAR_OK) {
+                return status;
+            }
+
+            pid = state.ppid;
+        }
 
         if (lookup->type == PTQL_VALUE_TYPE_ANY) {
             /* Args, Env, etc. */
