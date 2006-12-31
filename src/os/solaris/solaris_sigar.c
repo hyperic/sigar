@@ -791,7 +791,7 @@ static int ucb_ps_args_get(sigar_t *sigar, sigar_pid_t pid,
                            sigar_proc_args_t *procargs,
                            int timestamp)
 {
-    char buffer[9086], *args, *arg;
+    char buffer[9086], *args=NULL, *arg;
     sigar_cache_entry_t *ent;
     FILE *fp;
     pargs_t *pargs;
@@ -838,13 +838,19 @@ static int ucb_ps_args_get(sigar_t *sigar, sigar_pid_t pid,
             args = sigar_skip_multiple_token(args, 4);
             SIGAR_SKIP_SPACE(args);
             len = strlen(args);
-            args[len-1] = '\0'; /* chop \n */
+            if (len > 0) {
+                args[len-1] = '\0'; /* chop \n */
+            }
 
             pargs->args = malloc(len+1);
             memcpy(pargs->args, args, len);
         }
 
         pclose(fp);
+
+        if (!args) {
+            return ESRCH;
+        }
     }
 
     sigar_proc_args_create(procargs);
