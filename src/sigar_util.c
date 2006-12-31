@@ -98,22 +98,6 @@ char *sigar_getword(char **line, char stop)
     return res;
 }
 
-int sigar_file2str(const char *fname, char *buffer, int buflen)
-{
-    int len;
-    int fd = open(fname, O_RDONLY);
-
-    if (fd < 0) {
-        return ENOENT;
-    }
-
-    len = read(fd, buffer, buflen);
-    buffer[len] = '\0';
-    close(fd);
-
-    return SIGAR_OK;
-}
-
 /* avoiding sprintf */
 
 char *sigar_proc_filename(char *buffer, int buflen,
@@ -587,6 +571,22 @@ SIGAR_DECLARE(int) sigar_rpc_ping(char *host,
     return RPC_SUCCESS;
 }
 #endif
+
+int sigar_file2str(const char *fname, char *buffer, int buflen)
+{
+    int len;
+    int fd = open(fname, O_RDONLY);
+
+    if (fd < 0) {
+        return ENOENT;
+    }
+
+    len = read(fd, buffer, buflen);
+    buffer[len] = '\0';
+    close(fd);
+
+    return SIGAR_OK;
+}
 
 #ifdef WIN32
 #define vsnprintf _vsnprintf
