@@ -34,10 +34,21 @@ typedef struct ptql_branch_t ptql_branch_t;
 typedef int (*ptql_get_t)(sigar_t *sigar, sigar_pid_t pid, void *data);
 typedef int (*ptql_branch_init_t)(ptql_parse_branch_t *parsed, ptql_branch_t *branch);
 
-typedef int (*ptql_op_ui64_t)(sigar_uint64_t haystack, sigar_uint64_t needle);
-typedef int (*ptql_op_ui32_t)(sigar_uint32_t haystack, sigar_uint32_t needle);
-typedef int (*ptql_op_str_t)(char *haystack, char *needle);
-typedef int (*ptql_op_chr_t)(char haystack, char needle);
+typedef int (*ptql_op_ui64_t)(ptql_branch_t *branch,
+                              sigar_uint64_t haystack,
+                              sigar_uint64_t needle);
+
+typedef int (*ptql_op_ui32_t)(ptql_branch_t *branch,
+                              sigar_uint32_t haystack,
+                              sigar_uint32_t needle);
+
+typedef int (*ptql_op_str_t)(ptql_branch_t *branch,
+                             char *haystack,
+                             char *needle);
+
+typedef int (*ptql_op_chr_t)(ptql_branch_t *branch,
+                             char haystack,
+                             char needle);
 
 typedef enum {
     PTQL_VALUE_TYPE_UI64,
@@ -158,32 +169,38 @@ static ptql_op_name_t ptql_op_code_get(char *op)
     }
 }
 
-static int ptql_op_ui64_eq(sigar_uint64_t haystack, sigar_uint64_t needle)
+static int ptql_op_ui64_eq(ptql_branch_t *branch,
+                           sigar_uint64_t haystack, sigar_uint64_t needle)
 {
     return haystack == needle;
 }
 
-static int ptql_op_ui64_ne(sigar_uint64_t haystack, sigar_uint64_t needle)
+static int ptql_op_ui64_ne(ptql_branch_t *branch,
+                           sigar_uint64_t haystack, sigar_uint64_t needle)
 {
     return haystack != needle;
 }
 
-static int ptql_op_ui64_gt(sigar_uint64_t haystack, sigar_uint64_t needle)
+static int ptql_op_ui64_gt(ptql_branch_t *branch,
+                           sigar_uint64_t haystack, sigar_uint64_t needle)
 {
     return haystack > needle;
 }
 
-static int ptql_op_ui64_ge(sigar_uint64_t haystack, sigar_uint64_t needle)
+static int ptql_op_ui64_ge(ptql_branch_t *branch,
+                           sigar_uint64_t haystack, sigar_uint64_t needle)
 {
     return haystack >= needle;
 }
 
-static int ptql_op_ui64_lt(sigar_uint64_t haystack, sigar_uint64_t needle)
+static int ptql_op_ui64_lt(ptql_branch_t *branch,
+                           sigar_uint64_t haystack, sigar_uint64_t needle)
 {
     return haystack < needle;
 }
 
-static int ptql_op_ui64_le(sigar_uint64_t haystack, sigar_uint64_t needle)
+static int ptql_op_ui64_le(ptql_branch_t *branch,
+                           sigar_uint64_t haystack, sigar_uint64_t needle)
 {
     return haystack <= needle;
 }
@@ -197,32 +214,38 @@ static ptql_op_ui64_t ptql_op_ui64[] = {
     ptql_op_ui64_le
 };
 
-static int ptql_op_ui32_eq(sigar_uint32_t haystack, sigar_uint32_t needle)
+static int ptql_op_ui32_eq(ptql_branch_t *branch,
+                           sigar_uint32_t haystack, sigar_uint32_t needle)
 {
     return haystack == needle;
 }
 
-static int ptql_op_ui32_ne(sigar_uint32_t haystack, sigar_uint32_t needle)
+static int ptql_op_ui32_ne(ptql_branch_t *branch,
+                           sigar_uint32_t haystack, sigar_uint32_t needle)
 {
     return haystack != needle;
 }
 
-static int ptql_op_ui32_gt(sigar_uint32_t haystack, sigar_uint32_t needle)
+static int ptql_op_ui32_gt(ptql_branch_t *branch,
+                           sigar_uint32_t haystack, sigar_uint32_t needle)
 {
     return haystack > needle;
 }
 
-static int ptql_op_ui32_ge(sigar_uint32_t haystack, sigar_uint32_t needle)
+static int ptql_op_ui32_ge(ptql_branch_t *branch,
+                           sigar_uint32_t haystack, sigar_uint32_t needle)
 {
     return haystack >= needle;
 }
 
-static int ptql_op_ui32_lt(sigar_uint32_t haystack, sigar_uint32_t needle)
+static int ptql_op_ui32_lt(ptql_branch_t *branch,
+                           sigar_uint32_t haystack, sigar_uint32_t needle)
 {
     return haystack < needle;
 }
 
-static int ptql_op_ui32_le(sigar_uint32_t haystack, sigar_uint32_t needle)
+static int ptql_op_ui32_le(ptql_branch_t *branch,
+                           sigar_uint32_t haystack, sigar_uint32_t needle)
 {
     return haystack <= needle;
 }
@@ -236,37 +259,44 @@ static ptql_op_ui32_t ptql_op_ui32[] = {
     ptql_op_ui32_le
 };
 
-static int ptql_op_str_eq(char *haystack, char *needle)
+static int ptql_op_str_eq(ptql_branch_t *branch,
+                          char *haystack, char *needle)
 {
     return strEQ(haystack, needle);
 }
 
-static int ptql_op_str_ne(char *haystack, char *needle)
+static int ptql_op_str_ne(ptql_branch_t *branch,
+                          char *haystack, char *needle)
 {
     return !strEQ(haystack, needle);
 }
 
-static int ptql_op_str_gt(char *haystack, char *needle)
+static int ptql_op_str_gt(ptql_branch_t *branch,
+                          char *haystack, char *needle)
 {
     return strcmp(haystack, needle) > 0;
 }
 
-static int ptql_op_str_ge(char *haystack, char *needle)
+static int ptql_op_str_ge(ptql_branch_t *branch,
+                          char *haystack, char *needle)
 {
     return strcmp(haystack, needle) >= 0;
 }
 
-static int ptql_op_str_lt(char *haystack, char *needle)
+static int ptql_op_str_lt(ptql_branch_t *branch,
+                          char *haystack, char *needle)
 {
     return strcmp(haystack, needle) < 0;
 }
 
-static int ptql_op_str_le(char *haystack, char *needle)
+static int ptql_op_str_le(ptql_branch_t *branch,
+                          char *haystack, char *needle)
 {
     return strcmp(haystack, needle) <= 0;
 }
 
-static int ptql_op_str_ew(char *haystack, char *needle)
+static int ptql_op_str_ew(ptql_branch_t *branch,
+                          char *haystack, char *needle)
 {
     int nlen = strlen(needle);
     int hlen = strlen(haystack);
@@ -277,17 +307,20 @@ static int ptql_op_str_ew(char *haystack, char *needle)
     return strnEQ(haystack + diff, needle, nlen);
 }
 
-static int ptql_op_str_sw(char *haystack, char *needle)
+static int ptql_op_str_sw(ptql_branch_t *branch,
+                          char *haystack, char *needle)
 {
     return strnEQ(haystack, needle, strlen(needle));
 }
 
-static int ptql_op_str_re(char *haystack, char *needle)
+static int ptql_op_str_re(ptql_branch_t *branch,
+                          char *haystack, char *needle)
 {
     return 0; /*XXX pcre?*/
 }
 
-static int ptql_op_str_ct(char *haystack, char *needle)
+static int ptql_op_str_ct(ptql_branch_t *branch,
+                          char *haystack, char *needle)
 {
     return strstr(haystack, needle) != NULL;
 }
@@ -305,32 +338,38 @@ static ptql_op_str_t ptql_op_str[] = {
     ptql_op_str_ct
 };
 
-static int ptql_op_chr_eq(char haystack, char needle)
+static int ptql_op_chr_eq(ptql_branch_t *branch,
+                          char haystack, char needle)
 {
     return haystack == needle;
 }
 
-static int ptql_op_chr_ne(char haystack, char needle)
+static int ptql_op_chr_ne(ptql_branch_t *branch,
+                          char haystack, char needle)
 {
     return haystack != needle;
 }
 
-static int ptql_op_chr_gt(char haystack, char needle)
+static int ptql_op_chr_gt(ptql_branch_t *branch,
+                          char haystack, char needle)
 {
     return haystack > needle;
 }
 
-static int ptql_op_chr_ge(char haystack, char needle)
+static int ptql_op_chr_ge(ptql_branch_t *branch,
+                          char haystack, char needle)
 {
     return haystack >= needle;
 }
 
-static int ptql_op_chr_lt(char haystack, char needle)
+static int ptql_op_chr_lt(ptql_branch_t *branch,
+                          char haystack, char needle)
 {
     return haystack < needle;
 }
 
-static int ptql_op_chr_le(char haystack, char needle)
+static int ptql_op_chr_le(ptql_branch_t *branch,
+                          char haystack, char needle)
 {
     return haystack <= needle;
 }
@@ -415,17 +454,21 @@ static int ptql_branch_match(ptql_branch_t *branch)
 {
     switch (branch->lookup->type) {
       case PTQL_VALUE_TYPE_UI64:
-        return branch->match.ui64(*(sigar_uint64_t *)DATA_PTR(branch),
+        return branch->match.ui64(branch,
+                                  *(sigar_uint64_t *)DATA_PTR(branch),
                                   branch->value.ui64);
       case PTQL_VALUE_TYPE_UI32:
-        return branch->match.ui32(*(sigar_uint32_t *)DATA_PTR(branch),
+        return branch->match.ui32(branch,
+                                  *(sigar_uint32_t *)DATA_PTR(branch),
                                   branch->value.ui32);
       case PTQL_VALUE_TYPE_CHR:
-        return branch->match.chr(*(char *)DATA_PTR(branch),
+        return branch->match.chr(branch,
+                                 *(char *)DATA_PTR(branch),
                                  branch->value.chr[0]);
       case PTQL_VALUE_TYPE_STR:
       case PTQL_VALUE_TYPE_ANY:
-        return branch->match.str((char *)DATA_PTR(branch),
+        return branch->match.str(branch,
+                                 (char *)DATA_PTR(branch),
                                  branch->value.str);
       default:
         return 0;
@@ -436,17 +479,21 @@ static int ptql_branch_match_ref(ptql_branch_t *branch, ptql_branch_t *ref)
 {
     switch (branch->lookup->type) {
       case PTQL_VALUE_TYPE_UI64:
-        return branch->match.ui64(*(sigar_uint64_t *)DATA_PTR(branch),
+        return branch->match.ui64(branch,
+                                  *(sigar_uint64_t *)DATA_PTR(branch),
                                   *(sigar_uint64_t *)DATA_PTR(ref));
       case PTQL_VALUE_TYPE_UI32:
-        return branch->match.ui32(*(sigar_uint32_t *)DATA_PTR(branch),
+        return branch->match.ui32(branch,
+                                  *(sigar_uint32_t *)DATA_PTR(branch),
                                   *(sigar_uint32_t *)DATA_PTR(ref));
       case PTQL_VALUE_TYPE_CHR:
-        return branch->match.chr(*(char *)DATA_PTR(branch),
+        return branch->match.chr(branch,
+                                 *(char *)DATA_PTR(branch),
                                  *(char *)DATA_PTR(ref));
       case PTQL_VALUE_TYPE_STR:
       case PTQL_VALUE_TYPE_ANY:
-        return branch->match.str((char *)DATA_PTR(branch),
+        return branch->match.str(branch,
+                                 (char *)DATA_PTR(branch),
                                  (char *)DATA_PTR(ref));
       default:
         return 0;
@@ -563,7 +610,8 @@ static int ptql_args_match(sigar_t *sigar,
         int i;
         for (i=0; i<args.number; i++) {
             matched = 
-                branch->match.str(args.data[i],
+                branch->match.str(branch,
+                                  args.data[i],
                                   branch->value.str);
             if (matched) {
                 break;
@@ -579,7 +627,8 @@ static int ptql_args_match(sigar_t *sigar,
         }
         if ((num >= 0) && (num < args.number)) {
             matched = 
-                branch->match.str(args.data[num],
+                branch->match.str(branch,
+                                  args.data[num],
                                   branch->value.str);
         }
     }
@@ -642,7 +691,8 @@ static int ptql_env_match(sigar_t *sigar,
     else {
         if (entry.val) {
             matched = 
-                branch->match.str(entry.val,
+                branch->match.str(branch,
+                                  entry.val,
                                   branch->value.str);
         }
     }
