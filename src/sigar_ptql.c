@@ -21,6 +21,10 @@
 #include "sigar_util.h"
 #include "sigar_ptql.h"
 
+#ifdef WIN32
+#define strtoull strtoul /*XXX*/
+#endif
+
 /* XXX need more specific errors */
 #define SIGAR_PTQL_MALFORMED_QUERY 1
 
