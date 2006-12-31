@@ -456,6 +456,7 @@ static int ptql_branch_init_pid(ptql_parse_branch_t *parsed,
         branch->flags = PTQL_PID_SERVICE;
         branch->data = strdup(parsed->value);
         branch->data_size = strlen(parsed->value);
+        return SIGAR_OK;
 #else
         return SIGAR_PTQL_MALFORMED_QUERY;
 #endif
