@@ -48,6 +48,7 @@ typedef enum {
 } ptql_value_type_t;
 
 #define PTQL_OP_FLAG_PARENT 1
+#define PTQL_OP_FLAG_REF    2
 
 struct ptql_parse_branch_t {
     char *name;
@@ -386,7 +387,8 @@ static int ptql_branch_list_destroy(sigar_t *sigar,
             }
 
             if (branch->lookup &&
-                (branch->lookup->type == PTQL_VALUE_TYPE_STR))
+                (branch->lookup->type == PTQL_VALUE_TYPE_STR) &&
+                !(branch->op_flags & PTQL_OP_FLAG_REF))
             {
                 if (branch->value.str) {
                     free(branch->value.str);
@@ -425,6 +427,27 @@ static int ptql_branch_match(ptql_branch_t *branch)
       case PTQL_VALUE_TYPE_ANY:
         return branch->match.str((char *)DATA_PTR(branch),
                                  branch->value.str);
+      default:
+        return 0;
+    }
+}
+
+static int ptql_branch_match_ref(ptql_branch_t *branch, ptql_branch_t *ref)
+{
+    switch (branch->lookup->type) {
+      case PTQL_VALUE_TYPE_UI64:
+        return branch->match.ui64(*(sigar_uint64_t *)DATA_PTR(branch),
+                                  *(sigar_uint64_t *)DATA_PTR(ref));
+      case PTQL_VALUE_TYPE_UI32:
+        return branch->match.ui32(*(sigar_uint32_t *)DATA_PTR(branch),
+                                  *(sigar_uint32_t *)DATA_PTR(ref));
+      case PTQL_VALUE_TYPE_CHR:
+        return branch->match.chr(*(char *)DATA_PTR(branch),
+                                 *(char *)DATA_PTR(ref));
+      case PTQL_VALUE_TYPE_STR:
+      case PTQL_VALUE_TYPE_ANY:
+        return branch->match.str((char *)DATA_PTR(branch),
+                                 (char *)DATA_PTR(ref));
       default:
         return 0;
     }
@@ -774,13 +797,17 @@ static int ptql_branch_parse(char *query, ptql_parse_branch_t *branch)
 }
 
 static int ptql_branch_add(ptql_parse_branch_t *parsed,
-                           ptql_branch_t *branch)
+                           ptql_branch_list_t *branches)
 {
+    ptql_branch_t *branch;
     ptql_entry_t *entry = NULL;
     ptql_lookup_t *lookup = NULL;
     ptql_op_name_t op;
-    int i;
+    int i, is_ref=0;
 
+    PTQL_BRANCH_LIST_GROW(branches);
+
+    branch = &branches->data[branches->number++];
     branch->data = NULL;
     branch->data_size = 0;
     branch->op_flags = parsed->op_flags;
@@ -833,23 +860,48 @@ static int ptql_branch_add(ptql_parse_branch_t *parsed,
         return SIGAR_PTQL_MALFORMED_QUERY;
     }
 
+    if ((*parsed->value == '$') &&
+        sigar_isdigit(*(parsed->value+1)))
+    {
+        is_ref = 1;
+        branch->op_flags |= PTQL_OP_FLAG_REF;
+        branch->value.ui32 = atoi(parsed->value+1) - 1;
+
+        if (branch->value.ui32 >= branches->number) {
+            /* out-of-range */
+            return SIGAR_PTQL_MALFORMED_QUERY;
+        }
+        else if (branch->value.ui32 == branches->number-1) {
+            /* self reference */
+            return SIGAR_PTQL_MALFORMED_QUERY;
+        }
+    }
+
     switch (lookup->type) {
       case PTQL_VALUE_TYPE_UI64:
         branch->match.ui64 = ptql_op_ui64[op];
-        branch->value.ui64 = strtoull(parsed->value, NULL, 10);
+        if (!is_ref) {
+            branch->value.ui64 = strtoull(parsed->value, NULL, 10);
+        }
         break;
       case PTQL_VALUE_TYPE_UI32:
         branch->match.ui32 = ptql_op_ui32[op];
-        branch->value.ui32 = strtoul(parsed->value, NULL, 10);
+        if (!is_ref) {
+            branch->value.ui32 = strtoul(parsed->value, NULL, 10);
+        }
         break;
       case PTQL_VALUE_TYPE_CHR:
         branch->match.chr = ptql_op_chr[op];
-        branch->value.chr[0] = parsed->value[0];
+        if (!is_ref) {
+            branch->value.chr[0] = parsed->value[0];
+        }
         break;
       case PTQL_VALUE_TYPE_STR:
       case PTQL_VALUE_TYPE_ANY:
         branch->match.str = ptql_op_str[op];
-        branch->value.str = strdup(parsed->value);
+        if (!is_ref) {
+            branch->value.str = strdup(parsed->value);
+        }
         break;
     }
 
@@ -873,7 +925,7 @@ SIGAR_DECLARE(int) sigar_ptql_query_create(sigar_t *sigar,
     char *ptr, *ptql_copy = strdup(ptql);
     int status = SIGAR_OK;
     sigar_ptql_query_t *query =
-        *queryp = malloc(sizeof(*queryp));
+        *queryp = malloc(sizeof(*query));
 
     ptql = ptql_copy;
 
@@ -888,11 +940,8 @@ SIGAR_DECLARE(int) sigar_ptql_query_create(sigar_t *sigar,
 
         status = ptql_branch_parse(ptql, &parsed);
         if (status == SIGAR_OK) {
-            PTQL_BRANCH_LIST_GROW(&query->branches);
-
             status =
-                ptql_branch_add(&parsed,
-                                &query->branches.data[query->branches.number++]);
+                ptql_branch_add(&parsed, &query->branches);
 
             if (status != SIGAR_OK) {
                 break;
@@ -916,8 +965,7 @@ SIGAR_DECLARE(int) sigar_ptql_query_create(sigar_t *sigar,
         sigar_ptql_query_destroy(sigar, query);
         *queryp = NULL;
     }
-
-    if (query->branches.number > 1) {
+    else if (query->branches.number > 1) {
         qsort(query->branches.data,
               query->branches.number,
               sizeof(query->branches.data[0]),
@@ -972,12 +1020,18 @@ SIGAR_DECLARE(int) sigar_ptql_query_match(sigar_t *sigar,
                 branch->data = malloc(branch->data_size);
             }
             status = lookup->get(sigar, pid, branch->data);
+            if (status != SIGAR_OK) {
+                return status;
+            }
 
-            if (status == SIGAR_OK) {
-                matched = ptql_branch_match(branch);
+            if (branch->op_flags & PTQL_OP_FLAG_REF) {
+                ptql_branch_t *ref =
+                    &query->branches.data[branch->value.ui32];
+
+                matched = ptql_branch_match_ref(branch, ref);
             }
             else {
-                matched = 0;
+                matched = ptql_branch_match(branch);
             }
         }
 
