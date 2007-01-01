@@ -81,10 +81,16 @@ typedef struct {
 #define DATA_PTR(branch) \
     ((char *)branch->data + branch->lookup->offset)
 
+static void data_free(void *data)
+{
+    free(data);
+}
+
 struct ptql_branch_t {
     ptql_lookup_t *lookup;
     void *data;
     unsigned int data_size;
+    void (*data_free)(void *);
     unsigned int flags;
     unsigned int op_flags;
     union {
@@ -422,7 +428,7 @@ static int ptql_branch_list_destroy(sigar_t *sigar,
                 &branches->data[i];
 
             if (branch->data_size && branch->data) {
-                free(branch->data);
+                branch->data_free(branch->data);
             }
 
             if (branch->lookup &&
@@ -860,6 +866,7 @@ static int ptql_branch_add(ptql_parse_branch_t *parsed,
     branch = &branches->data[branches->number++];
     branch->data = NULL;
     branch->data_size = 0;
+    branch->data_free = data_free;
     branch->op_flags = parsed->op_flags;
 
     op = ptql_op_code_get(parsed->op);
