@@ -21,6 +21,10 @@
 #include "sigar_util.h"
 #include "sigar_ptql.h"
 
+#ifdef SIGAR_HAS_PCRE
+#include "pcre.h"
+#endif
+
 #ifdef WIN32
 #define strtoull strtoul /*XXX*/
 #endif
@@ -325,7 +329,15 @@ static int ptql_op_str_sw(ptql_branch_t *branch,
 static int ptql_op_str_re(ptql_branch_t *branch,
                           char *haystack, char *needle)
 {
-    return 0; /*XXX pcre?*/
+#ifdef SIGAR_HAS_PCRE
+    pcre *re = (pcre *)branch->value.ptr;
+    int len = strlen(haystack);
+    int rc =
+        pcre_exec(re, NULL, haystack, len, 0, 0, NULL, 0);
+    return rc >= 0;
+#else
+    return 0;
+#endif
 }
 
 static int ptql_op_str_ct(ptql_branch_t *branch,
@@ -935,6 +947,26 @@ static int ptql_branch_add(ptql_parse_branch_t *parsed,
             /* self reference */
             return SIGAR_PTQL_MALFORMED_QUERY;
         }
+        else if (branch->op_name == PTQL_OP_RE) {
+            /* not for use with .re */
+            return SIGAR_PTQL_MALFORMED_QUERY;
+        }
+    }
+    else if (branch->op_name == PTQL_OP_RE) {
+#ifdef SIGAR_HAS_PCRE
+    const char *error;
+    int offset;
+    pcre *re =
+        pcre_compile(parsed->value, 0, &error, &offset, NULL);
+    if (!re) {
+        return SIGAR_PTQL_MALFORMED_QUERY;
+    }
+    is_set = 1;
+    branch->value.ptr = re;
+    branch->value_free = pcre_free;
+#else
+    return SIGAR_PTQL_MALFORMED_QUERY;
+#endif
     }
 
     switch (lookup->type) {
