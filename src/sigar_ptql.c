@@ -853,7 +853,7 @@ static int ptql_branch_add(ptql_parse_branch_t *parsed,
     ptql_entry_t *entry = NULL;
     ptql_lookup_t *lookup = NULL;
     ptql_op_name_t op;
-    int i, is_ref=0;
+    int i, is_set=0;
 
     PTQL_BRANCH_LIST_GROW(branches);
 
@@ -913,7 +913,7 @@ static int ptql_branch_add(ptql_parse_branch_t *parsed,
     if ((*parsed->value == '$') &&
         sigar_isdigit(*(parsed->value+1)))
     {
-        is_ref = 1;
+        is_set = 1;
         branch->op_flags |= PTQL_OP_FLAG_REF;
         branch->value.ui32 = atoi(parsed->value+1) - 1;
 
@@ -930,26 +930,26 @@ static int ptql_branch_add(ptql_parse_branch_t *parsed,
     switch (lookup->type) {
       case PTQL_VALUE_TYPE_UI64:
         branch->match.ui64 = ptql_op_ui64[op];
-        if (!is_ref) {
+        if (!is_set) {
             branch->value.ui64 = strtoull(parsed->value, NULL, 10);
         }
         break;
       case PTQL_VALUE_TYPE_UI32:
         branch->match.ui32 = ptql_op_ui32[op];
-        if (!is_ref) {
+        if (!is_set) {
             branch->value.ui32 = strtoul(parsed->value, NULL, 10);
         }
         break;
       case PTQL_VALUE_TYPE_CHR:
         branch->match.chr = ptql_op_chr[op];
-        if (!is_ref) {
+        if (!is_set) {
             branch->value.chr[0] = parsed->value[0];
         }
         break;
       case PTQL_VALUE_TYPE_STR:
       case PTQL_VALUE_TYPE_ANY:
         branch->match.str = ptql_op_str[op];
-        if (!is_ref) {
+        if (!is_set) {
             branch->value.str = strdup(parsed->value);
         }
         break;
