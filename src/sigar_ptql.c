@@ -58,6 +58,21 @@ typedef enum {
     PTQL_VALUE_TYPE_ANY
 } ptql_value_type_t;
 
+typedef enum {
+    PTQL_OP_EQ,
+    PTQL_OP_NE,
+    PTQL_OP_GT,
+    PTQL_OP_GE,
+    PTQL_OP_LT,
+    PTQL_OP_LE,
+#define PTQL_OP_MAX_NSTR PTQL_OP_LE
+    PTQL_OP_EW, /* rest are string only */
+    PTQL_OP_SW,
+    PTQL_OP_RE,
+    PTQL_OP_CT,
+    PTQL_OP_MAX
+} ptql_op_name_t;
+
 #define PTQL_OP_FLAG_PARENT 1
 #define PTQL_OP_FLAG_REF    2
 
@@ -93,6 +108,7 @@ struct ptql_branch_t {
     void (*data_free)(void *);
     unsigned int flags;
     unsigned int op_flags;
+    ptql_op_name_t op_name;
     union {
         ptql_op_ui64_t ui64;
         ptql_op_ui32_t ui32;
@@ -123,21 +139,6 @@ typedef struct {
 struct sigar_ptql_query_t {
     ptql_branch_list_t branches;
 };
-
-typedef enum {
-    PTQL_OP_EQ,
-    PTQL_OP_NE,
-    PTQL_OP_GT,
-    PTQL_OP_GE,
-    PTQL_OP_LT,
-    PTQL_OP_LE,
-#define PTQL_OP_MAX_NSTR PTQL_OP_LE
-    PTQL_OP_EW, /* rest are string only */
-    PTQL_OP_SW,
-    PTQL_OP_RE,
-    PTQL_OP_CT,
-    PTQL_OP_MAX
-} ptql_op_name_t;
 
 /* XXX optimize */
 static ptql_op_name_t ptql_op_code_get(char *op)
@@ -860,7 +861,6 @@ static int ptql_branch_add(ptql_parse_branch_t *parsed,
     ptql_branch_t *branch;
     ptql_entry_t *entry = NULL;
     ptql_lookup_t *lookup = NULL;
-    ptql_op_name_t op;
     int i, is_set=0;
 
     PTQL_BRANCH_LIST_GROW(branches);
@@ -872,8 +872,8 @@ static int ptql_branch_add(ptql_parse_branch_t *parsed,
     branch->value_free = data_free;
     branch->op_flags = parsed->op_flags;
 
-    op = ptql_op_code_get(parsed->op);
-    if (op == PTQL_OP_MAX) {
+    branch->op_name = ptql_op_code_get(parsed->op);
+    if (branch->op_name == PTQL_OP_MAX) {
         return SIGAR_PTQL_MALFORMED_QUERY;
     }
 
@@ -915,7 +915,7 @@ static int ptql_branch_add(ptql_parse_branch_t *parsed,
     branch->lookup = lookup;
 
     if ((lookup->type < PTQL_VALUE_TYPE_STR) &&
-        (op > PTQL_OP_MAX_NSTR))
+        (branch->op_name > PTQL_OP_MAX_NSTR))
     {
         return SIGAR_PTQL_MALFORMED_QUERY;
     }
@@ -939,26 +939,26 @@ static int ptql_branch_add(ptql_parse_branch_t *parsed,
 
     switch (lookup->type) {
       case PTQL_VALUE_TYPE_UI64:
-        branch->match.ui64 = ptql_op_ui64[op];
+        branch->match.ui64 = ptql_op_ui64[branch->op_name];
         if (!is_set) {
             branch->value.ui64 = strtoull(parsed->value, NULL, 10);
         }
         break;
       case PTQL_VALUE_TYPE_UI32:
-        branch->match.ui32 = ptql_op_ui32[op];
+        branch->match.ui32 = ptql_op_ui32[branch->op_name];
         if (!is_set) {
             branch->value.ui32 = strtoul(parsed->value, NULL, 10);
         }
         break;
       case PTQL_VALUE_TYPE_CHR:
-        branch->match.chr = ptql_op_chr[op];
+        branch->match.chr = ptql_op_chr[branch->op_name];
         if (!is_set) {
             branch->value.chr[0] = parsed->value[0];
         }
         break;
       case PTQL_VALUE_TYPE_STR:
       case PTQL_VALUE_TYPE_ANY:
-        branch->match.str = ptql_op_str[op];
+        branch->match.str = ptql_op_str[branch->op_name];
         if (!is_set) {
             branch->value.str = strdup(parsed->value);
         }
