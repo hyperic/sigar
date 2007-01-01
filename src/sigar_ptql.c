@@ -104,7 +104,9 @@ struct ptql_branch_t {
         sigar_uint32_t ui32;
         char chr[4];
         char *str;
+        void *ptr;
     } value;
+    void (*value_free)(void *);
 };
 
 typedef struct {
@@ -436,7 +438,7 @@ static int ptql_branch_list_destroy(sigar_t *sigar,
                 !(branch->op_flags & PTQL_OP_FLAG_REF))
             {
                 if (branch->value.str) {
-                    free(branch->value.str);
+                    branch->value_free(branch->value.str);
                 }
             }
         }
@@ -867,6 +869,7 @@ static int ptql_branch_add(ptql_parse_branch_t *parsed,
     branch->data = NULL;
     branch->data_size = 0;
     branch->data_free = data_free;
+    branch->value_free = data_free;
     branch->op_flags = parsed->op_flags;
 
     op = ptql_op_code_get(parsed->op);
