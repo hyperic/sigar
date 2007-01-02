@@ -721,6 +721,45 @@ static int ptql_env_match(sigar_t *sigar,
     return matched ? SIGAR_OK : !SIGAR_OK;
 }
 
+static int ptql_branch_init_port(ptql_parse_branch_t *parsed,
+                                 ptql_branch_t *branch)
+{
+    if (strEQ(parsed->attr, "tcp")) {
+        branch->flags = SIGAR_NETCONN_TCP;
+    }
+    else if (strEQ(parsed->attr, "udp")) {
+        branch->flags = SIGAR_NETCONN_UDP;
+    }
+    else {
+        return SIGAR_PTQL_MALFORMED_QUERY;        
+    }
+
+    branch->data = (void*)atoi(parsed->value); /*XXX*/
+
+    return SIGAR_OK;
+}
+
+static int ptql_port_match(sigar_t *sigar,
+                           sigar_pid_t pid,
+                           void *data)
+{
+    ptql_branch_t *branch =
+        (ptql_branch_t *)data;
+    unsigned long port =
+        (unsigned long)branch->data;
+    int status;
+    sigar_pid_t match_pid=0;
+
+    status =
+        sigar_proc_port_get(sigar, branch->flags, port, &match_pid);
+
+    if (status != SIGAR_OK) {
+        return status;
+    }
+
+    return (pid == match_pid) ? SIGAR_OK : !SIGAR_OK;
+}
+
 #define PTQL_LOOKUP_ENTRY(cname, member, type) \
     (ptql_get_t)sigar_##cname##_get, \
     sigar_offsetof(sigar_##cname##_t, member), \
@@ -795,6 +834,10 @@ static ptql_lookup_t PTQL_Env[] = {
     { NULL, ptql_env_match, 0, 0, PTQL_VALUE_TYPE_ANY, ptql_branch_init_any }
 };
 
+static ptql_lookup_t PTQL_Port[] = {
+    { NULL, ptql_port_match, 0, 0, PTQL_VALUE_TYPE_ANY, ptql_branch_init_port }
+};
+
 static ptql_lookup_t PTQL_Pid[] = {
     { NULL, ptql_pid_match, 0, 0, PTQL_VALUE_TYPE_ANY, ptql_branch_init_pid }
 };
@@ -809,6 +852,7 @@ static ptql_entry_t ptql_map[] = {
     { "Fd",       PTQL_Fd },
     { "Args",     PTQL_Args },
     { "Env",      PTQL_Env },
+    { "Port",     PTQL_Port },
     { "Pid",      PTQL_Pid },
     { NULL }
 };
