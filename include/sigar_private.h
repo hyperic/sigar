@@ -146,6 +146,8 @@ int sigar_os_close(sigar_t *sigar);
 
 char *sigar_os_error_string(sigar_t *sigar, int err);
 
+char *sigar_strerror_get(int err, char *errbuf, int buflen);
+
 int sigar_sys_info_get_uname(sigar_sys_info_t *sysinfo);
 
 int sigar_os_sys_info_get(sigar_t *sigar, sigar_sys_info_t *sysinfo);

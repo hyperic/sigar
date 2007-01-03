@@ -114,10 +114,7 @@ static char *sigar_error_string(int err)
 
 SIGAR_DECLARE(char *) sigar_strerror(sigar_t *sigar, int err)
 {
-    char *buf = NULL;
-#ifdef WIN32
-    DWORD len;
-#endif
+    char *buf;
 
     if (err > SIGAR_OS_START_ERROR) {
         if ((buf = sigar_os_error_string(sigar, err)) != NULL) {
@@ -130,14 +127,22 @@ SIGAR_DECLARE(char *) sigar_strerror(sigar_t *sigar, int err)
         return sigar_error_string(err);
     }
 
+    return sigar_strerror_get(err, sigar->errbuf, sizeof(sigar->errbuf));
+}
+
+char *sigar_strerror_get(int err, char *errbuf, int buflen)
+{
+    char *buf = NULL;
 #ifdef WIN32
+    DWORD len;
+
     len = FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM |
                         FORMAT_MESSAGE_IGNORE_INSERTS,
                         NULL,
                         err,
                         0, /* default language */
-                        (LPTSTR)sigar->errbuf,
-                        (DWORD)sizeof(sigar->errbuf),
+                        (LPTSTR)errbuf,
+                        (DWORD)buflen,
                         NULL);
 #else
 
@@ -146,9 +151,9 @@ SIGAR_DECLARE(char *) sigar_strerror(sigar_t *sigar, int err)
      * strerror_r man page says:
      * "The GNU version may, but need not, use the user supplied buffer"
      */
-    buf = strerror_r(err, sigar->errbuf, sizeof(sigar->errbuf));
+    buf = strerror_r(err, errbuf, buflen);
 #elif defined(HAVE_STRERROR_R)
-    if (strerror_r(err, sigar->errbuf, sizeof(sigar->errbuf)) < 0) {
+    if (strerror_r(err, errbuf, buflen) < 0) {
         buf = "Unknown Error";
     }
 #else
@@ -157,11 +162,11 @@ SIGAR_DECLARE(char *) sigar_strerror(sigar_t *sigar, int err)
 #endif
 
     if (buf != NULL) {
-        SIGAR_SSTRCPY(sigar->errbuf, buf);
+        SIGAR_STRNCPY(errbuf, buf, buflen);
     }
     
 #endif
-    return sigar->errbuf;
+    return errbuf;
 }
 
 #include <stdio.h> /* for sprintf */
