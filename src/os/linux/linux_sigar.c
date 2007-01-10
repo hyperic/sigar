@@ -2165,7 +2165,10 @@ static void redhat_vendor_parse(char *line, sigar_sys_info_t *info)
     }
 }
 
-static void lsb_vendor_parse(char *data, sigar_sys_info_t *info)
+#define is_quote(c) ((c == '\'') || (c == '"')) 
+
+static void kv_parse(char *data, sigar_sys_info_t *info,
+                     void (*func)(sigar_sys_info_t *, char *, char *))
 {
     char *ptr = data;
     int len = strlen(data);
@@ -2188,19 +2191,57 @@ static void lsb_vendor_parse(char *data, sigar_sys_info_t *info)
             *ix = '\0';
         }
         vlen = strlen(val);
+        if (is_quote(*val)) {
+            if (is_quote(val[vlen-1])) {
+                val[vlen-1] =  '\0';
+            }
+            ++val;
+        }
 
-        if (strEQ(key, "DISTRIB_ID")) {
-            SIGAR_SSTRCPY(info->vendor, val);
-        }
-        else if (strEQ(key, "DISTRIB_RELEASE")) {
-            SIGAR_SSTRCPY(info->vendor_version, val);
-        }
-        else if (strEQ(key, "DISTRIB_CODENAME")) {
-            SIGAR_SSTRCPY(info->vendor_code_name, val);
-        }
+        func(info, key, val);
 
         ptr += (klen + 1 + vlen + 1);
     }
+}
+
+static void lsb_parse(sigar_sys_info_t *info,
+                      char *key, char *val)
+{
+    if (strEQ(key, "DISTRIB_ID")) {
+        SIGAR_SSTRCPY(info->vendor, val);
+    }
+    else if (strEQ(key, "DISTRIB_RELEASE")) {
+        SIGAR_SSTRCPY(info->vendor_version, val);
+    }
+    else if (strEQ(key, "DISTRIB_CODENAME")) {
+        SIGAR_SSTRCPY(info->vendor_code_name, val);
+    }
+}
+
+static void lsb_vendor_parse(char *data, sigar_sys_info_t *info)
+{
+    kv_parse(data, info, lsb_parse);
+}
+
+static void xen_parse(sigar_sys_info_t *info,
+                      char *key, char *val)
+{
+    if (strEQ(key, "PRODUCT_VERSION")) {
+        SIGAR_SSTRCPY(info->vendor_version, val);
+    }
+    else if (strEQ(key, "KERNEL_VERSION")) {
+        SIGAR_SSTRCPY(info->version, val);
+    }
+}
+
+static void xen_vendor_parse(char *data, sigar_sys_info_t *info)
+{
+    kv_parse(data, info, xen_parse);
+
+    snprintf(info->description,
+             sizeof(info->description),
+             "XenServer %s",
+             info->vendor_version);
 }
 
 typedef struct {
@@ -2216,6 +2257,7 @@ static linux_vendor_info_t linux_vendors[] = {
     { "Slackware", "/etc/slackware-version", NULL },
     { "Mandrake",  "/etc/mandrake-release", NULL },
     { "VMware",    "/proc/vmware/version", NULL },
+    { "XenSource", "/etc/xensource-inventory", xen_vendor_parse },
     { "Red Hat",   "/etc/redhat-release", redhat_vendor_parse },
     { "lsb",       "/etc/lsb-release", lsb_vendor_parse },
     { "Debian",    "/etc/debian_version", NULL },
@@ -2268,10 +2310,12 @@ static int get_linux_vendor_info(sigar_sys_info_t *info)
         generic_vendor_parse(data, info);
     }
 
-    snprintf(info->description,
-             sizeof(info->description),
-             "%s %s",
-             info->vendor, info->vendor_version);
+    if (info->description[0] == '\0') {
+        snprintf(info->description,
+                 sizeof(info->description),
+                 "%s %s",
+                 info->vendor, info->vendor_version);
+    }
 
     return SIGAR_OK;
 }
