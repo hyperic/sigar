@@ -1238,7 +1238,7 @@ int sigar_proc_fd_get(sigar_t *sigar, sigar_pid_t pid,
 
     /* see sys/user.h */
     for (i=0; i<uinfo.U_maxofile; i++) {
-        if (uinfo.U_ufd[i].fp) {
+        if (uinfo.U_ofile(i)) {
             procfd->total++;
         }
     }
