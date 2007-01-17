@@ -79,6 +79,7 @@ typedef enum {
 
 #define PTQL_OP_FLAG_PARENT 1
 #define PTQL_OP_FLAG_REF    2
+#define PTQL_OP_FLAG_GLOB   4
 
 struct ptql_parse_branch_t {
     char *name;
@@ -98,16 +99,25 @@ typedef struct {
 } ptql_lookup_t;
 
 #define DATA_PTR(branch) \
-    ((char *)branch->data + branch->lookup->offset)
+    ((char *)branch->data.ptr + branch->lookup->offset)
 
 static void data_free(void *data)
 {
     free(data);
 }
 
+typedef union {
+    sigar_pid_t pid;
+    sigar_uint64_t ui64;
+    sigar_uint32_t ui32;
+    char chr[4];
+    char *str;
+    void *ptr;
+} any_value_t;
+
 struct ptql_branch_t {
     ptql_lookup_t *lookup;
-    void *data;
+    any_value_t data;
     unsigned int data_size;
     void (*data_free)(void *);
     unsigned int flags;
@@ -119,13 +129,7 @@ struct ptql_branch_t {
         ptql_op_chr_t chr;
         ptql_op_str_t str;
     } match;
-    union {
-        sigar_uint64_t ui64;
-        sigar_uint32_t ui32;
-        char chr[4];
-        char *str;
-        void *ptr;
-    } value;
+    any_value_t value;
     void (*value_free)(void *);
 };
 
@@ -442,8 +446,8 @@ static int ptql_branch_list_destroy(sigar_t *sigar,
             ptql_branch_t *branch =
                 &branches->data[i];
 
-            if (branch->data_size && branch->data) {
-                branch->data_free(branch->data);
+            if (branch->data_size && branch->data.ptr) {
+                branch->data_free(branch->data.ptr);
             }
 
             if (branch->lookup &&
@@ -466,7 +470,7 @@ static int ptql_branch_list_destroy(sigar_t *sigar,
 static int ptql_branch_init_any(ptql_parse_branch_t *parsed,
                                 ptql_branch_t *branch)
 {
-    branch->data = strdup(parsed->attr);
+    branch->data.str = strdup(parsed->attr);
     branch->data_size = strlen(parsed->attr);
     return SIGAR_OK;
 }
@@ -527,29 +531,35 @@ enum {
     PTQL_PID_SERVICE
 };
 
+#ifdef SIGAR_64BIT
+#define str2pid(value) strtoull(value, NULL, 10)
+#else
+#define str2pid(value) strtoul(value, NULL, 10)
+#endif
+
 static int ptql_branch_init_pid(ptql_parse_branch_t *parsed,
                                 ptql_branch_t *branch)
 {
     if (strEQ(parsed->attr, "Pid")) {
         branch->flags = PTQL_PID_PID;
         if (strEQ(parsed->value, "$$")) {
-            branch->data = (void*)getpid();
+            branch->data.pid = getpid();
         }
         else {
-            branch->data = (void*)atoi(parsed->value); /*XXX*/
+            branch->data.pid = str2pid(parsed->value);
         }
         return SIGAR_OK;
     }
     else if (strEQ(parsed->attr, "PidFile")) {
         branch->flags = PTQL_PID_FILE;
-        branch->data = strdup(parsed->value);
+        branch->data.str = strdup(parsed->value);
         branch->data_size = strlen(parsed->value);
         return SIGAR_OK;
     }
     else if (strEQ(parsed->attr, "Service")) {
 #ifdef WIN32
         branch->flags = PTQL_PID_SERVICE;
-        branch->data = strdup(parsed->value);
+        branch->data.str = strdup(parsed->value);
         branch->data_size = strlen(parsed->value);
         return SIGAR_OK;
 #else
@@ -572,7 +582,7 @@ static int ptql_pid_match(sigar_t *sigar,
     if (branch->flags == PTQL_PID_FILE) {
         char buffer[SIGAR_PATH_MAX+1];
         int status =
-            sigar_file2str((const char *)branch->data,
+            sigar_file2str((const char *)branch->data.str,
                            buffer, sizeof(buffer)-1);
         if (status != SIGAR_OK) {
             return status;
@@ -587,7 +597,7 @@ static int ptql_pid_match(sigar_t *sigar,
 #endif
     }
     else {
-        match_pid = (sigar_pid_t)branch->data;
+        match_pid = branch->data.pid;
     }
 
     return (pid == match_pid) ? SIGAR_OK : !SIGAR_OK;
@@ -597,13 +607,13 @@ static int ptql_args_branch_init(ptql_parse_branch_t *parsed,
                                  ptql_branch_t *branch)
 {
     if (strEQ(parsed->attr, "*")) {
-        branch->data = NULL;
+        branch->op_flags |= PTQL_OP_FLAG_GLOB;
     }
     else {
         char *end;
 
-        branch->data =
-            (void*)strtol(parsed->attr, &end, 10);
+        branch->data.ui32 =
+            strtol(parsed->attr, &end, 10);
 
         if (end && *end) {
             /* conversion failed */
@@ -627,7 +637,7 @@ static int ptql_args_match(sigar_t *sigar,
         return status;
     }
 
-    if (!branch->data) {
+    if (branch->op_flags & PTQL_OP_FLAG_GLOB) {
         int i;
         for (i=0; i<args.number; i++) {
             matched = 
@@ -640,7 +650,7 @@ static int ptql_args_match(sigar_t *sigar,
         }
     }
     else {
-        int num = (int)branch->data;
+        int num = branch->data.ui32;
 
         /* e.g. find last element of args: Args.-1.eq=weblogic.Server */
         if (num < 0) {
@@ -695,12 +705,12 @@ static int ptql_env_match(sigar_t *sigar,
     sigar_proc_env_entry_t entry;
 
     /* XXX ugh this is klunky */
-    entry.key = branch->data;
+    entry.key = branch->data.str;
     entry.klen = branch->data_size;
     entry.val = NULL;
 
     procenv.type = SIGAR_PROC_ENV_KEY;
-    procenv.key  = branch->data;
+    procenv.key  = branch->data.str;
     procenv.klen = branch->data_size;
     procenv.env_getter = sigar_proc_env_get_key;
     procenv.data = &entry;
@@ -734,7 +744,7 @@ static int ptql_branch_init_port(ptql_parse_branch_t *parsed,
         return SIGAR_PTQL_MALFORMED_QUERY;        
     }
 
-    branch->data = (void*)atoi(parsed->value); /*XXX*/
+    branch->data.ui32 = atoi(parsed->value); /*XXX*/
 
     return SIGAR_OK;
 }
@@ -746,7 +756,7 @@ static int ptql_port_match(sigar_t *sigar,
     ptql_branch_t *branch =
         (ptql_branch_t *)data;
     unsigned long port =
-        (unsigned long)branch->data;
+        branch->data.ui32;
     int status;
     sigar_pid_t match_pid=0;
 
@@ -922,7 +932,7 @@ static int ptql_branch_add(ptql_parse_branch_t *parsed,
     PTQL_BRANCH_LIST_GROW(branches);
 
     branch = &branches->data[branches->number++];
-    branch->data = NULL;
+    branch->data.ptr = NULL;
     branch->data_size = 0;
     branch->data_free = data_free;
     branch->value_free = data_free;
@@ -1151,11 +1161,11 @@ SIGAR_DECLARE(int) sigar_ptql_query_match(sigar_t *sigar,
         }
         else {
             /* standard sigar_proc_*_get / structptr + offset */
-            if (!branch->data) {
+            if (!branch->data.ptr) {
                 branch->data_size = lookup->data_size;
-                branch->data = malloc(branch->data_size);
+                branch->data.ptr = malloc(branch->data_size);
             }
-            status = lookup->get(sigar, pid, branch->data);
+            status = lookup->get(sigar, pid, branch->data.ptr);
             if (status != SIGAR_OK) {
                 return status;
             }
