@@ -824,7 +824,7 @@ static int ucb_ps_args_get(sigar_t *sigar, sigar_pid_t pid,
     }
     else {
         snprintf(buffer, sizeof(buffer),
-                 "/usr/ucb/ps -ww %ld", pid);
+                 "/usr/ucb/ps -ww %ld", (long)pid);
 
         if (!(fp = popen(buffer, "r"))) {
             return errno;
@@ -1991,7 +1991,7 @@ static void ifstat_kstat_common(sigar_net_interface_stat_t *ifstat,
     int i;
 
     for (i=0; i<ndata; i++) {
-        sigar_uint64_t value = data[i].value.ui32;
+        sigar_uint64_t value = data[i].value.KSTAT_UINT;
 
         char *ptr = data[i].name;
 

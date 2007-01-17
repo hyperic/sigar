@@ -253,9 +253,15 @@ struct sigar_t {
     solaris_mib2_t mib2;
 };
 
+#ifdef SIGAR_64BIT
+#define KSTAT_UINT ui64
+#else
+#define KSTAT_UINT ui32
+#endif
+
 #define kSTAT_uint(v, type) \
     ((sigar->koffsets.type[v] == -2) ? 0 : \
-    ((kstat_named_t *)ksp->ks_data + sigar->koffsets.type[v])->value.ui32)
+    ((kstat_named_t *)ksp->ks_data + sigar->koffsets.type[v])->value.KSTAT_UINT)
 
 #define kSYSTEM(v) kSTAT_uint(v, system)
 
