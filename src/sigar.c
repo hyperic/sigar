@@ -1054,7 +1054,8 @@ static int sigar_who_utmp(sigar_t *sigar,
 {
     FILE *fp;
 #ifdef __sun
-    struct utmpx ut;
+    /* use futmpx w/ pid32_t for sparc64 */
+    struct futmpx ut;
 #else
     struct utmp ut;
 #endif
