@@ -358,7 +358,7 @@ int sigar_cpu_list_get(sigar_t *sigar, sigar_cpu_list_t *cpulist)
 {
     kstat_ctl_t *kc = sigar->kc; 
     kstat_t *ksp;
-    ulong cpuinfo[CPU_STATES];
+    uint_t cpuinfo[CPU_STATES];
     unsigned int i;
     int is_debug = SIGAR_LOG_IS_DEBUG(sigar);
     int reported_virtual = 0;

@@ -259,11 +259,19 @@ struct sigar_t {
 #define KSTAT_UINT ui32
 #endif
 
-#define kSTAT_uint(v, type) \
-    ((sigar->koffsets.type[v] == -2) ? 0 : \
-    ((kstat_named_t *)ksp->ks_data + sigar->koffsets.type[v])->value.KSTAT_UINT)
+#define kSTAT_exists(v, type) \
+    (sigar->koffsets.type[v] != -2)
 
-#define kSYSTEM(v) kSTAT_uint(v, system)
+#define kSTAT_ptr(v, type) \
+    ((kstat_named_t *)ksp->ks_data + sigar->koffsets.type[v])
+
+#define kSTAT_uint(v, type) \
+    (kSTAT_exists(v, type) ? kSTAT_ptr(v, type)->value.KSTAT_UINT : 0)
+
+#define kSTAT_ui32(v, type) \
+    (kSTAT_exists(v, type) ? kSTAT_ptr(v, type)->value.ui32 : 0)
+
+#define kSYSTEM(v) kSTAT_ui32(v, system)
 
 #define kMEMPAGES(v) kSTAT_uint(v, mempages)
 
