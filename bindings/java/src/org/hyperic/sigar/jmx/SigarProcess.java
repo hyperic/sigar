@@ -37,7 +37,11 @@ public class SigarProcess implements SigarProcessMBean {
     private SigarProxy sigar;
 
     public SigarProcess() {
-        this.sigarImpl = new Sigar();
+        this(new Sigar());
+    }
+
+    public SigarProcess(Sigar sigar) {
+        this.sigarImpl = sigar;
         this.sigar = SigarProxyCache.newInstance(sigarImpl);
     }
 
