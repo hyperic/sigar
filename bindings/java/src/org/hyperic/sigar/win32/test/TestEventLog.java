@@ -92,7 +92,7 @@ public class TestEventLog extends SigarTestCase {
         log.close();
     }
 
-    private boolean readAll(String logname) throws Exception {
+    private int readAll(String logname) throws Exception {
         int fail = 0, success = 0, max = 500;
         String testMax = System.getProperty("sigar.testeventlog.max");
         if (testMax != null) {
@@ -125,18 +125,20 @@ public class TestEventLog extends SigarTestCase {
         log.close();
 
         traceln("success=" + success + ", fail=" + fail);
-        return success > fail;
+        return success;
     }
 
     // Test reading all records
     public void testRead() throws Exception {
+        int total = 0;
         String[] logs = EventLog.getLogNames();
         for (int i=0; i<logs.length; i++) {
             String msg = "readAll(" + logs[i] + ")"; 
             traceln(msg);
-            if (!readAll(logs[i])) {
-                fail(msg);
-            }
+            total += readAll(logs[i]);
+        }
+        if (total == 0) {
+            fail("No eventlog entries read");
         }
     }
 
