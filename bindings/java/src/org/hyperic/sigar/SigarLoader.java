@@ -24,6 +24,7 @@ import org.hyperic.jni.ArchName;
 import org.hyperic.jni.ArchNotSupportedException;
 
 public class SigarLoader extends ArchLoader {
+    public static final String PROP_SIGAR_JAR_NAME = "sigar.jar.name";
 
     private static String location = null;
     private static String nativeName = null;
@@ -57,6 +58,20 @@ public class SigarLoader extends ArchLoader {
         System.load(name);
     }
 
+    public String getJarName() {
+        return System.getProperty(PROP_SIGAR_JAR_NAME,
+                                  super.getJarName());
+    }
+
+    public static void setSigarJarName(String jarName) {
+        System.setProperty(PROP_SIGAR_JAR_NAME, jarName);
+    }
+
+    public static String getSigarJarName() {
+        return System.getProperty(PROP_SIGAR_JAR_NAME,
+                                  "sigar.jar");
+    }
+
     /**
      * Returns the path where sigar.jar is located.
      */
@@ -64,7 +79,7 @@ public class SigarLoader extends ArchLoader {
         if (location == null) {
             SigarLoader loader = new SigarLoader(Sigar.class);
             try {
-                location = loader.findJarPath("sigar.jar");
+                location = loader.findJarPath(getSigarJarName());
             } catch (ArchLoaderException e) {
                 location = ".";
             }
