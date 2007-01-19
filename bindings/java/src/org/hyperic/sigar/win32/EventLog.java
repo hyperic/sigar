@@ -117,4 +117,31 @@ public class EventLog extends Win32 {
      */
     public native void waitForChange(int timeout)
         throws Win32Exception;
+
+    /**
+     * Eventlog names are store in the registry under:
+     * SYSTEM\CurrentControlSet\Services\Eventlog
+     * This method returns the list of these entries.
+     * @return All Eventlog names
+     */
+    public static String[] getLogNames() {
+        final String EVENTLOG_KEY =
+            "SYSTEM\\CurrentControlSet\\Services\\Eventlog";
+
+        String[] names;
+        RegistryKey key = null;
+        try {
+            key = RegistryKey.LocalMachine.openSubKey(EVENTLOG_KEY);
+            names = key.getSubKeyNames();
+        } catch (Win32Exception e) {
+            names =
+                new String[] { SYSTEM, APPLICATION, SECURITY };
+        } finally {
+            if (key != null) {
+                key.close();
+            }
+        }
+
+        return names;
+    }
 }

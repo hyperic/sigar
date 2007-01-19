@@ -93,21 +93,27 @@ public class TestEventLog extends SigarTestCase {
     }
 
     private boolean readAll(String logname) throws Exception {
-        int fail = 0, success = 0; 
+        int fail = 0, success = 0, max = 500;
+        String testMax = System.getProperty("sigar.testeventlog.max");
+        if (testMax != null) {
+            max = Integer.parseInt(testMax);
+        }
         EventLogRecord record;
         EventLog log = new EventLog();
 
         log.open(logname);
         int oldestRecord = log.getOldestRecord();
         int numRecords = log.getNumberOfRecords();
-        traceln("oldest=" + oldestRecord + ", total=" + numRecords);
+        traceln("oldest=" + oldestRecord +
+                ", total=" + numRecords +
+                ", max=" + max);
 
         for (int i = oldestRecord; i < oldestRecord + numRecords; i++) {
             try {
                 record = log.read(i);
                 success++;
-                if (!getVerbose() && (success > 500)) {
-                    break; //read plenty
+                if (success > max) {
+                    break;
                 }
             } catch (Win32Exception e) {
                 fail++;
@@ -124,10 +130,7 @@ public class TestEventLog extends SigarTestCase {
 
     // Test reading all records
     public void testRead() throws Exception {
-        String[] logs = {
-            EventLog.SYSTEM,
-            EventLog.APPLICATION
-        };
+        String[] logs = EventLog.getLogNames();
         for (int i=0; i<logs.length; i++) {
             String msg = "readAll(" + logs[i] + ")"; 
             traceln(msg);
