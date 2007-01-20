@@ -22,7 +22,8 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
-import java.util.HashMap;
+
+import org.apache.log4j.Logger;
 
 public abstract class FileTail extends FileWatcher {
 
@@ -32,8 +33,11 @@ public abstract class FileTail extends FileWatcher {
     private boolean useSudo = 
         "true".equals(System.getProperty(PROP_USE_SUDO));
 
-    private HashMap offsets = new HashMap();
-    
+    private static final Logger log = 
+        SigarLog.getLogger(FileTail.class.getName());
+
+    private static final boolean isDebug = log.isDebugEnabled();
+
     public abstract void tail(FileInfo info, Reader reader);
 
     public FileTail(Sigar sigar) {
@@ -46,7 +50,7 @@ public abstract class FileTail extends FileWatcher {
 
     static void error(String name, Throwable exc) {
         String msg = name + ": " + exc.getMessage(); 
-        SigarLog.getLogger(FileTail.class.getName()).error(msg, exc);
+        log.error(msg, exc);
     }
 
     public void onChange(FileInfo info) {
@@ -61,9 +65,14 @@ public abstract class FileTail extends FileWatcher {
             else {
                 reader = new FileReader(name);
             }
-            reader.skip(getOffset(info));
+
+            long offset = getOffset(info);
+
+            if (offset > 0) {
+                reader.skip(offset);
+            }
+
             tail(info, reader);
-            setOffset(info);
         } catch (IOException e) {
             error(name, e);
         } finally {
@@ -76,7 +85,9 @@ public abstract class FileTail extends FileWatcher {
     public FileInfo add(String file)
         throws SigarException {
         FileInfo info = super.add(file);
-        setOffset(info);
+        if (isDebug) {
+            log.debug("add: " + file + "=" + info);
+        }
         return info;
     }
 
@@ -87,13 +98,35 @@ public abstract class FileTail extends FileWatcher {
         return info.modified();
     }
 
-    private long getOffset(FileInfo info) {
-        Long offset = (Long)this.offsets.get(info);
+    private long getOffset(FileInfo current) {
+        FileInfo previous = current.getPreviousInfo();
 
-        return offset.longValue();
-    }
+        if (previous == null) {
+            if (isDebug) {
+                log.debug(current.getName() + ": first stat");
+            }
+            return current.size;
+        }
 
-    private void setOffset(FileInfo info) {
-        this.offsets.put(info, new Long(info.size));
+        if (current.inode != previous.inode) {
+            if (isDebug) {
+                log.debug(current.getName() + ": file inode changed");
+            }
+            return -1;
+        }
+
+        if (current.size < previous.size) {
+            if (isDebug) {
+                log.debug(current.getName() + ": file truncated");
+            }
+            return -1;
+        }
+
+        if (isDebug) {
+            long diff = current.size - previous.size;
+            log.debug(current.getName() + ": " + diff + " new bytes");
+        }
+
+        return previous.size;
     }
 }
