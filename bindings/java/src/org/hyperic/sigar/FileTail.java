@@ -95,7 +95,9 @@ public abstract class FileTail extends FileWatcher {
         throws SigarException,
                SigarFileNotFoundException {
 
-        return info.modified();
+        return
+            info.modified() ||
+            (info.getPreviousInfo().size != info.size);
     }
 
     private long getOffset(FileInfo current) {

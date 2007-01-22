@@ -1,3 +1,7 @@
+2007-01-22  Doug MacEachern  <dougm@hyperic.com>
+
+        * [SIGAR-32] Fix FileTail on Windows
+
 2007-01-19  Doug MacEachern  <dougm@hyperic.com>
 
         * [SIGAR-31] Improve truncation detection in FileTail
