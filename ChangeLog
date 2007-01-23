@@ -1,5 +1,10 @@
 2007-01-22  Doug MacEachern  <dougm@hyperic.com>
 
+        * Fix proc_mem.size on HP-UX
+          Submitted by: Ragnar <rr@mima.x.se>
+
+2007-01-22  Doug MacEachern  <dougm@hyperic.com>
+
         * [SIGAR-32] Fix FileTail on Windows
 
 2007-01-19  Doug MacEachern  <dougm@hyperic.com>

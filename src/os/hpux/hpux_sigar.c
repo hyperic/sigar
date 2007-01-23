@@ -284,15 +284,19 @@ int sigar_proc_mem_get(sigar_t *sigar, sigar_pid_t pid,
     }
 
     procmem->size = 
-        pinfo->pst_tsize + /* text */
-        pinfo->pst_dsize + /* data */
-        pinfo->pst_ssize;  /* stack */
+        pinfo->pst_vtsize + /* text */
+        pinfo->pst_vdsize + /* data */
+        pinfo->pst_vssize + /* stack */
+        pinfo->pst_vshmsize + /* shared memory */
+        pinfo->pst_vmmsize + /* mem-mapped files */
+        pinfo->pst_vusize + /* U-Area & K-Stack */
+        pinfo->pst_viosize; /* I/O dev mapping */
 
     procmem->size *= pagesize;
         
     procmem->resident = pinfo->pst_rssize * pagesize;
 
-    procmem->share = pinfo->pst_shmsize * pagesize;
+    procmem->share = pinfo->pst_vshmsize * pagesize;
 
     procmem->minor_faults = pinfo->pst_minorfaults;
     procmem->major_faults = pinfo->pst_majorfaults;
