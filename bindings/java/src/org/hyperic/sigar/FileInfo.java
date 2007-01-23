@@ -425,13 +425,18 @@ public class FileInfo extends FileAttrs {
 
         FileInfo info = new FileInfo();
 
-        if (followSymlinks) {
-            info.gather(sigar, name);
-            info.lstat = false;
-        }
-        else {
-            info.gatherLink(sigar, name);
-            info.lstat = true;
+        try {
+            if (followSymlinks) {
+                info.gather(sigar, name);
+                info.lstat = false;
+            }
+            else {
+                info.gatherLink(sigar, name);
+                info.lstat = true;
+            }
+        } catch (SigarException e) {
+            e.setMessage(name + ": " + e.getMessage());
+            throw e;
         }
 
         info.sigar = sigar;

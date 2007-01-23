@@ -23,7 +23,22 @@ package org.hyperic.sigar;
  */
 public class SigarException extends Exception {
 
+    private String message;
+
     public SigarException () { super(); }
 
     public SigarException (String s) { super(s); }
+
+    public String getMessage() {
+        if (this.message != null) {
+            return this.message;
+        }
+        else {
+            return super.getMessage();
+        }
+    }
+
+    void setMessage(String message) {
+        this.message = message;
+    }
 }
