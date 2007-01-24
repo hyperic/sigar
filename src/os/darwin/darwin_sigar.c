@@ -29,6 +29,8 @@
 #include <mach/mach_traps.h>
 #include <mach/mach_port.h>
 #include <mach/task.h>
+#include <mach/thread_act.h>
+#include <mach/thread_info.h>
 #include <mach/vm_map.h>
 #include <mach/shared_memory_server.h>
 #include <Gestalt.h>
@@ -796,6 +798,9 @@ int sigar_proc_cred_get(sigar_t *sigar, sigar_pid_t pid,
 #define tval2msec(tval) \
    ((tval.seconds * SIGAR_MSEC) + (tval.microseconds / 1000))
 
+#define tval2nsec(tval) \
+    (SIGAR_SEC2NANO((tval).seconds) + SIGAR_MICROSEC2NANO((tval).microseconds))
+
 static int get_proc_times(sigar_pid_t pid, sigar_proc_time_t *time)
 {
     unsigned int count;
@@ -1331,6 +1336,24 @@ int sigar_thread_cpu_get(sigar_t *sigar,
                          sigar_uint64_t id,
                          sigar_thread_cpu_t *cpu)
 {
+#ifdef DARWIN
+    mach_port_t self = mach_thread_self();
+    thread_basic_info_data_t info;
+    mach_msg_type_number_t count = THREAD_BASIC_INFO_COUNT;
+    kern_return_t status;
+
+    status = thread_info(self, THREAD_BASIC_INFO,
+                         (thread_info_t)&info, &count);
+    if (status != KERN_SUCCESS) {
+        return errno;
+    }
+
+    mach_port_deallocate(mach_task_self(), self);
+
+    cpu->user  = tval2nsec(info.user_time);
+    cpu->sys   = tval2nsec(info.system_time);
+    cpu->total = cpu->user + cpu->sys;
+#else
     /* XXX this is not per-thread, it is for the whole-process.
      * just want to use for the shell time command at the moment.
      */
@@ -1340,6 +1363,7 @@ int sigar_thread_cpu_get(sigar_t *sigar,
     cpu->user  = TIME_NSEC(usage.ru_utime);
     cpu->sys   = TIME_NSEC(usage.ru_stime);
     cpu->total = TIME_NSEC(usage.ru_utime) + TIME_NSEC(usage.ru_stime);
+#endif
 
     return SIGAR_OK;
 }

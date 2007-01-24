@@ -1,3 +1,7 @@
+2007-01-24  Doug MacEachern  <dougm@hyperic.com>
+
+        * Add proper thread_cpu impl for OS X
+
 2007-01-23  Doug MacEachern  <dougm@hyperic.com>
 
         * Fix proc_mem.size on HP-UX
