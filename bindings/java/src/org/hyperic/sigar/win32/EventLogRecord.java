@@ -34,6 +34,20 @@ public class EventLogRecord {
     String computerName;
     String user;
     String message;
+    String logName;
+
+    EventLogRecord() {}
+
+    /**
+     * @return Event log name which generated the event
+     */
+    public String getLogName() {
+        return this.logName;
+    }
+
+    void setLogName(String logName) {
+        this.logName = logName;
+    }
 
     /* Get the record number for this event entry */
     public long getRecordNumber() {

@@ -97,7 +97,9 @@ public class EventLog extends Win32 {
     public EventLogRecord read(int recordOffset)
         throws Win32Exception {
 
-        return readlog(this.name, recordOffset);
+        EventLogRecord record = readlog(this.name, recordOffset);
+        record.setLogName(this.name);
+        return record;
     }
 
     private native EventLogRecord readlog(String name, int recordOffset)
