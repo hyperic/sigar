@@ -521,13 +521,28 @@ SIGAR_DECLARE(int) sigar_mem_get(sigar_t *sigar, sigar_mem_t *mem)
 
 SIGAR_DECLARE(int) sigar_swap_get(sigar_t *sigar, sigar_swap_t *swap)
 {
-    MEMORYSTATUS memstat;
+    DLLMOD_INIT(kernel, TRUE);
 
-    GlobalMemoryStatus(&memstat);
+    if (sigar_GlobalMemoryStatusEx) {
+        MEMORYSTATUSEX memstat;
 
-    swap->total = memstat.dwTotalPageFile;
-    swap->free  = memstat.dwAvailPageFile;
-    swap->used  = swap->total - swap->free;
+        memstat.dwLength = sizeof(memstat);
+
+        if (!sigar_GlobalMemoryStatusEx(&memstat)) {
+            return GetLastError();
+        }
+
+        swap->total = memstat.ullTotalPageFile;
+        swap->free  = memstat.ullAvailPageFile;
+    }
+    else {
+        MEMORYSTATUS memstat;
+        GlobalMemoryStatus(&memstat);
+        swap->total = memstat.dwTotalPageFile;
+        swap->free  = memstat.dwAvailPageFile;
+    }
+
+    swap->used = swap->total - swap->free;
 
     return SIGAR_OK;
 }

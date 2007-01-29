@@ -1,3 +1,7 @@
+2007-01-29  Doug MacEachern  <dougm@hyperic.com>
+
+        * [SIGAR-38] Change win32 swap_get to use GlobalMemoryStatusEx
+
 2007-01-24  Doug MacEachern  <dougm@hyperic.com>
 
         * Add proper thread_cpu impl for OS X
