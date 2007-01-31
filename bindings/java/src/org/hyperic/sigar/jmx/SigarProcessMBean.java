@@ -43,5 +43,7 @@ public interface SigarProcessMBean {
 
     public Long getTimeSys();
 
+    public Double getCpuUsage();
+
     public Long getOpenFd();
 }

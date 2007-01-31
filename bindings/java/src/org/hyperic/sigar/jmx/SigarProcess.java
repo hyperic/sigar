@@ -18,9 +18,9 @@
 
 package org.hyperic.sigar.jmx;
 
+import org.hyperic.sigar.ProcCpu;
 import org.hyperic.sigar.ProcFd;
 import org.hyperic.sigar.ProcMem;
-import org.hyperic.sigar.ProcTime;
 import org.hyperic.sigar.Sigar;
 import org.hyperic.sigar.SigarException;
 import org.hyperic.sigar.SigarProxy;
@@ -66,12 +66,12 @@ public class SigarProcess implements SigarProcessMBean {
         }
     }
 
-    private synchronized ProcTime getTime() {
+    private synchronized ProcCpu getCpu() {
         try {
             long pid = this.sigar.getPid();
-            return this.sigar.getProcTime(pid);
+            return this.sigar.getProcCpu(pid);
         } catch (SigarException e) {
-            throw unexpectedError("Time", e);
+            throw unexpectedError("Cpu", e);
         }   
     }
 
@@ -109,11 +109,15 @@ public class SigarProcess implements SigarProcessMBean {
     }
 
     public Long getTimeUser() {
-        return new Long(getTime().getUser());
+        return new Long(getCpu().getUser());
     }
 
     public Long getTimeSys() {
-        return new Long(getTime().getSys());
+        return new Long(getCpu().getSys());
+    }
+
+    public Double getCpuUsage() {
+        return new Double(getCpu().getPercent());
     }
 
     public Long getOpenFd() {
