@@ -18,9 +18,11 @@
 
 package org.hyperic.sigar;
 
+import org.hyperic.sigar.jmx.CpuTimerMBean;
+
 import java.io.PrintStream;
 
-public class CpuTimer {
+public class CpuTimer implements CpuTimerMBean {
     private Sigar sigar;
     private long totalTime;
     private long cpuTotal;
