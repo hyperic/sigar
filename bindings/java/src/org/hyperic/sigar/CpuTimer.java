@@ -32,7 +32,7 @@ public class CpuTimer {
     private long startTime;
 
     public CpuTimer() {
-        this(new Sigar());
+        this(null);
     }
 
     public CpuTimer(Sigar sigar) {
@@ -55,17 +55,25 @@ public class CpuTimer {
     }
 
     public void start() {
+        start(this.sigar);
+    }
+
+    public void start(Sigar sigar) {
         this.startTime = System.currentTimeMillis();
 
         try {
-            this.cpu.gather(this.sigar, 0);
+            this.cpu.gather(sigar, 0);
         } catch (SigarException e) {
             throw new IllegalArgumentException(e.toString());
         }
     }
 
     public void stop() {
-        ThreadCpu diff = getDiff();
+        stop(this.sigar);
+    }
+
+    public void stop(Sigar sigar) {
+        ThreadCpu diff = getDiff(sigar);
 
         this.cpuTotal += diff.total;
         this.cpuUser  += diff.user;
@@ -79,6 +87,10 @@ public class CpuTimer {
     }
 
     public ThreadCpu getDiff() {
+        return getDiff(this.sigar);
+    }
+
+    public ThreadCpu getDiff(Sigar sigar) {
         long startTotal = this.cpu.total;
         long startUser  = this.cpu.user;
         long startSys   = this.cpu.sys;
@@ -86,7 +98,7 @@ public class CpuTimer {
         ThreadCpu diff = new ThreadCpu();
 
         try {
-            this.cpu.gather(this.sigar, 0);
+            this.cpu.gather(sigar, 0);
         } catch (SigarException e) {
             throw new IllegalArgumentException(e.toString());
         }
