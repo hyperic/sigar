@@ -21,8 +21,14 @@ package org.hyperic.sigar;
 import org.hyperic.sigar.jmx.CpuTimerMBean;
 
 import java.io.PrintStream;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 public class CpuTimer implements CpuTimerMBean {
+    private static final Map timers =
+        Collections.synchronizedMap(new HashMap());
+
     private Sigar sigar;
     private long totalTime;
     private long cpuTotal;
@@ -144,6 +150,15 @@ public class CpuTimer implements CpuTimerMBean {
 
     public long getLastSampleTime() {
         return this.stopTime;
+    }
+
+    public static CpuTimer getInstance(String name) {
+        CpuTimer timer = (CpuTimer)timers.get(name);
+        if (timer == null) {
+            timer = new CpuTimer();
+            timers.put(name, timer);
+        }
+        return timer;
     }
 
     public String format(long elap) {
