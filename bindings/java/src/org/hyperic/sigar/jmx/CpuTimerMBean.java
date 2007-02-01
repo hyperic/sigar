@@ -26,5 +26,7 @@ public interface CpuTimerMBean {
 
     public long getCpuSys();
 
+    public double getCpuUsage();
+
     public long getTotalTime();
 }

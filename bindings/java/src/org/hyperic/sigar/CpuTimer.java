@@ -28,7 +28,8 @@ public class CpuTimer implements CpuTimerMBean {
     private long cpuTotal;
     private long cpuUser;
     private long cpuSys;
-    
+    private double cpuPercent;
+
     private ThreadCpu cpu = new ThreadCpu();
 
     private long startTime;
@@ -47,6 +48,7 @@ public class CpuTimer implements CpuTimerMBean {
         this.cpuTotal = 0;
         this.cpuUser  = 0;
         this.cpuSys   = 0;
+        this.cpuPercent = 0.0;
     }
 
     public void add(CpuTimer timer) {
@@ -81,11 +83,13 @@ public class CpuTimer implements CpuTimerMBean {
         this.cpuUser  += diff.user;
         this.cpuSys   += diff.sys;
 
-        long stopTime = System.currentTimeMillis();
+        long timeNow = System.currentTimeMillis();
         
-        long time = stopTime - this.startTime;
+        double timeDiff = timeNow - this.startTime;
 
-        this.totalTime += time;
+        this.totalTime += timeDiff;
+
+        this.cpuPercent = toMillis(diff.total) / timeDiff;
     }
 
     public ThreadCpu getDiff() {
@@ -116,16 +120,24 @@ public class CpuTimer implements CpuTimerMBean {
         return this.totalTime;
     }
     
+    private long toMillis(long ns) {
+        return ns / 1000000; //convert nanos to millis
+    }
+
     public long getCpuTotal() {
-        return this.cpuTotal / 1000000; //convert nanos to millis
+        return toMillis(this.cpuTotal);
     }
     
     public long getCpuUser() {
-        return this.cpuUser / 1000000; //convert nanos to millis
+        return toMillis(this.cpuUser);
     }
     
     public long getCpuSys() {
-        return this.cpuSys / 1000000; //convert nanos to millis
+        return toMillis(this.cpuSys / 1000000);
+    }
+
+    public double getCpuUsage() {
+        return this.cpuPercent;
     }
 
     public String format(long elap) {
@@ -148,5 +160,6 @@ public class CpuTimer implements CpuTimerMBean {
                     format(getTotalTime()));
         out.println("user....." + format(getCpuUser()));
         out.println("sys......" + format(getCpuSys()));
+        out.println("usage...." + CpuPerc.format(getCpuUsage()));
     }
 }

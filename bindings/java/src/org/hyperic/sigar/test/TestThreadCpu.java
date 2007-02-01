@@ -18,6 +18,7 @@
 
 package org.hyperic.sigar.test;
 
+import org.hyperic.sigar.CpuPerc;
 import org.hyperic.sigar.CpuTimer;
 import org.hyperic.sigar.Sigar;
 import org.hyperic.sigar.SigarNotImplementedException;
@@ -46,19 +47,29 @@ public class TestThreadCpu extends SigarTestCase {
         assertGtEqZeroTrace("Total", cpu.getTotal());
 
         CpuTimer timer = new CpuTimer(sigar);
+        timer.start();
 
         for (int i=0; i<1000000; i++) {
             System.getProperty("java.home");
         }
 
-        traceln("\nDiff...\n");
+        String sleepTime =
+            System.getProperty("sigar.testThreadCpu.sleep");
+        if (sleepTime != null) {
+            Thread.sleep(Integer.parseInt(sleepTime) * 1000);
+        }
+        timer.stop();
 
-        ThreadCpu diff = timer.getDiff();
+        traceln("\nUsage...\n");
 
-        assertGtEqZeroTrace("User", diff.getUser());
+        assertGtEqZeroTrace("User", timer.getCpuUser());
 
-        assertGtEqZeroTrace("Sys", diff.getSys());
+        assertGtEqZeroTrace("Sys", timer.getCpuSys());
 
-        assertGtEqZeroTrace("Total", diff.getTotal());
+        assertGtEqZeroTrace("Total", timer.getCpuTotal());
+
+        assertGtEqZeroTrace("Real Time", timer.getTotalTime());
+
+        traceln("Cpu Percent=" + CpuPerc.format(timer.getCpuUsage()));
     }
 }
