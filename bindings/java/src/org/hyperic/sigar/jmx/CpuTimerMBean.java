@@ -29,4 +29,6 @@ public interface CpuTimerMBean {
     public double getCpuUsage();
 
     public long getTotalTime();
+
+    public long getLastSampleTime();
 }

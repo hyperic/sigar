@@ -32,7 +32,7 @@ public class CpuTimer implements CpuTimerMBean {
 
     private ThreadCpu cpu = new ThreadCpu();
 
-    private long startTime;
+    private long startTime, stopTime;
 
     public CpuTimer() {
         this(null);
@@ -44,6 +44,8 @@ public class CpuTimer implements CpuTimerMBean {
     }
 
     public void clear() {
+        this.startTime = -1;
+        this.stopTime = -1;
         this.totalTime = 0;
         this.cpuTotal = 0;
         this.cpuUser  = 0;
@@ -83,9 +85,9 @@ public class CpuTimer implements CpuTimerMBean {
         this.cpuUser  += diff.user;
         this.cpuSys   += diff.sys;
 
-        long timeNow = System.currentTimeMillis();
+        this.stopTime = System.currentTimeMillis();
         
-        double timeDiff = timeNow - this.startTime;
+        double timeDiff = this.stopTime - this.startTime;
 
         this.totalTime += timeDiff;
 
@@ -138,6 +140,10 @@ public class CpuTimer implements CpuTimerMBean {
 
     public double getCpuUsage() {
         return this.cpuPercent;
+    }
+
+    public long getLastSampleTime() {
+        return this.stopTime;
     }
 
     public String format(long elap) {
