@@ -1,3 +1,8 @@
+2007-02-02  Doug MacEachern  <dougm@hyperic.net>
+
+        * [SIGAR-40] Change win32 file_system_list to ignore removable disks
+          such as floppy, usb, etc.
+        
 2007-01-29  Doug MacEachern  <dougm@hyperic.com>
 
         * [SIGAR-38] Change win32 swap_get to use GlobalMemoryStatusEx

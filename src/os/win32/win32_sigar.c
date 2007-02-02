@@ -1624,7 +1624,6 @@ int sigar_os_fs_type_get(sigar_file_system_t *fsp)
 SIGAR_DECLARE(int) sigar_file_system_list_get(sigar_t *sigar,
                                               sigar_file_system_list_t *fslist)
 {
-    sigar_file_system_t *fsp;
     char name[256];
     char *ptr = name;
     /* XXX: hmm, Find{First,Next}Volume not available in my sdk */
@@ -1637,18 +1636,40 @@ SIGAR_DECLARE(int) sigar_file_system_list_get(sigar_t *sigar,
     sigar_file_system_list_create(fslist);
 
     while (*ptr) {
+        sigar_file_system_t *fsp;
         DWORD flags, serialnum=0;
         char fsname[1024];
-        UINT type;
+        UINT drive_type = GetDriveType(ptr);
+        int type;
+
+        switch (drive_type) {
+          case DRIVE_FIXED:
+            type = SIGAR_FSTYPE_LOCAL_DISK;
+            break;
+          case DRIVE_REMOTE:
+            type = SIGAR_FSTYPE_NETWORK;
+            break;
+          case DRIVE_CDROM:
+            type = SIGAR_FSTYPE_CDROM;
+            break;
+          case DRIVE_RAMDISK:
+            type = SIGAR_FSTYPE_RAM_DISK;
+            break;
+          case DRIVE_REMOVABLE:
+            /* skip floppy, usb, etc. drives */
+            ptr += strlen(ptr)+1;
+            continue;
+          default:
+            type = SIGAR_FSTYPE_NONE;
+            break;
+        }
 
         fsname[0] = '\0';
 
         GetVolumeInformation(ptr, NULL, 0, &serialnum, NULL,
                              &flags, fsname, sizeof(fsname));
 
-        type = GetDriveType(ptr);
-
-        if (!serialnum && (type == DRIVE_FIXED)) {
+        if (!serialnum && (drive_type == DRIVE_FIXED)) {
             ptr += strlen(ptr)+1;
             continue; /* ignore unformatted partitions */
         }
@@ -1657,28 +1678,9 @@ SIGAR_DECLARE(int) sigar_file_system_list_get(sigar_t *sigar,
 
         fsp = &fslist->data[fslist->number++];
 
+        fsp->type = type;
         SIGAR_SSTRCPY(fsp->dir_name, ptr);
         SIGAR_SSTRCPY(fsp->dev_name, ptr);
-
-        switch (type) {
-          case DRIVE_FIXED:
-            fsp->type = SIGAR_FSTYPE_LOCAL_DISK;
-            break;
-          case DRIVE_REMOTE:
-            fsp->type = SIGAR_FSTYPE_NETWORK;
-            break;
-          case DRIVE_CDROM:
-            fsp->type = SIGAR_FSTYPE_CDROM;
-            break;
-          case DRIVE_RAMDISK:
-            fsp->type = SIGAR_FSTYPE_RAM_DISK;
-            break;
-          case DRIVE_REMOVABLE:
-            /* XXX */
-          default:
-            fsp->type = SIGAR_FSTYPE_NONE;
-            break;
-        }
 
         /* we set fsp->type, just looking up sigar.c:fstype_names[type] */
         sigar_fs_type_get(fsp);
