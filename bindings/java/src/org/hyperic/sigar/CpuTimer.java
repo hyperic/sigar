@@ -34,7 +34,9 @@ public class CpuTimer implements CpuTimerMBean {
     private long cpuTotal;
     private long cpuUser;
     private long cpuSys;
-    private double cpuPercent;
+    private long cpuSampleFirst;
+    private long cpuSampleLast;
+    private long cpuSampleTime;
 
     private ThreadCpu cpu = new ThreadCpu();
 
@@ -56,10 +58,23 @@ public class CpuTimer implements CpuTimerMBean {
         this.cpuTotal = 0;
         this.cpuUser  = 0;
         this.cpuSys   = 0;
-        this.cpuPercent = 0.0;
+        this.cpuSampleFirst = 0;
+        this.cpuSampleLast = 0;
+        this.cpuSampleTime = 0;
+    }
+
+    private void stamp(CpuTimer timer) {
+        if (this.cpuSampleFirst == 0) {
+            this.cpuSampleFirst = toMillis(timer.cpu.total);
+            this.cpuSampleTime = timer.startTime;
+        }
+        else {
+            this.cpuSampleLast = toMillis(timer.cpu.total);
+        }
     }
 
     public void add(CpuTimer timer) {
+        stamp(timer);
         this.cpuTotal  += timer.cpuTotal;
         this.cpuUser   += timer.cpuUser;
         this.cpuSys    += timer.cpuSys;
@@ -78,6 +93,7 @@ public class CpuTimer implements CpuTimerMBean {
         } catch (SigarException e) {
             throw new IllegalArgumentException(e.toString());
         }
+        stamp(this);
     }
 
     public void stop() {
@@ -96,8 +112,6 @@ public class CpuTimer implements CpuTimerMBean {
         double timeDiff = this.stopTime - this.startTime;
 
         this.totalTime += timeDiff;
-
-        this.cpuPercent = toMillis(diff.total) / timeDiff;
     }
 
     public ThreadCpu getDiff() {
@@ -121,6 +135,8 @@ public class CpuTimer implements CpuTimerMBean {
         diff.user  = this.cpu.user - startUser;
         diff.sys   = this.cpu.sys - startSys;
 
+        stamp(this);
+
         return diff;
     }
 
@@ -141,11 +157,32 @@ public class CpuTimer implements CpuTimerMBean {
     }
     
     public long getCpuSys() {
-        return toMillis(this.cpuSys / 1000000);
+        return toMillis(this.cpuSys);
     }
 
+    //expecting start/stop/add to be called more often than this,
+    //so we give percentage over time in between calls.
     public double getCpuUsage() {
-        return this.cpuPercent;
+        if ((this.cpuSampleFirst == 0) ||
+            (this.cpuSampleLast == 0))
+        {
+            return 0.0;
+        }
+
+        long timeNow = System.currentTimeMillis();
+        double diff = timeNow - this.cpuSampleTime;
+        if (diff == 0) {
+            return 0.0;
+        }
+
+        double usage =
+            (this.cpuSampleLast - this.cpuSampleFirst) / diff;
+
+        this.cpuSampleFirst = 0;
+        this.cpuSampleLast = 0;
+        this.cpuSampleTime = 0;
+
+        return usage;
     }
 
     public long getLastSampleTime() {
