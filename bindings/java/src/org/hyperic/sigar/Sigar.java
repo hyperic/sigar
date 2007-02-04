@@ -242,6 +242,17 @@ public class Sigar implements SigarProxy {
     public native void kill(long pid, int signum) throws SigarException;
 
     /**
+     * Send a signal to a process.
+     *
+     * @param pid The process id or query.
+     * @param signum The signal number.
+     * @exception SigarException on failure.
+     */
+    public void kill(String pid, int signum) throws SigarException {
+        kill(convertPid(pid), signum);
+    }
+
+    /**
      * Get system memory info.
      * @exception SigarException on failure.
      */
