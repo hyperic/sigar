@@ -499,7 +499,7 @@ int sigar_cpu_get(sigar_t *sigar, sigar_cpu_t *cpu)
 
 #else
     int status;
-    long cp_time[CPUSTATES];
+    unsigned long cp_time[CPUSTATES];
     size_t size = sizeof(cp_time);
 
     /* try sysctl first, does not require /dev/kmem perms */
