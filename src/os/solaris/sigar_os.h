@@ -19,6 +19,10 @@
 #ifndef SIGAR_OS_H
 #define SIGAR_OS_H
 
+#ifndef _POSIX_PTHREAD_SEMANTICS
+#define _POSIX_PTHREAD_SEMANTICS
+#endif
+
 typedef unsigned long long int u_int64_t;
 
 #include <ctype.h>
