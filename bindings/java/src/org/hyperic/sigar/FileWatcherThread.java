@@ -100,7 +100,8 @@ public class FileWatcherThread implements Runnable {
                 try {
                     watcher.check();
                 } catch (Exception e) {
-                    FileTail.error("Unexception exception", e);
+                    FileTail.error("Unexpected exception: " +
+                                   e.getMessage(), e);
                 }
             }
         }
