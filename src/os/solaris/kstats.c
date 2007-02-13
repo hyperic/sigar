@@ -62,8 +62,7 @@ int sigar_get_multi_kstats(sigar_t *sigar,
 int sigar_get_kstats(sigar_t *sigar)
 {
     kstat_ctl_t *kc = sigar->kc;
-    kstat_t *ksp;
-    unsigned int i, ncpu = sysconf(_SC_NPROCESSORS_CONF);
+    unsigned int i, id, ncpu = sysconf(_SC_NPROCESSORS_CONF);
     int is_debug = SIGAR_LOG_IS_DEBUG(sigar);
 
     if (ncpu != sigar->ncpu) {
@@ -93,35 +92,29 @@ int sigar_get_kstats(sigar_t *sigar)
 
         sigar->ncpu = ncpu;
 
-        for (i=0, ksp=kc->kc_chain; i<ncpu; ksp=ksp->ks_next) {
-            char *id;
-            kstat_t *cpu_info;
+        /* from man p_online:
+         * ``Processor numbers are integers,
+         *   greater than or equal to 0,
+         *   and are defined by the hardware platform.
+         *   Processor numbers are not necessarily contiguous,
+         *   but "not too sparse."``
+         * so we maintain our own mapping in ks.cpuid[]
+         */
 
-            if (!ksp) {
-                break;
-            }
-            if (strncmp(ksp->ks_name, "cpu_stat", 8)) {
+        /* lookup in order, which kstat chain may not be in */
+        for (i=0, id=0; i<ncpu; id++) {
+            kstat_t *cpu_info, *cpu_stat;
+
+            if (!(cpu_stat = kstat_lookup(kc, "cpu_stat", id, NULL))) {
                 continue;
             }
 
-            /* from man p_online:
-             * ``Processor numbers are integers,
-             *   greater than or equal to 0,
-             *   and are defined by the hardware platform.
-             *   Processor numbers are not necessarily contiguous,
-             *   but "not too sparse."``
-             * so we maintain our own mapping in ks.cpuid[]
-             */
-            id = ksp->ks_name;
-            while (!sigar_isdigit(*id)) {
-                id++;
-            }
-
-            sigar->ks.cpu[i] = ksp;
-            sigar->ks.cpuid[i] = atoi(id);
-            if ((cpu_info = kstat_lookup(kc, "cpu_info", sigar->ks.cpuid[i], NULL))) {
+            sigar->ks.cpu[i] = cpu_stat;
+            sigar->ks.cpuid[i] = id;
+            if ((cpu_info = kstat_lookup(kc, "cpu_info", id, NULL))) {
                 sigar->ks.cpu_info[i] = cpu_info;
             }
+
             if (is_debug) {
                 sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
                                  "cpu %d id=%d", i, sigar->ks.cpuid[i]);
