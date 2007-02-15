@@ -1327,6 +1327,10 @@ int sigar_file_system_list_get(sigar_t *sigar,
     sigar_file_system_list_create(fslist);
 
     while (getmntent(fp, &ent) == 0) {
+        if (strstr(ent.mnt_mntopts, "ignore")) {
+            continue; /* e.g. vold */
+        }
+
         SIGAR_FILE_SYSTEM_LIST_GROW(fslist);
 
         fsp = &fslist->data[fslist->number++];
