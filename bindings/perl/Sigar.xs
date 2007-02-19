@@ -35,6 +35,8 @@ typedef sigar_thread_cpu_t * Sigar__ThreadCpu;
 typedef sigar_resource_limit_t * Sigar__ResourceLimit;
 typedef sigar_net_info_t * Sigar__NetInfo;
 typedef sigar_dir_usage_t * Sigar__DirUsage;
+typedef sigar_sys_info_t * Sigar__SysInfo; 
+typedef sigar_net_stat_t * Sigar__NetStat; 
 
 /* Perl < 5.6 */
 #ifndef aTHX_

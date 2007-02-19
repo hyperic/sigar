@@ -31,6 +31,8 @@ Sigar::ThreadCpu T_PTROBJ
 Sigar::ResourceLimit T_PTROBJ
 Sigar::NetInfo T_PTROBJ
 Sigar::DirUsage T_PTROBJ
+Sigar::SysInfo T_PTROBJ
+Sigar::NetStat T_PTROBJ
 
 OUTPUT
 T_NETADDR
