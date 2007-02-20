@@ -82,10 +82,16 @@ public class SigarProxyCache
         throws SigarException {
     }
 
+    private static SigarProxyCache getHandler(Object proxy) {
+        return (SigarProxyCache)Proxy.getInvocationHandler(proxy);
+    }
+
     public static void clear(Object proxy) {
-        SigarProxyCache handler = 
-            (SigarProxyCache)Proxy.getInvocationHandler(proxy);
-        handler.cache.clear();
+        getHandler(proxy).cache.clear();
+    }
+
+    public static Sigar getSigar(Object proxy) {
+        return getHandler(proxy).sigar;
     }
 
     private String getDebugArgs(Object[] args, Object argKey) {
