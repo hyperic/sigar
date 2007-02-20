@@ -21,6 +21,7 @@
 #include "sigar_fileinfo.h"
 #include "sigar_log.h"
 #include "sigar_private.h"
+#include "sigar_ptql.h"
 #include "sigar_util.h"
 #include "sigar_os.h"
 
@@ -57,7 +58,7 @@ typedef struct {
 } jni_sigar_t;
 
 #define dSIGAR_GET \
-    jni_sigar_t *jsigar = sigar_get_pointer(env, sigar_obj); \
+    jni_sigar_t *jsigar = sigar_get_jpointer(env, sigar_obj); \
     sigar_t *sigar
 
 #define dSIGAR_VOID \
@@ -177,20 +178,22 @@ static void sigar_throw_error(JNIEnv *env, jni_sigar_t *jsigar, int err)
                    sigar_strerror(jsigar->sigar, err));
 }
 
-static jni_sigar_t *sigar_get_pointer(JNIEnv *env, jobject obj) {
+static void *sigar_get_pointer(JNIEnv *env, jobject obj) {
     jfieldID pointer_field;
-    jni_sigar_t *jsigar;
-    jclass cls;
-      
-    cls = JENV->GetObjectClass(env, obj);
+    jclass cls = JENV->GetObjectClass(env, obj);
 
 #ifdef SIGAR_POINTER_LONG
     pointer_field = JENV->GetFieldID(env, cls, "longSigarWrapper", "J");
-    jsigar = (jni_sigar_t *) JENV->GetLongField(env, obj, pointer_field);
+    return (void *)JENV->GetLongField(env, obj, pointer_field);
 #else
     pointer_field = JENV->GetFieldID(env, cls, "sigarWrapper", "I");
-    jsigar = (jni_sigar_t *) JENV->GetIntField(env, obj, pointer_field);
+    return (void *)JENV->GetIntField(env, obj, pointer_field);
 #endif
+}
+
+static jni_sigar_t *sigar_get_jpointer(JNIEnv *env, jobject obj) {
+    jni_sigar_t *jsigar =
+        (jni_sigar_t *)sigar_get_pointer(env, obj);
 
     if (!jsigar) {
         sigar_throw_exception(env, "sigar has been closed");
@@ -1067,6 +1070,58 @@ JNIEXPORT jstring SIGAR_JNIx(getFQDN)
     }
 
     return JENV->NewStringUTF(env, fqdn);
+}
+
+JNIEXPORT jboolean SIGAR_JNI(ptql_SigarProcessQuery_match)
+(JNIEnv *env, jobject obj, jobject sigar_obj, jlong pid)
+{
+    int status;
+    sigar_ptql_query_t *query =
+        (sigar_ptql_query_t *)sigar_get_pointer(env, obj);
+    dSIGAR(JNI_FALSE);
+
+    status = sigar_ptql_query_match(sigar, query, pid);
+
+    if (status == SIGAR_OK) {
+        return JNI_TRUE;
+    }
+    else {
+        return JNI_FALSE;
+    }
+}
+
+JNIEXPORT void SIGAR_JNI(ptql_SigarProcessQuery_create)
+(JNIEnv *env, jobject obj, jstring jptql)
+{
+    int status;
+    jboolean is_copy;
+    const char *ptql;
+    sigar_ptql_query_t *query;
+
+    ptql = JENV->GetStringUTFChars(env, jptql, &is_copy);
+    status = sigar_ptql_query_create(&query, (char *)ptql);
+    if (is_copy) {
+        JENV->ReleaseStringUTFChars(env, jptql, ptql);
+    }
+
+    if (status != SIGAR_OK) {
+        sigar_throw_exception(env, "Malformed query"); /*XXX*/
+    }
+    else {
+        sigar_set_pointer(env, obj, query);
+    }
+}
+
+JNIEXPORT void SIGAR_JNI(ptql_SigarProcessQuery_destroy)
+(JNIEnv *env, jobject obj)
+{
+    sigar_ptql_query_t *query =
+        (sigar_ptql_query_t *)sigar_get_pointer(env, obj);
+
+    if (query) {
+        sigar_ptql_query_destroy(query);
+        sigar_set_pointer(env, obj, 0);
+    }
 }
 
 #include "sigar_getline.h"
