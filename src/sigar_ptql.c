@@ -436,8 +436,7 @@ static int ptql_branch_list_grow(ptql_branch_list_t *branches)
     return SIGAR_OK;
 }
 
-static int ptql_branch_list_destroy(sigar_t *sigar,
-                                    ptql_branch_list_t *branches)
+static int ptql_branch_list_destroy(ptql_branch_list_t *branches)
 {
     if (branches->size) {
         int i;
@@ -1064,8 +1063,7 @@ static int ptql_branch_compare(const void *b1, const void *b2)
         branch2->lookup->type;
 }
 
-SIGAR_DECLARE(int) sigar_ptql_query_create(sigar_t *sigar,
-                                           sigar_ptql_query_t **queryp,
+SIGAR_DECLARE(int) sigar_ptql_query_create(sigar_ptql_query_t **queryp,
                                            char *ptql)
 {
     char *ptr, *ptql_copy = strdup(ptql);
@@ -1108,7 +1106,7 @@ SIGAR_DECLARE(int) sigar_ptql_query_create(sigar_t *sigar,
     free(ptql_copy);
 
     if (status != SIGAR_OK) {
-        sigar_ptql_query_destroy(sigar, query);
+        sigar_ptql_query_destroy(query);
         *queryp = NULL;
     }
     else if (query->branches.number > 1) {
@@ -1121,10 +1119,9 @@ SIGAR_DECLARE(int) sigar_ptql_query_create(sigar_t *sigar,
     return status;
 }
 
-SIGAR_DECLARE(int) sigar_ptql_query_destroy(sigar_t *sigar,
-                                            sigar_ptql_query_t *query)
+SIGAR_DECLARE(int) sigar_ptql_query_destroy(sigar_ptql_query_t *query)
 {
-    ptql_branch_list_destroy(sigar, &query->branches);
+    ptql_branch_list_destroy(&query->branches);
     free(query);
     return SIGAR_OK;
 }

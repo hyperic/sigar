@@ -21,15 +21,13 @@
 
 typedef struct sigar_ptql_query_t sigar_ptql_query_t;
 
-SIGAR_DECLARE(int) sigar_ptql_query_create(sigar_t *sigar,
-                                           sigar_ptql_query_t **query,
+SIGAR_DECLARE(int) sigar_ptql_query_create(sigar_ptql_query_t **query,
                                            char *ptql);
 
 SIGAR_DECLARE(int) sigar_ptql_query_match(sigar_t *sigar,
                                           sigar_ptql_query_t *query,
                                           sigar_pid_t pid);
 
-SIGAR_DECLARE(int) sigar_ptql_query_destroy(sigar_t *sigar,
-                                            sigar_ptql_query_t *query);
+SIGAR_DECLARE(int) sigar_ptql_query_destroy(sigar_ptql_query_t *query);
 
 #endif /*SIGAR_PTQL_H*/
