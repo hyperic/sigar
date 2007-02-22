@@ -246,6 +246,31 @@ cpu_info_list(sigar)
     OUTPUT:
     RETVAL
 
+SV * 
+cpu_list(sigar) 
+    Sigar sigar 
+
+    PREINIT: 
+    sigar_cpu_list_t cpus; 
+    int status; 
+
+    CODE: 
+    status = sigar_cpu_list_get(sigar, &cpus); 
+
+    if (status != SIGAR_OK) { 
+        SIGAR_CROAK(sigar, "cpu_list"); 
+    } 
+
+    RETVAL = convert_2svav((char *)&cpus.data[0], 
+                           cpus.number, 
+                           sizeof(*cpus.data), 
+                           "Sigar::Cpu"); 
+
+    sigar_cpu_list_destroy(sigar, &cpus); 
+
+    OUTPUT: 
+    RETVAL
+
 SV *
 proc_list(sigar)
     Sigar sigar
