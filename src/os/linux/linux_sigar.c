@@ -1123,6 +1123,11 @@ int sigar_file_system_list_get(sigar_t *sigar,
 
 #define FSDEV_ID(sb) (sb.st_ino + sb.st_dev)
 
+#define FSDEV_IS_DEV(dev) strnEQ(dev, "/dev/", 5)
+
+#define ST_MAJOR(sb) major((sb).st_rdev)
+#define ST_MINOR(sb) minor((sb).st_rdev)
+
 static void fsdev_free(void *ptr)
 {
     if (ptr != FSDEV_NONE) {
@@ -1192,8 +1197,7 @@ static char *get_fsdev(sigar_t *sigar,
                 }
 
                 ptr = fsp->dev_name;
-                if (strnEQ(ptr, "/dev/", 5)) {
-                    ptr += 5;
+                if (FSDEV_IS_DEV(ptr)) {
                     ent->value = sigar_strdup(ptr);
                     if (debug) {
                         sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
@@ -1237,6 +1241,10 @@ static int get_iostat_sys(sigar_t *sigar,
         return ENOENT;
     }
 
+    if (FSDEV_IS_DEV(name)) {
+        name += 5; /* strip "/dev/" */
+    }
+
     while (!sigar_isdigit(*fsdev)) {
         fsdev++;
     }
@@ -1271,35 +1279,41 @@ static int get_iostat_proc_dstat(sigar_t *sigar,
 {
     FILE *fp;
     char buffer[1025], dev[1025];
-    char *name, *ptr;
-    int len;
+    char *ptr;
+    struct stat sb;
 
-    name = get_fsdev(sigar, dirname, dev);
-
-    if (!name) {
+    if (!get_fsdev(sigar, dirname, dev)) {
         return ENOENT;
     }
 
-    len = strlen(name);
+    if (stat(dev, &sb) < 0) {
+        return errno;
+    }
+
+    if (SIGAR_LOG_IS_DEBUG(sigar)) {
+        sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
+                         PROC_DISKSTATS " %s -> %s [%d,%d]",
+                         dirname, dev, ST_MAJOR(sb), ST_MINOR(sb));
+    }
 
     if (!(fp = fopen(PROC_DISKSTATS, "r"))) {
         return errno;
     }
 
     while ((ptr = fgets(buffer, sizeof(buffer), fp))) {
-        /* major, minor */
-        ptr = sigar_skip_multiple_token(ptr, 2);        
-        SIGAR_SKIP_SPACE(ptr);
+        unsigned long major, minor;
 
-        if (strnEQ(ptr, name, len)) {
+        major = sigar_strtoul(ptr);
+        minor = sigar_strtoul(ptr);
+
+        if ((major == ST_MAJOR(sb)) && (minor == ST_MINOR(sb))) {
             int num, status=SIGAR_OK;
             unsigned long
                 rio, rmerge, rsect, ruse,
                 wio, wmerge, wsect, wuse,
                 running, use, aveq;
 
-            ptr += len; /* name */
-            SIGAR_SKIP_SPACE(ptr);
+            ptr = sigar_skip_token(ptr); /* name */
 
             num = sscanf(ptr,
                          "%lu %lu %lu %lu "
@@ -1355,16 +1369,22 @@ static int get_iostat_procp(sigar_t *sigar,
 {
     FILE *fp;
     char buffer[1025], dev[1025];
-    char *name, *ptr;
-    int len;
+    char *ptr;
+    struct stat sb;
 
-    name = get_fsdev(sigar, dirname, dev);
-
-    if (!name) {
+    if (!get_fsdev(sigar, dirname, dev)) {
         return ENOENT;
     }
 
-    len = strlen(name);
+    if (stat(dev, &sb) < 0) {
+        return errno;
+    }
+
+    if (SIGAR_LOG_IS_DEBUG(sigar)) {
+        sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
+                         PROC_PARTITIONS " %s -> %s [%d,%d]",
+                         dirname, dev, ST_MAJOR(sb), ST_MINOR(sb));
+    }
 
     if (!(fp = fopen(PROC_PARTITIONS, "r"))) {
         return errno;
@@ -1372,11 +1392,13 @@ static int get_iostat_procp(sigar_t *sigar,
 
     (void)fgets(buffer, sizeof(buffer), fp); /* skip header */
     while ((ptr = fgets(buffer, sizeof(buffer), fp))) {
-        /* major, minor, #blocks */
-        ptr = sigar_skip_multiple_token(ptr, 3);
-        SIGAR_SKIP_SPACE(ptr);
+        unsigned long major, minor;
 
-        if (strnEQ(ptr, name, len)) {
+        major = sigar_strtoul(ptr);
+        minor = sigar_strtoul(ptr);
+
+        if ((major == ST_MAJOR(sb)) && (minor == ST_MINOR(sb))) {
+            ptr = sigar_skip_token(ptr); /* blocks */
             ptr = sigar_skip_token(ptr); /* name */
             fsusage->disk_reads = sigar_strtoull(ptr); /* rio */
             ptr = sigar_skip_token(ptr);  /* rmerge */ 
