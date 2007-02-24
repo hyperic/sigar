@@ -21,7 +21,9 @@ package org.hyperic.sigar;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
-public class NfsFileSystem extends FileSystem {
+public class NfsFileSystem extends FileSystem implements java.io.Serializable {
+
+    private static final long serialVersionUID = 02242007L;
 
     private static final int NFS_PROGRAM = 100003;
 

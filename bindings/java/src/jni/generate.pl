@@ -28,6 +28,15 @@ sub supported_platforms {
     return join ", ", @platforms;
 }
 
+sub hash {
+    use integer;
+    my $hash = 0;
+    for (split //, shift) {
+        $hash = $hash*31 + ord $_;
+    }
+    return $hash;
+}
+
 #this script generates jni code and java classes for the following table
 
 my %classes = (
@@ -1395,6 +1404,13 @@ EOF
 
     my $cache_field_ids = 1;
 
+    my $uid = 0;
+
+    for my $field (@$fields) {
+        $field->{type} ||= 'Long';
+        $uid += hash($field->{type}) + hash($field->{name});
+    }
+
     print JFH <<EOF;
 package $package;
 
@@ -1404,7 +1420,9 @@ import java.util.Map;
 /**
  * $name sigar class.
  */
-public class $name {
+public class $name implements java.io.Serializable {
+
+    private static final long serialVersionUID = ${uid}L;
 
     public $name() { }
 
@@ -1499,7 +1517,7 @@ DESTROY(obj)
 EOF
 
     for my $field (@$fields) {
-        my $type = $field->{type} || 'Long';
+        my $type = $field->{type};
         my $name = $field->{name};
         my $member = $field->{member} || $name;
         my $desc = $field->{desc} || $name;

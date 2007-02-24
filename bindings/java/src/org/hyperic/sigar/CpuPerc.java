@@ -21,7 +21,10 @@ package org.hyperic.sigar;
 /**
  * CPU percentage usage
  */
-public class CpuPerc {
+public class CpuPerc implements java.io.Serializable {
+
+    private static final long serialVersionUID = 02242007L;
+
     private double user;
     private double sys;
     private double nice;

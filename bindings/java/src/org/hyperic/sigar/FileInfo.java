@@ -22,13 +22,15 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 
-public class FileInfo extends FileAttrs {
+public class FileInfo extends FileAttrs implements java.io.Serializable {
+
+    private static final long serialVersionUID = 02242007L;
 
     private static final SimpleDateFormat DATE_FORMAT =
         new SimpleDateFormat("MMM dd HH:mm");
 
     String name;
-    private Sigar sigar;
+    private transient Sigar sigar;
     private boolean dirStatEnabled = false;
     private DirStat stat = null;
     private boolean lstat;

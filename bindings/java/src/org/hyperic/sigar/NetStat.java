@@ -18,7 +18,9 @@
 
 package org.hyperic.sigar;
 
-public class NetStat {
+public class NetStat implements java.io.Serializable {
+
+    private static final long serialVersionUID = 02242007L;
 
     protected int[] tcpStates;
     protected int tcpInboundTotal, tcpOutboundTotal;
