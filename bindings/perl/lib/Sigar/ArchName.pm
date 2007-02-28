@@ -33,6 +33,18 @@ sub get_name {
     elsif ($os =~ /darwin/) {
         return 'universal-macosx';
     }
+    elsif ($os =~ /freebsd/) { 
+        if($arch =~ /.86/) { 
+            if($vers =~ /6\../ ) { 
+                return 'x86-freebsd-6'; 
+            }
+        } 
+        elsif( $arch =~ /amd64/) { 
+            if($vers =~ /6\../ ) { 
+                return 'amd64-freebsd-6'; 
+            } 
+        } 
+    } 
 
     die "Unsupported platform";
 }
