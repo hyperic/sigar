@@ -90,6 +90,8 @@ SIGAR_DECLARE(sigar_pid_t) sigar_pid_get(sigar_t *sigar);
 
 SIGAR_DECLARE(int) sigar_proc_kill(sigar_pid_t pid, int signum);
 
+SIGAR_DECLARE(int) sigar_signum_get(char *name);
+
 SIGAR_DECLARE(char *) sigar_strerror(sigar_t *sigar, int err);
 
 /* system memory info */

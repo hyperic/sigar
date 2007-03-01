@@ -318,6 +318,24 @@ JNIEXPORT void SIGAR_JNIx(kill)
     }
 }
 
+JNIEXPORT jint SIGAR_JNIx(getSigNum)
+(JNIEnv *env, jclass cls_obj, jstring jname)
+{
+    jboolean is_copy;
+    const char *name;
+    int num;
+
+    name = JENV->GetStringUTFChars(env, jname, &is_copy);
+
+    num = sigar_signum_get((char *)name);
+
+    if (is_copy) {
+        JENV->ReleaseStringUTFChars(env, jname, name);
+    }
+
+    return num;
+}
+
 #define SetStringField(env, obj, fieldID, val) \
     SetObjectField(env, obj, fieldID, JENV->NewStringUTF(env, val))
 

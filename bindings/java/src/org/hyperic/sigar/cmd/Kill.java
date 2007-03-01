@@ -50,18 +50,13 @@ public class Kill extends SigarCommandBase {
     }
 
     public void output(String[] args) throws SigarException {
-        int signum = 15; //SIGTERM
+        String signal = "SIGTERM";
         long[] pids;
         String query;
 
         if (args.length == 2) {
+            signal = args[0];
             query = args[1];
-            try {
-                signum = Integer.parseInt(args[0]);
-            } catch (NumberFormatException e) {
-                //XXX convert SIGFOO to number
-                throw new SigarException(e.getMessage());
-            }
         }
         else {
             query = args[0];
@@ -70,8 +65,8 @@ public class Kill extends SigarCommandBase {
         pids = this.shell.findPids(new String[] { query });
 
         for (int i=0; i<pids.length; i++) {
-            println("kill " + signum + " " + pids[i]);
-            this.sigar.kill(pids[i], signum);
+            println("kill " + signal + " " + pids[i]);
+            this.sigar.kill(pids[i], signal);
         }
     }
 

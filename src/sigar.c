@@ -16,17 +16,12 @@
  * USA.
  */
 
-
 #include <errno.h>
 
 #include "sigar.h"
 #include "sigar_private.h"
 #include "sigar_util.h"
 #include "sigar_os.h"
-
-#ifndef WIN32
-#include <signal.h>
-#endif
 
 SIGAR_DECLARE(int) sigar_open(sigar_t **sigar)
 {
@@ -66,41 +61,6 @@ SIGAR_DECLARE(sigar_pid_t) sigar_pid_get(sigar_t *sigar)
     return sigar->pid;
 }
 #endif
-
-SIGAR_DECLARE(int) sigar_proc_kill(sigar_pid_t pid, int signum)
-{
-#ifdef WIN32
-    int status = -1;
-    HANDLE proc =
-        OpenProcess(PROCESS_ALL_ACCESS,
-                    TRUE, (DWORD)pid);
-
-    if (proc) {
-        switch (signum) {
-          case 0:
-            status = SIGAR_OK;
-            break;
-          default:
-            if (TerminateProcess(proc, signum)) {
-                status = SIGAR_OK;
-            }
-            break;
-        }
-
-        CloseHandle(proc);
-
-        if (status == SIGAR_OK) {
-            return SIGAR_OK;
-        }
-    }
-    return GetLastError();
-#else
-    if (kill(pid, signum) == -1) {
-        return errno;
-    }
-    return SIGAR_OK;
-#endif
-}
 
 static char *sigar_error_string(int err)
 {

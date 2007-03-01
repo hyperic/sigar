@@ -244,6 +244,37 @@ public class Sigar implements SigarProxy {
     /**
      * Send a signal to a process.
      *
+     * @param pid The process id.
+     * @param signum The signal name.
+     * @exception SigarException on failure.
+     */
+    public void kill(long pid, String signame) throws SigarException {
+        int signum;
+
+        if (Character.isDigit(signame.charAt(0))) {
+            try {
+                signum = Integer.parseInt(signame);
+            } catch (NumberFormatException e) {
+                signum = -1;
+            }
+        }
+        else {
+            signum = getSigNum(signame);
+        }
+
+        if (signum < 0) {
+            throw new SigarException(signame +
+                                     ": invalid signal specification");
+        }
+
+        kill(pid, signum);
+    }
+
+    private static native int getSigNum(String name);
+
+    /**
+     * Send a signal to a process.
+     *
      * @param pid The process id or query.
      * @param signum The signal number.
      * @exception SigarException on failure.
