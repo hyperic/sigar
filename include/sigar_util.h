@@ -41,6 +41,9 @@
 #define sigar_isalpha(c) \
     (isalpha(((unsigned char)(c))))
 
+#define sigar_isupper(c) \
+    (isupper(((unsigned char)(c))))
+
 #ifndef PROC_FS_ROOT
 #define PROC_FS_ROOT "/proc/"
 #endif

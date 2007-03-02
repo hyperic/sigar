@@ -899,7 +899,7 @@ static int ptql_branch_parse(char *query, ptql_parse_branch_t *branch)
     if (*query) {
         char flag;
 
-        while (isupper((flag = *query))) {
+        while (sigar_isupper((flag = *query))) {
             switch (flag) {
               case 'P':
                 branch->op_flags |= PTQL_OP_FLAG_PARENT;
