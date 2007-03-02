@@ -270,7 +270,7 @@ public class Sigar implements SigarProxy {
         kill(pid, signum);
     }
 
-    private static native int getSigNum(String name);
+    public static native int getSigNum(String name);
 
     /**
      * Send a signal to a process.
