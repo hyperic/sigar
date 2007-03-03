@@ -32,13 +32,45 @@ public class TestPdh extends SigarTestCase {
     private void getValue(String key) throws Exception {
         Pdh pdh = new Pdh();
 
-        assertGtEqZeroTrace("raw..." + key,
+        traceln(key);
+        assertGtEqZeroTrace("raw",
                             (long)pdh.getRawValue(key));
-        assertGtEqZeroTrace("fmt..." + key,
+        assertGtEqZeroTrace("fmt",
                             (long)pdh.getFormattedValue(key));
     }
 
+    private String getCounterName(String index)
+        throws Exception {
+
+        String name =
+            Pdh.getCounterName(Integer.parseInt(index));
+
+        return name;
+    }
+
+    private void getValue(String object, String counter)
+        throws Exception {
+
+        object = getCounterName(object);
+        counter = getCounterName(counter);
+        getValue("\\" + object + "\\" + counter);
+    }
+
+    //XXX restore original test below when this is handled internally
     public void testGetValue() throws Exception {
+        Map counters = Pdh.getEnglishPerflibCounterMap();
+        String[][] keys = {
+            { "Memory", "Available Bytes" },
+            { "Memory", "Pages/sec" },
+        };
+        for (int i=0; i<keys.length; i++) {
+            String object = (String)counters.get(keys[i][0]);
+            String counter = (String)counters.get(keys[i][1]);
+            getValue(object, counter);
+        }
+    }
+
+    public void ORIGINAL_testGetValue() throws Exception {
         String[] keys = {
             "\\Memory\\Available Bytes",
             "\\Memory\\Pages/sec",
