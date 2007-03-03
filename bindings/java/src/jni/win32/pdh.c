@@ -401,6 +401,23 @@ JNIEXPORT jobjectArray SIGAR_JNI(win32_Pdh_pdhGetObjects)
     return array;
 }
 
+JNIEXPORT jstring SIGAR_JNI(win32_Pdh_pdhLookupPerfName)
+(JNIEnv *env, jclass cur, jint index)
+{
+    TCHAR path[8192];
+    DWORD len = sizeof(path);
+    PDH_STATUS status =
+        PdhLookupPerfNameByIndex(NULL, index, path, &len);
+
+    if (status == ERROR_SUCCESS) {
+        return JENV->NewStringUTF(env, path);
+    }
+    else {
+        win32_throw_exception(env, get_error_message(status));
+        return NULL;
+    }
+}
+
 #ifdef __cplusplus
 }
 #endif

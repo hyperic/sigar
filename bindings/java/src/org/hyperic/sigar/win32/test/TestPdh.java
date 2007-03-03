@@ -68,10 +68,14 @@ public class TestPdh extends SigarTestCase {
         };
         String last = null;
         for (int i=0; i<keys.length; i++) {
-            String index = (String)counters.get(keys[i]);
+            String name = keys[i];
+            String index = (String)counters.get(name);
             assertFalse(index.equals(last));
-            traceln(keys[i] + "=" + index);
+            traceln(name + "=" + index);
             last = index;
+            String lookupName =
+                Pdh.getCounterName(Integer.parseInt(index));
+            traceln(name + "=" + lookupName);
         }
     }
 

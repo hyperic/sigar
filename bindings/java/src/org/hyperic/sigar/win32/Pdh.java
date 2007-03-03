@@ -101,6 +101,12 @@ public class Pdh extends Win32 {
         return counters.map;
     }
 
+    public static String getCounterName(int index)
+        throws Win32Exception {
+
+        return pdhLookupPerfName(index);
+    }
+
     /**
      * @deprecated
      * @see #getRawValue(String path)
@@ -162,6 +168,8 @@ public class Pdh extends Win32 {
     private static final native String[] pdhGetKeys(String path)
         throws Win32Exception;
     private static final native String[] pdhGetObjects()
+        throws Win32Exception;
+    private static final native String pdhLookupPerfName(int index)
         throws Win32Exception;
 
     /**
