@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 
 public class Pdh extends Win32 {
 
@@ -31,7 +30,6 @@ public class Pdh extends Win32 {
 
     private long   query = -1l; // Handle to the query
     private String hostname = null;
-    private Properties names;
 
     public Pdh() throws Win32Exception {
         this.query = pdhOpenQuery();
@@ -40,11 +38,6 @@ public class Pdh extends Win32 {
     public Pdh(String hostName) throws Win32Exception {
         this();
         this.hostname = hostName;
-    }
-
-    public Pdh(Properties names) throws Win32Exception {
-        this();
-        this.names = names;
     }
 
     protected void finalize() throws Throwable {
@@ -129,9 +122,6 @@ public class Pdh extends Win32 {
 
         if (this.hostname != null) {
             pdhConnectMachine(this.hostname);
-        }
-        if (this.names != null) {
-            path = this.names.getProperty(path, path);
         }
 
         long counter = pdhAddCounter(this.query, path);
