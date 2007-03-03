@@ -19,10 +19,15 @@
 package org.hyperic.sigar.win32;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
 public class Pdh extends Win32 {
+
+    public static final String PERFLIB_KEY =
+        "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Perflib";
 
     private long   query = -1l; // Handle to the query
     private String hostname = null;
@@ -55,6 +60,52 @@ public class Pdh extends Win32 {
             pdhCloseQuery(this.query);
             this.query = -1l;
         }
+    }
+
+    private static class PerflibCounterMap extends ArrayList {
+        private Map map = new HashMap();
+        private String index = null;
+
+        //called by RegistryKey.getMultiStringValue
+        //format description see: http://support.microsoft.com/kb/q287159/
+        public boolean add(Object o) {
+            if (index == null) {
+                index = (String)o;
+                return true;
+            }
+            //name -> index
+            this.map.put(o, index);
+            index = null; //reset
+            return true;
+        }
+    }
+
+    public static Map getEnglishPerflibCounterMap()
+        throws Win32Exception {
+
+        LocaleInfo locale =
+            new LocaleInfo(LocaleInfo.LANG_ENGLISH);
+
+        return getPerflibCounterMap(locale);
+    }
+
+    public static Map getPerflibCounterMap(LocaleInfo locale)
+        throws Win32Exception {
+
+        String path =
+            PERFLIB_KEY + "\\" + locale.getPerflibLangId();
+
+        RegistryKey key =
+            RegistryKey.LocalMachine.openSubKey(path);
+
+        PerflibCounterMap counters = new PerflibCounterMap();
+        try {
+            key.getMultiStringValue("Counter", counters);
+        } finally {
+            key.close();
+        }
+
+        return counters.map;
     }
 
     /**

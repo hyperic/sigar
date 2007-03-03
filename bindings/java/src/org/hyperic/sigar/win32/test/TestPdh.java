@@ -18,6 +18,8 @@
 
 package org.hyperic.sigar.win32.test;
 
+import java.util.Map;
+
 import org.hyperic.sigar.test.SigarTestCase;
 import org.hyperic.sigar.win32.Pdh;
 
@@ -54,6 +56,23 @@ public class TestPdh extends SigarTestCase {
             traceln(bogusKey + "=" + e.getMessage());
         }
         */
+    }
+
+    public void testCounterMap() throws Exception {
+        Map counters = Pdh.getEnglishPerflibCounterMap();
+
+        assertGtZeroTrace("counters", counters.size());
+
+        String[] keys = {
+            "System", "System Up Time"
+        };
+        String last = null;
+        for (int i=0; i<keys.length; i++) {
+            String index = (String)counters.get(keys[i]);
+            assertFalse(index.equals(last));
+            traceln(keys[i] + "=" + index);
+            last = index;
+        }
     }
 
     public void testPdh() throws Exception {
