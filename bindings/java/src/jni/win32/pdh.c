@@ -17,6 +17,9 @@
  */
 
 #ifdef WIN32
+#define UNICODE
+#define _UNICODE
+
 #include <pdh.h>
 #include <pdhmsg.h>
 
@@ -71,10 +74,10 @@ JNIEXPORT void SIGAR_JNI(win32_Pdh_pdhConnectMachine)
 (JNIEnv *env, jobject cur, jstring jhost)
 {
     PDH_STATUS status;
-    LPCTSTR host = JENV->GetStringUTFChars(env, jhost, NULL);
+    LPCTSTR host = JENV->GetStringChars(env, jhost, NULL);
 
     status = PdhConnectMachine(host);
-    JENV->ReleaseStringUTFChars(env, jhost, host);
+    JENV->ReleaseStringChars(env, jhost, host);
 
     if (status != ERROR_SUCCESS) {
         win32_throw_exception(env, get_error_message(status));
@@ -116,7 +119,7 @@ JNIEXPORT jlong SIGAR_JNI(win32_Pdh_pdhAddCounter)
     HCOUNTER   h_counter;
     HQUERY     h_query = (HQUERY)query;
     PDH_STATUS status;
-    LPCTSTR    counter_path = JENV->GetStringUTFChars(env, cp, NULL);
+    LPCTSTR    counter_path = JENV->GetStringChars(env, cp, NULL);
 
     /* Add the counter that created the data in the log file. */
     status = PdhAddCounter(h_query, counter_path, 0, &h_counter);
@@ -125,13 +128,13 @@ JNIEXPORT jlong SIGAR_JNI(win32_Pdh_pdhAddCounter)
         /* if given counter does not exist,
          * try the same name w/ "/sec" appended
          */
-        char counter_sec[MAX_PATH];
-        strcpy(counter_sec, counter_path);
-        strcat(counter_sec, "/sec");
+        TCHAR counter_sec[MAX_PATH];
+        lstrcpy(counter_sec, counter_path);
+        lstrcat(counter_sec, _T("/sec"));
         status = PdhAddCounter(h_query, counter_sec, 0, &h_counter);
     }
 
-    JENV->ReleaseStringUTFChars(env, cp, counter_path);
+    JENV->ReleaseStringChars(env, cp, counter_path);
 
     if (status != ERROR_SUCCESS) {
         win32_throw_exception(env, get_error_message(status));
@@ -214,7 +217,7 @@ JNIEXPORT jobjectArray SIGAR_JNI(win32_Pdh_pdhGetInstances)
         (LPTSTR)malloc ((instance_list_size * sizeof (TCHAR)));
     LPTSTR       cur_object          = NULL;
     LPCTSTR      counter_path        = 
-        (LPCTSTR)JENV->GetStringUTFChars(env, cp, 0);
+        JENV->GetStringChars(env, cp, 0);
     jobjectArray array = NULL;
 
     status = PdhEnumObjectItems(NULL, NULL, counter_path, NULL,
@@ -237,7 +240,7 @@ JNIEXPORT jobjectArray SIGAR_JNI(win32_Pdh_pdhGetInstances)
                                       PERF_DETAIL_WIZARD, FALSE);
     }
 
-    JENV->ReleaseStringUTFChars(env, cp, counter_path);
+    JENV->ReleaseStringChars(env, cp, counter_path);
 
     // Still may get PDH_ERROR_MORE data after the first reallocation,
     // but that is OK for just browsing the instances
@@ -256,10 +259,13 @@ JNIEXPORT jobjectArray SIGAR_JNI(win32_Pdh_pdhGetInstances)
         /* Walk the return instance list, creating an array */
         for (cur_object = instance_list_buf, i = 0;
              *cur_object != 0;
-             cur_object += lstrlen(cur_object) + 1, i++) 
+             i++) 
         {
-            jstring s = JENV->NewStringUTF(env, cur_object);
+            int len = lstrlen(cur_object);
+            jstring s =
+                JENV->NewString(env, (const jchar *)cur_object, len);
             JENV->SetObjectArrayElement(env, array, i, s);
+            cur_object += len + 1;
         }
     } else {
         if (instance_list_buf != NULL) 
@@ -285,7 +291,7 @@ JNIEXPORT jobjectArray SIGAR_JNI(win32_Pdh_pdhGetKeys)
     LPTSTR      instance_list_buf   = 
         (LPTSTR)malloc (counter_list_size * sizeof(TCHAR));
     LPTSTR      cur_object          = NULL;
-    LPCTSTR     counter_path        = JENV->GetStringUTFChars(env, cp, 0);
+    LPCTSTR     counter_path        = JENV->GetStringChars(env, cp, NULL);
     jobjectArray array              = NULL;
 
     status = PdhEnumObjectItems(NULL, NULL, counter_path,
@@ -308,7 +314,7 @@ JNIEXPORT jobjectArray SIGAR_JNI(win32_Pdh_pdhGetKeys)
                                      PERF_DETAIL_WIZARD, 0);
     }
 
-    JENV->ReleaseStringUTFChars(env, cp, counter_path);
+    JENV->ReleaseStringChars(env, cp, counter_path);
 
     if (status == ERROR_SUCCESS || status == PDH_MORE_DATA) {
         int i, count;
@@ -325,10 +331,13 @@ JNIEXPORT jobjectArray SIGAR_JNI(win32_Pdh_pdhGetKeys)
         /* Walk the return instance list, creating an array */
         for (cur_object = instance_list_buf, i = 0;
              *cur_object != 0;
-             cur_object += lstrlen(cur_object) + 1, i++) 
+             i++) 
         {
-            jstring s = JENV->NewStringUTF(env, cur_object);
+            int len = lstrlen(cur_object);
+            jstring s =
+                JENV->NewString(env, (const jchar *)cur_object, len);
             JENV->SetObjectArrayElement(env, array, i, s);
+            cur_object += len + 1;
         }
     } else {
         // An error occured
@@ -389,10 +398,13 @@ JNIEXPORT jobjectArray SIGAR_JNI(win32_Pdh_pdhGetObjects)
 
     for (cur_object = list_buf, i = 0;
          *cur_object != 0;
-         cur_object += lstrlen(cur_object) + 1, i++) 
+         i++) 
     {
-        jstring s = JENV->NewStringUTF(env, cur_object);
+        int len = lstrlen(cur_object);
+        jstring s =
+            JENV->NewString(env, (const jchar *)cur_object, len);
         JENV->SetObjectArrayElement(env, array, i, s);
+        cur_object += len + 1;
     }
 
     if (list_buf != NULL)
@@ -404,13 +416,13 @@ JNIEXPORT jobjectArray SIGAR_JNI(win32_Pdh_pdhGetObjects)
 JNIEXPORT jstring SIGAR_JNI(win32_Pdh_pdhLookupPerfName)
 (JNIEnv *env, jclass cur, jint index)
 {
-    TCHAR path[8192];
+    TCHAR path[MAX_PATH];
     DWORD len = sizeof(path);
     PDH_STATUS status =
         PdhLookupPerfNameByIndex(NULL, index, path, &len);
 
     if (status == ERROR_SUCCESS) {
-        return JENV->NewStringUTF(env, path);
+        return JENV->NewString(env, (const jchar *)path, len);
     }
     else {
         win32_throw_exception(env, get_error_message(status));
