@@ -28,6 +28,7 @@ import org.hyperic.sigar.cmd.SigarCommandBase;
 import org.hyperic.sigar.cmd.Shell;
 
 import org.hyperic.sigar.win32.test.TestEventLog;
+import org.hyperic.sigar.win32.test.TestLocaleInfo;
 import org.hyperic.sigar.win32.test.TestMetaBase;
 import org.hyperic.sigar.win32.test.TestPdh;
 import org.hyperic.sigar.win32.test.TestRegistryKey;
@@ -75,6 +76,7 @@ public class SigarTestRunner extends SigarCommandBase {
 
     private static final Class[] WIN32_TESTS = {
         TestEventLog.class,
+        TestLocaleInfo.class,
         TestPdh.class,
         TestMetaBase.class,
         TestRegistryKey.class,

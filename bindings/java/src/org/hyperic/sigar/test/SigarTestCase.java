@@ -133,6 +133,12 @@ public abstract class SigarTestCase extends TestCase {
         assertTrue(msg, value.length() > 0);
     }
 
+    public void assertIndexOfTrace(String msg, String value,
+                                   String substr) {
+        assertTrueTrace(msg, value);
+        assertTrue(msg, value.indexOf(substr) != -1);
+    }
+
     public void assertGtZeroTrace(String msg, long value) {
         traceln(msg + "=" + value);
         assertTrue(msg, value > 0);

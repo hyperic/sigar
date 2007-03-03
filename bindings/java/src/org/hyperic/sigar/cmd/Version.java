@@ -26,8 +26,10 @@ import java.net.UnknownHostException;
 import org.hyperic.sigar.OperatingSystem;
 import org.hyperic.sigar.Sigar;
 import org.hyperic.sigar.SigarException;
-
 import org.hyperic.sigar.SigarLoader;
+
+import org.hyperic.sigar.win32.LocaleInfo;
+
 /**
  * Display Sigar, java and system version information.
  */
@@ -88,6 +90,13 @@ public class Version extends SigarCommandBase {
         if (!fqdn.equals(host)) {
             os.println("Hostname............" + host);
         }        
+
+        if (SigarLoader.IS_WIN32) {
+            LocaleInfo info = new LocaleInfo();
+            os.println("Language............" + info);
+            os.println("Perflib lang id....." +
+                       info.getPerflibLangId());
+        }
     }
     
     public static void printInfo(PrintStream os) {
