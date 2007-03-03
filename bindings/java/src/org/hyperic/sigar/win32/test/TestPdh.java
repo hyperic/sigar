@@ -30,7 +30,7 @@ public class TestPdh extends SigarTestCase {
     }
 
     private void getValue(String key) throws Exception {
-        Pdh pdh = new Pdh(System.getProperties());
+        Pdh pdh = new Pdh();
 
         assertGtEqZeroTrace("raw..." + key,
                             (long)pdh.getRawValue(key));
