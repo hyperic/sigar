@@ -104,7 +104,7 @@ public class Pdh extends Win32 {
     public static String getCounterName(int index)
         throws Win32Exception {
 
-        return pdhLookupPerfName(index);
+        return pdhLookupPerfName(index).trim();
     }
 
     /**
