@@ -22,10 +22,9 @@
 
 #ifdef WIN32
 #include <windows.h>
-#else
-#include <signal.h>
 #endif
 
+#include <signal.h>
 #include <errno.h>
 
 SIGAR_DECLARE(int) sigar_proc_kill(sigar_pid_t pid, int signum)
