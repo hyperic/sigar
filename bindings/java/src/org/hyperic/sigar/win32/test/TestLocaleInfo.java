@@ -35,7 +35,7 @@ public class TestLocaleInfo extends SigarTestCase {
         assertGtEqZeroTrace("sub lang", info.getSubLangId());
         assertLengthTrace("perflib id", info.getPerflibLangId());
         assertIndexOfTrace("lang",
-                           info.getLocalizedLanguageName(), match);
+                           info.toString(), match);
     }
 
     public void testInfo() throws Exception {

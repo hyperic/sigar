@@ -21,9 +21,14 @@ package org.hyperic.sigar.win32;
 public class LocaleInfo extends Win32 {
 
     /**
-     * Localized name of language
+     * English name of language
      */
-    public static final int LOCALE_SLANGUAGE = 0x00000002;
+    public static final int LOCALE_SENGLANGUAGE = 0x00001001;
+
+    /**
+     * English name of country
+     */
+    public static final int LOCALE_SENGCOUNTRY = 0x00001002;
 
     /**
      * English primary language id
@@ -91,11 +96,18 @@ public class LocaleInfo extends Win32 {
         return getAttribute(this.id, attr);
     }
 
-    public String getLocalizedLanguageName() {
-        return getAttribute(LOCALE_SLANGUAGE);
+    public String getEnglishLanguageName() {
+        return getAttribute(LOCALE_SENGLANGUAGE);
+    }
+
+    public String getEnglishCountryName() {
+        return getAttribute(LOCALE_SENGCOUNTRY);
     }
 
     public String toString() {
-        return getId() + ":" + getLocalizedLanguageName();
+        return
+            getId() + ":" +
+            getEnglishLanguageName() +
+            " (" + getEnglishCountryName() + ")";
     }
 }
