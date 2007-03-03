@@ -19,6 +19,7 @@
 package org.hyperic.sigar.win32;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Vector;
 
 public class RegistryKey extends Win32
@@ -174,6 +175,12 @@ public class RegistryKey extends Win32
 
         return strResult;
     }
+
+    public void getMultiStringValue(String name, List values)
+        throws Win32Exception
+    {
+        RegQueryMultiStringValue(this.m_hkey, name, values);
+    }
     
     public String getStringValue(String name, String defaultValue)
     {
@@ -280,6 +287,10 @@ public class RegistryKey extends Win32
 
     private static native String RegQueryStringValue(long hkey, 
                                                      String valueName);
+
+    private static native void RegQueryMultiStringValue(long hkey, 
+                                                        String valueName,
+                                                        List values);
 
     private static native int    RegSetIntValue(long hkey, 
                                                 String valueName,

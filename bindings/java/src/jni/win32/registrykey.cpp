@@ -265,6 +265,62 @@ JNIEXPORT jstring SIGAR_JNI(win32_RegistryKey_RegQueryStringValue)
     }
 }
 
+JNIEXPORT void SIGAR_JNI(win32_RegistryKey_RegQueryMultiStringValue)
+(JNIEnv *env, jclass, jlong hkey, jstring jname, jobject obj)
+{
+    LONG rc;
+    DWORD type, size;
+    LPBYTE value;
+    LPTSTR name =
+        (LPTSTR)env->GetStringChars(jname, NULL);
+    jclass cls =
+        env->GetObjectClass(obj);
+    jmethodID id =
+        env->GetMethodID(cls, "add",
+                         "(Ljava/lang/Object;)"
+                         "Z");
+
+    rc = RegQueryValueEx((HKEY)hkey, 
+                         name, NULL, 
+                         &type, NULL, &size);
+
+    if (type != REG_MULTI_SZ) {
+        rc = ERROR_SUCCESS - 1;
+    }
+
+    if (rc == ERROR_SUCCESS) {
+        value =
+            (LPBYTE)HeapAlloc(GetProcessHeap(), 
+                              HEAP_ZERO_MEMORY, size);
+
+        if (RegQueryValueEx((HKEY)hkey, name, NULL, NULL, 
+                            value, &size) == ERROR_SUCCESS)
+        {
+            PTSTR ptr = (PTSTR)value;
+
+            while (*ptr) {
+                int len = _tcslen(ptr);
+                jstring jval =
+                    env->NewString((const jchar *)ptr, len);
+
+                env->CallBooleanMethod(obj, id, jval);
+
+                ptr += len + 1;
+            }
+        }
+
+        HeapFree(GetProcessHeap(), 0, value);
+    }
+
+    env->ReleaseStringChars(jname, (const jchar *)name);
+    
+    if (rc != ERROR_SUCCESS) {
+        jclass cls =
+            env->FindClass(WIN32_PACKAGE "Win32Exception");
+        env->ThrowNew(cls, "");
+    }
+}
+
 JNIEXPORT jint SIGAR_JNI(win32_RegistryKey_RegSetIntValue)
 (JNIEnv * env, jclass, jlong hkey, jstring valueName, jint value)
 {
