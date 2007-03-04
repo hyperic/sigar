@@ -253,6 +253,8 @@ public class Pdh extends Win32 {
         throws Win32Exception;
     private static final native String pdhLookupPerfName(int index)
         throws Win32Exception;
+    private static final native int pdhLookupPerfIndex(String name)
+        throws Win32Exception;
 
     /**
      * Main method for dumping the entire PDH
