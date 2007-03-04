@@ -69,8 +69,25 @@ public class LocaleInfo extends Win32 {
         this.id = id;
     }
 
+    private static int getPrimaryLangId(int id) {
+        return id & 0x3ff;
+    }
+
     public int getPrimaryLangId() {
-        return this.id & 0x3ff;
+        return getPrimaryLangId(this.id);
+    }
+
+    private static int getSubLangId(int id) {
+        return id >> 10;
+    }
+
+    public int getSubLangId() {
+        return getSubLangId(this.id);
+    }
+
+    public static boolean isEnglish() {
+        int id = getSystemDefaultLCID();
+        return getPrimaryLangId(id) == LANG_ENGLISH;
     }
 
     public String getPerflibLangId() {
@@ -86,10 +103,6 @@ public class LocaleInfo extends Win32 {
         fid.append(id);
 
         return fid.toString();
-    }
-
-    public int getSubLangId() {
-        return this.id >> 10;
     }
 
     public String getAttribute(int attr) {
