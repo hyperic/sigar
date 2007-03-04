@@ -39,44 +39,26 @@ public class TestPdh extends SigarTestCase {
                             (long)pdh.getFormattedValue(key));
     }
 
-    private String getCounterName(String index)
-        throws Exception {
-
-        String name =
-            Pdh.getCounterName(Integer.parseInt(index));
-
-        return name;
-    }
-
-    private void getValue(String object, String counter)
-        throws Exception {
-
-        object = getCounterName(object);
-        counter = getCounterName(counter);
-        getValue("\\" + object + "\\" + counter);
-    }
-
-    //XXX restore original test below when this is handled internally
     public void testGetValue() throws Exception {
-        Map counters = Pdh.getEnglishPerflibCounterMap();
+        Pdh.enableTranslation();
+        final String DL = "\\";
         String[][] keys = {
+            { "System", "System Up Time" },
             { "Memory", "Available Bytes" },
             { "Memory", "Pages/sec" },
+            { "Processor(_Total)", "% User Time" },
         };
-        for (int i=0; i<keys.length; i++) {
-            String object = (String)counters.get(keys[i][0]);
-            String counter = (String)counters.get(keys[i][1]);
-            getValue(object, counter);
-        }
-    }
 
-    public void ORIGINAL_testGetValue() throws Exception {
-        String[] keys = {
-            "\\Memory\\Available Bytes",
-            "\\Memory\\Pages/sec",
-        };
         for (int i=0; i<keys.length; i++) {
-            getValue(keys[i]);
+            String path =
+                DL + keys[i][0] + DL + keys[i][1];
+
+            String trans = Pdh.translate(path);
+            if (!trans.equals(path)) {
+                traceln(path + "-->" + trans);
+            }
+
+            getValue(path);
         }
         /* XXX hangs for a while on my XP box
         String bogusKey = "\\Does Not\\Exist";

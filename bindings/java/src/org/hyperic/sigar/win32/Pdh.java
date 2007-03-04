@@ -22,6 +22,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.StringTokenizer;
+
+import org.hyperic.sigar.SigarLoader;
 
 public class Pdh extends Win32 {
 
@@ -30,6 +33,21 @@ public class Pdh extends Win32 {
 
     private long   query = -1l; // Handle to the query
     private String hostname = null;
+    private static Map counters = null;
+
+    static {
+        final String prop = "sigar.pdh.enableTranslation";
+        if (SigarLoader.IS_WIN32 &&
+            "true".equals(System.getProperty(prop)))
+        {
+            try {
+                enableTranslation();
+            } catch (Exception e) {
+                System.err.println(prop + ": " +
+                                   e.getMessage());
+            }
+        }
+    }
 
     public Pdh() throws Win32Exception {
         this.query = pdhOpenQuery();
@@ -53,6 +71,18 @@ public class Pdh extends Win32 {
             pdhCloseQuery(this.query);
             this.query = -1l;
         }
+    }
+
+    public static void enableTranslation() throws Win32Exception {
+        if (counters != null) {
+            return;
+        }
+        
+        if (LocaleInfo.isEnglish()) {
+            return;
+        }
+
+        counters = getEnglishPerflibCounterMap();
     }
 
     private static class PerflibCounterMap extends ArrayList {
@@ -123,6 +153,57 @@ public class Pdh extends Win32 {
         return getValue(path, true);
     }
 
+    private static final String DELIM = "\\";
+
+    private static String getCounterName(String englishName)
+        throws Win32Exception {
+
+        String index = (String)counters.get(englishName);
+        if (index == null) {
+            return englishName;
+        }
+        int ix = Integer.parseInt(index);
+        String name = getCounterName(ix);
+        return name;
+    }
+
+    public static String translate(String path)
+        throws Win32Exception {
+
+        if (counters == null) {
+            return path;
+        }
+
+        StringBuffer trans = new StringBuffer();
+        StringTokenizer tok =
+            new StringTokenizer(path, DELIM);
+
+        int num = tok.countTokens();
+
+        if (num == 3) {
+            String hostname = tok.nextToken();
+            trans.append(DELIM).append(DELIM).append(hostname);
+        }
+
+        String object = tok.nextToken();
+        String instance = null;
+        int ix = object.indexOf('(');
+        if (ix != -1) {
+            instance = object.substring(ix);
+            object = object.substring(0, ix);
+        }
+
+        trans.append(DELIM).append(getCounterName(object));
+        if (instance != null) {
+            trans.append(instance);
+        }
+
+        String counter = tok.nextToken();
+        trans.append(DELIM).append(getCounterName(counter));
+
+        return trans.toString();
+    }
+
     private double getValue(String path, boolean format)
         throws Win32Exception {
 
@@ -130,7 +211,8 @@ public class Pdh extends Win32 {
             pdhConnectMachine(this.hostname);
         }
 
-        long counter = pdhAddCounter(this.query, path);
+        long counter =
+            pdhAddCounter(this.query, translate(path));
         try {
             return pdhGetValue(this.query, counter, format);
         } finally {
