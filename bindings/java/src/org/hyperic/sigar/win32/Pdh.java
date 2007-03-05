@@ -40,7 +40,7 @@ public class Pdh extends Win32 {
     static {
         final String prop = "sigar.pdh.enableTranslation";
         if (SigarLoader.IS_WIN32 &&
-            "true".equals(System.getProperty(prop)))
+            !"false".equals(System.getProperty(prop)))
         {
             try {
                 enableTranslation();
