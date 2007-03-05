@@ -28,7 +28,37 @@ import org.hyperic.sigar.SigarLoader;
 
 public class Pdh extends Win32 {
 
-    public static final long SUCCESS = 0;
+    //PDH_CSTATUS_* from pdhmsg.h
+
+    /**
+     * The returned data is valid.
+     */
+    public static final long CSTATUS_VALID_DATA = 0x00000000L;
+
+    /**
+     * The specified instance is not present.
+     */
+    public static final long CSTATUS_NO_INSTANCE = 0x800007D1L;
+
+    /**
+     * The specified counter could not be found.
+     */
+    public static final long CSTATUS_NO_COUNTER = 0xC0000BB9L;
+
+    /**
+     * The specified object is not found on the system.
+     */
+    public static final long CSTATUS_NO_OBJECT = 0xC0000BB8L;
+
+    /**
+     * Unable to connect to specified machine or machine is off line.
+     */
+    public static final long CSTATUS_NO_MACHINE = 0x800007D0L;
+
+    /**
+     * Unable to parse the counter path.
+     */
+    public static final long CSTATUS_BAD_COUNTERNAME = 0xC0000BC0L;
 
     public static final String PERFLIB_KEY =
         "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Perflib";
@@ -231,7 +261,7 @@ public class Pdh extends Win32 {
                 for (int i=0; i<cix.length; i++) {
                     String name =
                         getCounterName(cix[i]);
-                    if (validate(trans + name) == SUCCESS) {
+                    if (validate(trans + name) == CSTATUS_VALID_DATA) {
                         counter = name;
                         break;
                     }
