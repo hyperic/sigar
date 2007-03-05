@@ -94,6 +94,7 @@ public class Pdh extends Win32 {
         //called by RegistryKey.getMultiStringValue
         //format description see: http://support.microsoft.com/kb/q287159/
         public boolean add(Object o) {
+            o = ((String)o).trim().toLowerCase();
             if (index == null) {
                 index = (String)o;
                 return true;
@@ -147,7 +148,9 @@ public class Pdh extends Win32 {
     public static String getCounterName(int index)
         throws Win32Exception {
 
-        return pdhLookupPerfName(index).trim();
+        String name = pdhLookupPerfName(index).trim();
+
+        return name;
     }
 
     /**
@@ -168,10 +171,14 @@ public class Pdh extends Win32 {
 
     private static final String DELIM = "\\";
 
+    private static int[] getCounterIndex(String englishName) {
+        return (int[])counters.get(englishName.toLowerCase());
+    }
+
     private static String getCounterName(String englishName)
         throws Win32Exception {
 
-        int[] ix = (int[])counters.get(englishName);
+        int[] ix = getCounterIndex(englishName);
         if (ix == null) {
             return englishName;
         }
@@ -214,7 +221,7 @@ public class Pdh extends Win32 {
         String counter = tok.nextToken();
         trans.append(DELIM);
 
-        int[] cix = (int[])counters.get(counter);
+        int[] cix = getCounterIndex(counter);
         if (cix != null) {
             if (cix.length == 1) {
                 counter = getCounterName(cix[0]);
