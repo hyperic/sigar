@@ -70,6 +70,21 @@ static char *get_error_message(PDH_STATUS status) {
     }
 }
 
+JNIEXPORT jlong SIGAR_JNI(win32_Pdh_validate)
+(JNIEnv *env, jclass cur, jstring jpath)
+{
+    PDH_STATUS status;
+    jboolean is_copy;
+    LPCTSTR path = JENV->GetStringChars(env, jpath, &is_copy);
+
+    status = PdhValidatePath(path);
+    if (is_copy) {
+        JENV->ReleaseStringChars(env, jpath, path);
+    }
+
+    return status;
+}
+
 JNIEXPORT void SIGAR_JNI(win32_Pdh_pdhConnectMachine)
 (JNIEnv *env, jobject cur, jstring jhost)
 {

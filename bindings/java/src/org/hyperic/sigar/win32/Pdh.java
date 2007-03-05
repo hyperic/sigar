@@ -243,6 +243,8 @@ public class Pdh extends Win32 {
         return pdhGetObjects();
     }
 
+    public static final native long validate(String path);
+
     private static final native void pdhConnectMachine(String host)
         throws Win32Exception;
     private static final native long pdhOpenQuery() throws Win32Exception;

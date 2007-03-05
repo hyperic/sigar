@@ -58,19 +58,12 @@ public class TestPdh extends SigarTestCase {
             if (!trans.equals(path)) {
                 traceln(path + "-->" + trans);
             }
-
+            traceln(path + " validate: " + Pdh.validate(path));
             getValue(path);
         }
-        /* XXX hangs for a while on my XP box
+
         String bogusKey = "\\Does Not\\Exist";
-        try {
-            new Pdh().getRawValue(bogusKey);
-            assertTrue(false);
-        } catch (Win32Exception e) {
-            assertTrue(true);
-            traceln(bogusKey + "=" + e.getMessage());
-        }
-        */
+        assertTrue(Pdh.validate(bogusKey) != 0);
     }
 
     public void testCounterMap() throws Exception {
