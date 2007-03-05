@@ -33,32 +33,32 @@ public class Pdh extends Win32 {
     /**
      * The returned data is valid.
      */
-    public static final long CSTATUS_VALID_DATA = 0x00000000L;
+    public static final int CSTATUS_VALID_DATA = 0x00000000;
 
     /**
      * The specified instance is not present.
      */
-    public static final long CSTATUS_NO_INSTANCE = 0x800007D1L;
+    public static final int CSTATUS_NO_INSTANCE = 0x800007D1;
 
     /**
      * The specified counter could not be found.
      */
-    public static final long CSTATUS_NO_COUNTER = 0xC0000BB9L;
+    public static final int CSTATUS_NO_COUNTER = 0xC0000BB9;
 
     /**
      * The specified object is not found on the system.
      */
-    public static final long CSTATUS_NO_OBJECT = 0xC0000BB8L;
+    public static final int CSTATUS_NO_OBJECT = 0xC0000BB8;
 
     /**
      * Unable to connect to specified machine or machine is off line.
      */
-    public static final long CSTATUS_NO_MACHINE = 0x800007D0L;
+    public static final int CSTATUS_NO_MACHINE = 0x800007D0;
 
     /**
      * Unable to parse the counter path.
      */
-    public static final long CSTATUS_BAD_COUNTERNAME = 0xC0000BC0L;
+    public static final int CSTATUS_BAD_COUNTERNAME = 0xC0000BC0;
 
     public static final String PERFLIB_KEY =
         "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Perflib";
@@ -302,7 +302,7 @@ public class Pdh extends Win32 {
         return pdhGetObjects();
     }
 
-    public static final native long validate(String path);
+    public static final native int validate(String path);
 
     private static final native void pdhConnectMachine(String host)
         throws Win32Exception;

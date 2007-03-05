@@ -70,7 +70,7 @@ static char *get_error_message(PDH_STATUS status) {
     }
 }
 
-JNIEXPORT jlong SIGAR_JNI(win32_Pdh_validate)
+JNIEXPORT jint SIGAR_JNI(win32_Pdh_validate)
 (JNIEnv *env, jclass cur, jstring jpath)
 {
     PDH_STATUS status;
