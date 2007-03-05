@@ -96,8 +96,19 @@ public class Pdh extends Win32 {
                 index = (String)o;
                 return true;
             }
+            int[] ix =
+                (int[])this.map.get(o);
+            if (ix == null) {
+                ix = new int[1];
+            }
+            else {
+                int[] cur = ix;
+                ix = new int[cur.length + 1];
+                System.arraycopy(cur, 0, ix, 1, cur.length);
+            }
+            ix[0] = Integer.parseInt(index);
             //name -> index
-            this.map.put(o, index);
+            this.map.put(o, ix);
             index = null; //reset
             return true;
         }
@@ -158,12 +169,12 @@ public class Pdh extends Win32 {
     private static String getCounterName(String englishName)
         throws Win32Exception {
 
-        String index = (String)counters.get(englishName);
-        if (index == null) {
+        int[] ix = (int[])counters.get(englishName);
+        if (ix == null) {
             return englishName;
         }
-        int ix = Integer.parseInt(index);
-        String name = getCounterName(ix);
+
+        String name = getCounterName(ix[0]);
         return name;
     }
 

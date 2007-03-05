@@ -18,6 +18,7 @@
 
 package org.hyperic.sigar.win32.test;
 
+import java.util.Iterator;
 import java.util.Map;
 
 import org.hyperic.sigar.test.SigarTestCase;
@@ -76,19 +77,30 @@ public class TestPdh extends SigarTestCase {
         Map counters = Pdh.getEnglishPerflibCounterMap();
 
         assertGtZeroTrace("counters", counters.size());
+        int dups = 0;
+        for (Iterator it=counters.entrySet().iterator(); it.hasNext();) {
+            Map.Entry entry = (Map.Entry)it.next();
+            String name = (String)entry.getKey();
+            int[] ix = (int[])entry.getValue();
+            if (ix.length > 1) {
+                dups++;
+                //traceln(name + " has dups: " + ix.length);
+            }
+        }
+        traceln(dups + " names have dups");
 
         String[] keys = {
             "System", "System Up Time"
         };
-        String last = null;
+        int last = -1;
         for (int i=0; i<keys.length; i++) {
             String name = keys[i];
-            String index = (String)counters.get(name);
-            assertFalse(index.equals(last));
-            traceln(name + "=" + index);
-            last = index;
+            int[] ix = (int[])counters.get(name);
+            assertFalse(ix[0] == last);
+            traceln(name + "=" + ix[0]);
+            last = ix[0];
             String lookupName =
-                Pdh.getCounterName(Integer.parseInt(index));
+                Pdh.getCounterName(ix[0]);
             traceln(name + "=" + lookupName);
         }
     }
