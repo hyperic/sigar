@@ -28,6 +28,8 @@ import org.hyperic.sigar.SigarLoader;
 
 public class Pdh extends Win32 {
 
+    public static final long SUCCESS = 0;
+
     public static final String PERFLIB_KEY =
         "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Perflib";
 
@@ -210,7 +212,27 @@ public class Pdh extends Win32 {
         }
 
         String counter = tok.nextToken();
-        trans.append(DELIM).append(getCounterName(counter));
+        trans.append(DELIM);
+
+        int[] cix = (int[])counters.get(counter);
+        if (cix != null) {
+            if (cix.length == 1) {
+                counter = getCounterName(cix[0]);
+            }
+            else {
+                //handle duplicate counter names
+                for (int i=0; i<cix.length; i++) {
+                    String name =
+                        getCounterName(cix[i]);
+                    if (validate(trans + name) == SUCCESS) {
+                        counter = name;
+                        break;
+                    }
+                }
+            }
+        }
+
+        trans.append(counter);
 
         return trans.toString();
     }
