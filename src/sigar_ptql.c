@@ -1007,18 +1007,19 @@ static int ptql_branch_add(ptql_parse_branch_t *parsed,
     }
     else if (branch->op_name == PTQL_OP_RE) {
 #ifdef SIGAR_HAS_PCRE
-    const char *error;
-    int offset;
-    pcre *re =
-        pcre_compile(parsed->value, 0, &error, &offset, NULL);
-    if (!re) {
-        return SIGAR_PTQL_MALFORMED_QUERY;
-    }
-    is_set = 1;
-    branch->value.ptr = re;
-    branch->value_free = pcre_free;
+        const char *error;
+        int offset;
+        pcre *re =
+            pcre_compile(parsed->value, 0,
+                         &error, &offset, NULL);
+        if (!re) {
+            return SIGAR_PTQL_MALFORMED_QUERY;
+        }
+        is_set = 1;
+        branch->value.ptr = re;
+        branch->value_free = pcre_free;
 #else
-    return SIGAR_PTQL_MALFORMED_QUERY;
+        return SIGAR_PTQL_MALFORMED_QUERY;
 #endif
     }
 
