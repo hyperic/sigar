@@ -61,9 +61,6 @@ public class TestPdh extends SigarTestCase {
             traceln(path + " validate: " + Pdh.validate(path));
             getValue(path);
         }
-
-        String bogusKey = "\\Does Not\\Exist";
-        assertTrue(Pdh.validate(bogusKey) != 0);
     }
 
     public void testCounterMap() throws Exception {
@@ -88,13 +85,42 @@ public class TestPdh extends SigarTestCase {
         int last = -1;
         for (int i=0; i<keys.length; i++) {
             String name = keys[i];
-            int[] ix = (int[])counters.get(name);
+            int[] ix =
+                (int[])counters.get(name.toLowerCase());
             assertFalse(ix[0] == last);
             traceln(name + "=" + ix[0]);
             last = ix[0];
             String lookupName =
                 Pdh.getCounterName(ix[0]);
             traceln(name + "=" + lookupName);
+        }
+    }
+
+    public void testValidate() {
+        Object[][] tests = {
+            { "\\Does Not\\Exist", new Integer(Pdh.NO_OBJECT) },
+            { "Does Not Exist", new Integer(Pdh.BAD_COUNTERNAME) },
+            { "\\System\\DoesNotExist", new Integer(Pdh.NO_COUNTER) },
+            { "\\Processor(666)\\% User Time", new Integer(Pdh.NO_INSTANCE) },
+            { "\\System\\Threads", new Integer(Pdh.VALID_DATA) },
+            //slow
+            //{ "\\\\-\\System\\Threads", new Integer(Pdh.NO_MACHINE) },
+        };
+
+        for (int i=0; i<tests.length; i++) {
+            String path = (String)tests[i][0];
+            int expect = ((Integer)tests[i][1]).intValue();
+            int status = Pdh.validate(path);
+            boolean expectedResult = (status == expect);
+
+            if (!expectedResult) {
+                traceln("[validate] " + path + "-->" +
+                        Integer.toHexString(status).toUpperCase() +
+                        " != " +
+                        Integer.toHexString(expect).toUpperCase());
+            }
+
+            assertTrue(expectedResult);
         }
     }
 
