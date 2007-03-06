@@ -33,32 +33,32 @@ public class Pdh extends Win32 {
     /**
      * The returned data is valid.
      */
-    public static final int CSTATUS_VALID_DATA = 0x00000000;
+    public static final int VALID_DATA = 0x00000000;
 
     /**
      * The specified instance is not present.
      */
-    public static final int CSTATUS_NO_INSTANCE = 0x800007D1;
+    public static final int NO_INSTANCE = 0x800007D1;
 
     /**
      * The specified counter could not be found.
      */
-    public static final int CSTATUS_NO_COUNTER = 0xC0000BB9;
+    public static final int NO_COUNTER = 0xC0000BB9;
 
     /**
      * The specified object is not found on the system.
      */
-    public static final int CSTATUS_NO_OBJECT = 0xC0000BB8;
+    public static final int NO_OBJECT = 0xC0000BB8;
 
     /**
      * Unable to connect to specified machine or machine is off line.
      */
-    public static final int CSTATUS_NO_MACHINE = 0x800007D0;
+    public static final int NO_MACHINE = 0x800007D0;
 
     /**
      * Unable to parse the counter path.
      */
-    public static final int CSTATUS_BAD_COUNTERNAME = 0xC0000BC0;
+    public static final int BAD_COUNTERNAME = 0xC0000BC0;
 
     public static final String PERFLIB_KEY =
         "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Perflib";
@@ -261,7 +261,7 @@ public class Pdh extends Win32 {
                 for (int i=0; i<cix.length; i++) {
                     String name =
                         getCounterName(cix[i]);
-                    if (validate(trans + name) == CSTATUS_VALID_DATA) {
+                    if (validate(trans + name) == VALID_DATA) {
                         counter = name;
                         break;
                     }
