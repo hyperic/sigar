@@ -98,6 +98,11 @@ int sigar_proc_exe_peb_get(sigar_t *sigar, HANDLE proc,
 
     PEB_NEXT(scratch); //skip PATH
 
+    /* XXX seen on non-english windows, random leading char */
+    if (*(scratch + sizeof(WCHAR)) != L':') {
+        scratch += sizeof(WCHAR);
+    }
+
     wcsncpy(buf, (LPWSTR)scratch, MAX_PATH);
     buf[MAX_PATH-1] = L'\0';
 
