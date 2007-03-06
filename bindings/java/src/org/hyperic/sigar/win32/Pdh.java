@@ -124,13 +124,12 @@ public class Pdh extends Win32 {
         //called by RegistryKey.getMultiStringValue
         //format description see: http://support.microsoft.com/kb/q287159/
         public boolean add(Object o) {
-            o = ((String)o).trim().toLowerCase();
             if (index == null) {
                 index = (String)o;
                 return true;
             }
-            int[] ix =
-                (int[])this.map.get(o);
+            String name = ((String)o).trim().toLowerCase();
+            int[] ix = (int[])this.map.get(name);
             if (ix == null) {
                 ix = new int[1];
             }
@@ -141,7 +140,7 @@ public class Pdh extends Win32 {
             }
             ix[0] = Integer.parseInt(index);
             //name -> index
-            this.map.put(o, ix);
+            this.map.put(name, ix);
             index = null; //reset
             return true;
         }
