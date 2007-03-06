@@ -201,6 +201,9 @@ public class Pdh extends Win32 {
     private static final String DELIM = "\\";
 
     private static int[] getCounterIndex(String englishName) {
+        if (counters == null) {
+            return null;
+        }
         return (int[])counters.get(englishName.toLowerCase());
     }
 
@@ -290,11 +293,11 @@ public class Pdh extends Win32 {
     }
 
     public static String[] getInstances(String path) throws Win32Exception {
-        return pdhGetInstances(path);
+        return pdhGetInstances(getCounterName(path));
     }
 
     public static String[] getKeys(String path) throws Win32Exception {
-        return pdhGetKeys(path);
+        return pdhGetKeys(getCounterName(path));
     }
 
     public static String[] getObjects() throws Win32Exception {
