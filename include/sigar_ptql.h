@@ -21,6 +21,11 @@
 
 typedef struct sigar_ptql_query_t sigar_ptql_query_t;
 
+typedef int (*sigar_ptql_re_impl_t)(void *, char *, char *);
+
+SIGAR_DECLARE(void) sigar_ptql_re_impl_set(sigar_t *sigar, void *data,
+                                           sigar_ptql_re_impl_t impl);
+
 SIGAR_DECLARE(int) sigar_ptql_query_create(sigar_ptql_query_t **query,
                                            char *ptql);
 

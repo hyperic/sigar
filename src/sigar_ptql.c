@@ -20,6 +20,7 @@
 #include "sigar_private.h"
 #include "sigar_util.h"
 #include "sigar_ptql.h"
+#include "sigar_os.h"
 
 #ifdef SIGAR_HAS_PCRE
 #include "pcre.h"
@@ -1019,7 +1020,8 @@ static int ptql_branch_add(ptql_parse_branch_t *parsed,
         branch->value.ptr = re;
         branch->value_free = pcre_free;
 #else
-        return SIGAR_PTQL_MALFORMED_QUERY;
+        branch->value.ptr = NULL;
+        branch->value_free = NULL;
 #endif
     }
 
@@ -1127,6 +1129,13 @@ SIGAR_DECLARE(int) sigar_ptql_query_destroy(sigar_ptql_query_t *query)
     return SIGAR_OK;
 }
 
+SIGAR_DECLARE(void) sigar_ptql_re_impl_set(sigar_t *sigar, void *data,
+                                           sigar_ptql_re_impl_t impl)
+{
+    sigar->ptql_re_data = data;
+    sigar->ptql_re_impl = impl;
+}
+
 SIGAR_DECLARE(int) sigar_ptql_query_match(sigar_t *sigar,
                                           sigar_ptql_query_t *query,
                                           sigar_pid_t query_pid)
@@ -1175,7 +1184,24 @@ SIGAR_DECLARE(int) sigar_ptql_query_match(sigar_t *sigar,
                 matched = ptql_branch_match_ref(branch, ref);
             }
             else {
+#ifdef SIGAR_HAS_PCRE
                 matched = ptql_branch_match(branch);
+#else
+                if (branch->op_name == PTQL_OP_RE) {
+                    if (sigar->ptql_re_impl) {
+                        matched =
+                            sigar->ptql_re_impl(sigar->ptql_re_data,
+                                                (char *)DATA_PTR(branch),
+                                                branch->value.str);
+                    }
+                    else {
+                        matched = 0;
+                    }
+                }
+                else {
+                    matched = ptql_branch_match(branch);
+                }
+#endif
             }
         }
 

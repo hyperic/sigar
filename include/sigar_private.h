@@ -24,6 +24,7 @@
 #endif
 
 #include "sigar_log.h"
+#include "sigar_ptql.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -54,6 +55,8 @@
    int log_level; \
    void *log_data; \
    sigar_log_impl_t log_impl; \
+   void *ptql_re_data; \
+   sigar_ptql_re_impl_t ptql_re_impl; \
    unsigned int ncpu; \
    unsigned long version; \
    unsigned long boot_time; \
