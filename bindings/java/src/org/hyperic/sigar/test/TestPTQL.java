@@ -102,8 +102,14 @@ public class TestPTQL extends SigarTestCase {
                QueryLoadException,
                SigarException {
 
-        ProcessQuery query =
-            ProcessQueryFactory.getInstance(qs);
+        ProcessQuery query;
+        try {
+            query =
+                ProcessQueryFactory.getInstance(qs);
+        } catch (MalformedQueryException e) {
+            traceln("parse error: " + qs);
+            throw e;
+        }
 
         ProcessFinder finder = new ProcessFinder(proxy);
 

@@ -44,4 +44,14 @@ public class SigarProcessQuery implements ProcessQuery {
 
         return match(SigarProxyCache.getSigar(sigar), pid);
     }
+
+    static boolean re(String haystack, String needle) {
+        if (haystack == null) {
+            return false;
+        }
+        if (needle == null) {
+            return false;
+        }
+        return StringPattern.matches(haystack, needle);
+    }
 }

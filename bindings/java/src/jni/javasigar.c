@@ -1090,15 +1090,54 @@ JNIEXPORT jstring SIGAR_JNIx(getFQDN)
     return JENV->NewStringUTF(env, fqdn);
 }
 
+typedef struct {
+    JNIEnv *env;
+    jobject obj;
+    jclass cls;
+    jmethodID id;    
+} jni_ptql_re_data_t;
+
+static int jsigar_ptql_re_impl(void *data,
+                               char *haystack, char *needle)
+{
+    jni_ptql_re_data_t *re = (jni_ptql_re_data_t *)data;
+    JNIEnv *env = re->env;
+
+    if (!re->cls) {
+        re->cls = JENV->GetObjectClass(env, re->obj);
+        re->id =
+            JENV->GetStaticMethodID(env, re->cls, "re",
+                                    "(Ljava/lang/String;Ljava/lang/String;)"
+                                    "Z");
+        if (!re->id) {
+            return 0;
+        }
+    }
+
+    return JENV->CallStaticBooleanMethod(env, re->cls, re->id,  
+                                         JENV->NewStringUTF(env, haystack),
+                                         JENV->NewStringUTF(env, needle));
+}
+
 JNIEXPORT jboolean SIGAR_JNI(ptql_SigarProcessQuery_match)
 (JNIEnv *env, jobject obj, jobject sigar_obj, jlong pid)
 {
     int status;
+    jni_ptql_re_data_t re;
     sigar_ptql_query_t *query =
         (sigar_ptql_query_t *)sigar_get_pointer(env, obj);
     dSIGAR(JNI_FALSE);
 
+    re.env = env;
+    re.cls = NULL;
+    re.obj = obj;
+    re.id = NULL;
+
+    sigar_ptql_re_impl_set(sigar, &re, jsigar_ptql_re_impl);
+
     status = sigar_ptql_query_match(sigar, query, pid);
+
+    sigar_ptql_re_impl_set(sigar, NULL, NULL);
 
     if (status == SIGAR_OK) {
         return JNI_TRUE;
