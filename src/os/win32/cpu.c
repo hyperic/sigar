@@ -198,6 +198,7 @@ static unsigned char CPUCount(unsigned char *LogicalNum,
             if (dwProcessAffinity != dwSystemAffinity) {
                 StatusFlag = HT_CANNOT_DETECT;
                 // *PhysicalNum = (unsigned char)-1;
+                CloseHandle(hCurrentProcessHandle);
                 return StatusFlag;
             }
 
@@ -244,6 +245,7 @@ static unsigned char CPUCount(unsigned char *LogicalNum,
                     StatusFlag = HT_SUPPORTED_NOT_ENABLED;
                 }
             }
+            CloseHandle(hCurrentProcessHandle);
         }
     }
     else {
@@ -299,11 +301,13 @@ int sigar_cpu_info_get(sigar_t *sigar, sigar_cpu_info_t *info)
     //just lookup the first id, then assume all cpus are the same.
     rc = RegEnumKey(key, 0, id, sizeof(id));
     if (rc != ERROR_SUCCESS) {
+        RegCloseKey(key);
         return rc;
     }
        
     rc = RegOpenKey(key, id, &cpu);
     if (rc != ERROR_SUCCESS) {
+        RegCloseKey(key);
         return rc;
     }
 
@@ -343,6 +347,8 @@ int sigar_cpu_info_get(sigar_t *sigar, sigar_cpu_info_t *info)
     }
 
     info->cache_size = -1; //XXX
+    RegCloseKey(key);
+    RegCloseKey(cpu);
 
     return SIGAR_OK;
 }

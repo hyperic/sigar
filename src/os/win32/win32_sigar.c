@@ -1108,6 +1108,7 @@ SIGAR_DECLARE(int) sigar_proc_time_get(sigar_t *sigar, sigar_pid_t pid,
 {
     HANDLE proc = open_process(pid);
     FILETIME start_time, exit_time, system_time, user_time;
+    int status = ERROR_SUCCESS;
 
     if (!proc) {
         return GetLastError();
@@ -1117,10 +1118,14 @@ SIGAR_DECLARE(int) sigar_proc_time_get(sigar_t *sigar, sigar_pid_t pid,
                          &start_time, &exit_time,
                          &system_time, &user_time))
     {
-        return GetLastError();
+        status = GetLastError();
     }
 
     CloseHandle(proc);
+
+    if (status != ERROR_SUCCESS) {
+        return status;
+    }
 
     if (start_time.dwHighDateTime) {
         proctime->start_time = FileTimeToTime(&start_time) / 1000;
@@ -1347,6 +1352,7 @@ static int sigar_remote_proc_env_get(sigar_t *sigar, sigar_pid_t pid,
     char *value;
     DWORD rv, thrid, bytes, datalen=0, size;
     LPVOID addr;
+    int status;
 
     if (!(kdll = GetModuleHandle("msvcrt.dll"))) {
         return GetLastError();
@@ -1363,6 +1369,8 @@ static int sigar_remote_proc_env_get(sigar_t *sigar, sigar_pid_t pid,
     if (!(fstrlen = GetProcAddress(kdll, "lstrlenA"))) {
         return GetLastError();
     }
+
+    /* FIXME: close the kdll handles */
 
     if (!(proc = OpenProcess(MAXIMUM_ALLOWED, 0, (DWORD)pid))) {
         return GetLastError();
@@ -1435,15 +1443,16 @@ static int sigar_remote_proc_env_get(sigar_t *sigar, sigar_pid_t pid,
                             key, strlen(key),
                             value, bytes-1);
 
-        HeapFree(GetProcessHeap(), 0, value);
+        status = SIGAR_OK;
     }
     else {
-        CloseHandle(proc);
-        return GetLastError();
+        status = GetLastError();
     }
 
+    HeapFree(GetProcessHeap(), 0, value);
     CloseHandle(proc);
-    return SIGAR_OK;
+
+    return status;
 }
 
 SIGAR_DECLARE(int) sigar_proc_env_get(sigar_t *sigar, sigar_pid_t pid,
@@ -1532,6 +1541,8 @@ SIGAR_DECLARE(int) sigar_proc_exe_get(sigar_t *sigar, sigar_pid_t pid,
         /* uppercase driver letter */
         procexe->name[0] = toupper(procexe->name[0]);
     }
+
+    CloseHandle(proc);
 
     return status;
 }
