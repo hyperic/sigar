@@ -1386,15 +1386,6 @@ JNIEXPORT void SIGAR_JNI(SigarLog_setLevel)
     sigar_log_level_set(sigar, level);
 }
 
-/*
- * XXX temporary function for ptql to map windows service to pid.
- * in the future would better to integrate win32bindings w/ sigar.
- */
-#ifdef WIN32
-#define sigar_QueryServiceStatusEx \
-    sigar->advapi.query_service_status.func
-#endif
-
 JNIEXPORT jlong SIGAR_JNIx(getServicePid)
 (JNIEnv *env, jobject sigar_obj, jstring jname)
 {
@@ -1402,56 +1393,20 @@ JNIEXPORT jlong SIGAR_JNIx(getServicePid)
     const char *name;
     jboolean is_copy;
     jlong pid = 0;
-    DWORD err = ERROR_SUCCESS;
-    SC_HANDLE mgr;
+    int status;
     dSIGAR(0);
-
-    if (!sigar_QueryServiceStatusEx) {
-        sigar_throw_notimpl(env,
-                            "QueryServiceStatusEx not available");
-        return 0;
-    }
 
     name = JENV->GetStringUTFChars(env, jname, &is_copy);
 
-    mgr = OpenSCManager(NULL, SERVICES_ACTIVE_DATABASE,
-                        SC_MANAGER_ALL_ACCESS);
-
-    if (mgr) {
-        HANDLE svc = OpenService(mgr, name, SERVICE_ALL_ACCESS);
-
-        if (svc) {
-            SERVICE_STATUS_PROCESS status;
-            DWORD bytes;
-
-            if (sigar_QueryServiceStatusEx(svc,
-                                           SC_STATUS_PROCESS_INFO,
-                                           (LPBYTE)&status,
-                                           sizeof(status), &bytes))
-            {
-                pid = status.dwProcessId;
-            }
-            else {
-                err = GetLastError();
-            }
-            CloseServiceHandle(svc);
-        }
-        else {
-            err = GetLastError();
-        }
-
-        CloseServiceHandle(mgr);
-    }
-    else {
-        err = GetLastError();
-    }
+    status =
+        sigar_service_pid_get(sigar, (char *)name, &pid);
 
     if (is_copy) {
         JENV->ReleaseStringUTFChars(env, jname, name);
     }
 
-    if (err != ERROR_SUCCESS) {
-        sigar_throw_error(env, jsigar, err);
+    if (status != ERROR_SUCCESS) {
+        sigar_throw_error(env, jsigar, status);
     }
 
     return pid;

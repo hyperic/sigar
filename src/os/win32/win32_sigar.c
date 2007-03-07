@@ -3187,3 +3187,48 @@ int sigar_os_sys_info_get(sigar_t *sigar,
 
     return SIGAR_OK;
 }
+
+#define sigar_QueryServiceStatusEx \
+    sigar->advapi.query_service_status.func
+
+int sigar_service_pid_get(sigar_t *sigar, char *name, sigar_pid_t *pid)
+{
+    DWORD rc = ERROR_SUCCESS, len;
+    SC_HANDLE mgr;
+    HANDLE svc;
+    SERVICE_STATUS_PROCESS status;
+
+    if (!sigar_QueryServiceStatusEx) {
+        return SIGAR_ENOTIMPL;
+    }
+
+    mgr = OpenSCManager(NULL,
+                        SERVICES_ACTIVE_DATABASE,
+                        SC_MANAGER_ALL_ACCESS);
+
+    if (!mgr) {
+        return GetLastError();
+    }
+
+    if (!(svc = OpenService(mgr, name, SERVICE_ALL_ACCESS))) {
+        CloseServiceHandle(mgr);
+        return GetLastError();
+    }
+
+    if (sigar_QueryServiceStatusEx(svc,
+                                   SC_STATUS_PROCESS_INFO,
+                                   (LPBYTE)&status,
+                                   sizeof(status), &len))
+    {
+        *pid = status.dwProcessId;
+    }
+    else {
+        *pid = -1;
+        rc = GetLastError();
+    }
+
+    CloseServiceHandle(svc);
+    CloseServiceHandle(mgr);
+
+    return rc;
+}
