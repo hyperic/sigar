@@ -23,10 +23,16 @@ import java.util.Comparator;
 import java.util.Map;
 import java.util.StringTokenizer;
 
+import org.hyperic.sigar.Sigar;
+import org.hyperic.sigar.SigarException;
 import org.hyperic.sigar.util.ReferenceMap;
 
 public class ProcessQueryFactory implements Comparator {
     
+    //for testing until native port is completed
+    private static final boolean useNative =
+        "true".equals(System.getProperty("sigar.ptql.native"));
+
     private static Map cache =
         ReferenceMap.synchronizedMap();
 
@@ -149,6 +155,17 @@ public class ProcessQueryFactory implements Comparator {
         ProcessQuery pQuery = (ProcessQuery)cache.get(query);
 
         if (pQuery != null) {
+            return pQuery;
+        }
+
+        if (useNative) {
+            pQuery = new SigarProcessQuery();
+            try {
+                ((SigarProcessQuery)pQuery).create(query);
+            } catch (SigarException e) {
+                throw new MalformedQueryException(e.getMessage());
+            }
+            cache.put(query, pQuery);
             return pQuery;
         }
 
