@@ -1354,6 +1354,10 @@ static int sigar_remote_proc_env_get(sigar_t *sigar, sigar_pid_t pid,
     LPVOID addr;
     int status;
 
+    /*
+     * Do not FreeLibrary(kdll), see:
+     * http://msdn2.microsoft.com/en-us/library/ms683199.aspx
+     */
     if (!(kdll = GetModuleHandle("msvcrt.dll"))) {
         return GetLastError();
     }
@@ -1369,8 +1373,6 @@ static int sigar_remote_proc_env_get(sigar_t *sigar, sigar_pid_t pid,
     if (!(fstrlen = GetProcAddress(kdll, "lstrlenA"))) {
         return GetLastError();
     }
-
-    /* FIXME: close the kdll handles */
 
     if (!(proc = OpenProcess(MAXIMUM_ALLOWED, 0, (DWORD)pid))) {
         return GetLastError();
