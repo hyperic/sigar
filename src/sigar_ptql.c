@@ -1114,6 +1114,9 @@ static int ptql_branch_add(ptql_parse_branch_t *parsed,
       case PTQL_VALUE_TYPE_CHR:
         branch->match.chr = ptql_op_chr[branch->op_name];
         if (!is_set) {
+            if (strlen(parsed->value) != 1) {
+                return SIGAR_PTQL_MALFORMED_QUERY;
+            }
             branch->value.chr[0] = parsed->value[0];
         }
         break;
