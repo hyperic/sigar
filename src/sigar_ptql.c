@@ -47,6 +47,10 @@ typedef int (*ptql_op_ui32_t)(ptql_branch_t *branch,
                               sigar_uint32_t haystack,
                               sigar_uint32_t needle);
 
+typedef int (*ptql_op_dbl_t)(ptql_branch_t *branch,
+                             double haystack,
+                             double needle);
+
 typedef int (*ptql_op_str_t)(ptql_branch_t *branch,
                              char *haystack,
                              char *needle);
@@ -58,6 +62,7 @@ typedef int (*ptql_op_chr_t)(ptql_branch_t *branch,
 typedef enum {
     PTQL_VALUE_TYPE_UI64,
     PTQL_VALUE_TYPE_UI32,
+    PTQL_VALUE_TYPE_DBL,
     PTQL_VALUE_TYPE_CHR,
     PTQL_VALUE_TYPE_STR,
     PTQL_VALUE_TYPE_ANY
@@ -111,6 +116,7 @@ typedef union {
     sigar_pid_t pid;
     sigar_uint64_t ui64;
     sigar_uint32_t ui32;
+    double dbl;
     char chr[4];
     char *str;
     void *ptr;
@@ -127,6 +133,7 @@ struct ptql_branch_t {
     union {
         ptql_op_ui64_t ui64;
         ptql_op_ui32_t ui32;
+        ptql_op_dbl_t dbl;
         ptql_op_chr_t chr;
         ptql_op_str_t str;
     } match;
@@ -275,6 +282,51 @@ static ptql_op_ui32_t ptql_op_ui32[] = {
     ptql_op_ui32_ge,
     ptql_op_ui32_lt,
     ptql_op_ui32_le
+};
+
+static int ptql_op_dbl_eq(ptql_branch_t *branch,
+                          double haystack, double needle)
+{
+    return haystack == needle;
+}
+
+static int ptql_op_dbl_ne(ptql_branch_t *branch,
+                          double haystack, double needle)
+{
+    return haystack != needle;
+}
+
+static int ptql_op_dbl_gt(ptql_branch_t *branch,
+                          double haystack, double needle)
+{
+    return haystack > needle;
+}
+
+static int ptql_op_dbl_ge(ptql_branch_t *branch,
+                          double haystack, double needle)
+{
+    return haystack >= needle;
+}
+
+static int ptql_op_dbl_lt(ptql_branch_t *branch,
+                          double haystack, double needle)
+{
+    return haystack < needle;
+}
+
+static int ptql_op_dbl_le(ptql_branch_t *branch,
+                          double haystack, double needle)
+{
+    return haystack <= needle;
+}
+
+static ptql_op_dbl_t ptql_op_dbl[] = {
+    ptql_op_dbl_eq,
+    ptql_op_dbl_ne,
+    ptql_op_dbl_gt,
+    ptql_op_dbl_ge,
+    ptql_op_dbl_lt,
+    ptql_op_dbl_le
 };
 
 static int ptql_op_str_eq(ptql_branch_t *branch,
@@ -1041,6 +1093,12 @@ static int ptql_branch_add(ptql_parse_branch_t *parsed,
         branch->match.ui32 = ptql_op_ui32[branch->op_name];
         if (!is_set) {
             branch->value.ui32 = strtoul(parsed->value, NULL, 10);
+        }
+        break;
+      case PTQL_VALUE_TYPE_DBL:
+        branch->match.dbl = ptql_op_dbl[branch->op_name];
+        if (!is_set) {
+            branch->value.dbl = strtod(parsed->value, NULL);
         }
         break;
       case PTQL_VALUE_TYPE_CHR:
