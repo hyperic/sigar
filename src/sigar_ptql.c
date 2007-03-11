@@ -28,6 +28,8 @@
 
 #ifdef WIN32
 #define strtoull strtoul /*XXX*/
+#else
+#include <errno.h>
 #endif
 
 #define strtonum_failed(src, ptr) \
