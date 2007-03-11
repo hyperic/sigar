@@ -33,17 +33,29 @@ typedef unsigned __int32 sigar_uint32_t;
 
 typedef unsigned __int64 sigar_uint64_t;
 
+typedef __int32 sigar_int32_t;
+
+typedef __int64 sigar_int64_t;
+
 #elif ULONG_MAX > 4294967295UL
 
 typedef unsigned int sigar_uint32_t;
 
 typedef unsigned long sigar_uint64_t;
 
+typedef int sigar_int32_t;
+
+typedef long sigar_int64_t;
+
 #else
 
 typedef unsigned int sigar_uint32_t;
 
 typedef unsigned long long sigar_uint64_t;
+
+typedef int sigar_int32_t;
+
+typedef long long sigar_int64_t;
 
 #endif
 
@@ -271,6 +283,20 @@ typedef struct {
 
 SIGAR_DECLARE(int) sigar_proc_time_get(sigar_t *sigar, sigar_pid_t pid,
                                        sigar_proc_time_t *proctime);
+
+typedef struct {
+    /* must match sigar_proc_time_t fields */
+    sigar_uint64_t
+        start_time,
+        user,
+        sys,
+        total;
+    sigar_uint64_t last_time;
+    double percent;
+} sigar_proc_cpu_t;
+
+SIGAR_DECLARE(int) sigar_proc_cpu_get(sigar_t *sigar, sigar_pid_t pid,
+                                      sigar_proc_cpu_t *proccpu);
 
 #define SIGAR_PROC_NAME_LEN 128
 

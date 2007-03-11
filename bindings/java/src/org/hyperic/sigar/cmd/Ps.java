@@ -148,9 +148,13 @@ public class Ps extends SigarCommandBase {
         println(join(getInfo(this.proxy, pid)));
     }
 
-    public static String getCpuTime(ProcTime time) {
-        long t = time.getTotal() / 1000;
+    public static String getCpuTime(long total) {
+        long t = total / 1000;
         return t/60 + ":" + t%60;
+    }
+
+    public static String getCpuTime(ProcTime time) {
+        return getCpuTime(time.getTotal());
     }
 
     private static String getStartTime(long time) {

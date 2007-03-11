@@ -319,6 +319,18 @@ my %classes = (
          plat => '*'
       },
     ],
+    ProcCpu => [
+      {
+         name => 'percent', type => 'Double',
+         desc => 'Process cpu usage',
+         plat => '*'
+      },
+      {
+         name => 'last_time', type => 'Long',
+         desc => '',
+         plat => '*'
+      },
+    ],
     ProcState => [
       {
          name => 'state', type => 'Char',
@@ -975,6 +987,14 @@ my %classes = (
 );
 
 $classes{DirUsage} = $classes{DirStat};
+
+my(%extends) = (
+    ProcCpu => 'ProcTime',
+);
+
+while (my($subclass, $superclass) = each %extends) {
+    push @{ $classes{$subclass} }, @{ $classes{$superclass} };
+}
 
 my %cmds = (
     Mem => {

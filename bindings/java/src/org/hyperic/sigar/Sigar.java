@@ -472,7 +472,7 @@ public class Sigar implements SigarProxy {
      * @exception SigarException on failure.
      */
     public ProcCpu getProcCpu(long pid) throws SigarException {
-        return ProcCpu.get(this, pid);
+        return ProcCpu.fetch(this, pid);
     }
 
     public ProcCpu getProcCpu(String pid) throws SigarException {

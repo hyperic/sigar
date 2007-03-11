@@ -58,7 +58,7 @@ public class MultiPs extends SigarCommandBase {
         MultiProcCpu cpu = this.proxy.getMultiProcCpu(query);
         println("Number of processes: " + cpu.getProcesses());
         println("Cpu usage: " + CpuPerc.format(cpu.getPercent()));
-        println("Cpu time: "  + Ps.getCpuTime(cpu));
+        println("Cpu time: "  + Ps.getCpuTime(cpu.getTotal()));
 
         ProcMem mem = this.proxy.getMultiProcMem(query);
         println("Size: " + Sigar.formatSize(mem.getSize()));

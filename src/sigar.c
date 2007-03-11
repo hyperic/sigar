@@ -34,7 +34,10 @@ SIGAR_DECLARE(int) sigar_open(sigar_t **sigar)
         (*sigar)->log_level = -1; /* log nothing by default */
         (*sigar)->log_impl = NULL;
         (*sigar)->log_data = NULL;
+        (*sigar)->ptql_re_impl = NULL;
+        (*sigar)->ptql_re_data = NULL;
         (*sigar)->self_path = NULL;
+        (*sigar)->proc_cpu = NULL;
     }
 
     return status;
@@ -48,6 +51,10 @@ SIGAR_DECLARE(int) sigar_close(sigar_t *sigar)
     if (sigar->self_path) {
         free(sigar->self_path);
     }
+    if (sigar->proc_cpu) {
+        sigar_cache_destroy(sigar->proc_cpu);
+    }
+
     return sigar_os_close(sigar);
 }
 
@@ -61,6 +68,62 @@ SIGAR_DECLARE(sigar_pid_t) sigar_pid_get(sigar_t *sigar)
     return sigar->pid;
 }
 #endif
+
+/* XXX: add clear() function */
+/* XXX: check for stale-ness using start_time */
+SIGAR_DECLARE(int) sigar_proc_cpu_get(sigar_t *sigar, sigar_pid_t pid,
+                                      sigar_proc_cpu_t *proccpu)
+{
+    sigar_cache_entry_t *entry;
+    sigar_proc_cpu_t *prev;
+    sigar_uint64_t otime, time_now = time(NULL) * 1000;
+    sigar_int64_t time_diff, total_diff;
+    int status;
+
+    if (!sigar->proc_cpu) {
+        sigar->proc_cpu = sigar_cache_new(128);
+    }
+
+    entry = sigar_cache_get(sigar->proc_cpu, pid);
+    if (entry->value) {
+        prev = (sigar_proc_cpu_t *)entry->value;
+    }
+    else {
+        prev = entry->value = malloc(sizeof(*prev));
+        SIGAR_ZERO(prev);
+    }
+
+    time_diff = time_now - prev->last_time;
+    proccpu->last_time = prev->last_time = time_now;
+
+    if (time_diff == 0) {
+        /* we were just called within < 1 second ago. */
+        memcpy(proccpu, prev, sizeof(*proccpu));
+        return SIGAR_OK;
+    }
+
+    otime = prev->total;
+
+    status =
+        sigar_proc_time_get(sigar, pid,
+                            (sigar_proc_time_t *)proccpu);
+
+    if (status != SIGAR_OK) {
+        return status;
+    }
+
+    memcpy(prev, proccpu, sizeof(*prev));
+
+    if (otime == 0) {
+        /* first time called */
+        return SIGAR_OK;
+    }
+
+    total_diff = proccpu->total - otime;
+    proccpu->percent = total_diff / (double)time_diff;
+
+    return SIGAR_OK;
+}
 
 static char *sigar_error_string(int err)
 {

@@ -28,6 +28,7 @@ import org.hyperic.sigar.ptql.ProcessFinder;
  */
 public class MultiProcCpu extends ProcCpu {
 
+    private long pid;
     private int nproc = 0;
     private static Map ptable = new HashMap();
 
@@ -98,5 +99,20 @@ public class MultiProcCpu extends ProcCpu {
      */
     public int getProcesses() {
         return this.nproc;
+    }
+
+    /**
+     * @return Pid of the process.
+     */
+    public int hashCode() {
+        return (int)this.pid;
+    }
+
+    public boolean equals(Object cpu) {
+        if (!(cpu instanceof MultiProcCpu)) {
+            return false;
+        }
+
+        return ((MultiProcCpu)cpu).pid == this.pid;
     }
 }

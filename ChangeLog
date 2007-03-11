@@ -1,3 +1,7 @@
+2007-03-11  Doug MacEachern  <dougm@hyperic.com>
+
+        * Implement native sigar_proc_cpu_get function
+
 2007-03-07  Doug MacEachern  <dougm@hyperic.com>
 
         * Plug various handle+mem leaks on win32
