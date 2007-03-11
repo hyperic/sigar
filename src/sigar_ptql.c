@@ -591,7 +591,12 @@ static int ptql_pid_match(sigar_t *sigar,
     }
     else if (branch->flags == PTQL_PID_SERVICE) {
 #ifdef WIN32
-        return !SIGAR_OK; /*XXX*/
+        int status =
+            sigar_service_pid_get(sigar,
+                                  branch->data.str, &match_pid);
+        if (status != SIGAR_OK) {
+            return status;
+        }
 #else
         return !SIGAR_OK;
 #endif
