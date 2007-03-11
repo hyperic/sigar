@@ -20,6 +20,7 @@ Sigar::ProcState T_PTROBJ
 Sigar::NetConnection T_PTROBJ
 Sigar::ProcExe T_PTROBJ
 Sigar::ProcTime T_PTROBJ
+Sigar::ProcCpu T_PTROBJ
 Sigar::ProcMem T_PTROBJ
 Sigar::FileSystem T_PTROBJ
 Sigar::FileSystemUsage T_PTROBJ

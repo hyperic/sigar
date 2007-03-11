@@ -24,6 +24,7 @@ typedef sigar_proc_state_t * Sigar__ProcState;
 typedef sigar_net_connection_t * Sigar__NetConnection;
 typedef sigar_proc_exe_t * Sigar__ProcExe;
 typedef sigar_proc_time_t * Sigar__ProcTime;
+typedef sigar_proc_cpu_t * Sigar__ProcCpu;
 typedef sigar_proc_mem_t * Sigar__ProcMem;
 typedef sigar_file_system_t * Sigar__FileSystem;
 typedef sigar_file_system_usage_t * Sigar__FileSystemUsage;
