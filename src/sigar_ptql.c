@@ -30,6 +30,9 @@
 #define strtoull strtoul /*XXX*/
 #endif
 
+#define strtonum_failed(src, ptr) \
+    ((src == ptr) || (errno == ERANGE) || (*ptr != '\0'))
+
 /* XXX need more specific errors */
 #define SIGAR_PTQL_MALFORMED_QUERY 1
 
@@ -630,6 +633,7 @@ static int ptql_pid_match(sigar_t *sigar,
     ptql_branch_t *branch =
         (ptql_branch_t *)data;
     sigar_pid_t match_pid;
+    char *ptr;
 
     if (branch->flags == PTQL_PID_FILE) {
         char buffer[SIGAR_PATH_MAX+1];
@@ -639,7 +643,10 @@ static int ptql_pid_match(sigar_t *sigar,
         if (status != SIGAR_OK) {
             return status;
         }
-        match_pid = strtoull(buffer, NULL, 10); /*XXX validate*/
+        match_pid = strtoull(buffer, &ptr, 10);
+        if (strtonum_failed(buffer, ptr)) {
+            return SIGAR_PTQL_MALFORMED_QUERY;
+        }
     }
     else if (branch->flags == PTQL_PID_SERVICE) {
 #ifdef WIN32
@@ -672,7 +679,7 @@ static int ptql_args_branch_init(ptql_parse_branch_t *parsed,
         branch->data.ui32 =
             strtol(parsed->attr, &end, 10);
 
-        if (end && *end) {
+        if (strtonum_failed(parsed->attr, end)) {
             /* conversion failed */
             return SIGAR_PTQL_MALFORMED_QUERY;
         }
@@ -987,9 +994,6 @@ static int ptql_branch_parse(char *query, ptql_parse_branch_t *branch)
 
     return SIGAR_OK;
 }
-
-#define strtonum_failed(src, ptr) \
-    ((src == ptr) || (errno == ERANGE) || (*ptr != '\0'))
 
 static int ptql_branch_add(ptql_parse_branch_t *parsed,
                            ptql_branch_list_t *branches)
