@@ -589,9 +589,9 @@ enum {
 };
 
 #ifdef SIGAR_64BIT
-#define str2pid(value) strtoull(value, NULL, 10)
+#define str2pid(value, ptr) strtoull(value, &ptr, 10)
 #else
-#define str2pid(value) strtoul(value, NULL, 10)
+#define str2pid(value, ptr) strtoul(value, &ptr, 10)
 #endif
 
 static int ptql_branch_init_pid(ptql_parse_branch_t *parsed,
@@ -603,7 +603,11 @@ static int ptql_branch_init_pid(ptql_parse_branch_t *parsed,
             branch->data.pid = getpid();
         }
         else {
-            branch->data.pid = str2pid(parsed->value);
+            char *ptr;
+            branch->data.pid = str2pid(parsed->value, ptr);
+            if (strtonum_failed(parsed->value, ptr)) {
+                return SIGAR_PTQL_MALFORMED_QUERY;
+            }
         }
         return SIGAR_OK;
     }
