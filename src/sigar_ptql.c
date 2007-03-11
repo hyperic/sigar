@@ -988,6 +988,9 @@ static int ptql_branch_parse(char *query, ptql_parse_branch_t *branch)
     return SIGAR_OK;
 }
 
+#define strtonum_failed(src, ptr) \
+    ((src == ptr) || (errno == ERANGE) || (*ptr != '\0'))
+
 static int ptql_branch_add(ptql_parse_branch_t *parsed,
                            ptql_branch_list_t *branches)
 {
@@ -995,6 +998,7 @@ static int ptql_branch_add(ptql_parse_branch_t *parsed,
     ptql_entry_t *entry = NULL;
     ptql_lookup_t *lookup = NULL;
     int i, is_set=0;
+    char *ptr;
 
     PTQL_BRANCH_LIST_GROW(branches);
 
@@ -1096,19 +1100,28 @@ static int ptql_branch_add(ptql_parse_branch_t *parsed,
       case PTQL_VALUE_TYPE_UI64:
         branch->match.ui64 = ptql_op_ui64[branch->op_name];
         if (!is_set) {
-            branch->value.ui64 = strtoull(parsed->value, NULL, 10);
+            branch->value.ui64 = strtoull(parsed->value, &ptr, 10);
+            if (strtonum_failed(parsed->value, ptr)) {
+                return SIGAR_PTQL_MALFORMED_QUERY;
+            }
         }
         break;
       case PTQL_VALUE_TYPE_UI32:
         branch->match.ui32 = ptql_op_ui32[branch->op_name];
         if (!is_set) {
-            branch->value.ui32 = strtoul(parsed->value, NULL, 10);
+            branch->value.ui32 = strtoul(parsed->value, &ptr, 10);
+            if (strtonum_failed(parsed->value, ptr)) {
+                return SIGAR_PTQL_MALFORMED_QUERY;
+            }
         }
         break;
       case PTQL_VALUE_TYPE_DBL:
         branch->match.dbl = ptql_op_dbl[branch->op_name];
         if (!is_set) {
-            branch->value.dbl = strtod(parsed->value, NULL);
+            branch->value.dbl = strtod(parsed->value, &ptr);
+            if (strtonum_failed(parsed->value, ptr)) {
+                return SIGAR_PTQL_MALFORMED_QUERY;
+            }
         }
         break;
       case PTQL_VALUE_TYPE_CHR:
