@@ -846,6 +846,15 @@ static ptql_lookup_t PTQL_Time[] = {
     { NULL }
 };
 
+static ptql_lookup_t PTQL_Cpu[] = {
+    { "StartTime", PTQL_LOOKUP_ENTRY(proc_cpu, start_time, UI64) },
+    { "User",      PTQL_LOOKUP_ENTRY(proc_cpu, user, UI64) },
+    { "Sys",       PTQL_LOOKUP_ENTRY(proc_cpu, sys, UI64) },
+    { "Total",     PTQL_LOOKUP_ENTRY(proc_cpu, total, UI64) },
+    { "Percent",   PTQL_LOOKUP_ENTRY(proc_cpu, total, DBL) },
+    { NULL }
+};
+
 static ptql_lookup_t PTQL_CredName[] = {
     { "User",  PTQL_LOOKUP_ENTRY(proc_cred_name, user, STR) },
     { "Group", PTQL_LOOKUP_ENTRY(proc_cred_name, group, STR) },
@@ -911,6 +920,7 @@ static ptql_lookup_t PTQL_Pid[] = {
 
 static ptql_entry_t ptql_map[] = {
     { "Time",     PTQL_Time },
+    { "Cpu",      PTQL_Cpu },
     { "CredName", PTQL_CredName },
     { "Mem",      PTQL_Mem },
     { "Exe",      PTQL_Exe },
