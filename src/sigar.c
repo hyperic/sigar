@@ -1862,9 +1862,11 @@ SIGAR_DECLARE(sigar_uint32_t) sigar_net_address_hash(sigar_net_address_t *addres
     return hash;
 }
 
-static int fqdn_ip_get(sigar_t *sigar, char *name)
+SIGAR_DECLARE(int)
+sigar_net_interface_config_primary_get(sigar_t *sigar,
+                                       sigar_net_interface_config_t *ifconfig)
 {
-    int i, status;
+    int i, status, found=0;
     sigar_net_interface_list_t iflist;
 
     if ((status = sigar_net_interface_list_get(sigar, &iflist)) != SIGAR_OK) {
@@ -1872,30 +1874,47 @@ static int fqdn_ip_get(sigar_t *sigar, char *name)
     }
 
     for (i=0; i<iflist.number; i++) {
-        sigar_net_interface_config_t ifconfig;
-
         status = sigar_net_interface_config_get(sigar,
-                                                iflist.data[i], &ifconfig);
+                                                iflist.data[i], ifconfig);
 
         if ((status != SIGAR_OK) ||
-            (ifconfig.flags & SIGAR_IFF_LOOPBACK) ||
-            !ifconfig.address.addr.in ||  /* no ip address */
-            !ifconfig.hwaddr.addr.in ||   /* no mac address */
+            (ifconfig->flags & SIGAR_IFF_LOOPBACK) ||
+            !ifconfig->address.addr.in ||  /* no ip address */
+            !ifconfig->hwaddr.addr.in ||   /* no mac address */
             strchr(iflist.data[i], ':'))  /* alias */
         {
             continue;
         }
-
-        sigar_net_address_to_string(sigar, &ifconfig.address, name);
-
-        sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
-                         "[fqdn] using ip address '%s' for fqdn",
-                         name);
-
+        found = 1;
         break;
     }
 
     sigar_net_interface_list_destroy(sigar, &iflist);
+
+    if (found) {
+        return SIGAR_OK;
+    }
+    else {
+        return !SIGAR_OK;
+    }
+}
+
+static int fqdn_ip_get(sigar_t *sigar, char *name)
+{
+    sigar_net_interface_config_t ifconfig;
+    int status;
+
+    status = sigar_net_interface_config_primary_get(sigar, &ifconfig);
+
+    if (status != SIGAR_OK) {
+        return status;
+    }
+
+    sigar_net_address_to_string(sigar, &ifconfig.address, name);
+
+    sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
+                     "[fqdn] using ip address '%s' for fqdn",
+                     name);
 
     return SIGAR_OK;
 }

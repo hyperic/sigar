@@ -542,6 +542,10 @@ sigar_net_interface_config_get(sigar_t *sigar,
                                const char *name,
                                sigar_net_interface_config_t *ifconfig);
 
+SIGAR_DECLARE(int)
+sigar_net_interface_config_primary_get(sigar_t *sigar,
+                                       sigar_net_interface_config_t *ifconfig);
+
 typedef struct {
     sigar_uint64_t
         /* received */
