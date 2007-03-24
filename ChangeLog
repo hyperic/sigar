@@ -1,3 +1,7 @@
+2007-03-24  Doug MacEachern  <dougm@hyperic.com>
+
+        * Implement proc_state_t.threads on OS X
+
 2007-03-11  Doug MacEachern  <dougm@hyperic.com>
 
         * Implement native sigar_proc_cpu_get function

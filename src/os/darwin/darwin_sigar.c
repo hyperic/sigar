@@ -891,6 +891,33 @@ int sigar_proc_time_get(sigar_t *sigar, sigar_pid_t pid,
     return SIGAR_OK;
 }
 
+#ifdef DARWIN
+static int sigar_proc_threads_get(sigar_t *sigar, sigar_pid_t pid,
+                                  sigar_proc_state_t *procstate)
+{
+    mach_port_t task, self = mach_task_self();
+    kern_return_t status;
+    thread_array_t threads;
+    mach_msg_type_number_t count;
+
+    status = task_for_pid(self, pid, &task);
+    if (status != KERN_SUCCESS) {
+        return errno;
+    }
+
+    status = task_threads(task, &threads, &count);
+    if (status != KERN_SUCCESS) {
+        return errno;
+    }
+
+    procstate->threads = count;
+		
+    vm_deallocate(self, (vm_address_t)threads, sizeof(thread_t) * count);
+
+    return SIGAR_OK;
+}
+#endif
+
 int sigar_proc_state_get(sigar_t *sigar, sigar_pid_t pid,
                          sigar_proc_state_t *procstate)
 {
@@ -908,6 +935,10 @@ int sigar_proc_state_get(sigar_t *sigar, sigar_pid_t pid,
     procstate->tty      = SIGAR_FIELD_NOTIMPL; /*XXX*/
     procstate->threads  = SIGAR_FIELD_NOTIMPL;
     procstate->processor = SIGAR_FIELD_NOTIMPL;
+
+#ifdef DARWIN
+    sigar_proc_threads_get(sigar, pid, procstate);
+#endif
 
     switch (pinfo->KI_STAT) {
       case SIDL:
