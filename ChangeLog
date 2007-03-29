@@ -1,3 +1,8 @@
+2007-03-29  Doug MacEachern  <dougm@hyperic.com>
+
+        *  Fix cpu ticks to msec on linux/ia64
+           Submitted by: Jan Kneschke <jan.kneschke@mysql.com>
+
 2007-03-24  Doug MacEachern  <dougm@hyperic.com>
 
         * Implement proc_state_t.threads on OS X

@@ -118,8 +118,11 @@
     ((sigar_uint64_t)(s) * (sigar_uint64_t)SIGAR_NSEC)
 
 /* cpu ticks to milliseconds */
-#define SIGAR_TICK2MSEC(s) ((sigar_uint64_t)(s) * ((sigar_uint64_t)SIGAR_MSEC / sigar->ticks))
-#define SIGAR_TICK2NSEC(s) ((sigar_uint64_t)(s) * ((sigar_uint64_t)SIGAR_NSEC / sigar->ticks))
+#define SIGAR_TICK2MSEC(s) \
+   ((sigar_uint64_t)(s) * ((sigar_uint64_t)SIGAR_MSEC / (double)sigar->ticks))
+
+#define SIGAR_TICK2NSEC(s) \
+   ((sigar_uint64_t)(s) * ((sigar_uint64_t)SIGAR_NSEC / (double)sigar->ticks))
 
 #define IFTYPE_LO  2
 #define IFTYPE_ETH 3
