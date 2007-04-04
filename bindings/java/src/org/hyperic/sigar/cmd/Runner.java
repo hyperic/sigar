@@ -36,11 +36,12 @@ import org.hyperic.sigar.SigarLoader;
 public class Runner {
 
     private static HashMap wantedJars = new HashMap();
+    private static final String JAR_EXT = ".jar";
 
     static {
-        wantedJars.put("bcel-5.1.jar", Boolean.FALSE);
-        wantedJars.put("junit.jar", Boolean.FALSE);
-        wantedJars.put("log4j.jar", Boolean.FALSE);
+        wantedJars.put("bcel", Boolean.FALSE);
+        wantedJars.put("junit", Boolean.FALSE);
+        wantedJars.put("log4j", Boolean.FALSE);
     }
 
     private static void printMissingJars() {
@@ -50,7 +51,7 @@ public class Runner {
             Map.Entry entry = (Map.Entry)it.next();
             String jar = (String)entry.getKey();
             if (wantedJars.get(jar) == Boolean.FALSE) {
-                System.out.println("Unable to locate: " + jar);
+                System.out.println("Unable to locate: " + jar + JAR_EXT);
             }
         }
     }
@@ -72,7 +73,26 @@ public class Runner {
     public static URL[] getLibJars(String dir) throws Exception {
         File[] jars = new File(dir).listFiles(new FileFilter() {
             public boolean accept(File file) {
-                return wantedJars.get(file.getName()) != null;
+                String name = file.getName();
+                int jarIx = name.indexOf(JAR_EXT);
+                if (jarIx == -1) {
+                    return false;
+                }
+                int ix = name.indexOf('-');
+                if (ix != -1) {
+                    name = name.substring(0, ix); //versioned .jar
+                }
+                else {
+                    name = name.substring(0, jarIx);
+                }
+
+                if (wantedJars.get(name) != null) {
+                    wantedJars.put(name, Boolean.TRUE);
+                    return true;
+                }
+                else {
+                    return false;
+                }
             }
         });
 
@@ -83,8 +103,6 @@ public class Runner {
         URL[] urls = new URL[jars.length];
 
         for (int i=0; i<jars.length; i++) {
-            wantedJars.put(jars[i].getName(),
-                           Boolean.TRUE);
             URL url = 
                 new URL("jar", null,
                         "file:" + jars[i].getAbsolutePath() + "!/");
