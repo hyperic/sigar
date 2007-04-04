@@ -365,7 +365,7 @@ my %classes = (
       {
          name => 'threads', type => 'Long',
          desc => 'Number of active threads',
-         plat => 'AHLSW'
+         plat => 'ADHLSW'
       },
       {
          name => 'processor', type => 'Int',
