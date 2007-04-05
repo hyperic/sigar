@@ -114,18 +114,6 @@ static void sigar_throw_notimpl(JNIEnv *env, char *msg)
     JENV->ThrowNew(env, errorClass, msg);
 }
 
-#ifdef WIN32
-#  define SIGAR_ENOENT ERROR_FILE_NOT_FOUND
-#else
-#  define SIGAR_ENOENT ENOENT
-#endif
-
-#ifdef WIN32
-#  define SIGAR_EACCES ERROR_ACCESS_DENIED
-#else
-#  define SIGAR_EACCES EACCES
-#endif
-
 static void sigar_throw_error(JNIEnv *env, jni_sigar_t *jsigar, int err)
 {
     jclass errorClass;

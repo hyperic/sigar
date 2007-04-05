@@ -67,6 +67,14 @@ typedef long long sigar_int64_t;
 #define SIGAR_OS_START_ERROR (SIGAR_START_ERROR*2)
 
 #ifdef WIN32
+#   define SIGAR_ENOENT ERROR_FILE_NOT_FOUND
+#   define SIGAR_EACCES ERROR_ACCESS_DENIED
+#else
+#   define SIGAR_ENOENT ENOENT
+#   define SIGAR_EACCES EACCES
+#endif
+
+#ifdef WIN32
 #   define SIGAR_DECLARE(type) \
         __declspec(dllexport) type __stdcall
 #else
