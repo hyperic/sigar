@@ -1899,7 +1899,7 @@ sigar_net_interface_config_primary_get(sigar_t *sigar,
         return SIGAR_OK;
     }
     else {
-        return SIGAR_ENOENT;
+        return SIGAR_ENXIO;
     }
 }
 
