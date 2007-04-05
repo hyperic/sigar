@@ -67,6 +67,7 @@ struct sigar_t {
     int lcpu;
     linux_iostat_e iostat;
     sigar_cache_t *fsdev;
+    char *proc_net;
 };
 
 #define HAVE_STRERROR_R

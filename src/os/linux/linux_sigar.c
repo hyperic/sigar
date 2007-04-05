@@ -168,6 +168,9 @@ int sigar_os_open(sigar_t **sigar)
 
     (*sigar)->fsdev = NULL;
 
+    /* hook for using mirrored /proc/net/tcp file */
+    (*sigar)->proc_net = getenv("SIGAR_PROC_NET");
+
     return SIGAR_OK;
 }
 
@@ -1817,12 +1820,32 @@ static int proc_net_read(sigar_net_connection_walker_t *walker,
                          const char *fname,
                          int type)
 {
-    FILE *fp;
+    FILE *fp = NULL;
     char buffer[8192];
-    char *ptr;
+    sigar_t *sigar = walker->sigar;
+    char *ptr = sigar->proc_net;
     int flags = walker->flags;
 
-    if (!(fp = fopen(fname, "r"))) {
+    if (ptr) {
+        snprintf(buffer, sizeof(buffer),
+                 "%s/%s", ptr,
+                 fname + sizeof(PROC_FS_ROOT)-1);
+
+        if ((fp = fopen(buffer, "r"))) {
+            if (SIGAR_LOG_IS_DEBUG(sigar)) {
+                sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
+                                 "[proc_net] using %s",
+                                 buffer);
+            }
+        }
+        else if (SIGAR_LOG_IS_DEBUG(sigar)) {
+            sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
+                             "[proc_net] cannot open %s",
+                             buffer);
+        }
+    }
+
+    if (!(fp || (fp = fopen(fname, "r")))) {
         return errno;
     }
 
