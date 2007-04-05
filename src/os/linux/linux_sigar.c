@@ -1521,6 +1521,10 @@ static int get_cpu_info(sigar_t *sigar, sigar_cpu_info_t *info,
 
     int found = 0;
 
+    /* UML vm wont have "cpu MHz" or "cache size" fields */
+    info->mhz        = 0;
+    info->cache_size = 0;
+
 #ifdef __powerpc64__
     SIGAR_SSTRCPY(info->vendor, "IBM");
 #endif
