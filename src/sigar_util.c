@@ -404,7 +404,7 @@ void sigar_cpu_model_adjust(sigar_t *sigar, sigar_cpu_info_t *info)
     len = strlen(model);
     end = &model[len-1];
     while (*ptr == ' ') ++ptr;
-    while (*end == ' ') *--end = '\0';
+    while (*end == ' ') *end-- = '\0';
 
     /* remove vendor from model name */
     len = strlen(info->vendor);
