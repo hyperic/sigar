@@ -20,14 +20,26 @@
         * Plug various handle+mem leaks on win32
           Submitted by: Jan Kneschke <jan.kneschke@mysql.com>
 
+2007-03-04  Doug MacEachern  <dougm@hyperic.com>
+
+        * [SIGAR-29] Add pdh language translation support
+
+        * Add RegistryKey.getMultiStringValue()
+
+        * Add win32.LocaleInfo class
+
+2007-02-28  Doug MacEachern  <dougm@hyperic.com>
+
+        * Add signal name lookup support
+
 2007-02-24  Doug MacEachern  <dougm@hyperic.com>
 
         * Make Java objects returned by Sigar class Serializable
 
 2007-02-21  Doug MacEachern  <dougm@hyperic.com>
 
-        *  Perl binding updates
-           Submitted by: Nicolas Laurent
+        * Perl binding updates
+          Submitted by: Nicolas Laurent
 
         * [SIGAR-45] Fix disk reads/writes for LVM managed volumes
 
