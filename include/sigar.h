@@ -69,9 +69,11 @@ typedef long long sigar_int64_t;
 #ifdef WIN32
 #   define SIGAR_ENOENT ERROR_FILE_NOT_FOUND
 #   define SIGAR_EACCES ERROR_ACCESS_DENIED
+#   define SIGAR_EXNIO  ERROR_BAD_DRIVER_LEVEL
 #else
 #   define SIGAR_ENOENT ENOENT
 #   define SIGAR_EACCES EACCES
+#   define SIGAR_ENXIO  ENXIO
 #endif
 
 #ifdef WIN32
