@@ -17,6 +17,8 @@
  */
 
 #ifdef WIN32
+#define UNICODE
+#define _UNICODE
 
 #include "win32bindings.h"
 #include "javasigar.h"
@@ -34,14 +36,15 @@ JNIEXPORT jint SIGAR_JNI(win32_LocaleInfo_getSystemDefaultLCID)
 JNIEXPORT jstring SIGAR_JNI(win32_LocaleInfo_getAttribute)
 (JNIEnv *env, jclass objcls, jint lcid, jint attr)
 {
-    char value[8192];
+    TCHAR value[8192];
     int retval =
         GetLocaleInfo(lcid,
                       attr,
                       value, sizeof(value));
 
     if (retval) {
-        return env->NewStringUTF(value);
+        int len = lstrlen(value);
+        return env->NewString((const jchar *)value, len);
     }
     else {
         return NULL;
