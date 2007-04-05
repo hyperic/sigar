@@ -2446,6 +2446,10 @@ sigar_net_interface_config_get(sigar_t *sigar,
     MIB_IPADDRROW *ipaddr;
     int status;
 
+    if (!name) {
+        return sigar_net_interface_config_primary_get(sigar, ifconfig);
+    }
+
     status = get_mib_ifrow(sigar, name, &ifr);
     if (status != SIGAR_OK) {
         return status;

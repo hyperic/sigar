@@ -1468,6 +1468,10 @@ int sigar_net_interface_config_get(sigar_t *sigar, const char *name,
     int sock;
     struct ifreq ifr;
 
+    if (!name) {
+        return sigar_net_interface_config_primary_get(sigar, ifconfig);
+    }
+
     SIGAR_ZERO(ifconfig);
 
     if ((sock = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {

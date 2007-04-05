@@ -1824,6 +1824,10 @@ int sigar_net_interface_config_get(sigar_t *sigar, const char *name,
     struct sockaddr_dl *sdl;
     struct ifreq ifr;
 
+    if (!name) {
+        return sigar_net_interface_config_primary_get(sigar, ifconfig);
+    }
+
     if (sigar->ifconf_len == 0) {
         if ((status = sigar_ifmsg_init(sigar)) != SIGAR_OK) {
             return status;

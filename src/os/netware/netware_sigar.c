@@ -542,6 +542,10 @@ sigar_net_interface_config_get(sigar_t *sigar,
     INTERFACE_INFO *if_info = NULL;
     u_long flags;
 
+    if (!name) {
+        return sigar_net_interface_config_primary_get(sigar, ifconfig);
+    }
+
     /* win32 lacks socket ioctls to query given interface.
      * so we loop through the list to find our made up ifname.
      */
