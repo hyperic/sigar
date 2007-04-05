@@ -29,6 +29,7 @@ import org.hyperic.sigar.DirStat;
 import org.hyperic.sigar.FileInfo;
 import org.hyperic.sigar.FileWatcher;
 import org.hyperic.sigar.FileWatcherThread;
+import org.hyperic.sigar.ProcFileMirror;
 
 /**
  * Watch a file or directory displaying attribute changes.
@@ -129,11 +130,22 @@ public class Watch {
 
         watcher.setInterval(watcherThread.getInterval());
         for (int i=0; i<args.length; i++) {
-            if (args[i].equals("-r")) {
-                recurse = true;
-                continue;
+            String arg = args[i];
+            if (arg.startsWith("/proc/")) {
+                ProcFileMirror mirror =
+                    new ProcFileMirror(sigar, "./proc");
+                watcherThread.add(mirror);
+                mirror.add(arg);
+
+                arg = mirror.getProcFile(arg);
+                add(sigar, watcher, arg, false);
             }
-            add(sigar, watcher, args[i], recurse);
+            else if (arg.equals("-r")) {
+                recurse = true;
+            }
+            else {
+                add(sigar, watcher, arg, recurse);
+            }
         }
 
         watcherThread.add(watcher);
