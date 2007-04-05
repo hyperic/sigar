@@ -1220,37 +1220,34 @@ int sigar_net_info_get(sigar_t *sigar,
     char buffer[BUFSIZ], *ptr;
     FILE *fp;
 
-    if (!(fp = fopen("/etc/resolv.conf", "r"))) {
-        return errno;
-    }
-
     SIGAR_ZERO(netinfo);
 
-    while ((ptr = fgets(buffer, sizeof(buffer), fp))) {
-        int len;
+    if ((fp = fopen("/etc/resolv.conf", "r"))) {
+        while ((ptr = fgets(buffer, sizeof(buffer), fp))) {
+            int len;
 
-        SIGAR_SKIP_SPACE(ptr);
-        if (!(ptr = strstr(ptr, "nameserver"))) {
-            continue;
-        }
-        ptr += 10;
-        SIGAR_SKIP_SPACE(ptr);
+            SIGAR_SKIP_SPACE(ptr);
+            if (!(ptr = strstr(ptr, "nameserver"))) {
+                continue;
+            }
+            ptr += 10;
+            SIGAR_SKIP_SPACE(ptr);
 
-        len = strlen(ptr);
-        ptr[len-1] = '\0'; /* chop \n */
+            len = strlen(ptr);
+            ptr[len-1] = '\0'; /* chop \n */
 
-        if (!netinfo->primary_dns[0]) {
-            SIGAR_SSTRCPY(netinfo->primary_dns, ptr);
+            if (!netinfo->primary_dns[0]) {
+                SIGAR_SSTRCPY(netinfo->primary_dns, ptr);
+            }
+            else if (!netinfo->secondary_dns[0]) {
+                SIGAR_SSTRCPY(netinfo->secondary_dns, ptr);
+            }
+            else {
+                break;
+            }
         }
-        else if (!netinfo->secondary_dns[0]) {
-            SIGAR_SSTRCPY(netinfo->secondary_dns, ptr);
-        }
-        else {
-            break;
-        }
-    }
-
-    fclose(fp);
+        fclose(fp);
+    } /* else /etc/resolv.conf may not exist if unplugged (MacOSX) */
 
     size = sizeof(netinfo->host_name)-1;
     if (gethostname(netinfo->host_name, size) == 0) {
