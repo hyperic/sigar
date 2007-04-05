@@ -1872,6 +1872,9 @@ sigar_net_interface_config_primary_get(sigar_t *sigar,
 {
     int i, status, found=0;
     sigar_net_interface_list_t iflist;
+    sigar_net_interface_config_t possible_config;
+
+    possible_config.flags = 0;
 
     if ((status = sigar_net_interface_list_get(sigar, &iflist)) != SIGAR_OK) {
         return status;
@@ -1883,12 +1886,20 @@ sigar_net_interface_config_primary_get(sigar_t *sigar,
 
         if ((status != SIGAR_OK) ||
             (ifconfig->flags & SIGAR_IFF_LOOPBACK) ||
-            !ifconfig->address.addr.in ||  /* no ip address */
             !ifconfig->hwaddr.addr.in ||   /* no mac address */
             strchr(iflist.data[i], ':'))  /* alias */
         {
             continue;
         }
+
+        if (!possible_config.flags) {
+            /* save for later for use if we're not connected to the net */
+            memcpy(&possible_config, ifconfig, sizeof(*ifconfig));
+        }
+        if (!ifconfig->address.addr.in) {
+            continue; /* no ip address */
+        }
+
         found = 1;
         break;
     }
@@ -1896,6 +1907,10 @@ sigar_net_interface_config_primary_get(sigar_t *sigar,
     sigar_net_interface_list_destroy(sigar, &iflist);
 
     if (found) {
+        return SIGAR_OK;
+    }
+    else if (possible_config.flags) {
+        memcpy(ifconfig, &possible_config, sizeof(*ifconfig));
         return SIGAR_OK;
     }
     else {
@@ -1912,6 +1927,9 @@ static int fqdn_ip_get(sigar_t *sigar, char *name)
 
     if (status != SIGAR_OK) {
         return status;
+    }
+    if (!ifconfig.address.addr.in) {
+        return SIGAR_ENXIO;
     }
 
     sigar_net_address_to_string(sigar, &ifconfig.address, name);
