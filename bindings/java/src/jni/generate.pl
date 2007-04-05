@@ -1347,8 +1347,8 @@ while (my($name, $fields) = each %classes) {
         $args_proto = ", jstring jname";
         $arg_type = 'const char *';
         $decl_string = "const char *name;";
-        $get_string = "name = JENV->GetStringUTFChars(env, jname, 0);";
-        $release_string = "JENV->ReleaseStringUTFChars(env, jname, name);";
+        $get_string = "name = jname ? JENV->GetStringUTFChars(env, jname, 0) : NULL;";
+        $release_string = "if (jname) JENV->ReleaseStringUTFChars(env, jname, name);";
         $arg  = 'name';
         $args = " $arg, ";
     }
