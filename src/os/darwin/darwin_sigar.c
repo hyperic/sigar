@@ -1426,6 +1426,7 @@ int sigar_file_system_list_get(sigar_t *sigar,
     struct statfs *fs;
     int num, i;
     long len;
+    int is_debug = SIGAR_LOG_IS_DEBUG(sigar);
 
     if ((num = getfsstat(NULL, 0, MNT_NOWAIT)) < 0) {
         return errno;
@@ -1445,6 +1446,23 @@ int sigar_file_system_list_get(sigar_t *sigar,
 
 #ifdef MNT_AUTOMOUNTED
         if (fs[i].f_flags & MNT_AUTOMOUNTED) {
+            if (is_debug) {
+                sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
+                                 "[file_system_list] skipping automounted %s: %s",
+                                 fs[i].f_fstypename, fs[i].f_mntonname);
+            }
+            continue;
+        }
+#endif
+
+#ifdef MNT_RDONLY
+        if (fs[i].f_flags & MNT_RDONLY) {
+            /* e.g. ftp mount or .dmg image */
+            if (is_debug) {
+                sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
+                                 "[file_system_list] skipping readonly %s: %s",
+                                 fs[i].f_fstypename, fs[i].f_mntonname);
+            }
             continue;
         }
 #endif
