@@ -38,6 +38,7 @@ SIGAR_DECLARE(int) sigar_open(sigar_t **sigar)
         (*sigar)->ptql_re_data = NULL;
         (*sigar)->self_path = NULL;
         (*sigar)->proc_cpu = NULL;
+        (*sigar)->net_listen = NULL;
     }
 
     return status;
@@ -53,6 +54,9 @@ SIGAR_DECLARE(int) sigar_close(sigar_t *sigar)
     }
     if (sigar->proc_cpu) {
         sigar_cache_destroy(sigar->proc_cpu);
+    }
+    if (sigar->net_listen) {
+        sigar_cache_destroy(sigar->net_listen);
     }
 
     return sigar_os_close(sigar);
@@ -843,7 +847,6 @@ sigar_net_connection_list_get(sigar_t *sigar,
 
 typedef struct {
     sigar_net_stat_t *netstat;
-    sigar_cache_t *listen_ports;
     sigar_net_connection_list_t *connlist;
 } net_stat_getter_t;
 
@@ -856,21 +859,23 @@ static int net_stat_walker(sigar_net_connection_walker_t *walker,
                            sigar_net_connection_t *conn)
 {
     int state = conn->state;
+    sigar_cache_t *listen_ports = walker->sigar->net_listen;
     net_stat_getter_t *getter =
         (net_stat_getter_t *)walker->data;
 
     if (conn->type == SIGAR_NETCONN_TCP) {
         getter->netstat->tcp_states[state]++;
 
+        /* XXX listen_ports may get stale */
         if (state == SIGAR_TCP_LISTEN) {
             sigar_cache_entry_t *entry =
-                sigar_cache_get(getter->listen_ports,
+                sigar_cache_get(listen_ports,
                                 conn->local_port);
 
             entry->value = (void*)conn->local_port;
         }
         else {
-            if (sigar_cache_find(getter->listen_ports,
+            if (sigar_cache_find(listen_ports,
                                  conn->local_port))
             {
                 getter->netstat->tcp_inbound_total++;
@@ -884,86 +889,13 @@ static int net_stat_walker(sigar_net_connection_walker_t *walker,
         /*XXX*/
     }
 
+    getter->netstat->all_inbound_total =
+        getter->netstat->tcp_inbound_total;
+
+    getter->netstat->all_outbound_total =
+        getter->netstat->tcp_outbound_total;
+
     return SIGAR_OK;
-}
-
-static int sigar_net_stat_get_walk(sigar_t *sigar,
-                                   sigar_net_stat_t *netstat,
-                                   int flags)
-{
-    int status;
-    sigar_net_connection_walker_t walker;
-    net_stat_getter_t getter;
-
-    getter.netstat = netstat;
-    getter.listen_ports = sigar_cache_new(32);
-    getter.listen_ports->free_value = listen_port_free;
-    
-    walker.sigar = sigar;
-    walker.data = &getter;
-    walker.add_connection = net_stat_walker;
-
-    walker.flags = flags;
-
-    status = sigar_net_connection_walk(&walker);
-
-    sigar_cache_destroy(getter.listen_ports);
-
-    return status;
-}
-
-static int sigar_net_stat_get_list(sigar_t *sigar,
-                                   sigar_net_stat_t *netstat,
-                                   int flags)
-{
-    int status, i;
-    sigar_net_connection_list_t connlist;
-    sigar_cache_t *listen_ports;
-    status = sigar_net_connection_list_get(sigar, &connlist, flags);
-
-    if (status != SIGAR_OK) {
-        return status;
-    }
-
-    listen_ports = sigar_cache_new(32);
-    listen_ports->free_value = listen_port_free;
-
-    /* first pass, get states and listening port numbers */
-    for (i=0; i<connlist.number; i++) {
-        sigar_net_connection_t *conn = &connlist.data[i];
-        int state = conn->state;
-
-        netstat->tcp_states[state]++;
-
-        if (state == SIGAR_TCP_LISTEN) {
-            sigar_cache_entry_t *entry =
-                sigar_cache_get(listen_ports,
-                                conn->local_port);
-
-            entry->value = (void*)conn->local_port;
-        }
-    }
-
-    /* second pass, get addresses connected to listening ports */
-    for (i=0; i<connlist.number; i++) {
-        sigar_net_connection_t *conn = &connlist.data[i];
-
-        if (conn->state != SIGAR_TCP_LISTEN) {
-            if (sigar_cache_find(listen_ports,
-                                 conn->local_port))
-            {
-                netstat->tcp_inbound_total++;
-            }
-            else {
-                netstat->tcp_outbound_total++;
-            }
-        }
-    }
-
-    sigar_cache_destroy(listen_ports);
-    sigar_net_connection_list_destroy(sigar, &connlist);
-
-    return status;
 }
 
 SIGAR_DECLARE(int)
@@ -971,22 +903,25 @@ sigar_net_stat_get(sigar_t *sigar,
                    sigar_net_stat_t *netstat,
                    int flags)
 {
+    sigar_net_connection_walker_t walker;
+    net_stat_getter_t getter;
+
+    if (!sigar->net_listen) {
+        sigar->net_listen = sigar_cache_new(32);
+        sigar->net_listen->free_value = listen_port_free;
+    }
+    
     SIGAR_ZERO(netstat);
 
-    if (getenv("SIGAR_NETSTAT_WALK")) {
-        /* XXX only for testing atm
-         * The 'walk' version is faster that the 'list' version,
-         * however the 'walk' version depends on the underlying
-         * OS to return connections in the LISTEN state before
-         * those which are connected to the given LISTEN port.
-         * Seems this is the case in Linux at least, but that
-         * is likely subject to change.
-         */
-        return sigar_net_stat_get_walk(sigar, netstat, flags);
-    }
-    else {
-        return sigar_net_stat_get_list(sigar, netstat, flags);
-    }
+    getter.netstat = netstat;
+
+    walker.sigar = sigar;
+    walker.data = &getter;
+    walker.add_connection = net_stat_walker;
+
+    walker.flags = flags;
+
+    return sigar_net_connection_walk(&walker);
 }
 
 typedef struct {

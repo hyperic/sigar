@@ -66,7 +66,8 @@
    char *ifconf_buf; \
    int ifconf_len; \
    char *self_path; \
-   sigar_cache_t *proc_cpu
+   sigar_cache_t *proc_cpu; \
+   sigar_cache_t *net_listen
 
 #if defined(WIN32)
 #   define SIGAR_INLINE __inline
