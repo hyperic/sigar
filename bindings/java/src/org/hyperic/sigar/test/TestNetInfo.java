@@ -44,8 +44,12 @@ public class TestNetInfo extends SigarTestCase {
 
         for (int i=0; i<connections.length; i++) {
             long port = connections[i].getLocalPort();
-            traceln("Listen " +
-                    getSigar().getNetListenAddress(port) + ":" + port);
+            String listenAddress = 
+                getSigar().getNetListenAddress(port);
+            if (NetFlags.isAnyAddress(listenAddress)) {
+                listenAddress = "*";
+            }
+            traceln("Listen " + listenAddress + ":" + port);
         }
     }
 }
