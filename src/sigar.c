@@ -17,6 +17,11 @@
  */
 
 #include <errno.h>
+#ifndef WIN32
+#include <arpa/inet.h>
+#include <sys/socket.h>
+#include <sys/time.h>
+#endif
 
 #include "sigar.h"
 #include "sigar_private.h"
@@ -1415,9 +1420,7 @@ int sigar_resource_limit_get(sigar_t *sigar,
 #if !defined(WIN32) && !defined(DARWIN) && !defined(__FreeBSD__) && !defined(NETWARE)
 
 /* XXX: prolly will be moving these stuffs into os_net.c */
-#include <sys/socket.h>
 #include <sys/ioctl.h>
-#include <arpa/inet.h>
 #include <net/if.h>
 
 #ifndef SIOCGIFCONF
@@ -1870,7 +1873,6 @@ SIGAR_DECLARE(int) sigar_net_address_equals(sigar_net_address_t *addr1,
 }
 
 #if !defined(WIN32) && !defined(NETWARE) && !defined(__hpux)
-#include <arpa/inet.h>
 #define sigar_inet_ntop inet_ntop
 #define sigar_inet_ntop_errno errno
 #else
