@@ -865,7 +865,7 @@ sigar_net_listen_address_get(sigar_t *sigar,
                              sigar_net_address_t *address)
 {
     if (!sigar->net_listen ||
-        sigar_cache_find(sigar->net_listen, port))
+        !sigar_cache_find(sigar->net_listen, port))
     {
         sigar_net_stat_t netstat;
         int status =
