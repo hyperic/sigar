@@ -845,15 +845,24 @@ sigar_net_connection_list_get(sigar_t *sigar,
 }
 #endif
 
+static void sigar_net_listen_address_add(sigar_t *sigar,
+                                         sigar_net_connection_t *conn)
+{
+    sigar_cache_entry_t *entry =
+        sigar_cache_get(sigar->net_listen, conn->local_port);
+
+    if (!entry->value) {
+        entry->value = malloc(sizeof(conn->local_address));
+    }
+
+    memcpy(entry->value, &conn->local_address,
+           sizeof(conn->local_address));
+}
+
 typedef struct {
     sigar_net_stat_t *netstat;
     sigar_net_connection_list_t *connlist;
 } net_stat_getter_t;
-
-static void listen_port_free(void *ptr)
-{
-    /*noop*/
-}
 
 static int net_stat_walker(sigar_net_connection_walker_t *walker,
                            sigar_net_connection_t *conn)
@@ -868,11 +877,7 @@ static int net_stat_walker(sigar_net_connection_walker_t *walker,
 
         /* XXX listen_ports may get stale */
         if (state == SIGAR_TCP_LISTEN) {
-            sigar_cache_entry_t *entry =
-                sigar_cache_get(listen_ports,
-                                conn->local_port);
-
-            entry->value = (void*)conn->local_port;
+            sigar_net_listen_address_add(walker->sigar, conn);
         }
         else {
             if (sigar_cache_find(listen_ports,
@@ -908,7 +913,6 @@ sigar_net_stat_get(sigar_t *sigar,
 
     if (!sigar->net_listen) {
         sigar->net_listen = sigar_cache_new(32);
-        sigar->net_listen->free_value = listen_port_free;
     }
     
     SIGAR_ZERO(netstat);
