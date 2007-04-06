@@ -851,7 +851,12 @@ static void sigar_net_listen_address_add(sigar_t *sigar,
     sigar_cache_entry_t *entry =
         sigar_cache_get(sigar->net_listen, conn->local_port);
 
-    if (!entry->value) {
+    if (entry->value) {
+        if (conn->local_address.family == SIGAR_AF_INET6) {
+            return; /* prefer ipv4 */
+        }
+    }
+    else {
         entry->value = malloc(sizeof(conn->local_address));
     }
 
