@@ -851,8 +851,31 @@ JNIEXPORT jobjectArray SIGAR_JNIx(getNetConnectionList)
     return connarray;
 }
 
+static int jbyteArray_to_sigar_net_address(JNIEnv *env, jbyteArray jaddress,
+                                           sigar_net_address_t *address)
+{
+    jsize len = JENV->GetArrayLength(env, jaddress);
+
+    JENV->GetByteArrayRegion(env, jaddress, 0, len,
+                             (jbyte *)&address->addr.in6);
+
+    switch (len) {
+      case 4:
+        address->family = SIGAR_AF_INET;
+        break;
+      case 4*4:
+        address->family = SIGAR_AF_INET6;
+        break;
+      default:
+        return EINVAL;
+    }
+
+    return SIGAR_OK;
+}
+
 JNIEXPORT void SIGAR_JNI(NetStat_stat)
-(JNIEnv *env, jobject obj, jobject sigar_obj, jint flags)
+(JNIEnv *env, jobject obj, jobject sigar_obj, jint flags,
+ jbyteArray jaddress, jlong port)
 {
     int status;
     sigar_net_stat_t netstat;
@@ -860,9 +883,21 @@ JNIEXPORT void SIGAR_JNI(NetStat_stat)
     jfieldID id;
     jintArray states;
     jint tcp_states[SIGAR_TCP_UNKNOWN];
+    sigar_net_address_t address;
+    jboolean has_port = (port != -1);
     dSIGAR_VOID;
 
-    status = sigar_net_stat_get(sigar, &netstat, flags);
+    if (has_port) {
+        status = jbyteArray_to_sigar_net_address(env, jaddress, &address);
+        if (status == SIGAR_OK) {
+            status = sigar_net_stat_port_get(sigar, &netstat, flags,
+                                             &address, port);
+        }
+    }
+    else {
+        status = sigar_net_stat_get(sigar, &netstat, flags);
+    }
+
     if (status != SIGAR_OK) {
         sigar_throw_error(env, jsigar, status);
         return;
@@ -891,8 +926,6 @@ JNIEXPORT void SIGAR_JNI(NetStat_stat)
 
     id = JENV->GetFieldID(env, cls, "tcpStates", "[I");
     JENV->SetObjectField(env, obj, id, states);
-
-    return;
 }
 
 JNIEXPORT jstring SIGAR_JNI(NetConnection_getTypeString)

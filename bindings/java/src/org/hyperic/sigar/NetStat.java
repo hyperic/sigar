@@ -20,12 +20,14 @@ package org.hyperic.sigar;
 
 public class NetStat implements java.io.Serializable {
 
-    private static final long serialVersionUID = 02242007L;
+    private static final long serialVersionUID = 04052007L;
 
     protected int[] tcpStates;
     protected int tcpInboundTotal, tcpOutboundTotal;
+    protected int allInboundTotal, allOutboundTotal;
 
-    public native void stat(Sigar sigar, int flags) throws SigarException;
+    native void stat(Sigar sigar, int flags,
+                     byte[] address, long port) throws SigarException;
 
     public NetStat() { }
 
@@ -34,7 +36,17 @@ public class NetStat implements java.io.Serializable {
             NetFlags.CONN_SERVER | NetFlags.CONN_CLIENT |
             NetFlags.CONN_TCP;
 
-        stat(sigar, flags);
+        stat(sigar, flags, null, -1);
+    }
+
+    public void stat(Sigar sigar,
+                     byte[] address, long port)
+        throws SigarException {
+
+        int flags =
+            NetFlags.CONN_CLIENT | NetFlags.CONN_TCP;
+
+        stat(sigar, flags, address, port);
     }
 
     public int getTcpInboundTotal() {
@@ -43,6 +55,14 @@ public class NetStat implements java.io.Serializable {
 
     public int getTcpOutboundTotal() {
         return this.tcpOutboundTotal;
+    }
+
+    public int getAllInboundTotal() {
+        return this.allInboundTotal;
+    }
+
+    public int getAllOutboundTotal() {
+        return this.allOutboundTotal;
     }
 
     public int[] getTcpStates() {

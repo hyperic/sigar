@@ -55,6 +55,7 @@ public class SigarTestRunner extends SigarCommandBase {
         TestNetInfo.class,
         TestNetRoute.class,
         TestNetStat.class,
+        TestNetStatPort.class,
         TestProcArgs.class,
         TestProcEnv.class,
         TestProcExe.class,

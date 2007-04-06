@@ -989,6 +989,85 @@ sigar_net_stat_get(sigar_t *sigar,
     }
 }
 
+typedef struct {
+    sigar_net_stat_t *netstat;
+    sigar_net_address_t *address;
+    unsigned long port;
+} net_stat_port_getter_t;
+
+static int net_stat_port_walker(sigar_net_connection_walker_t *walker,
+                                sigar_net_connection_t *conn)
+{
+    net_stat_port_getter_t *getter =
+        (net_stat_port_getter_t *)walker->data;
+    sigar_net_stat_t *netstat = getter->netstat;
+
+    if (conn->type == SIGAR_NETCONN_TCP) {
+        if (conn->local_port == getter->port) {
+            netstat->all_inbound_total++;
+
+            if (sigar_net_address_equals(getter->address,
+                                         &conn->local_address) == SIGAR_OK)
+            {
+                netstat->tcp_inbound_total++;
+            }
+        }
+        else if (conn->remote_port == getter->port) {
+            netstat->all_outbound_total++;
+
+            if (sigar_net_address_equals(getter->address,
+                                         &conn->remote_address) == SIGAR_OK)
+            {
+                netstat->tcp_outbound_total++;
+            }
+        }
+        else {
+            return SIGAR_OK;
+        }
+
+        netstat->tcp_states[conn->state]++;
+    }
+    else if (conn->type == SIGAR_NETCONN_UDP) {
+        /*XXX*/
+    }
+
+    return SIGAR_OK;
+}
+
+SIGAR_DECLARE(int)
+sigar_net_stat_port_get(sigar_t *sigar,
+                        sigar_net_stat_t *netstat,
+                        int flags,
+                        sigar_net_address_t *address,
+                        unsigned long port)
+{
+    sigar_net_connection_walker_t walker;
+    net_stat_port_getter_t getter;
+
+    SIGAR_ZERO(netstat);
+
+    getter.netstat = netstat;
+    getter.address = address;
+    getter.port = port;
+
+    walker.sigar = sigar;
+    walker.data = &getter;
+    walker.add_connection = net_stat_port_walker;
+
+    walker.flags = flags;
+
+    if (SIGAR_LOG_IS_DEBUG(sigar)) {
+        char name[SIGAR_FQDN_LEN];
+        sigar_net_address_to_string(sigar, address, name);
+
+        sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
+                         "[net_stat_port] using address '%s:%d'",
+                         name, port);
+    }
+
+    return sigar_net_connection_walk(&walker);
+}
+
 int sigar_who_list_create(sigar_who_list_t *wholist)
 {
     wholist->number = 0;
@@ -1796,6 +1875,26 @@ static int sigar_ether_ntoa(char *buff, unsigned char *ptr)
             (ptr[0] & 0xff), (ptr[1] & 0xff), (ptr[2] & 0xff),
             (ptr[3] & 0xff), (ptr[4] & 0xff), (ptr[5] & 0xff));
     return SIGAR_OK;
+}
+
+SIGAR_DECLARE(int) sigar_net_address_equals(sigar_net_address_t *addr1,
+                                            sigar_net_address_t *addr2)
+                                            
+{
+    if (addr1->family != addr2->family) {
+        return EINVAL;
+    }
+
+    switch (addr1->family) {
+      case SIGAR_AF_INET:
+        return memcmp(&addr1->addr.in, &addr2->addr.in, sizeof(addr1->addr.in));
+      case SIGAR_AF_INET6:
+        return memcmp(&addr1->addr.in6, &addr2->addr.in6, sizeof(addr1->addr.in6));
+      case SIGAR_AF_LINK:
+        return memcmp(&addr1->addr.mac, &addr2->addr.mac, sizeof(addr1->addr.mac));
+      default:
+        return EINVAL;
+    }
 }
 
 SIGAR_DECLARE(int) sigar_net_address_to_string(sigar_t *sigar,

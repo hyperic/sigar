@@ -799,7 +799,14 @@ public class Sigar implements SigarProxy {
         netstat.stat(this);
         return netstat;
     }
-    
+
+    public NetStat getNetStat(byte[] address, long port)
+        throws SigarException {
+        NetStat netstat = new NetStat();
+        netstat.stat(this, address, port);
+        return netstat;
+    }
+
     public native Who[] getWhoList()
         throws SigarException;
 

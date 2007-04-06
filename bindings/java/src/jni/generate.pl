@@ -847,6 +847,12 @@ my %classes = (
       {
          name => 'tcp_outbound_total', type => 'Int',
       },
+      {
+         name => 'all_inbound_total', type => 'Int',
+      },
+      {
+         name => 'all_outbound_total', type => 'Int',
+      },
     ],
     ResourceLimit => [
       {

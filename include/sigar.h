@@ -461,6 +461,9 @@ typedef struct {
     } addr;
 } sigar_net_address_t;
 
+SIGAR_DECLARE(int) sigar_net_address_equals(sigar_net_address_t *addr1,
+                                            sigar_net_address_t *addr2);
+
 SIGAR_DECLARE(int) sigar_net_address_to_string(sigar_t *sigar,
                                                sigar_net_address_t *address,
                                                char *addr_str);
@@ -666,12 +669,22 @@ typedef struct {
     int tcp_states[SIGAR_TCP_UNKNOWN];
     sigar_uint32_t tcp_inbound_total;
     sigar_uint32_t tcp_outbound_total;
+    sigar_uint32_t all_inbound_total;
+    sigar_uint32_t all_outbound_total;
 } sigar_net_stat_t;
 
 SIGAR_DECLARE(int)
 sigar_net_stat_get(sigar_t *sigar,
                    sigar_net_stat_t *netstat,
                    int flags);
+
+SIGAR_DECLARE(int)
+sigar_net_stat_port_get(sigar_t *sigar,
+                        sigar_net_stat_t *netstat,
+                        int flags,
+                        sigar_net_address_t *address,
+                        unsigned long port);
+
     
 SIGAR_DECLARE(const char *)sigar_net_connection_type_get(int type);
 
