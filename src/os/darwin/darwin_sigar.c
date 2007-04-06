@@ -2024,11 +2024,20 @@ static int net_connection_get(sigar_net_connection_walker_t *walker, int proto)
 
             SIGAR_ZERO(&conn);
 
-            sigar_net_address_set(conn.local_address,
-                                  inp->inp_laddr.s_addr);
+            if (inp->inp_vflag & INP_IPV6) {
+                sigar_net_address6_set(conn.local_address,
+                                       &inp->in6p_laddr.s6_addr);
 
-            sigar_net_address_set(conn.remote_address,
-                                  inp->inp_faddr.s_addr);
+                sigar_net_address6_set(conn.remote_address,
+                                       &inp->in6p_faddr.s6_addr);
+            }
+            else {
+                sigar_net_address_set(conn.local_address,
+                                      inp->inp_laddr.s_addr);
+
+                sigar_net_address_set(conn.remote_address,
+                                      inp->inp_faddr.s_addr);
+            }
 
             conn.local_port  = ntohs(inp->inp_lport);
             conn.remote_port = ntohs(inp->inp_fport);
