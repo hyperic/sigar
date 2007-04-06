@@ -250,9 +250,10 @@ int sigar_mem_get(sigar_t *sigar, sigar_mem_t *mem)
     vm_statistics_data_t vmstat;
     kern_return_t status;
     mach_msg_type_number_t count = sizeof(vmstat) / sizeof(integer_t);
-    uint64_t value64;
+    uint64_t mem_total;
 #else
-    unsigned long value;
+    unsigned long mem_total;
+    int mem_free;
 #endif
     int mib[2];
     size_t len;
@@ -267,17 +268,15 @@ int sigar_mem_get(sigar_t *sigar, sigar_mem_t *mem)
 
 #ifdef DARWIN
     mib[1] = HW_MEMSIZE;
-#   define MEM_VAL value64
 #else
     mib[1] = HW_PHYSMEM;
-#   define MEM_VAL value
 #endif
-    len = sizeof(MEM_VAL);
-    if (sysctl(mib, NMIB(mib), &MEM_VAL, &len, NULL, 0) < 0) {
+    len = sizeof(mem_total);
+    if (sysctl(mib, NMIB(mib), &mem_total, &len, NULL, 0) < 0) {
         return errno;
     }
 
-    mem->total = MEM_VAL;
+    mem->total = mem_total;
 
 #ifdef DARWIN
     status = host_statistics(sigar->mach_port, HOST_VM_INFO,
@@ -289,14 +288,15 @@ int sigar_mem_get(sigar_t *sigar, sigar_mem_t *mem)
 
     mem->free = vmstat.free_count * sigar->pagesize;
 #else
-    len = sizeof(value);
+    len = sizeof(mem_free);
     if (sysctlbyname("vm.stats.vm.v_free_count",
-                     &value, &len, NULL, 0) == -1)
+                     &mem_free, &len, NULL, 0) == -1)
     {
         mem->free = 0; /*XXX*/
     }
     else {
-        mem->free = value * sigar->pagesize;
+        mem->free = mem_free;
+        mem->free *= sigar->pagesize;
     }
 #endif
 

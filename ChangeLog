@@ -1,3 +1,7 @@
+2007-04-06  Doug MacEachern  <dougm@hyperic.com>
+
+        * [SIGAR-47] Fix sigar_mem_get on 64-bit FreeBSD
+
 2007-04-05  Doug MacEachern  <dougm@hyperic.com>
 
         * Add net_listen_address function to lookup bind address of a listen socket
