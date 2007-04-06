@@ -859,9 +859,10 @@ static void sigar_net_listen_address_add(sigar_t *sigar,
            sizeof(conn->local_address));
 }
 
-SIGAR_DECLARE(int)sigar_net_listen_address_get(sigar_t *sigar,
-                                               unsigned long port,
-                                               sigar_net_address_t *address)
+SIGAR_DECLARE(int)
+sigar_net_listen_address_get(sigar_t *sigar,
+                             unsigned long port,
+                             sigar_net_address_t *address)
 {
     if (!sigar->net_listen ||
         sigar_cache_find(sigar->net_listen, port))
