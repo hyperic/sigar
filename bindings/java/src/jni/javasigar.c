@@ -928,6 +928,22 @@ JNIEXPORT void SIGAR_JNI(NetStat_stat)
     JENV->SetObjectField(env, obj, id, states);
 }
 
+JNIEXPORT jstring SIGAR_JNIx(getNetListenAddress)
+(JNIEnv *env, jobject sigar_obj, jlong port)
+{
+    int status;
+    sigar_net_address_t address;
+    dSIGAR(NULL);
+
+    status = sigar_net_listen_address_get(sigar, port, &address);
+    if (status != SIGAR_OK) {
+        sigar_throw_error(env, jsigar, status);
+        return NULL;
+    }
+
+    return jnet_address_to_string(env, sigar, &address);
+}
+
 JNIEXPORT jstring SIGAR_JNI(NetConnection_getTypeString)
 (JNIEnv *env, jobject obj)
 {
