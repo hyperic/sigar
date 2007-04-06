@@ -686,6 +686,10 @@ sigar_net_stat_port_get(sigar_t *sigar,
                         unsigned long port);
 
     
+SIGAR_DECLARE(int)sigar_net_listen_address_get(sigar_t *sigar,
+                                               unsigned long port,
+                                               sigar_net_address_t *address);
+
 SIGAR_DECLARE(const char *)sigar_net_connection_type_get(int type);
 
 SIGAR_DECLARE(const char *)sigar_net_connection_state_get(int state);

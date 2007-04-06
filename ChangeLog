@@ -1,5 +1,7 @@
 2007-04-05  Doug MacEachern  <dougm@hyperic.com>
 
+        * Add net_listen_address function to lookup bind address of a listen socket
+
         * Add net_stat_port function to provide metrics on specific port+address
 
         * [SIGAR-46] Fix cpu_info.{mhz,cache_size} fields in UML vms

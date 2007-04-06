@@ -859,6 +859,33 @@ static void sigar_net_listen_address_add(sigar_t *sigar,
            sizeof(conn->local_address));
 }
 
+SIGAR_DECLARE(int)sigar_net_listen_address_get(sigar_t *sigar,
+                                               unsigned long port,
+                                               sigar_net_address_t *address)
+{
+    if (!sigar->net_listen ||
+        sigar_cache_find(sigar->net_listen, port))
+    {
+        sigar_net_stat_t netstat;
+        int status =
+            sigar_net_stat_get(sigar, &netstat,
+                               SIGAR_NETCONN_SERVER|SIGAR_NETCONN_TCP);
+
+        if (status != SIGAR_OK) {
+            return status;
+        }
+    }
+
+    if (sigar_cache_find(sigar->net_listen, port)) {
+        void *value = sigar_cache_get(sigar->net_listen, port)->value;
+        memcpy(address, value, sizeof(*address));
+        return SIGAR_OK;
+    }
+    else {
+        return ENOENT;
+    }
+}
+
 typedef struct {
     sigar_net_stat_t *netstat;
     sigar_net_connection_list_t *connlist;
