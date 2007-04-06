@@ -18,6 +18,7 @@
 
 package org.hyperic.sigar.cmd;
 
+import org.hyperic.sigar.NetInterfaceConfig;
 import org.hyperic.sigar.SigarException;
 
 /**
@@ -38,6 +39,19 @@ public class NetInfo extends SigarCommandBase {
     }
 
     public void output(String[] args) throws SigarException {
+        NetInterfaceConfig config = this.sigar.getNetInterfaceConfig(null);
+        println("primary interface....." +
+                config.getName());
+
+        println("primary ip address...." +
+                config.getAddress());
+
+        println("primary mac address..." +
+                config.getHwaddr());
+
+        println("primary netmask......." +
+                config.getNetmask());
+
         org.hyperic.sigar.NetInfo info =
             this.sigar.getNetInfo();
 
