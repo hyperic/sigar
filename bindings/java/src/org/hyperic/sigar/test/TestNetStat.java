@@ -25,8 +25,6 @@ import org.hyperic.sigar.Sigar;
 import org.hyperic.sigar.SigarNotImplementedException;
 
 public class TestNetStat extends SigarTestCase {
-    private static boolean printListeners =
-        "true".equals(System.getProperty("sigar.netstat.listeners"));
 
     public TestNetStat(String name) {
         super(name);
@@ -48,21 +46,6 @@ public class TestNetStat extends SigarTestCase {
         int[] states = netstat.getTcpStates();
         for (int i=0; i<NetFlags.TCP_UNKNOWN; i++) {
             assertGtEqZeroTrace(NetConnection.getStateString(i), states[i]);
-        }
-
-        if (!printListeners) {
-            return;
-        }
-
-        int flags = NetFlags.CONN_SERVER | NetFlags.CONN_TCP;
-
-        NetConnection[] connections =
-            sigar.getNetConnectionList(flags);
-
-        for (int i=0; i<connections.length; i++) {
-            long port = connections[i].getLocalPort();
-            traceln("Listen " +
-                    sigar.getNetListenAddress(port) + ":" + port);
         }
     }
 }

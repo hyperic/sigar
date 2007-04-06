@@ -18,7 +18,10 @@
 
 package org.hyperic.sigar.test;
 
+import org.hyperic.sigar.NetConnection;
+import org.hyperic.sigar.NetFlags;
 import org.hyperic.sigar.NetInfo;
+import org.hyperic.sigar.NetInterfaceConfig;
 import org.hyperic.sigar.SigarException;
 
 public class TestNetInfo extends SigarTestCase {
@@ -29,5 +32,20 @@ public class TestNetInfo extends SigarTestCase {
 
     public void testNetInfo() throws SigarException {
         NetInfo info = getSigar().getNetInfo();
+        NetInterfaceConfig config = getSigar().getNetInterfaceConfig(null);
+        traceln("");
+        traceln(info.toString());
+        traceln(config.toString());
+
+        int flags = NetFlags.CONN_SERVER | NetFlags.CONN_TCP;
+
+        NetConnection[] connections =
+            getSigar().getNetConnectionList(flags);
+
+        for (int i=0; i<connections.length; i++) {
+            long port = connections[i].getLocalPort();
+            traceln("Listen " +
+                    getSigar().getNetListenAddress(port) + ":" + port);
+        }
     }
 }
