@@ -1864,22 +1864,29 @@ SIGAR_DECLARE(int) sigar_net_address_equals(sigar_net_address_t *addr1,
     }
 }
 
+#if !defined(WIN32) && !defined(NETWARE) && !defined(__hpux)
+#include <arpa/inet.h>
+#define sigar_inet_ntop inet_ntop
+#define sigar_inet_ntop_errno errno
+#else
+#define sigar_inet_ntop(af, src, dst, size) NULL
+#define sigar_inet_ntop_errno EINVAL
+#endif
+
 SIGAR_DECLARE(int) sigar_net_address_to_string(sigar_t *sigar,
                                                sigar_net_address_t *address,
                                                char *addr_str)
 {
     switch (address->family) {
       case SIGAR_AF_INET6:
-#if defined(__linux__) /*XXX*/
-        if (inet_ntop(AF_INET6, (const void *)&address->addr.in6,
-                      addr_str, SIGAR_INET6_ADDRSTRLEN))
+        if (sigar_inet_ntop(AF_INET6, (const void *)&address->addr.in6,
+                            addr_str, SIGAR_INET6_ADDRSTRLEN))
         {
             return SIGAR_OK;
         }
         else {
-            return errno;
+            return sigar_inet_ntop_errno;
         }
-#endif
       case SIGAR_AF_INET:
         return sigar_inet_ntoa(sigar, address->addr.in, addr_str);
       case SIGAR_AF_UNSPEC:
