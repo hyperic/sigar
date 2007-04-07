@@ -38,8 +38,6 @@ public class TestPTQL extends SigarTestCase {
         "State.Name.ne=java,Exe.Cwd.eq=$user.dir", //parent(s) of process running this test
         "State.Name.sw=httpsd,State.Name.Pne=$1", //httpsd parent process
         "State.Name.ct=ssh", //anything ssh, "ssh", "ssh-agent", "sshd"
-        //disabled to pass with jdk 1.3
-        //"Args.-1.eq=weblogic.Server,Env.WEBLOGIC_CLASSPATH.re=.*weblogic.jar.*", //weblogic
         "State.Name.eq=java,Args.-1.ew=AgentClient", //hq agents
         "Cred.Uid.eq=1003,State.Name.eq=java,Args.-1.ew=AgentClient", //my hq agent
         "Cred.Uid.gt=0,Cred.Uid.lt=1000", //range of users
@@ -67,6 +65,16 @@ public class TestPTQL extends SigarTestCase {
         "Pid.Service.eq=Hyperic HQ Agent",
         "State.Name.eq=java,Pid.Pid.ne=$$", //all java procs cept this one
         "Cpu.Percent.ge=0.2",
+        "State.Name.sw=java,Args.*.eq=org.jboss.Main", //jboss
+        "State.Name.eq=java,Args.*.eq=com.ibm.ws.runtime.WsServer", //websphere
+        "State.Name.eq=java,Args.-1.eq=weblogic.Server", //weblogic
+    };
+
+    //XXX current required 1.4+
+    private static final String[] OK_RE_QUERIES = {
+        "Args.-1.eq=weblogic.Server,Env.WEBLOGIC_CLASSPATH.re=.*weblogic.jar.*", //weblogic
+        "State.Name.re=https?d.*|[Aa]pache2?$,State.Name.Pne=$1", //apache
+        "State.Name.re=post(master|gres),State.Name.Pne=$1,Args.0.re=.*post(master|gres)$", //postgresql
     };
 
     private static final String[] MALFORMED_QUERIES = {
@@ -137,6 +145,14 @@ public class TestPTQL extends SigarTestCase {
         }
     }
 
+    private void testReOK(SigarProxy proxy) throws Exception {
+        for (int i=0; i<OK_RE_QUERIES.length; i++) {
+            String qs = OK_RE_QUERIES[i];
+            assertTrue(qs,
+                       runQuery(proxy, qs) >= 0);
+        }
+    }
+
     private void testMalformed(SigarProxy proxy) throws Exception {
         for (int i=0; i<MALFORMED_QUERIES.length; i++) {
             String qs = MALFORMED_QUERIES[i];
@@ -168,6 +184,15 @@ public class TestPTQL extends SigarTestCase {
             SigarProxyCache.newInstance(getSigar());
 
         testOK(proxy);
+        String spec =
+            System.getProperty("java.specification.version");
+
+        if (spec.compareTo("1.4") >= 0) {
+            testReOK(proxy);
+        }
+        else {
+            traceln("skipping re tests for " + spec);
+        }
         testMalformed(proxy);
         testLoadFailure(proxy);
     }
