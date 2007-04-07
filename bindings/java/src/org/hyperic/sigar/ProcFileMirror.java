@@ -31,7 +31,6 @@ import org.apache.log4j.Logger;
 public class ProcFileMirror extends FileWatcher {
 
     private String proc;
-    private long timestamp;
     private long expire;
 
     private static final Logger log = 
@@ -41,7 +40,7 @@ public class ProcFileMirror extends FileWatcher {
 
     public ProcFileMirror(Sigar sigar, String proc) {
         super(sigar);
-        this.timestamp = System.currentTimeMillis();
+
         this.proc = proc;
         this.expire = FileWatcherThread.DEFAULT_INTERVAL;
     }
@@ -161,9 +160,10 @@ public class ProcFileMirror extends FileWatcher {
         throws SigarException,
                SigarFileNotFoundException {
 
+        File dest = new File(getProcFile(info.getName()));
         long now = System.currentTimeMillis();
-        if ((now - this.timestamp) > this.expire) {
-            this.timestamp = now;
+
+        if ((now - dest.lastModified()) > this.expire) {
             return true;
         }
         else {
