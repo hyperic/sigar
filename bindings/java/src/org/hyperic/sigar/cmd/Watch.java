@@ -128,13 +128,16 @@ public class Watch {
                 }
             };
 
+        ProcFileMirror mirror =
+            new ProcFileMirror(sigar, "./proc");
+
         watcher.setInterval(watcherThread.getInterval());
+        mirror.setInterval(watcherThread.getInterval());
+        mirror.setExpire(60);
+
         for (int i=0; i<args.length; i++) {
             String arg = args[i];
             if (arg.startsWith("/proc/")) {
-                ProcFileMirror mirror =
-                    new ProcFileMirror(sigar, "./proc");
-                watcherThread.add(mirror);
                 mirror.add(arg);
 
                 arg = mirror.getProcFile(arg);
@@ -148,6 +151,7 @@ public class Watch {
             }
         }
 
+        watcherThread.add(mirror);
         watcherThread.add(watcher);
 
         watcherThread.doStart();
