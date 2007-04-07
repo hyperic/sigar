@@ -19,6 +19,7 @@
 package org.hyperic.sigar.test;
 
 import java.net.InetAddress;
+import java.util.ArrayList;
 
 import org.hyperic.sigar.NetConnection;
 import org.hyperic.sigar.NetFlags;
@@ -62,13 +63,16 @@ public class TestNetStatPort extends SigarTestCase {
         NetInterfaceConfig ifconfig =
             sigar.getNetInterfaceConfig(null);
 
-        String[] addrs = {
-            ifconfig.getAddress(),
-            "0:0:0:0:0:0:0:1",
-        };
+        ArrayList addrs = new ArrayList();
+        addrs.add(ifconfig.getAddress());
+        addrs.add(NetFlags.LOOPBACK_ADDRESS);
+        if (JDK_14_COMPAT) {
+            addrs.add(NetFlags.LOOPBACK_ADDRESS_V6);
+        }
 
-        for (int i=0; i<addrs.length; i++) {
-            netstat(sigar, addrs[i], 22);
+        for (int i=0; i<addrs.size(); i++) {
+            String addr = (String)addrs.get(i);
+            netstat(sigar, addr, 22);
         }
     }
 }

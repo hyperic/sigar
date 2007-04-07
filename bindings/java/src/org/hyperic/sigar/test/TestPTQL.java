@@ -186,15 +186,11 @@ public class TestPTQL extends SigarTestCase {
             SigarProxyCache.newInstance(getSigar());
 
         testOK(proxy);
-        String spec =
-            System.getProperty("java.specification.version");
 
-        if (spec.compareTo("1.4") >= 0) {
+        if (JDK_14_COMPAT) {
             testReOK(proxy);
         }
-        else {
-            traceln("skipping re tests for " + spec);
-        }
+
         testMalformed(proxy);
         testLoadFailure(proxy);
     }

@@ -38,6 +38,9 @@ public abstract class SigarTestCase extends TestCase {
     private static boolean verbose =
         "true".equals(System.getProperty("sigar.testVerbose"));
 
+    protected static final boolean JDK_14_COMPAT =
+        System.getProperty("java.specification.version").compareTo("1.4") >= 0;
+
     private static PrintStream out = System.out;
 
     public SigarTestCase(String name) {
