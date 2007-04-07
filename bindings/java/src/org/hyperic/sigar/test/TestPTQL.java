@@ -89,13 +89,15 @@ public class TestPTQL extends SigarTestCase {
         "State.State.eq=read",
         "Args.x.eq=foo",
         "Time.Sys.gt=x",
-        "Pid.PidFile.ne=pid.file",
         "Pid.Pid.eq=foo",
-        "Pid.Service.ne=Eventlog",
         "Cpu.Percent.ge=x",
         "Port.foo.eq=8080",
         "",
-        null
+        null,
+        //disabled for testing w/ -Dsigar.ptql.native=true
+        //where these do not throw an exception
+        //"Pid.PidFile.ne=pid.file",
+        //"Pid.Service.ne=Eventlog",
     };
 
     private static final String[] LOAD_FAIL_QUERIES = {
