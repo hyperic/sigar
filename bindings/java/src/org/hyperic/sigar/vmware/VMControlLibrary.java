@@ -22,7 +22,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
-import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -101,6 +100,17 @@ public class VMControlLibrary {
         return getLib(LIBCRYPTO);
     }
 
+    private static String toString(String[] args) {
+        StringBuffer cmd = new StringBuffer();
+        for (int i=0; i<args.length; i++) {
+            if (cmd.length() != 0) {
+                cmd.append(' ');
+            }
+            cmd.append("'").append(args[i]).append("'");
+        }
+        return cmd.toString();
+    }
+
     private static void exec(String[] args)
         throws IOException {
 
@@ -109,14 +119,14 @@ public class VMControlLibrary {
             int exitVal = proc.waitFor();
             if (exitVal != 0) {
                 String msg =
-                    "exec" + Arrays.asList(args) +
-                    " failed: " + exitVal;
+                    "exec(" + toString(args) +
+                    ") failed: " + exitVal;
                 throw new IOException(msg);
             }
         } catch (InterruptedException e) {
         }
         if (isDebug) {
-            System.out.println("exec" + Arrays.asList(args) + " OK");
+            System.out.println("exec(" + toString(args) + ") OK");
         }
     }
 
