@@ -396,3 +396,28 @@ net_interface_list(sigar)
     OUTPUT:
     RETVAL
 
+SV *
+net_connection_list(sigar, flags)
+    Sigar sigar
+    int flags
+
+    PREINIT:
+    sigar_net_connection_list_t conn_list;
+    int status;
+
+    CODE:
+    status = sigar_net_connection_list_get(sigar, &conn_list, flags);
+
+    if (status != SIGAR_OK) {
+        SIGAR_CROAK(sigar, "net_connection_list");
+    }
+
+    RETVAL = convert_2svav((char *)&conn_list.data[0],
+                           conn_list.number,
+                           sizeof(*conn_list.data),
+                           "Sigar::NetConnection");
+
+    sigar_net_connection_list_destroy(sigar, &conn_list);
+
+    OUTPUT:
+    RETVAL
