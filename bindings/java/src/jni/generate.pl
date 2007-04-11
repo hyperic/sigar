@@ -29,12 +29,7 @@ sub supported_platforms {
 }
 
 sub hash {
-    use integer;
-    my $hash = 0;
-    for (split //, shift) {
-        $hash = $hash*31 + ord $_;
-    }
-    return $hash;
+    return unpack("%32C*", shift) % 65535;
 }
 
 #this script generates jni code and java classes for the following table
