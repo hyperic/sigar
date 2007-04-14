@@ -549,6 +549,9 @@ static int ptql_branch_match(ptql_branch_t *branch)
                                  branch->value.chr[0]);
       case PTQL_VALUE_TYPE_STR:
       case PTQL_VALUE_TYPE_ANY:
+        if (!branch->value.str) {
+            return 0;
+        }
         return branch->match.str(branch,
                                  (char *)DATA_PTR(branch),
                                  branch->value.str);
@@ -1066,24 +1069,34 @@ static int ptql_branch_add(ptql_parse_branch_t *parsed,
         return SIGAR_PTQL_MALFORMED_QUERY;
     }
 
-    if ((*parsed->value == '$') &&
-        sigar_isdigit(*(parsed->value+1)))
-    {
+    if (*parsed->value == '$') {
         is_set = 1;
-        branch->op_flags |= PTQL_OP_FLAG_REF;
-        branch->value.ui32 = atoi(parsed->value+1) - 1;
 
-        if (branch->value.ui32 >= branches->number) {
-            /* out-of-range */
-            return SIGAR_PTQL_MALFORMED_QUERY;
-        }
-        else if (branch->value.ui32 == branches->number-1) {
-            /* self reference */
-            return SIGAR_PTQL_MALFORMED_QUERY;
-        }
-        else if (branch->op_name == PTQL_OP_RE) {
+        if (branch->op_name == PTQL_OP_RE) {
             /* not for use with .re */
             return SIGAR_PTQL_MALFORMED_QUERY;
+        }
+
+        if (sigar_isdigit(*(parsed->value+1))) {
+            branch->op_flags |= PTQL_OP_FLAG_REF;
+            branch->value.ui32 = atoi(parsed->value+1) - 1;
+
+            if (branch->value.ui32 >= branches->number) {
+                /* out-of-range */
+                return SIGAR_PTQL_MALFORMED_QUERY;
+            }
+            else if (branch->value.ui32 == branches->number-1) {
+                /* self reference */
+                return SIGAR_PTQL_MALFORMED_QUERY;
+            }
+        }
+        else {
+            if ((ptr = getenv(parsed->value+1))) {
+                branch->value.str = strdup(ptr);
+            }
+            else {
+                branch->value.str = NULL;
+            }
         }
     }
     else if (branch->op_name == PTQL_OP_RE) {
