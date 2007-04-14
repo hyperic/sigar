@@ -93,10 +93,6 @@ int sigar_proc_list_procfs_get(sigar_t *sigar,
 int sigar_proc_fd_count(sigar_t *sigar, sigar_pid_t pid,
                         sigar_uint64_t *total);
 
-/* generic util functions for all platforms */
-
-int sigar_proc_count(sigar_t *sigar, sigar_uint64_t *total);
-
 /* linux + freebsd */
 int sigar_procfs_args_get(sigar_t *sigar, sigar_pid_t pid,
                           sigar_proc_args_t *procargs);

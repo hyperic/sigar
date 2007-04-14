@@ -137,9 +137,18 @@ SIGAR_DECLARE(int) sigar_proc_cpu_get(sigar_t *sigar, sigar_pid_t pid,
 SIGAR_DECLARE(int) sigar_proc_stat_get(sigar_t *sigar,
                                        sigar_proc_stat_t *procstat)
 {
-    int status = sigar_proc_count(sigar, &procstat->total);
+    int status;
+    sigar_proc_list_t proclist;
 
-    return status;
+    if ((status = sigar_proc_list_get(sigar, &proclist)) != SIGAR_OK) {
+        return status;
+    }
+
+    procstat->total = proclist.number;
+
+    sigar_proc_list_destroy(sigar, &proclist);
+
+    return SIGAR_OK;
 }
 
 static char *sigar_error_string(int err)

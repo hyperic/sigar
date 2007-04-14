@@ -293,25 +293,6 @@ int sigar_procfs_args_get(sigar_t *sigar, sigar_pid_t pid,
 
 #endif /* WIN32 */
 
-/* os impls should use an optimized version of this */
-int sigar_proc_count(sigar_t *sigar, sigar_uint64_t *total)
-{
-    int status;
-    sigar_proc_list_t proclist;
-
-    *total = 0;
-
-    if ((status = sigar_proc_list_get(sigar, &proclist)) != SIGAR_OK) {
-        return status;
-    }
-
-    *total = proclist.number;
-
-    sigar_proc_list_destroy(sigar, &proclist);
-
-    return SIGAR_OK;
-}
-
 int sigar_mem_calc_ram(sigar_t *sigar, sigar_mem_t *mem)
 {
     sigar_uint64_t lram = (mem->total / (1024 * 1024));
