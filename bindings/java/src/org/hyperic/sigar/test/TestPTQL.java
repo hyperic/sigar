@@ -35,6 +35,7 @@ public class TestPTQL extends SigarTestCase {
         "State.Name.eq=java", //all java processs
         "Exe.Name.ew=java",   //similar
         "State.Name.eq=java,Exe.Cwd.eq=$user.dir", //process running this test
+        "State.Name.eq=java,Exe.Cwd.eq=$PWD", //getenv
         "State.Name.ne=java,Exe.Cwd.eq=$user.dir", //parent(s) of process running this test
         "State.Name.sw=httpsd,State.Name.Pne=$1", //httpsd parent process
         "State.Name.ct=ssh", //anything ssh, "ssh", "ssh-agent", "sshd"
