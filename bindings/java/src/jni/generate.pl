@@ -381,6 +381,31 @@ my %classes = (
          desc => 'Total number of processes',
          plat => '*'
       },
+      {
+         name => 'idle', type => 'Long',
+         desc => 'Total number of processes in idle state',
+         plat => '*'
+      },
+      {
+         name => 'running', type => 'Long',
+         desc => 'Total number of processes in run state',
+         plat => '*'
+      },
+      {
+         name => 'sleeping', type => 'Long',
+         desc => 'Total number of processes in sleep state',
+         plat => '*'
+      },
+      {
+         name => 'stopped', type => 'Long',
+         desc => 'Total number of processes in stop state',
+         plat => '*'
+      },
+      {
+         name => 'zombie', type => 'Long',
+         desc => 'Total number of processes in zombie state',
+         plat => '*'
+      },
     ],
     ProcExe => [
       {

@@ -137,14 +137,45 @@ SIGAR_DECLARE(int) sigar_proc_cpu_get(sigar_t *sigar, sigar_pid_t pid,
 SIGAR_DECLARE(int) sigar_proc_stat_get(sigar_t *sigar,
                                        sigar_proc_stat_t *procstat)
 {
-    int status;
+    int status, i;
     sigar_proc_list_t proclist;
+
+    SIGAR_ZERO(procstat);
 
     if ((status = sigar_proc_list_get(sigar, &proclist)) != SIGAR_OK) {
         return status;
     }
 
     procstat->total = proclist.number;
+
+    for (i=0; i<proclist.number; i++) {
+        sigar_proc_state_t state;
+
+        status = sigar_proc_state_get(sigar, proclist.data[i], &state);
+        if (status != SIGAR_OK) {
+            continue;
+        }
+
+        switch (state.state) {
+          case SIGAR_PROC_STATE_IDLE:
+            procstat->idle++;
+            break;
+          case SIGAR_PROC_STATE_RUN:
+            procstat->running++;
+            break;
+          case SIGAR_PROC_STATE_SLEEP:
+            procstat->sleeping++;
+            break;
+          case SIGAR_PROC_STATE_STOP:
+            procstat->stopped++;
+            break;
+          case SIGAR_PROC_STATE_ZOMBIE:
+            procstat->zombie++;
+            break;
+          default:
+            break;
+        }
+    }
 
     sigar_proc_list_destroy(sigar, &proclist);
 

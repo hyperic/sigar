@@ -26,7 +26,7 @@ import org.hyperic.sigar.SigarProxy;
 import org.hyperic.sigar.CpuPerc;
 import org.hyperic.sigar.SigarProxyCache;
 import org.hyperic.sigar.ProcCpu;
-import org.hyperic.sigar.CurrentProcessSummary;
+import org.hyperic.sigar.ProcStat;
 
 /**
  * Display system resource utilization summaries and process information.
@@ -45,6 +45,15 @@ public class Top {
     private static final String HEADER =
         "PID\tUSER\tSTIME\tSIZE\tRSS\tSHARE\tSTATE\tTIME\t%CPU\tCOMMAND";
 
+    private static String toString(ProcStat stat) {
+        return 
+            stat.getTotal()    + " processes: " +
+            stat.getSleeping() + " sleeping, " +
+            stat.getRunning()  + " running, " + 
+            stat.getZombie()   + " zombie, " +
+            stat.getStopped()  + " stopped";
+    }
+
     public static void main(String[] args) throws Exception {
         Sigar sigarImpl = new Sigar();
 
@@ -56,7 +65,7 @@ public class Top {
 
             System.out.println(Uptime.getInfo(sigar));
 
-            System.out.println(CurrentProcessSummary.get(sigar));
+            System.out.println(toString(sigar.getProcStat()));
 
             System.out.println(sigar.getCpuPerc());
 

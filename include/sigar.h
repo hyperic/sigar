@@ -244,6 +244,11 @@ SIGAR_DECLARE(int) sigar_proc_list_destroy(sigar_t *sigar,
 
 typedef struct {
     sigar_uint64_t total;
+    sigar_uint64_t sleeping;
+    sigar_uint64_t running;
+    sigar_uint64_t zombie;
+    sigar_uint64_t stopped;
+    sigar_uint64_t idle;
 } sigar_proc_stat_t;
 
 SIGAR_DECLARE(int) sigar_proc_stat_get(sigar_t *sigar,
@@ -307,6 +312,12 @@ typedef struct {
 
 SIGAR_DECLARE(int) sigar_proc_cpu_get(sigar_t *sigar, sigar_pid_t pid,
                                       sigar_proc_cpu_t *proccpu);
+
+#define SIGAR_PROC_STATE_SLEEP  'S'
+#define SIGAR_PROC_STATE_RUN    'R'
+#define SIGAR_PROC_STATE_STOP   'T'
+#define SIGAR_PROC_STATE_ZOMBIE 'Z'
+#define SIGAR_PROC_STATE_IDLE   'D'
 
 #define SIGAR_PROC_NAME_LEN 128
 
