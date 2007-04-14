@@ -1,3 +1,7 @@
+2007-04-14  Doug MacEachern  <dougm@hyperic.com>
+
+        * 1.4 released
+
 2007-04-06  Doug MacEachern  <dougm@hyperic.com>
 
         * [SIGAR-47] Fix sigar_mem_get on 64-bit FreeBSD
