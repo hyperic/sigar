@@ -18,7 +18,6 @@
   <property name="jni.source.dir" location="../.."/>
   <property name="jni.src.java" value="hyperic_jni/src"/>
   <property name="jni.libprefix" value=""/> <!-- drop "java" prefix -->
-  <property name="jni.werror" value="true"/>
   <property name="cpptasks.jar"
             location="hyperic_jni/lib/cpptasks.jar"/>
 
