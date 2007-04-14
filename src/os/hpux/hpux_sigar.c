@@ -235,15 +235,6 @@ int sigar_proc_list_get(sigar_t *sigar,
     return SIGAR_OK;
 }
 
-int sigar_proc_stat_get(sigar_t *sigar,
-                        sigar_proc_stat_t *procstat)
-{
-    int status = /* XXX optimize */
-        sigar_proc_count(sigar, &procstat->total);
-
-    return status;
-}
-
 static int sigar_pstat_getproc(sigar_t *sigar, sigar_pid_t pid)
 {
     int status, num;

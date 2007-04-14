@@ -976,15 +976,6 @@ SIGAR_DECLARE(int) sigar_proc_list_get(sigar_t *sigar,
     }
 }
 
-SIGAR_DECLARE(int) sigar_proc_stat_get(sigar_t *sigar,
-                                       sigar_proc_stat_t *procstat)
-{
-    int status = /* XXX optimize */
-        sigar_proc_count(sigar, &procstat->total);
-
-    return status;
-}
-
 #define PROCESS_DAC (PROCESS_QUERY_INFORMATION|PROCESS_VM_READ)
 
 static HANDLE open_process(sigar_pid_t pid)

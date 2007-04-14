@@ -134,6 +134,14 @@ SIGAR_DECLARE(int) sigar_proc_cpu_get(sigar_t *sigar, sigar_pid_t pid,
     return SIGAR_OK;
 }
 
+SIGAR_DECLARE(int) sigar_proc_stat_get(sigar_t *sigar,
+                                       sigar_proc_stat_t *procstat)
+{
+    int status = sigar_proc_count(sigar, &procstat->total);
+
+    return status;
+}
+
 static char *sigar_error_string(int err)
 {
     switch (err) {
