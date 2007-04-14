@@ -245,7 +245,7 @@ public class Sigar implements SigarProxy {
      * Send a signal to a process.
      *
      * @param pid The process id.
-     * @param signum The signal name.
+     * @param signame The signal name.
      * @exception SigarException on failure.
      */
     public void kill(long pid, String signame) throws SigarException {
