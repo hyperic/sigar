@@ -17,6 +17,8 @@
  */
 
 #include <errno.h>
+#include <stdio.h>
+
 #ifndef WIN32
 #include <arpa/inet.h>
 #include <sys/socket.h>
@@ -196,6 +198,10 @@ SIGAR_DECLARE(char *) sigar_strerror(sigar_t *sigar, int err)
 {
     char *buf;
 
+    if (err < 0) {
+        return sigar->errbuf;
+    }
+
     if (err > SIGAR_OS_START_ERROR) {
         if ((buf = sigar_os_error_string(sigar, err)) != NULL) {
             return buf;
@@ -249,7 +255,23 @@ char *sigar_strerror_get(int err, char *errbuf, int buflen)
     return errbuf;
 }
 
-#include <stdio.h> /* for sprintf */
+void sigar_strerror_set(sigar_t *sigar, char *msg)
+{
+    SIGAR_SSTRCPY(sigar->errbuf, msg);
+}
+
+#ifdef WIN32
+#define vsnprintf _vsnprintf
+#endif
+
+void sigar_strerror_printf(sigar_t *sigar, const char *format, ...)
+{
+    va_list args;
+
+    va_start(args, format);
+    vsnprintf(sigar->errbuf, sizeof(sigar->errbuf), format, args);
+    va_end(args);
+}
 
 SIGAR_DECLARE(int) sigar_uptime_string(sigar_t *sigar, 
                                        sigar_uptime_t *uptime,

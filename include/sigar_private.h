@@ -156,6 +156,10 @@ char *sigar_os_error_string(sigar_t *sigar, int err);
 
 char *sigar_strerror_get(int err, char *errbuf, int buflen);
 
+void sigar_strerror_set(sigar_t *sigar, char *msg);
+
+void sigar_strerror_printf(sigar_t *sigar, const char *format, ...);
+
 int sigar_sys_info_get_uname(sigar_sys_info_t *sysinfo);
 
 int sigar_os_sys_info_get(sigar_t *sigar, sigar_sys_info_t *sysinfo);
