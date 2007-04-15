@@ -195,8 +195,8 @@ JNIEXPORT jboolean VMWARE_JNI(VMwareServer_isRegistered)
     dSERVER(obj);
     const char *config =
         JENV->GetStringUTFChars(env, jconfig, NULL);
-    jboolean value;
-    jboolean retval =
+    Bool value;
+    Bool retval =
         VMControl_ServerIsRegistered(server, config, &value);
 
     JENV->ReleaseStringUTFChars(env, jconfig, config);
@@ -206,7 +206,7 @@ JNIEXPORT jboolean VMWARE_JNI(VMwareServer_isRegistered)
         return JNI_FALSE;
     }
 
-    return value;
+    return value ? JNI_TRUE : JNI_FALSE;
 }
 
 JNIEXPORT jobject VMWARE_JNI(VMwareServer_getRegisteredVmNames)
@@ -337,7 +337,7 @@ JNIEXPORT jint VMWARE_JNI(VM_getExecutionState)
 (JNIEnv *env, jclass obj)
 {
     dVM(obj);
-    unsigned int state;
+    int state;
 
     if (!VMControl_VMGetExecutionState(vm, &state)) {
         vmware_throw_last_vm_error();
@@ -393,7 +393,7 @@ JNIEXPORT jint VMWARE_JNI(VM_getToolsLastActive)
 (JNIEnv *env, jclass obj)
 {
     dVM(obj);
-    unsigned int seconds;
+    int seconds;
 
     if (!VMControl_VMToolsLastActive(vm, &seconds)) {
         vmware_throw_last_vm_error();
@@ -544,7 +544,7 @@ JNIEXPORT jint VMWARE_JNI(VM_getProductInfo)
 (JNIEnv *env, jclass obj, jint type)
 {
     dVM(obj);
-    unsigned int value;
+    int value;
 
     if (!VMControl_VMGetProductInfo(vm, type, &value)) {
         vmware_throw_last_vm_error();
@@ -637,14 +637,14 @@ JNIEXPORT jboolean VMWARE_JNI(VM_hasSnapshot)
 (JNIEnv *env, jclass obj)
 {
     dVM(obj);
-    jboolean value;
+    Bool value;
 
     if (!VMControl_VMHasSnapshot(vm, &value)) {
         vmware_throw_last_vm_error();
         return JNI_FALSE;
     }
 
-    return value;
+    return value ? JNI_TRUE : JNI_FALSE;
 }
 
 JNIEXPORT jlong VMWARE_JNI(VM_getPid)
@@ -730,8 +730,8 @@ JNIEXPORT jboolean VMWARE_JNI(VM_deviceIsConnected)
     dVM(obj);
     const char *device =
         JENV->GetStringUTFChars(env, jdevice, NULL);
-    jboolean isConnected;
-    jboolean retval =
+    Bool isConnected;
+    Bool retval =
         VMControl_VMDeviceIsConnected(vm, device,
                                       &isConnected);
 
@@ -742,7 +742,7 @@ JNIEXPORT jboolean VMWARE_JNI(VM_deviceIsConnected)
         return JNI_FALSE;
     }
 
-    return isConnected;
+    return isConnected ? JNI_TRUE : JNI_FALSE;
 }
 
 #endif /* VMCONTROL_WRAPPER_SUPPORTED */

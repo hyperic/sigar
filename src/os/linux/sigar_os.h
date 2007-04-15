@@ -71,7 +71,10 @@ struct sigar_t {
 };
 
 #define HAVE_STRERROR_R
+#ifndef __USE_XOPEN2K
+/* use gnu version of strerror_r */
 #define HAVE_STRERROR_R_GLIBC
+#endif
 #define HAVE_READDIR_R
 #define HAVE_GETPWNAM_R
 #define HAVE_GETPWUID_R
