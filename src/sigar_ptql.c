@@ -1079,6 +1079,7 @@ static int ptql_branch_add(ptql_parse_branch_t *parsed,
 
         if (sigar_isdigit(*(parsed->value+1))) {
             branch->op_flags |= PTQL_OP_FLAG_REF;
+            parsed->op_flags = branch->op_flags; /* for use by caller */
             branch->value.ui32 = atoi(parsed->value+1) - 1;
 
             if (branch->value.ui32 >= branches->number) {
@@ -1182,6 +1183,7 @@ SIGAR_DECLARE(int) sigar_ptql_query_create(sigar_ptql_query_t **queryp,
 {
     char *ptr, *ptql_copy = strdup(ptql);
     int status = SIGAR_OK;
+    int has_ref = 0;
     sigar_ptql_query_t *query =
         *queryp = malloc(sizeof(*query));
 
@@ -1204,6 +1206,9 @@ SIGAR_DECLARE(int) sigar_ptql_query_create(sigar_ptql_query_t **queryp,
             if (status != SIGAR_OK) {
                 break;
             }
+            if (parsed.op_flags & PTQL_OP_FLAG_REF) {
+                has_ref = 1;
+            }
         }
         else {
             break;
@@ -1223,7 +1228,7 @@ SIGAR_DECLARE(int) sigar_ptql_query_create(sigar_ptql_query_t **queryp,
         sigar_ptql_query_destroy(query);
         *queryp = NULL;
     }
-    else if (query->branches.number > 1) {
+    else if (!has_ref && (query->branches.number > 1)) {
         qsort(query->branches.data,
               query->branches.number,
               sizeof(query->branches.data[0]),
