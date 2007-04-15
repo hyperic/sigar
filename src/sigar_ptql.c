@@ -621,8 +621,8 @@ static int ptql_branch_init_pid(ptql_parse_branch_t *parsed,
         return SIGAR_OK;
     }
     else if (strEQ(parsed->attr, "Service")) {
-#ifdef WIN32
         branch->flags = PTQL_PID_SERVICE;
+#ifdef WIN32
         branch->data.str = strdup(parsed->value);
         branch->data_size = strlen(parsed->value);
 #endif
