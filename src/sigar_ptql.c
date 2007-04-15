@@ -532,6 +532,28 @@ static int ptql_branch_init_any(ptql_parse_branch_t *parsed,
     return SIGAR_OK;
 }
 
+static int ptql_str_match(sigar_t *sigar, ptql_branch_t *branch, char *value)
+{
+    if (!branch->value.str) {
+        return 0;
+    }
+#ifndef SIGAR_HAS_PCRE
+    if (branch->op_name == PTQL_OP_RE) {
+        if (sigar->ptql_re_impl) {
+            return sigar->ptql_re_impl(sigar->ptql_re_data,
+                                       value,
+                                       branch->value.str);
+        }
+        else {
+            return 0;
+        }
+    }
+#endif
+    return branch->match.str(branch,
+                             value,
+                             branch->value.str);
+}
+
 static int ptql_branch_match(ptql_branch_t *branch)
 {
     switch (branch->lookup->type) {
@@ -713,9 +735,8 @@ static int ptql_args_match(sigar_t *sigar,
         int i;
         for (i=0; i<args.number; i++) {
             matched = 
-                branch->match.str(branch,
-                                  args.data[i],
-                                  branch->value.str);
+                ptql_str_match(sigar, branch, args.data[i]);
+
             if (matched) {
                 break;
             }
@@ -729,10 +750,8 @@ static int ptql_args_match(sigar_t *sigar,
             num += args.number;
         }
         if ((num >= 0) && (num < args.number)) {
-            matched = 
-                branch->match.str(branch,
-                                  args.data[num],
-                                  branch->value.str);
+            matched =
+                ptql_str_match(sigar, branch, args.data[num]);
         }
     }
 
@@ -794,9 +813,7 @@ static int ptql_env_match(sigar_t *sigar,
     else {
         if (entry.val) {
             matched = 
-                branch->match.str(branch,
-                                  entry.val,
-                                  branch->value.str);
+                ptql_str_match(sigar, branch, entry.val);
         }
     }
 
@@ -1299,25 +1316,13 @@ SIGAR_DECLARE(int) sigar_ptql_query_match(sigar_t *sigar,
 
                 matched = ptql_branch_match_ref(branch, ref);
             }
-            else {
-#ifdef SIGAR_HAS_PCRE
-                matched = ptql_branch_match(branch);
-#else
-                if (branch->op_name == PTQL_OP_RE) {
-                    if (sigar->ptql_re_impl) {
-                        matched =
-                            sigar->ptql_re_impl(sigar->ptql_re_data,
-                                                (char *)DATA_PTR(branch),
-                                                branch->value.str);
-                    }
-                    else {
-                        matched = 0;
-                    }
-                }
-                else {
-                    matched = ptql_branch_match(branch);
-                }
+#ifndef SIGAR_HAS_PCRE
+            else if (branch->lookup->type == PTQL_VALUE_TYPE_STR) {
+                matched = ptql_str_match(sigar, branch, (char *)DATA_PTR(branch));
+            }
 #endif
+            else {
+                matched = ptql_branch_match(branch);
             }
         }
 
