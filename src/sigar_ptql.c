@@ -35,9 +35,6 @@
 #define strtonum_failed(src, ptr) \
     ((src == ptr) || (errno == ERANGE) || (*ptr != '\0'))
 
-/* XXX need more specific errors */
-#define SIGAR_PTQL_MALFORMED_QUERY 1
-
 typedef struct ptql_parse_branch_t ptql_parse_branch_t;
 typedef struct ptql_branch_t ptql_branch_t;
 
@@ -631,7 +628,7 @@ static int ptql_branch_init_pid(ptql_parse_branch_t *parsed,
             char *ptr;
             branch->data.pid = str2pid(parsed->value, ptr);
             if (strtonum_failed(parsed->value, ptr)) {
-                return SIGAR_PTQL_MALFORMED_QUERY;
+                return EINVAL;
             }
         }
         return SIGAR_OK;
@@ -652,7 +649,7 @@ static int ptql_branch_init_pid(ptql_parse_branch_t *parsed,
 
     }
     else {
-        return SIGAR_PTQL_MALFORMED_QUERY;
+        return EINVAL;
     }
 }
 
@@ -675,7 +672,7 @@ static int ptql_pid_match(sigar_t *sigar,
         }
         match_pid = strtoull(buffer, &ptr, 10);
         if (strtonum_failed(buffer, ptr)) {
-            return SIGAR_PTQL_MALFORMED_QUERY;
+            return errno;
         }
     }
     else if (branch->flags == PTQL_PID_SERVICE) {
@@ -711,7 +708,7 @@ static int ptql_args_branch_init(ptql_parse_branch_t *parsed,
 
         if (strtonum_failed(parsed->attr, end)) {
             /* conversion failed */
-            return SIGAR_PTQL_MALFORMED_QUERY;
+            return errno;
         }
     }
     return SIGAR_OK;
@@ -830,7 +827,7 @@ static int ptql_branch_init_port(ptql_parse_branch_t *parsed,
         branch->flags = SIGAR_NETCONN_UDP;
     }
     else {
-        return SIGAR_PTQL_MALFORMED_QUERY;        
+        return EINVAL;
     }
 
     branch->data.ui32 = atoi(parsed->value); /*XXX*/
@@ -1005,7 +1002,7 @@ static int ptql_branch_parse(char *query, ptql_parse_branch_t *branch)
                 branch->op_flags |= PTQL_OP_FLAG_PARENT;
                 break;
               default:
-                return SIGAR_PTQL_MALFORMED_QUERY;
+                return EINVAL;
             }
 
             ++query;
@@ -1142,7 +1139,7 @@ static int ptql_branch_add(ptql_parse_branch_t *parsed,
         if (!is_set) {
             branch->value.ui64 = strtoull(parsed->value, &ptr, 10);
             if (strtonum_failed(parsed->value, ptr)) {
-                return SIGAR_PTQL_MALFORMED_QUERY;
+                return errno;
             }
         }
         break;
@@ -1151,7 +1148,7 @@ static int ptql_branch_add(ptql_parse_branch_t *parsed,
         if (!is_set) {
             branch->value.ui32 = strtoul(parsed->value, &ptr, 10);
             if (strtonum_failed(parsed->value, ptr)) {
-                return SIGAR_PTQL_MALFORMED_QUERY;
+                return errno;
             }
         }
         break;
@@ -1160,7 +1157,7 @@ static int ptql_branch_add(ptql_parse_branch_t *parsed,
         if (!is_set) {
             branch->value.dbl = strtod(parsed->value, &ptr);
             if (strtonum_failed(parsed->value, ptr)) {
-                return SIGAR_PTQL_MALFORMED_QUERY;
+                return errno;
             }
         }
         break;

@@ -19,6 +19,8 @@
 #ifndef SIGAR_PTQL_H
 #define SIGAR_PTQL_H
 
+#define SIGAR_PTQL_MALFORMED_QUERY -1
+
 typedef struct sigar_ptql_query_t sigar_ptql_query_t;
 
 typedef int (*sigar_ptql_re_impl_t)(void *, char *, char *);

@@ -160,11 +160,7 @@ public class ProcessQueryFactory implements Comparator {
 
         if (useNative) {
             pQuery = new SigarProcessQuery();
-            try {
-                ((SigarProcessQuery)pQuery).create(query);
-            } catch (SigarException e) {
-                throw new MalformedQueryException(e.getMessage());
-            }
+            ((SigarProcessQuery)pQuery).create(query);
             cache.put(query, pQuery);
             return pQuery;
         }

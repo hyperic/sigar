@@ -114,6 +114,13 @@ static void sigar_throw_notimpl(JNIEnv *env, char *msg)
     JENV->ThrowNew(env, errorClass, msg);
 }
 
+static void sigar_throw_ptql_malformed(JNIEnv *env, char *msg)
+{
+    jclass errorClass = SIGAR_FIND_CLASS("ptql/MalformedQueryException");
+
+    JENV->ThrowNew(env, errorClass, msg);
+}
+
 static void sigar_throw_error(JNIEnv *env, jni_sigar_t *jsigar, int err)
 {
     jclass errorClass;
@@ -1199,7 +1206,15 @@ JNIEXPORT void SIGAR_JNI(ptql_SigarProcessQuery_create)
     }
 
     if (status != SIGAR_OK) {
-        sigar_throw_exception(env, "Malformed query"); /*XXX*/
+        char buf[1024], *msg=buf;
+        if (status == SIGAR_PTQL_MALFORMED_QUERY) {
+            msg = "Malformed query";
+        }
+        else {
+            sigar_strerror_get(status, buf, sizeof(buf));
+        }
+
+        sigar_throw_ptql_malformed(env, msg);
     }
     else {
         sigar_set_pointer(env, obj, query);

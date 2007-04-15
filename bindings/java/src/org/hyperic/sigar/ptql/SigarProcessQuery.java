@@ -28,7 +28,7 @@ public class SigarProcessQuery implements ProcessQuery {
     long longSigarWrapper = 0; //same, but where sizeof(void*) > sizeof(int)
 
     native void create(String ptql)
-        throws SigarException;
+        throws MalformedQueryException;
 
     native void destroy();
 
