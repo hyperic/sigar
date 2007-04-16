@@ -109,10 +109,6 @@ public class Shell extends ShellBase {
             //requires junit.jar
             registerCommandHandler("test", new SigarTestRunner(this));
         } catch (NoClassDefFoundError e) { }
-        try {
-            //requires bcel-5.1.jar
-            registerCommandHandler("ptql", new PTQL(this));
-        } catch (NoClassDefFoundError e) { }
     }
 
     public void processCommand(ShellCommandHandler handler, String args[])

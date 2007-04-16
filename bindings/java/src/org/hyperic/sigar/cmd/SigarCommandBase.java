@@ -205,8 +205,7 @@ public abstract class SigarCommandBase
             return line;
         }
 
-        return
-            ((GetlineCompleter)this.shell.getHandler("ptql")).complete(line);
+        return line; //XXX bring back ptql completion
     }
 
     public String complete(String line) {
