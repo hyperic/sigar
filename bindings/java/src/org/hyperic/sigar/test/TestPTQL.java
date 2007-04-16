@@ -27,7 +27,6 @@ import org.hyperic.sigar.ptql.ProcessQuery;
 import org.hyperic.sigar.ptql.ProcessQueryFactory;
 import org.hyperic.sigar.ptql.ProcessFinder;
 import org.hyperic.sigar.ptql.MalformedQueryException;
-import org.hyperic.sigar.ptql.QueryLoadException;
 
 public class TestPTQL extends SigarTestCase {
 
@@ -101,16 +100,12 @@ public class TestPTQL extends SigarTestCase {
         //"Pid.Service.ne=Eventlog",
     };
 
-    private static final String[] LOAD_FAIL_QUERIES = {
-    };
-
     public TestPTQL(String name) {
         super(name);
     }
 
     private int runQuery(SigarProxy proxy, String qs)
         throws MalformedQueryException,
-               QueryLoadException,
                SigarException {
 
         ProcessQuery query;
@@ -169,19 +164,6 @@ public class TestPTQL extends SigarTestCase {
         }
     }
 
-    private void testLoadFailure(SigarProxy proxy) throws Exception {
-        for (int i=0; i<LOAD_FAIL_QUERIES.length; i++) {
-            String qs = LOAD_FAIL_QUERIES[i];
-            try {
-                runQuery(proxy, qs);
-                fail(qs + " did not throw QueryLoadException");
-            } catch (QueryLoadException e) {
-                traceln(qs + ": " + e.getMessage());
-                assertTrue(qs + " QueryLoad", true);
-            }
-        }
-    }
-
     public void testCreate() throws Exception {
         SigarProxy proxy =
             SigarProxyCache.newInstance(getSigar());
@@ -193,7 +175,6 @@ public class TestPTQL extends SigarTestCase {
         }
 
         testMalformed(proxy);
-        testLoadFailure(proxy);
     }
 }
 

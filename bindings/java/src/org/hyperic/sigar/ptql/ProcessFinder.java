@@ -45,18 +45,16 @@ public class ProcessFinder {
             return findSingleProcess(processQuery);
         } catch (MalformedQueryException e) {
             throw new SigarException(e.getMessage());
-        } catch (QueryLoadException e) {
-            throw new SigarException(e.getMessage());
         }
     }
 
     public long findSingleProcess(ProcessQuery query)
         throws SigarException, SigarNotImplementedException,
         MalformedQueryException {
-
-        if (query instanceof PidQuery) {
-            return ((PidQuery)query).getPid();
-        }
+        //XXX bring back in another form
+        //if (query instanceof PidQuery) {
+        //    return ((PidQuery)query).getPid();
+        //}
 
         int i, matches = 0;
 
@@ -109,8 +107,6 @@ public class ProcessFinder {
 
         try {
             return finder.find(ProcessQueryFactory.getInstance(query));
-        } catch (QueryLoadException e) {
-            throw new SigarException(e.getMessage());
         } catch (MalformedQueryException e) {
             throw new SigarException(e.getMessage());
         }
@@ -127,8 +123,6 @@ public class ProcessFinder {
 
         try {
             return find(ProcessQueryFactory.getInstance(query));
-        } catch (QueryLoadException e) {
-            throw new SigarException(e.getMessage());
         } catch (MalformedQueryException e) {
             throw new SigarException(e.getMessage());
         }

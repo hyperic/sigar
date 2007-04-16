@@ -36,9 +36,8 @@ import org.hyperic.sigar.ProcStat;
  *
  * Example to display java processes only:<br>
  * <code>% java -jar sigar-bin/lib/sigar.jar Top State.Name.eq=java</code>
- *
- * @see org.hyperic.sigar.ptql.ProcessQueryBuilder
  */
+
 public class Top {
     private static final int SLEEP_TIME = 1000 * 5;
 

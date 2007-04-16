@@ -3,12 +3,10 @@
 	<classpathentry kind="src" path="build/src"/>
 	<classpathentry kind="src" path="hyperic_jni/src"/>
 	<classpathentry kind="src" path="src"/>
-	<classpathentry sourcepath="/usr/src/jakarta/bcel-5.1/src/java/" kind="lib" path="lib/bcel-5.1.jar"/>
 	<classpathentry kind="lib" path="lib/junit.jar"/>
 	<classpathentry kind="lib" path="hyperic_jni/lib/cpptasks.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="lib" path="/Developer/Java/Ant/lib/ant.jar"/>
 	<classpathentry kind="lib" path="lib/log4j.jar"/>
-	<classpathentry kind="lib" path="sigar-bin/lib/sigar.jar"/>
 	<classpathentry kind="output" path="build/classes"/>
 </classpath>

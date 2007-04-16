@@ -39,7 +39,6 @@ public class Runner {
     private static final String JAR_EXT = ".jar";
 
     static {
-        wantedJars.put("bcel", Boolean.FALSE);
         wantedJars.put("junit", Boolean.FALSE);
         wantedJars.put("log4j", Boolean.FALSE);
     }
