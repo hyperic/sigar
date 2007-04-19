@@ -462,8 +462,6 @@ int sigar_cpu_mhz_from_model(char *model)
 #include <rpc/pmap_clnt.h>
 #ifdef SIGAR_HPUX
 #include <nfs/nfs.h>
-#else
-#include <rpcsvc/nfs_prot.h>
 #endif
 #if defined(__FreeBSD__) || defined(__sun) || defined(DARWIN)
 #include <arpa/inet.h>
