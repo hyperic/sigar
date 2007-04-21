@@ -20,6 +20,7 @@ package org.hyperic.sigar.ptql;
 
 import org.hyperic.sigar.Sigar;
 import org.hyperic.sigar.SigarException;
+import org.hyperic.sigar.SigarNotImplementedException;
 import org.hyperic.sigar.SigarProxy;
 import org.hyperic.sigar.SigarProxyCache;
 
@@ -43,6 +44,15 @@ public class SigarProcessQuery implements ProcessQuery {
         throws SigarException {
 
         return match(SigarProxyCache.getSigar(sigar), pid);
+    }
+
+    public native long findProcess(Sigar sigar)
+        throws SigarException, SigarNotImplementedException, MalformedQueryException;
+
+    public long findProcess(SigarProxy sigar)
+        throws SigarException, SigarNotImplementedException, MalformedQueryException {
+
+        return findProcess(SigarProxyCache.getSigar(sigar));
     }
 
     static boolean re(String haystack, String needle) {

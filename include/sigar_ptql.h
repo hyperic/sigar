@@ -37,4 +37,8 @@ SIGAR_DECLARE(int) sigar_ptql_query_match(sigar_t *sigar,
 
 SIGAR_DECLARE(int) sigar_ptql_query_destroy(sigar_ptql_query_t *query);
 
+SIGAR_DECLARE(int) sigar_ptql_query_find_process(sigar_t *sigar,
+                                                 sigar_ptql_query_t *query,
+                                                 sigar_pid_t *pid);
+
 #endif /*SIGAR_PTQL_H*/

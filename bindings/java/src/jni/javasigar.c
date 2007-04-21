@@ -1163,6 +1163,16 @@ static int jsigar_ptql_re_impl(void *data,
                                          JENV->NewStringUTF(env, needle));
 }
 
+static void re_impl_set(JNIEnv *env, sigar_t *sigar, jobject obj, jni_ptql_re_data_t *re)
+{
+    re->env = env;
+    re->cls = NULL;
+    re->obj = obj;
+    re->id = NULL;
+
+    sigar_ptql_re_impl_set(sigar, re, jsigar_ptql_re_impl);
+}
+
 JNIEXPORT jboolean SIGAR_JNI(ptql_SigarProcessQuery_match)
 (JNIEnv *env, jobject obj, jobject sigar_obj, jlong pid)
 {
@@ -1172,12 +1182,7 @@ JNIEXPORT jboolean SIGAR_JNI(ptql_SigarProcessQuery_match)
         (sigar_ptql_query_t *)sigar_get_pointer(env, obj);
     dSIGAR(JNI_FALSE);
 
-    re.env = env;
-    re.cls = NULL;
-    re.obj = obj;
-    re.id = NULL;
-
-    sigar_ptql_re_impl_set(sigar, &re, jsigar_ptql_re_impl);
+    re_impl_set(env, sigar, obj, &re);
 
     status = sigar_ptql_query_match(sigar, query, pid);
 
@@ -1231,6 +1236,32 @@ JNIEXPORT void SIGAR_JNI(ptql_SigarProcessQuery_destroy)
         sigar_ptql_query_destroy(query);
         sigar_set_pointer(env, obj, 0);
     }
+}
+
+JNIEXPORT jlong SIGAR_JNI(ptql_SigarProcessQuery_findProcess)
+(JNIEnv *env, jobject obj, jobject sigar_obj)
+{
+    sigar_pid_t pid;
+    int status;
+    jni_ptql_re_data_t re;
+    sigar_ptql_query_t *query =
+        (sigar_ptql_query_t *)sigar_get_pointer(env, obj);
+    dSIGAR(0);
+
+    re_impl_set(env, sigar, obj, &re);
+
+    status = sigar_ptql_query_find_process(sigar, query, &pid);
+
+    sigar_ptql_re_impl_set(sigar, NULL, NULL);
+
+    if (status < 0) {
+        sigar_throw_ptql_malformed(env, sigar->errbuf);
+    }
+    else if (status != SIGAR_OK) {
+        sigar_throw_error(env, jsigar, status);
+    }
+
+    return pid;
 }
 
 #include "sigar_getline.h"

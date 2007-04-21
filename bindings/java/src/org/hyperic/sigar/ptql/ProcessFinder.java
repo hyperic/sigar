@@ -51,10 +51,10 @@ public class ProcessFinder {
     public long findSingleProcess(ProcessQuery query)
         throws SigarException, SigarNotImplementedException,
         MalformedQueryException {
-        //XXX bring back in another form
-        //if (query instanceof PidQuery) {
-        //    return ((PidQuery)query).getPid();
-        //}
+
+        if (query instanceof SigarProcessQuery) {
+            return ((SigarProcessQuery)query).findProcess(this.proxy);
+        }
 
         int i, matches = 0;
 

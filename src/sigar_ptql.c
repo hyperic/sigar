@@ -1363,3 +1363,52 @@ SIGAR_DECLARE(int) sigar_ptql_query_match(sigar_t *sigar,
 
     return SIGAR_OK;
 }
+
+SIGAR_DECLARE(int) sigar_ptql_query_find_process(sigar_t *sigar,
+                                                 sigar_ptql_query_t *query,
+                                                 sigar_pid_t *pid)
+{
+    sigar_proc_list_t pids;
+    int status = sigar_proc_list_get(sigar, &pids);
+    int i, matches=0;
+
+    if (status != SIGAR_OK) {
+        return status;
+    }
+
+    for (i=0; i<pids.number; i++) {
+        int query_status =
+            sigar_ptql_query_match(sigar, query, pids.data[i]);
+
+        if (query_status == SIGAR_OK) {
+            *pid = pids.data[i];
+            matches++;
+        }
+        else if (query_status == SIGAR_ENOTIMPL) {
+            /* let caller know query is invalid. */
+            status = query_status;
+            break;
+        } /* else ok, e.g. permission denied */
+    }
+
+    sigar_proc_list_destroy(sigar, &pids);
+
+    if (status != SIGAR_OK) {
+        return status;
+    }
+
+    if (matches == 1) {
+        return SIGAR_OK;
+    }
+    else if (matches == 0) {
+        sigar_strerror_set(sigar,
+                           "Query did not match any processes");
+    }
+    else {
+        sigar_strerror_printf(sigar,
+                              "Query matched multiple processes (%d)",
+                              matches);
+    }
+
+    return -1;
+}
