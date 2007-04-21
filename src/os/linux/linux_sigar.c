@@ -134,7 +134,7 @@ int sigar_os_open(sigar_t **sigar)
     }
 
     (*sigar)->pagesize = 0;
-    i = sysconf(_SC_PAGESIZE);
+    i = getpagesize();
     while ((i >>= 1) > 0) {
         (*sigar)->pagesize++;
     }
