@@ -29,9 +29,7 @@
 #include "sigar_util.h"
 #include "sigar_os.h"
 
-#include <asm/page.h> /* for PAGE_SHIFT */
-
-#define pageshift(x) ((x) << PAGE_SHIFT)
+#define pageshift(x) ((x) << sigar->pagesize)
 
 #define PROC_MEMINFO PROC_FS_ROOT "meminfo"
 #define PROC_MTRR    PROC_FS_ROOT "mtrr"
@@ -125,6 +123,7 @@ sigar_pid_t sigar_pid_get(sigar_t *sigar)
 int sigar_os_open(sigar_t **sigar)
 {
     char buffer[BUFSIZ], *ptr;
+    int i;
     int status = sigar_file2str(PROC_STAT, buffer, sizeof(buffer));
     struct stat sb;
 
@@ -132,6 +131,12 @@ int sigar_os_open(sigar_t **sigar)
 
     if (status != SIGAR_OK) {
         return status;
+    }
+
+    (*sigar)->pagesize = 0;
+    i = sysconf(_SC_PAGESIZE);
+    while ((i >>= 1) > 0) {
+        (*sigar)->pagesize++;
     }
 
     ptr = strstr(buffer, "\nbtime");
