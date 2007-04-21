@@ -27,8 +27,6 @@ import org.hyperic.sigar.SigarProxyCache;
 public class ProcessFinder {
 
     private SigarProxy proxy;
-    private static final long[] NO_MATCHES = new long[0];
-    private static final long[] ONE_MATCH = new long[1];
 
     public ProcessFinder(SigarProxy proxy) {
         this.proxy = proxy;
@@ -84,12 +82,6 @@ public class ProcessFinder {
         } catch (MalformedQueryException e) {
             throw new SigarException(e.getMessage());
         }
-    }
-
-    public long[] find(StringBuffer query)
-        throws SigarException, SigarNotImplementedException {
-
-        return find(query.toString());
     }
 
     public long[] find(String query)
