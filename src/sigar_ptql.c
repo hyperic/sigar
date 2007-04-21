@@ -88,6 +88,7 @@ typedef enum {
 #define PTQL_OP_FLAG_PARENT 1
 #define PTQL_OP_FLAG_REF    2
 #define PTQL_OP_FLAG_GLOB   4
+#define PTQL_OP_FLAG_PID    8
 
 struct ptql_parse_branch_t {
     char *name;
@@ -619,6 +620,8 @@ enum {
 static int ptql_branch_init_pid(ptql_parse_branch_t *parsed,
                                 ptql_branch_t *branch)
 {
+    branch->op_flags |= PTQL_OP_FLAG_PID;
+
     if (strEQ(parsed->attr, "Pid")) {
         branch->flags = PTQL_PID_PID;
         if (strEQ(parsed->value, "$$")) {
@@ -653,13 +656,10 @@ static int ptql_branch_init_pid(ptql_parse_branch_t *parsed,
     }
 }
 
-static int ptql_pid_match(sigar_t *sigar,
-                          sigar_pid_t pid,
-                          void *data)
+static int ptql_pid_get(sigar_t *sigar,
+                        ptql_branch_t *branch,
+                        sigar_pid_t *pid)
 {
-    ptql_branch_t *branch =
-        (ptql_branch_t *)data;
-    sigar_pid_t match_pid;
     char *ptr;
 
     if (branch->flags == PTQL_PID_FILE) {
@@ -670,7 +670,7 @@ static int ptql_pid_match(sigar_t *sigar,
         if (status != SIGAR_OK) {
             return status;
         }
-        match_pid = strtoull(buffer, &ptr, 10);
+        *pid = strtoull(buffer, &ptr, 10);
         if (strtonum_failed(buffer, ptr)) {
             return errno;
         }
@@ -679,7 +679,7 @@ static int ptql_pid_match(sigar_t *sigar,
 #ifdef WIN32
         int status =
             sigar_service_pid_get(sigar,
-                                  branch->data.str, &match_pid);
+                                  branch->data.str, pid);
         if (status != SIGAR_OK) {
             return status;
         }
@@ -688,10 +688,43 @@ static int ptql_pid_match(sigar_t *sigar,
 #endif
     }
     else {
-        match_pid = branch->data.pid;
+        *pid = branch->data.pid;
+    }
+
+    return SIGAR_OK;
+}
+
+static int ptql_pid_match(sigar_t *sigar,
+                          sigar_pid_t pid,
+                          void *data)
+{
+    sigar_pid_t match_pid;
+    int status =
+        ptql_pid_get(sigar,
+                     (ptql_branch_t *)data, &match_pid);
+
+    if (status != SIGAR_OK) {
+        return status;
     }
 
     return (pid == match_pid) ? SIGAR_OK : !SIGAR_OK;
+}
+
+static int sigar_ptql_pid_get(sigar_t *sigar,
+                              sigar_ptql_query_t *query,
+                              sigar_pid_t *query_pid)
+{
+    ptql_branch_t *branch;
+
+    if (query->branches.number != 0) {
+        return ERANGE;
+    }
+    branch = &query->branches.data[0];
+    if (!(branch->op_flags & PTQL_OP_FLAG_PID)) {
+        return EINVAL;
+    }
+
+    return ptql_pid_get(sigar, branch, query_pid);
 }
 
 static int ptql_args_branch_init(ptql_parse_branch_t *parsed,
