@@ -36,6 +36,9 @@ public class ProcessFinder {
         this.proxy.getPid();
     }
 
+    /**
+     * @deprecated
+     */
     public long findSingleProcess(String query)
         throws SigarException, SigarNotImplementedException {
 
@@ -48,6 +51,9 @@ public class ProcessFinder {
         }
     }
 
+    /**
+     * @deprecated
+     */
     public long findSingleProcess(ProcessQuery query)
         throws SigarException, SigarNotImplementedException,
         MalformedQueryException {
@@ -56,39 +62,7 @@ public class ProcessFinder {
             return ((SigarProcessQuery)query).findProcess(this.proxy);
         }
 
-        int i, matches = 0;
-
-        long[] pids = this.proxy.getProcList();
-        long pid=-1;
-
-        for (i=0; i<pids.length; i++) {
-            try {
-                if (query.match(this.proxy, pids[i])) {
-                    matches++;
-                    pid = pids[i];
-                }
-            } catch (SigarNotImplementedException e) {
-                throw e; //let caller know query is invalid.
-            } catch (SigarException e) {
-                //ok, e.g. permission denied.
-            }
-        }
-
-        if (matches == 1) {
-            return pid;
-        }
-
-        String msg;
-
-        if (matches == 0) {
-            msg = "Query did not match any processes";
-        }
-        else {
-            msg = "Query matched multiple processes" +
-                  " (" + matches + ")";
-        }
-
-        throw new MalformedQueryException(msg);
+        throw new MalformedQueryException();
     }
 
     public static long[] find(Sigar sigar, String query)
