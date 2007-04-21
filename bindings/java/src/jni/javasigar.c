@@ -1264,6 +1264,64 @@ JNIEXPORT jlong SIGAR_JNI(ptql_SigarProcessQuery_findProcess)
     return pid;
 }
 
+JNIEXPORT jlongArray SIGAR_JNI(ptql_SigarProcessQuery_findProcesses)
+(JNIEnv *env, jobject obj, jobject sigar_obj)
+{
+    int status;
+    jlongArray procarray;
+    sigar_proc_list_t proclist;
+    jlong *pids = NULL;
+    jni_ptql_re_data_t re;
+    sigar_ptql_query_t *query =
+        (sigar_ptql_query_t *)sigar_get_pointer(env, obj);
+    dSIGAR(NULL);
+
+    if ((status = sigar_proc_list_get(sigar, &proclist)) != SIGAR_OK) {
+        sigar_throw_error(env, jsigar, status);
+        return NULL;
+    }
+
+    re_impl_set(env, sigar, obj, &re);
+
+    status = sigar_ptql_query_find_processes(sigar, query, &proclist);
+
+    sigar_ptql_re_impl_set(sigar, NULL, NULL);
+
+    if (status < 0) {
+        sigar_throw_ptql_malformed(env, sigar->errbuf);
+        return NULL;
+    }
+    else if (status != SIGAR_OK) {
+        sigar_throw_error(env, jsigar, status);
+        return NULL;
+    }
+
+    procarray = JENV->NewLongArray(env, proclist.number);
+
+    if (sizeof(jlong) == sizeof(sigar_pid_t)) {
+        pids = (jlong *)proclist.data;
+    }
+    else {
+        unsigned int i;
+        pids = (jlong *)malloc(sizeof(jlong) * proclist.number);
+
+        for (i=0; i<proclist.number; i++) {
+            pids[i] = proclist.data[i];
+        }
+    }
+
+    JENV->SetLongArrayRegion(env, procarray, 0,
+                             proclist.number, pids);
+
+    if (pids != (jlong *)proclist.data) {
+        free(pids);
+    }
+
+    sigar_proc_list_destroy(sigar, &proclist);
+
+    return procarray;
+}
+
 #include "sigar_getline.h"
 
 JNIEXPORT jboolean SIGAR_JNI(util_Getline_isatty)

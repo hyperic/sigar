@@ -62,7 +62,7 @@ public class ProcessFinder {
             return ((SigarProcessQuery)query).findProcess(this.proxy);
         }
 
-        throw new MalformedQueryException();
+        throw new SigarNotImplementedException();
     }
 
     public static long[] find(Sigar sigar, String query)
@@ -105,52 +105,11 @@ public class ProcessFinder {
     public long[] find(ProcessQuery query)
         throws SigarException, SigarNotImplementedException {
 
-        int matches=0, lastMatch=-1;
-
-        //because we modify the array below.  XXX this sucks.
-        long[] pids = (long[])this.proxy.getProcList().clone();
-
-        for (int i=0; i<pids.length; i++) {
-            long pid = pids[i];
-            boolean add = false;
-
-            try {
-                add = query.match(this.proxy, pid);
-            } catch (SigarNotImplementedException e) {
-                throw e; //let caller know query is invalid.
-            } catch (SigarException e) {
-                //ok, e.g. permission denied.
-            }
-
-            if (add) {
-                ++matches;
-                lastMatch = i;
-            }
-            else {
-                pids[i] = -1;
-            }
+        if (query instanceof SigarProcessQuery) {
+            return ((SigarProcessQuery)query).findProcesses(this.proxy);
         }
 
-        if (matches == 1) {
-            /* avoid loop below */
-            ONE_MATCH[0] = pids[lastMatch];
-            return ONE_MATCH;
-        }
-        else if (matches == 0) {
-            return NO_MATCHES;
-        }
-
-        long[] matched = new long[matches];
-
-        //XXX this is clunky
-        for (int i=0, j=0; i<=lastMatch; i++) {
-            if (pids[i] == -1) {
-                continue;
-            }
-            matched[j++] = pids[i];
-        }
-
-        return matched;
+        throw new SigarNotImplementedException();
     }
 }
     

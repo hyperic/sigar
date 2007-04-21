@@ -55,6 +55,15 @@ public class SigarProcessQuery implements ProcessQuery {
         return findProcess(SigarProxyCache.getSigar(sigar));
     }
 
+    public native long[] findProcesses(Sigar sigar)
+        throws SigarException, SigarNotImplementedException;
+
+    public long[] findProcesses(SigarProxy sigar)
+        throws SigarException, SigarNotImplementedException {
+
+        return findProcesses(SigarProxyCache.getSigar(sigar));
+    }
+
     static boolean re(String haystack, String needle) {
         if (haystack == null) {
             return false;
