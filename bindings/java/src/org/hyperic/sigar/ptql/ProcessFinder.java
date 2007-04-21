@@ -34,9 +34,10 @@ public class ProcessFinder {
         this.proxy.getPid();
     }
 
-    /**
-     * @deprecated
-     */
+    private Sigar getSigar() {
+        return SigarProxyCache.getSigar(this.proxy);
+    }
+
     public long findSingleProcess(String query)
         throws SigarException, SigarNotImplementedException {
 
@@ -49,15 +50,12 @@ public class ProcessFinder {
         }
     }
 
-    /**
-     * @deprecated
-     */
     public long findSingleProcess(ProcessQuery query)
         throws SigarException, SigarNotImplementedException,
         MalformedQueryException {
 
         if (query instanceof SigarProcessQuery) {
-            return ((SigarProcessQuery)query).findProcess(this.proxy);
+            return ((SigarProcessQuery)query).findProcess(getSigar());
         }
 
         throw new SigarNotImplementedException();
@@ -98,7 +96,7 @@ public class ProcessFinder {
         throws SigarException, SigarNotImplementedException {
 
         if (query instanceof SigarProcessQuery) {
-            return ((SigarProcessQuery)query).findProcesses(this.proxy);
+            return ((SigarProcessQuery)query).findProcesses(getSigar());
         }
 
         throw new SigarNotImplementedException();
