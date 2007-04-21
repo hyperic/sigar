@@ -60,6 +60,7 @@ public class TestPTQL extends SigarTestCase {
         "Port.tcp.eq=8080,Cred.Uid.eq=1003", //dougm owned jboss port
         "Pid.PidFile.eq=pid.file",
         "Pid.Pid.eq=1",
+        "Pid.Pid.eq=$$",
         "Pid.Service.eq=Eventlog",
         "Pid.Service.eq=NOSUCHSERVICE",
         "Pid.Service.eq=Hyperic HQ Agent",

@@ -710,23 +710,6 @@ static int ptql_pid_match(sigar_t *sigar,
     return (pid == match_pid) ? SIGAR_OK : !SIGAR_OK;
 }
 
-static int sigar_ptql_pid_get(sigar_t *sigar,
-                              sigar_ptql_query_t *query,
-                              sigar_pid_t *query_pid)
-{
-    ptql_branch_t *branch;
-
-    if (query->branches.number != 0) {
-        return ERANGE;
-    }
-    branch = &query->branches.data[0];
-    if (!(branch->op_flags & PTQL_OP_FLAG_PID)) {
-        return EINVAL;
-    }
-
-    return ptql_pid_get(sigar, branch, query_pid);
-}
-
 static int ptql_args_branch_init(ptql_parse_branch_t *parsed,
                                  ptql_branch_t *branch)
 {
@@ -1369,9 +1352,17 @@ SIGAR_DECLARE(int) sigar_ptql_query_find_process(sigar_t *sigar,
                                                  sigar_pid_t *pid)
 {
     sigar_proc_list_t pids;
-    int status = sigar_proc_list_get(sigar, &pids);
+    int status;
     int i, matches=0;
 
+    if ((query->branches.number == 1) &&
+        (query->branches.data[0].op_flags & PTQL_OP_FLAG_PID))
+    {
+        /* avoid scanning the process list for single Pid.* queries */
+        return ptql_pid_get(sigar, &query->branches.data[0], pid);
+    }
+
+    status = sigar_proc_list_get(sigar, &pids);
     if (status != SIGAR_OK) {
         return status;
     }
