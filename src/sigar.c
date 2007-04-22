@@ -500,7 +500,7 @@ sigar_proc_cred_name_get(sigar_t *sigar, sigar_pid_t pid,
 
 #endif /* WIN32 */
 
-static int sigar_proc_list_create(sigar_proc_list_t *proclist)
+int sigar_proc_list_create(sigar_proc_list_t *proclist)
 {
     proclist->number = 0;
     proclist->size = SIGAR_PROC_LIST_MAX;

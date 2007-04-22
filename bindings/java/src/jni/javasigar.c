@@ -1276,11 +1276,6 @@ JNIEXPORT jlongArray SIGAR_JNI(ptql_SigarProcessQuery_find)
         (sigar_ptql_query_t *)sigar_get_pointer(env, obj);
     dSIGAR(NULL);
 
-    if ((status = sigar_proc_list_get(sigar, &proclist)) != SIGAR_OK) {
-        sigar_throw_error(env, jsigar, status);
-        return NULL;
-    }
-
     re_impl_set(env, sigar, obj, &re);
 
     status = sigar_ptql_query_find(sigar, query, &proclist);
