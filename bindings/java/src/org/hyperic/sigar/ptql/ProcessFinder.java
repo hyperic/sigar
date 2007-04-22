@@ -39,20 +39,15 @@ public class ProcessFinder {
     }
 
     public long findSingleProcess(String query)
-        throws SigarException, SigarNotImplementedException {
+        throws SigarException {
 
-        try {
-            ProcessQuery processQuery =
-                ProcessQueryFactory.getInstance(query);
-            return findSingleProcess(processQuery);
-        } catch (MalformedQueryException e) {
-            throw new SigarException(e.getMessage());
-        }
+        ProcessQuery processQuery =
+            ProcessQueryFactory.getInstance(query);
+        return findSingleProcess(processQuery);
     }
 
     public long findSingleProcess(ProcessQuery query)
-        throws SigarException, SigarNotImplementedException,
-        MalformedQueryException {
+        throws SigarException {
 
         if (query instanceof SigarProcessQuery) {
             return ((SigarProcessQuery)query).findProcess(getSigar());
@@ -75,25 +70,17 @@ public class ProcessFinder {
 
         ProcessFinder finder = new ProcessFinder(sigar);
 
-        try {
-            return finder.find(ProcessQueryFactory.getInstance(query));
-        } catch (MalformedQueryException e) {
-            throw new SigarException(e.getMessage());
-        }
+        return finder.find(ProcessQueryFactory.getInstance(query));
     }
 
     public long[] find(String query)
-        throws SigarException, SigarNotImplementedException {
+        throws SigarException {
 
-        try {
-            return find(ProcessQueryFactory.getInstance(query));
-        } catch (MalformedQueryException e) {
-            throw new SigarException(e.getMessage());
-        }
+        return find(ProcessQueryFactory.getInstance(query));
     }
 
     public long[] find(ProcessQuery query)
-        throws SigarException, SigarNotImplementedException {
+        throws SigarException {
 
         if (query instanceof SigarProcessQuery) {
             return ((SigarProcessQuery)query).findProcesses(getSigar());

@@ -1255,7 +1255,7 @@ JNIEXPORT jlong SIGAR_JNI(ptql_SigarProcessQuery_findProcess)
     sigar_ptql_re_impl_set(sigar, NULL, NULL);
 
     if (status < 0) {
-        sigar_throw_ptql_malformed(env, sigar->errbuf);
+        sigar_throw_exception(env, sigar->errbuf);
     }
     else if (status != SIGAR_OK) {
         sigar_throw_error(env, jsigar, status);
@@ -1288,7 +1288,7 @@ JNIEXPORT jlongArray SIGAR_JNI(ptql_SigarProcessQuery_findProcesses)
     sigar_ptql_re_impl_set(sigar, NULL, NULL);
 
     if (status < 0) {
-        sigar_throw_ptql_malformed(env, sigar->errbuf);
+        sigar_throw_exception(env, sigar->errbuf);
         return NULL;
     }
     else if (status != SIGAR_OK) {

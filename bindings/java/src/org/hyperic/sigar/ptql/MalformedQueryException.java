@@ -18,11 +18,13 @@
 
 package org.hyperic.sigar.ptql;
 
+import org.hyperic.sigar.SigarException;
+
 /**
  * Exception for malformed process queries which cannot
  * be parsed.
  */
-public class MalformedQueryException extends Exception {
+public class MalformedQueryException extends SigarException {
 
     public MalformedQueryException() {
     }

@@ -47,10 +47,10 @@ public class SigarProcessQuery implements ProcessQuery {
     }
 
     public native long findProcess(Sigar sigar)
-        throws SigarException, SigarNotImplementedException, MalformedQueryException;
+        throws SigarException;
 
     public native long[] findProcesses(Sigar sigar)
-        throws SigarException, SigarNotImplementedException;
+        throws SigarException;
 
     static boolean re(String haystack, String needle) {
         if (haystack == null) {
