@@ -20,7 +20,6 @@ package org.hyperic.sigar.ptql;
 
 import org.hyperic.sigar.Sigar;
 import org.hyperic.sigar.SigarException;
-import org.hyperic.sigar.SigarNotImplementedException;
 import org.hyperic.sigar.SigarProxy;
 import org.hyperic.sigar.SigarProxyCache;
 
@@ -50,11 +49,7 @@ public class ProcessFinder {
     public long findSingleProcess(ProcessQuery query)
         throws SigarException {
 
-        if (query instanceof SigarProcessQuery) {
-            return ((SigarProcessQuery)query).findProcess(this.sigar);
-        }
-
-        throw new SigarNotImplementedException();
+        return query.findProcess(this.sigar);
     }
 
     public static long[] find(Sigar sigar, String query)
@@ -78,11 +73,7 @@ public class ProcessFinder {
     public long[] find(ProcessQuery query)
         throws SigarException {
 
-        if (query instanceof SigarProcessQuery) {
-            return ((SigarProcessQuery)query).findProcesses(this.sigar);
-        }
-
-        throw new SigarNotImplementedException();
+        return query.findProcesses(this.sigar);
     }
 }
     

@@ -25,4 +25,10 @@ public interface ProcessQuery {
 
     public boolean match(Sigar sigar, long pid) 
         throws SigarException;
+
+    public long findProcess(Sigar sigar)
+        throws SigarException;
+
+    public long[] findProcesses(Sigar sigar)
+        throws SigarException;
 }
