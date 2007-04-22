@@ -24,10 +24,11 @@ import org.hyperic.sigar.SigarNotImplementedException;
 
 import org.hyperic.sigar.ptql.ProcessQuery;
 import org.hyperic.sigar.ptql.ProcessQueryFactory;
-import org.hyperic.sigar.ptql.ProcessFinder;
 import org.hyperic.sigar.ptql.MalformedQueryException;
 
 public class TestPTQL extends SigarTestCase {
+
+    private ProcessQueryFactory qf;
 
     private static final String[] OK_QUERIES = {
         "State.Name.eq=java", //all java processs
@@ -102,6 +103,7 @@ public class TestPTQL extends SigarTestCase {
 
     public TestPTQL(String name) {
         super(name);
+        this.qf = new ProcessQueryFactory();
     }
 
     private int runQuery(Sigar sigar, String qs)
@@ -110,22 +112,19 @@ public class TestPTQL extends SigarTestCase {
 
         ProcessQuery query;
         try {
-            query =
-                ProcessQueryFactory.getInstance(qs);
+            query = this.qf.getQuery(qs);
         } catch (MalformedQueryException e) {
             traceln("parse error: " + qs);
             throw e;
         }
 
-        ProcessFinder finder = new ProcessFinder(sigar);
-
         try {
-            long[] pids = finder.find(query);
+            long[] pids = query.findProcesses(sigar);
 
             traceln(pids.length + " processes match: " + qs);
 
             if (pids.length == 1) {
-                long pid = finder.findSingleProcess(query);
+                long pid = query.findProcess(sigar);
                 assertTrue(pid + "==" + pids[0],
                            pid == pids[0]);
             }
@@ -141,6 +140,7 @@ public class TestPTQL extends SigarTestCase {
             assertTrue(qs,
                        runQuery(sigar, qs) >= 0);
         }
+        this.qf.clear();
     }
 
     private void testReOK(Sigar sigar) throws Exception {
@@ -149,6 +149,7 @@ public class TestPTQL extends SigarTestCase {
             assertTrue(qs,
                        runQuery(sigar, qs) >= 0);
         }
+        this.qf.clear();
     }
 
     private void testMalformed(Sigar sigar) throws Exception {
@@ -162,6 +163,7 @@ public class TestPTQL extends SigarTestCase {
                 assertTrue(qs + " Malformed", true);
             }
         }
+        this.qf.clear();
     }
 
     public void testCreate() throws Exception {
