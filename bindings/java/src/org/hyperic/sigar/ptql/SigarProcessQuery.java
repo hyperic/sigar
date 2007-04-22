@@ -37,14 +37,8 @@ public class SigarProcessQuery implements ProcessQuery {
         destroy();
     }
 
-    private native boolean match(Sigar sigar, long pid) 
+    public native boolean match(Sigar sigar, long pid) 
         throws SigarException;
-
-    public boolean match(SigarProxy sigar, long pid) 
-        throws SigarException {
-
-        return match(SigarProxyCache.getSigar(sigar), pid);
-    }
 
     public native long findProcess(Sigar sigar)
         throws SigarException;

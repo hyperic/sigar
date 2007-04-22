@@ -26,16 +26,17 @@ import org.hyperic.sigar.SigarProxyCache;
 
 public class ProcessFinder {
 
-    private SigarProxy proxy;
+    private Sigar sigar;
 
+    /**
+     * @deprecated
+     */
     public ProcessFinder(SigarProxy proxy) {
-        this.proxy = proxy;
-        //getpid() cache to optimize queries on this process.
-        this.proxy.getPid();
+        this(SigarProxyCache.getSigar(proxy));
     }
 
-    private Sigar getSigar() {
-        return SigarProxyCache.getSigar(this.proxy);
+    public ProcessFinder(Sigar sigar) {
+        this.sigar = sigar;
     }
 
     public long findSingleProcess(String query)
@@ -50,7 +51,7 @@ public class ProcessFinder {
         throws SigarException {
 
         if (query instanceof SigarProcessQuery) {
-            return ((SigarProcessQuery)query).findProcess(getSigar());
+            return ((SigarProcessQuery)query).findProcess(this.sigar);
         }
 
         throw new SigarNotImplementedException();
@@ -59,18 +60,13 @@ public class ProcessFinder {
     public static long[] find(Sigar sigar, String query)
         throws SigarException {
 
-        SigarProxy proxy = 
-            SigarProxyCache.newInstance(sigar);
-
-        return find(proxy, query);
+        return new ProcessFinder(sigar).find(query);
     }
 
     public static long[] find(SigarProxy sigar, String query)
         throws SigarException {
 
-        ProcessFinder finder = new ProcessFinder(sigar);
-
-        return finder.find(ProcessQueryFactory.getInstance(query));
+        return new ProcessFinder(sigar).find(query);
     }
 
     public long[] find(String query)
@@ -83,7 +79,7 @@ public class ProcessFinder {
         throws SigarException {
 
         if (query instanceof SigarProcessQuery) {
-            return ((SigarProcessQuery)query).findProcesses(getSigar());
+            return ((SigarProcessQuery)query).findProcesses(this.sigar);
         }
 
         throw new SigarNotImplementedException();

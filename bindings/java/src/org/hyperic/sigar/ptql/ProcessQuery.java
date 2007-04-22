@@ -19,10 +19,10 @@
 package org.hyperic.sigar.ptql;
 
 import org.hyperic.sigar.SigarException;
-import org.hyperic.sigar.SigarProxy;
+import org.hyperic.sigar.Sigar;
 
 public interface ProcessQuery {
 
-    public boolean match(SigarProxy sigar, long pid) 
+    public boolean match(Sigar sigar, long pid) 
         throws SigarException;
 }
