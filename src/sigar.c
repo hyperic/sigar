@@ -537,7 +537,7 @@ SIGAR_DECLARE(int) sigar_proc_list_get(sigar_t *sigar,
     return sigar_os_proc_list_get(sigar, proclist);
 }
 
-static int sigar_proc_args_create(sigar_proc_args_t *procargs)
+int sigar_proc_args_create(sigar_proc_args_t *procargs)
 {
     procargs->number = 0;
     procargs->size = SIGAR_PROC_ARGS_MAX;

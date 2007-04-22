@@ -176,6 +176,8 @@ int sigar_proc_list_grow(sigar_proc_list_t *proclist);
         sigar_proc_list_grow(proclist); \
     }
 
+int sigar_proc_args_create(sigar_proc_args_t *proclist);
+
 int sigar_proc_args_grow(sigar_proc_args_t *procargs);
 
 #define SIGAR_PROC_ARGS_GROW(procargs) \
