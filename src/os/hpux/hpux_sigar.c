@@ -381,8 +381,8 @@ int sigar_proc_state_get(sigar_t *sigar, sigar_pid_t pid,
  * according to HP forums there isn't a way to get them
  * all if > 64
  */
-int sigar_proc_args_get(sigar_t *sigar, sigar_pid_t pid,
-                        sigar_proc_args_t *procargs)
+int sigar_os_proc_args_get(sigar_t *sigar, sigar_pid_t pid,
+                           sigar_proc_args_t *procargs)
 {
     char *args, *arg;
     struct pst_status status;
@@ -392,7 +392,6 @@ int sigar_proc_args_get(sigar_t *sigar, sigar_pid_t pid,
     }
 
     args = status.pst_cmd;
-    sigar_proc_args_create(procargs);
 
     while (*args && (arg = sigar_getword(&args, ' '))) {
         SIGAR_PROC_ARGS_GROW(procargs);

@@ -258,8 +258,6 @@ int sigar_procfs_args_get(sigar_t *sigar, sigar_pid_t pid,
 
     close(fd);
 
-    sigar_proc_args_create(procargs);
-
     /* e.g. /proc/2/cmdline */
     if (total == 0) {
         procargs->number = 0;

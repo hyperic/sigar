@@ -537,7 +537,7 @@ SIGAR_DECLARE(int) sigar_proc_list_get(sigar_t *sigar,
     return sigar_os_proc_list_get(sigar, proclist);
 }
 
-int sigar_proc_args_create(sigar_proc_args_t *procargs)
+static int sigar_proc_args_create(sigar_proc_args_t *procargs)
 {
     procargs->number = 0;
     procargs->size = SIGAR_PROC_ARGS_MAX;
@@ -570,6 +570,14 @@ SIGAR_DECLARE(int) sigar_proc_args_destroy(sigar_t *sigar,
     }
 
     return SIGAR_OK;
+}
+
+SIGAR_DECLARE(int) sigar_proc_args_get(sigar_t *sigar,
+                                       sigar_pid_t pid,
+                                       sigar_proc_args_t *procargs)
+{
+    sigar_proc_args_create(procargs);
+    return sigar_os_proc_args_get(sigar, pid, procargs);
 }
 
 int sigar_file_system_list_create(sigar_file_system_list_t *fslist)

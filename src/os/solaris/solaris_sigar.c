@@ -844,8 +844,6 @@ static int ucb_ps_args_get(sigar_t *sigar, sigar_pid_t pid,
         }
     }
 
-    sigar_proc_args_create(procargs);
-
     while (*args && (arg = sigar_getword(&args, ' '))) {
         SIGAR_PROC_ARGS_GROW(procargs);
         procargs->data[procargs->number++] = arg;
@@ -854,8 +852,8 @@ static int ucb_ps_args_get(sigar_t *sigar, sigar_pid_t pid,
     return SIGAR_OK;
 }
 
-int sigar_proc_args_get(sigar_t *sigar, sigar_pid_t pid,
-                        sigar_proc_args_t *procargs)
+int sigar_os_proc_args_get(sigar_t *sigar, sigar_pid_t pid,
+                           sigar_proc_args_t *procargs)
 {
     psinfo_t *pinfo;
     int fd, status;
@@ -916,12 +914,6 @@ int sigar_proc_args_get(sigar_t *sigar, sigar_pid_t pid,
         return errno;
     }
 
-    procargs->number = 0;
-    procargs->size = pinfo->pr_argc;
-    procargs->data =
-        (char **)malloc(sizeof(*(procargs->data)) *
-                        procargs->size);
-
     for (n = 0; n < pinfo->pr_argc; n++) {
         int alen;
         char *arg;
@@ -940,6 +932,7 @@ int sigar_proc_args_get(sigar_t *sigar, sigar_pid_t pid,
         arg = malloc(alen);
         memcpy(arg, buffer, alen);
 
+        SIGAR_PROC_ARGS_GROW(procargs);
         procargs->data[procargs->number++] = arg;
     }
 

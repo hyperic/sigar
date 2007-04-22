@@ -1126,8 +1126,8 @@ int sigar_proc_state_get(sigar_t *sigar, sigar_pid_t pid,
     return SIGAR_OK;
 }
 
-int sigar_proc_args_get(sigar_t *sigar, sigar_pid_t pid,
-                        sigar_proc_args_t *procargs)
+int sigar_os_proc_args_get(sigar_t *sigar, sigar_pid_t pid,
+                           sigar_proc_args_t *procargs)
 {
     /* XXX if buffer is not large enough args are truncated */
     char buffer[8192], *ptr;
@@ -1140,8 +1140,6 @@ int sigar_proc_args_get(sigar_t *sigar, sigar_pid_t pid,
     {
         return errno;
     }
-
-    sigar_proc_args_create(procargs);
 
     ptr = buffer;
 

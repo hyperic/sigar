@@ -1029,8 +1029,8 @@ static int kern_proc_args_skip_argv(sigar_kern_proc_args_t *kargs)
 }
 #endif
 
-int sigar_proc_args_get(sigar_t *sigar, sigar_pid_t pid,
-                        sigar_proc_args_t *procargs)
+int sigar_os_proc_args_get(sigar_t *sigar, sigar_pid_t pid,
+                           sigar_proc_args_t *procargs)
 {
 #if defined(DARWIN)
     int status, count;
@@ -1045,8 +1045,6 @@ int sigar_proc_args_get(sigar_t *sigar, sigar_pid_t pid,
     count = kargs.count;
     ptr = kargs.ptr;
     end = kargs.end;
-
-    sigar_proc_args_create(procargs);
 
     while ((ptr < end) && (count-- > 0)) {
         int slen = strlen(ptr);
@@ -1088,8 +1086,6 @@ int sigar_proc_args_get(sigar_t *sigar, sigar_pid_t pid,
     if (sysctl(mib, NMIB(mib), buffer, &len, NULL, 0) < 0) {
         return errno;
     }
-
-    sigar_proc_args_create(procargs);
 
     if (len == 0) {
         procargs->number = 0;

@@ -174,14 +174,15 @@ int sigar_proc_list_grow(sigar_proc_list_t *proclist);
         sigar_proc_list_grow(proclist); \
     }
 
-int sigar_proc_args_create(sigar_proc_args_t *procargs);
-
 int sigar_proc_args_grow(sigar_proc_args_t *procargs);
 
 #define SIGAR_PROC_ARGS_GROW(procargs) \
     if (procargs->number >= procargs->size) { \
         sigar_proc_args_grow(procargs); \
     }
+
+int sigar_os_proc_args_get(sigar_t *sigar, sigar_pid_t pid,
+                           sigar_proc_args_t *procargs);
 
 int sigar_file_system_list_create(sigar_file_system_list_t *fslist);
 

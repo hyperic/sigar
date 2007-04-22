@@ -122,8 +122,6 @@ int sigar_parse_proc_args(sigar_t *sigar, WCHAR *buf,
         buf = GetCommandLine();
     }
 
-    sigar_proc_args_create(procargs);
-
     args = CommandLineToArgvW(buf, &num);
 
     if (args == NULL) {

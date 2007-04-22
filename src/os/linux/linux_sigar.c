@@ -876,8 +876,8 @@ int sigar_proc_state_get(sigar_t *sigar, sigar_pid_t pid,
     return SIGAR_OK;
 }
 
-int sigar_proc_args_get(sigar_t *sigar, sigar_pid_t pid,
-                        sigar_proc_args_t *procargs)
+int sigar_os_proc_args_get(sigar_t *sigar, sigar_pid_t pid,
+                           sigar_proc_args_t *procargs)
 {
     return sigar_procfs_args_get(sigar, pid, procargs);
 }
