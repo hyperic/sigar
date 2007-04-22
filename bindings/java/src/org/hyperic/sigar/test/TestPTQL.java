@@ -119,7 +119,7 @@ public class TestPTQL extends SigarTestCase {
         }
 
         try {
-            long[] pids = query.findProcesses(sigar);
+            long[] pids = query.find(sigar);
 
             traceln(pids.length + " processes match: " + qs);
 

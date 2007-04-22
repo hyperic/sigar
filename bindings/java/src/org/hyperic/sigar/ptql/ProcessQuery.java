@@ -29,6 +29,6 @@ public interface ProcessQuery {
     public long findProcess(Sigar sigar)
         throws SigarException;
 
-    public long[] findProcesses(Sigar sigar)
+    public long[] find(Sigar sigar)
         throws SigarException;
 }

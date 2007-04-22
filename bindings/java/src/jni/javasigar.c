@@ -1264,7 +1264,7 @@ JNIEXPORT jlong SIGAR_JNI(ptql_SigarProcessQuery_findProcess)
     return pid;
 }
 
-JNIEXPORT jlongArray SIGAR_JNI(ptql_SigarProcessQuery_findProcesses)
+JNIEXPORT jlongArray SIGAR_JNI(ptql_SigarProcessQuery_find)
 (JNIEnv *env, jobject obj, jobject sigar_obj)
 {
     int status;
@@ -1283,7 +1283,7 @@ JNIEXPORT jlongArray SIGAR_JNI(ptql_SigarProcessQuery_findProcesses)
 
     re_impl_set(env, sigar, obj, &re);
 
-    status = sigar_ptql_query_find_processes(sigar, query, &proclist);
+    status = sigar_ptql_query_find(sigar, query, &proclist);
 
     sigar_ptql_re_impl_set(sigar, NULL, NULL);
 

@@ -1411,9 +1411,9 @@ SIGAR_DECLARE(int) sigar_ptql_query_find_process(sigar_t *sigar,
     return -1;
 }
 
-SIGAR_DECLARE(int) sigar_ptql_query_find_processes(sigar_t *sigar,
-                                                   sigar_ptql_query_t *query,
-                                                   sigar_proc_list_t *proclist)
+SIGAR_DECLARE(int) sigar_ptql_query_find(sigar_t *sigar,
+                                         sigar_ptql_query_t *query,
+                                         sigar_proc_list_t *proclist)
 {
     sigar_proc_list_t pids;
     int status;

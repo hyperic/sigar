@@ -73,7 +73,7 @@ public class ProcessFinder {
     public long[] find(ProcessQuery query)
         throws SigarException {
 
-        return query.findProcesses(this.sigar);
+        return query.find(this.sigar);
     }
 }
     

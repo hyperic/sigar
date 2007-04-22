@@ -41,8 +41,8 @@ SIGAR_DECLARE(int) sigar_ptql_query_find_process(sigar_t *sigar,
                                                  sigar_ptql_query_t *query,
                                                  sigar_pid_t *pid);
 
-SIGAR_DECLARE(int) sigar_ptql_query_find_processes(sigar_t *sigar,
-                                                   sigar_ptql_query_t *query,
-                                                   sigar_proc_list_t *proclist);
+SIGAR_DECLARE(int) sigar_ptql_query_find(sigar_t *sigar,
+                                         sigar_ptql_query_t *query,
+                                         sigar_proc_list_t *proclist);
 
 #endif /*SIGAR_PTQL_H*/
