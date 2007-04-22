@@ -18,17 +18,36 @@
 
 package org.hyperic.sigar.ptql;
 
+import java.util.Iterator;
 import java.util.Map;
-import org.hyperic.sigar.util.ReferenceMap;
+import java.util.HashMap;
 
 public class ProcessQueryFactory {
     
-    private static Map cache =
-        ReferenceMap.synchronizedMap();
+    private static ProcessQueryFactory instance = null;
+
+    private Map cache = new HashMap();
 
     public ProcessQueryFactory() {}
 
-    public static ProcessQuery getInstance(String query)
+    public void clear() {
+        for (Iterator it=this.cache.values().iterator();
+             it.hasNext();)
+        {
+            SigarProcessQuery query = (SigarProcessQuery)it.next();
+            query.destroy();
+        }
+        this.cache.clear();
+    }
+
+    public static ProcessQueryFactory getInstance() {
+        if (instance == null) {
+            instance = new ProcessQueryFactory();
+        }
+        return instance;
+    }
+
+    public ProcessQuery getQuery(String query)
         throws MalformedQueryException {
 
         if (query == null) {
@@ -39,7 +58,7 @@ public class ProcessQueryFactory {
             throw new MalformedQueryException("empty query");
         }
 
-        ProcessQuery pQuery = (ProcessQuery)cache.get(query);
+        ProcessQuery pQuery = (ProcessQuery)this.cache.get(query);
 
         if (pQuery != null) {
             return pQuery;
@@ -47,7 +66,17 @@ public class ProcessQueryFactory {
 
         pQuery = new SigarProcessQuery();
         ((SigarProcessQuery)pQuery).create(query);
-        cache.put(query, pQuery);
+        this.cache.put(query, pQuery);
         return pQuery;
+    }
+
+    /**
+     * @deprecated
+     * @see getQuery
+     */
+    public static ProcessQuery getInstance(String query)
+        throws MalformedQueryException {
+
+        return getInstance().getQuery(query);
     }
 }
