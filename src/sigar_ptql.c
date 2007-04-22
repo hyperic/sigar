@@ -157,6 +157,9 @@ typedef struct {
 
 struct sigar_ptql_query_t {
     ptql_branch_list_t branches;
+#ifdef PTQL_DEBUG
+    char *ptql;
+#endif
 };
 
 /* XXX optimize */
@@ -1143,9 +1146,6 @@ static int ptql_branch_add(ptql_parse_branch_t *parsed,
         is_set = 1;
         branch->value.ptr = re;
         branch->value_free = pcre_free;
-#else
-        branch->value.ptr = NULL;
-        branch->value_free = NULL;
 #endif
     }
 
@@ -1217,6 +1217,10 @@ SIGAR_DECLARE(int) sigar_ptql_query_create(sigar_ptql_query_t **queryp,
     sigar_ptql_query_t *query =
         *queryp = malloc(sizeof(*query));
 
+#ifdef PTQL_DEBUG
+    query->ptql = strdup(ptql);
+#endif
+
     ptql = ptql_copy;
 
     ptql_branch_list_create(&query->branches);
@@ -1270,6 +1274,9 @@ SIGAR_DECLARE(int) sigar_ptql_query_create(sigar_ptql_query_t **queryp,
 
 SIGAR_DECLARE(int) sigar_ptql_query_destroy(sigar_ptql_query_t *query)
 {
+#ifdef PTQL_DEBUG
+    free(query->ptql);
+#endif
     ptql_branch_list_destroy(&query->branches);
     free(query);
     return SIGAR_OK;
