@@ -162,7 +162,7 @@ public class Sigar implements SigarProxy {
     }
 
     public File getNativeLibrary() {
-        return this.loader.getNativeLibrary();
+        return loader.getNativeLibrary();
     }
 
     /**
