@@ -20,9 +20,6 @@ package org.hyperic.sigar.ptql;
 
 import org.hyperic.sigar.Sigar;
 import org.hyperic.sigar.SigarException;
-import org.hyperic.sigar.SigarNotImplementedException;
-import org.hyperic.sigar.SigarProxy;
-import org.hyperic.sigar.SigarProxyCache;
 
 public class SigarProcessQuery implements ProcessQuery {
     int sigarWrapper = 0; //holds the sigar_ptql_query_t *
