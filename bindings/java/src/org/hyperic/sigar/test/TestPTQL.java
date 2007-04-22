@@ -28,6 +28,8 @@ import org.hyperic.sigar.ptql.MalformedQueryException;
 
 public class TestPTQL extends SigarTestCase {
 
+    private static final String THIS_PROCESS = "Pid.Pid.eq=$$";
+
     private ProcessQueryFactory qf;
 
     private static final String[] OK_QUERIES = {
@@ -60,7 +62,7 @@ public class TestPTQL extends SigarTestCase {
         "Port.tcp.eq=8080,Cred.Uid.eq=1003", //dougm owned jboss port
         "Pid.PidFile.eq=pid.file",
         "Pid.Pid.eq=1",
-        "Pid.Pid.eq=$$",
+        THIS_PROCESS,
         "Pid.Service.eq=Eventlog",
         "Pid.Service.eq=NOSUCHSERVICE",
         "Pid.Service.eq=Hyperic HQ Agent",
@@ -135,6 +137,9 @@ public class TestPTQL extends SigarTestCase {
     }
 
     private void testOK(Sigar sigar) throws Exception {
+        assertTrue(THIS_PROCESS,
+                   runQuery(sigar, THIS_PROCESS) == 1);
+
         for (int i=0; i<OK_QUERIES.length; i++) {
             String qs = OK_QUERIES[i];
             assertTrue(qs,
