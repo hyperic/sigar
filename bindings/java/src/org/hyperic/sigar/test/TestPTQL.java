@@ -18,9 +18,8 @@
 
 package org.hyperic.sigar.test;
 
+import org.hyperic.sigar.Sigar;
 import org.hyperic.sigar.SigarException;
-import org.hyperic.sigar.SigarProxy;
-import org.hyperic.sigar.SigarProxyCache;
 import org.hyperic.sigar.SigarNotImplementedException;
 
 import org.hyperic.sigar.ptql.ProcessQuery;
@@ -105,7 +104,7 @@ public class TestPTQL extends SigarTestCase {
         super(name);
     }
 
-    private int runQuery(SigarProxy proxy, String qs)
+    private int runQuery(Sigar sigar, String qs)
         throws MalformedQueryException,
                SigarException {
 
@@ -118,7 +117,7 @@ public class TestPTQL extends SigarTestCase {
             throw e;
         }
 
-        ProcessFinder finder = new ProcessFinder(proxy);
+        ProcessFinder finder = new ProcessFinder(sigar);
 
         try {
             long[] pids = finder.find(query);
@@ -136,27 +135,27 @@ public class TestPTQL extends SigarTestCase {
         }
     }
 
-    private void testOK(SigarProxy proxy) throws Exception {
+    private void testOK(Sigar sigar) throws Exception {
         for (int i=0; i<OK_QUERIES.length; i++) {
             String qs = OK_QUERIES[i];
             assertTrue(qs,
-                       runQuery(proxy, qs) >= 0);
+                       runQuery(sigar, qs) >= 0);
         }
     }
 
-    private void testReOK(SigarProxy proxy) throws Exception {
+    private void testReOK(Sigar sigar) throws Exception {
         for (int i=0; i<OK_RE_QUERIES.length; i++) {
             String qs = OK_RE_QUERIES[i];
             assertTrue(qs,
-                       runQuery(proxy, qs) >= 0);
+                       runQuery(sigar, qs) >= 0);
         }
     }
 
-    private void testMalformed(SigarProxy proxy) throws Exception {
+    private void testMalformed(Sigar sigar) throws Exception {
         for (int i=0; i<MALFORMED_QUERIES.length; i++) {
             String qs = MALFORMED_QUERIES[i];
             try {
-                runQuery(proxy, qs);
+                runQuery(sigar, qs);
                 fail("'" + qs + "' did not throw MalformedQueryException");
             } catch (MalformedQueryException e) {
                 traceln(qs + ": " + e.getMessage());
@@ -166,16 +165,13 @@ public class TestPTQL extends SigarTestCase {
     }
 
     public void testCreate() throws Exception {
-        SigarProxy proxy =
-            SigarProxyCache.newInstance(getSigar());
-
-        testOK(proxy);
+        testOK(getSigar());
 
         if (JDK_14_COMPAT) {
-            testReOK(proxy);
+            testReOK(getSigar());
         }
 
-        testMalformed(proxy);
+        testMalformed(getSigar());
     }
 }
 
