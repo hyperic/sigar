@@ -631,8 +631,8 @@ static int sigar_dlinfo_get(sigar_t *sigar, const char *func,
     return SIGAR_OK;
 }
 
-int sigar_proc_list_get(sigar_t *sigar,
-                        sigar_proc_list_t *proclist)
+int sigar_os_proc_list_get(sigar_t *sigar,
+                           sigar_proc_list_t *proclist)
 {
     return sigar_proc_list_procfs_get(sigar, proclist);
 }

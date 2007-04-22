@@ -165,8 +165,8 @@ int sigar_loadavg_get(sigar_t *sigar,
 
 #define PROC_ELTS 16
 
-int sigar_proc_list_get(sigar_t *sigar,
-                        sigar_proc_list_t *proclist)
+int sigar_os_proc_list_get(sigar_t *sigar,
+                           sigar_proc_list_t *proclist)
 {
     struct tbl_procinfo procinfo[PROC_ELTS];
     int offset;
@@ -175,8 +175,6 @@ int sigar_proc_list_get(sigar_t *sigar,
         /* this number will not change while we are running */
         sigar->nproc = table(TBL_PROCINFO, 0, NULL, INT_MAX, 0);
     }
-
-    sigar_proc_list_create(proclist);
 
     for (offset=0; offset<sigar->nproc; offset+=PROC_ELTS) {
         int i;

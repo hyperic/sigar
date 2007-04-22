@@ -618,8 +618,8 @@ static SIGAR_INLINE int proc_isthread(sigar_t *sigar, char *pidstr, int len)
     return 1;
 }
 
-int sigar_proc_list_get(sigar_t *sigar,
-                        sigar_proc_list_t *proclist)
+int sigar_os_proc_list_get(sigar_t *sigar,
+                           sigar_proc_list_t *proclist)
 {
     DIR *dirp = opendir(PROCP_FS_ROOT);
     struct dirent *ent, dbuf;
@@ -631,8 +631,6 @@ int sigar_proc_list_get(sigar_t *sigar,
     if (sigar->proc_signal_offset == -1) {
         sigar->proc_signal_offset = get_proc_signal_offset();
     }
-
-    sigar_proc_list_create(proclist);
 
     while (readdir_r(dirp, &dbuf, &ent) == 0) {
         if (!ent) {

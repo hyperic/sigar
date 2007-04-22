@@ -1424,8 +1424,6 @@ SIGAR_DECLARE(int) sigar_ptql_query_find(sigar_t *sigar,
         return status;
     }
 
-    sigar_proc_list_create(proclist);
-
     for (i=0; i<pids.number; i++) {
         int query_status =
             sigar_ptql_query_match(sigar, query, pids.data[i]);
@@ -1444,7 +1442,7 @@ SIGAR_DECLARE(int) sigar_ptql_query_find(sigar_t *sigar,
     sigar_proc_list_destroy(sigar, &pids);
 
     if (status != SIGAR_OK) {
-        sigar_proc_list_create(proclist);
+        sigar_proc_list_destroy(sigar, proclist);
         return status;
     }
 

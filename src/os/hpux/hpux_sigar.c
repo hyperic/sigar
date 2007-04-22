@@ -206,13 +206,11 @@ int sigar_loadavg_get(sigar_t *sigar,
 
 #define PROC_ELTS 16
 
-int sigar_proc_list_get(sigar_t *sigar,
-                        sigar_proc_list_t *proclist)
+int sigar_os_proc_list_get(sigar_t *sigar,
+                           sigar_proc_list_t *proclist)
 {
     int num, idx=0;
     struct pst_status proctab[PROC_ELTS];
-
-    sigar_proc_list_create(proclist);
 
     while ((num = pstat_getproc(proctab, sizeof(proctab[0]),
                                 PROC_ELTS, idx)) > 0)

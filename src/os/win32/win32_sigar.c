@@ -904,8 +904,6 @@ static int sigar_proc_list_get_perf(sigar_t *sigar,
         }
     }
 
-    sigar_proc_list_create(proclist);
-
     for (i=0, inst = PdhFirstInstance(object);
          i<object->NumInstances;
          i++, inst = PdhNextInstance(inst))
@@ -928,8 +926,8 @@ static int sigar_proc_list_get_perf(sigar_t *sigar,
 #define sigar_EnumProcesses \
     sigar->psapi.enum_processes.func
 
-SIGAR_DECLARE(int) sigar_proc_list_get(sigar_t *sigar,
-                                       sigar_proc_list_t *proclist)
+int sigar_os_proc_list_get(sigar_t *sigar,
+                           sigar_proc_list_t *proclist)
 {
     DLLMOD_INIT(psapi, FALSE);
 
@@ -956,16 +954,14 @@ SIGAR_DECLARE(int) sigar_proc_list_get(sigar_t *sigar,
 
         pids = (DWORD *)sigar->perfbuf;
 
-        proclist->number = 0;
-        proclist->size = retval / sizeof(DWORD);
-        proclist->data =
-            malloc(sizeof(*(proclist->data)) * proclist->size);
+        size = retval / sizeof(DWORD);
 
-        for (i=0; i<proclist->size; i++) {
+        for (i=0; i<size; i++) {
             DWORD pid = pids[i];
             if (pid == 0) {
                 continue; /* dont include the system Idle process */
             }
+            SIGAR_PROC_LIST_GROW(proclist);
             proclist->data[proclist->number++] = pid;
         }
 

@@ -962,13 +962,11 @@ int sigar_loadavg_get(sigar_t *sigar,
     return SIGAR_OK;
 }
 
-int sigar_proc_list_get(sigar_t *sigar,
-                        sigar_proc_list_t *proclist)
+int sigar_os_proc_list_get(sigar_t *sigar,
+                           sigar_proc_list_t *proclist)
 {
     pid_t pid = 0;
     struct procsinfo info;
-
-    sigar_proc_list_create(proclist);
 
     for (;;) {
         int num = getprocs(&info, sizeof(info),

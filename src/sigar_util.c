@@ -163,8 +163,6 @@ int sigar_proc_list_procfs_get(sigar_t *sigar,
         return errno;
     }
 
-    sigar_proc_list_create(proclist);
-
 #ifdef HAVE_READDIR_R
     while (readdir_r(dirp, &dbuf, &ent) == 0) {
         if (ent == NULL) {

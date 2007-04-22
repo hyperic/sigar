@@ -500,7 +500,7 @@ sigar_proc_cred_name_get(sigar_t *sigar, sigar_pid_t pid,
 
 #endif /* WIN32 */
 
-int sigar_proc_list_create(sigar_proc_list_t *proclist)
+static int sigar_proc_list_create(sigar_proc_list_t *proclist)
 {
     proclist->number = 0;
     proclist->size = SIGAR_PROC_LIST_MAX;
@@ -528,6 +528,13 @@ SIGAR_DECLARE(int) sigar_proc_list_destroy(sigar_t *sigar,
     }
 
     return SIGAR_OK;
+}
+
+SIGAR_DECLARE(int) sigar_proc_list_get(sigar_t *sigar,
+                                       sigar_proc_list_t *proclist)
+{
+    sigar_proc_list_create(proclist);
+    return sigar_os_proc_list_get(sigar, proclist);
 }
 
 int sigar_proc_args_create(sigar_proc_args_t *procargs)

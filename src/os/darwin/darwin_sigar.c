@@ -613,8 +613,8 @@ int sigar_loadavg_get(sigar_t *sigar,
 #define KERN_PROC_PROC KERN_PROC_ALL
 #endif
 
-int sigar_proc_list_get(sigar_t *sigar,
-                        sigar_proc_list_t *proclist)
+int sigar_os_proc_list_get(sigar_t *sigar,
+                           sigar_proc_list_t *proclist)
 {
 #if defined(DARWIN) || defined(SIGAR_FREEBSD5)
     int mib[4] = { CTL_KERN, KERN_PROC, KERN_PROC_PROC, 0 };
@@ -634,7 +634,6 @@ int sigar_proc_list_get(sigar_t *sigar,
     }
 
     num = len/sizeof(*proc);
-    sigar_proc_list_create(proclist);
 
     for (i=0; i<num; i++) {
         if (proc[i].KI_FLAG & P_SYSTEM) {
@@ -656,8 +655,6 @@ int sigar_proc_list_get(sigar_t *sigar,
     }
 
     proc = kvm_getprocs(sigar->kmem, KERN_PROC_PROC, 0, &num);
-    
-    sigar_proc_list_create(proclist);
 
     for (i=0; i<num; i++) {
         if (proc[i].KI_FLAG & P_SYSTEM) {

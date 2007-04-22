@@ -164,7 +164,8 @@ int sigar_sys_info_get_uname(sigar_sys_info_t *sysinfo);
 
 int sigar_os_sys_info_get(sigar_t *sigar, sigar_sys_info_t *sysinfo);
 
-int sigar_proc_list_create(sigar_proc_list_t *proclist);
+int sigar_os_proc_list_get(sigar_t *sigar,
+                           sigar_proc_list_t *proclist);
 
 int sigar_proc_list_grow(sigar_proc_list_t *proclist);
 
