@@ -26,6 +26,7 @@ import org.hyperic.sigar.SigarProxyCache;
 public class ProcessFinder {
 
     private Sigar sigar;
+    private ProcessQueryFactory qf;
 
     /**
      * @deprecated
@@ -36,14 +37,13 @@ public class ProcessFinder {
 
     public ProcessFinder(Sigar sigar) {
         this.sigar = sigar;
+        this.qf = ProcessQueryFactory.getInstance();
     }
 
     public long findSingleProcess(String query)
         throws SigarException {
 
-        ProcessQuery processQuery =
-            ProcessQueryFactory.getInstance(query);
-        return findSingleProcess(processQuery);
+        return findSingleProcess(this.qf.getQuery(query));
     }
 
     public long findSingleProcess(ProcessQuery query)
@@ -67,7 +67,7 @@ public class ProcessFinder {
     public long[] find(String query)
         throws SigarException {
 
-        return find(ProcessQueryFactory.getInstance(query));
+        return find(this.qf.getQuery(query));
     }
 
     public long[] find(ProcessQuery query)
