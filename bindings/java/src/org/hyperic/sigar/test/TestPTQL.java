@@ -71,6 +71,7 @@ public class TestPTQL extends SigarTestCase {
         "State.Name.sw=java,Args.*.eq=org.jboss.Main", //jboss
         "State.Name.eq=java,Args.*.eq=com.ibm.ws.runtime.WsServer", //websphere
         "State.Name.eq=java,Args.-1.eq=weblogic.Server", //weblogic
+        "State.Name.eq=perl,Args.*.eq=v", //testing w/ exp/fork.pl
     };
 
     //XXX current required 1.4+
