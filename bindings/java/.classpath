@@ -8,5 +8,6 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="lib" path="/Developer/Java/Ant/lib/ant.jar"/>
 	<classpathentry kind="lib" path="lib/log4j.jar"/>
+	<classpathentry kind="lib" path="lib/mx4j-jmx.jar"/>
 	<classpathentry kind="output" path="build/classes"/>
 </classpath>
