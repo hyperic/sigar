@@ -31,25 +31,19 @@ import org.hyperic.sigar.Sigar;
 import org.hyperic.sigar.SigarException;
 
 /**
- * Sigar JMX MBean implementation for the <code>Mem</code> information
+ * Sigar JMX MBean implementation for the <code>Swap</code> information
  * package. Provides an OpenMBean conform implementation.
  * 
  * @author Bjoern Martin
  * @since 1.4 (2007-04)
  */
-public class SigarMem extends AbstractMBean {
+public class SigarSwap extends AbstractMBean {
 
-	private static final String MBEAN_TYPE = "Mem";
+	private static final String MBEAN_TYPE = "Swap";
 
 	private static final MBeanInfo MBEAN_INFO;
 	
-	private static final MBeanAttributeInfo MBEAN_ATTR_ACTUAL_FREE;
-
-	private static final MBeanAttributeInfo MBEAN_ATTR_ACTUAL_USED;
-
 	private static final MBeanAttributeInfo MBEAN_ATTR_FREE;
-
-	private static final MBeanAttributeInfo MBEAN_ATTR_RAM;
 
 	private static final MBeanAttributeInfo MBEAN_ATTR_TOTAL;
 
@@ -60,50 +54,34 @@ public class SigarMem extends AbstractMBean {
 	private static MBeanParameterInfo MBEAN_PARAM_SIGAR;
 	
 	static {
-		MBEAN_ATTR_ACTUAL_FREE = new MBeanAttributeInfo(
-				"ActualFree", "long",
-				"TODO add proper description here",
-				true, false, false);
-		MBEAN_ATTR_ACTUAL_USED = new MBeanAttributeInfo(
-				"ActualUsed", "long",
-				"TODO add proper description here",
-				true, false, false);
 		MBEAN_ATTR_FREE = new MBeanAttributeInfo(
 				"Free", "long",
-				"TODO add proper description here",
-				true, false, false);
-		MBEAN_ATTR_RAM = new MBeanAttributeInfo(
-				"Ram", "long",
-				"TODO add proper description here",
+				"The amount of free swap memory, in [bytes]",
 				true, false, false);
 		MBEAN_ATTR_TOTAL = new MBeanAttributeInfo(
 				"Total", "long",
-				"TODO add proper description here",
+				"The total amount of swap memory, in [bytes]",
 				true, false, false);
 		MBEAN_ATTR_USED = new MBeanAttributeInfo(
 				"Used", "long",
-				"TODO add proper description here",
+				"The amount of swap memory in use, in [bytes]",
 				true, false, false);
 		MBEAN_PARAM_SIGAR = new MBeanParameterInfo(
 				"sigar", Sigar.class.getName(),
 				"The Sigar instance to use to fetch data from");
 		MBEAN_CONSTR_SIGAR = new MBeanConstructorInfo(
-				SigarMem.class.getName(),
+				SigarSwap.class.getName(),
 				"Creates a new instance, using the Sigar instance " +
 				"specified to fetch the data.",
 				new MBeanParameterInfo[]{
 						MBEAN_PARAM_SIGAR});
 		MBEAN_INFO = new MBeanInfo(
-				SigarMem.class.getName(),
-				"Sigar Memory MBean, provides raw data for the physical " +
-				"memory installed on the system. Uses an internal cache " +
-				"that invalidates within 500ms, allowing for bulk request " +
-				"being satisfied with a single dataset fetch.",
+				SigarSwap.class.getName(),
+				"Sigar Swap MBean, provides raw data for the swap memory " +
+				"configured on the system. Uses an internal cache that " +
+				"invalidates within 5 seconds.",
 				new MBeanAttributeInfo[]{
-					MBEAN_ATTR_ACTUAL_FREE, 
-					MBEAN_ATTR_ACTUAL_USED, 
 					MBEAN_ATTR_FREE, 
-					MBEAN_ATTR_RAM, 
 					MBEAN_ATTR_TOTAL, 
 					MBEAN_ATTR_USED}, 
 				new MBeanConstructorInfo[]{
@@ -128,11 +106,11 @@ public class SigarMem extends AbstractMBean {
 	 * @throws IllegalArgumentException
 	 *             If an unexpected Sigar error occurs
 	 */
-	public SigarMem(Sigar sigar) throws IllegalArgumentException {
-		super(sigar, CACHED_500MS);
+	public SigarSwap(Sigar sigar) throws IllegalArgumentException {
+		super(sigar, CACHED_5SEC);
 
 		this.objectName = SigarInvokerJMX.DOMAIN_NAME + ":" + MBEAN_ATTR_TYPE
-				+ "=Memory";
+				+ "=Swap";
 	}
 
 	/**
@@ -144,66 +122,33 @@ public class SigarMem extends AbstractMBean {
 	}
 
 	/**
-	 * @return The actual amount of free physical memory, in [bytes]
-	 */
-	public long getActualFree() {
-		try {
-			return sigar.getMem().getActualFree();
-		} catch (SigarException e) {
-			throw unexpectedError(MBEAN_TYPE, e);
-		}
-	}
-
-	/**
-	 * @return The actual amount of physical memory used, in [bytes]
-	 */
-	public long getActualUsed() {
-		try {
-			return sigar.getMem().getActualUsed();
-		} catch (SigarException e) {
-			throw unexpectedError(MBEAN_TYPE, e);
-		}
-	}
-
-	/**
-	 * @return The amount of free physical memory, in [bytes]
+	 * @return The amount of free swap memory, in [bytes]
 	 */
 	public long getFree() {
 		try {
-			return sigar.getMem().getFree();
+			return sigar.getSwap().getFree();
 		} catch (SigarException e) {
 			throw unexpectedError(MBEAN_TYPE, e);
 		}
 	}
 
 	/**
-	 * @return The amount of physical memory, in [bytes]
-	 */
-	public long getRam() {
-		try {
-			return sigar.getMem().getRam();
-		} catch (SigarException e) {
-			throw unexpectedError(MBEAN_TYPE, e);
-		}
-	}
-
-	/**
-	 * @return The total amount of physical memory, in [bytes]
+	 * @return The total amount of swap memory, in [bytes]
 	 */
 	public long getTotal() {
 		try {
-			return sigar.getMem().getTotal();
+			return sigar.getSwap().getTotal();
 		} catch (SigarException e) {
 			throw unexpectedError(MBEAN_TYPE, e);
 		}
 	}
 
 	/**
-	 * @return The amount of physical memory in use, in [bytes]
+	 * @return The amount of swap memory in use, in [bytes]
 	 */
 	public long getUsed() {
 		try {
-			return sigar.getMem().getUsed();
+			return sigar.getSwap().getUsed();
 		} catch (SigarException e) {
 			throw unexpectedError(MBEAN_TYPE, e);
 		}
@@ -220,17 +165,8 @@ public class SigarMem extends AbstractMBean {
 	 */
 	public Object getAttribute(String attr) throws AttributeNotFoundException,
 			MBeanException, ReflectionException {
-		if (MBEAN_ATTR_ACTUAL_FREE.getName().equals(attr)) {
-			return new Long(getActualFree());
-
-		} else if (MBEAN_ATTR_ACTUAL_USED.getName().equals(attr)) {
-			return new Long(getActualUsed());
-
-		} else if (MBEAN_ATTR_FREE.getName().equals(attr)) {
+		if (MBEAN_ATTR_FREE.getName().equals(attr)) {
 			return new Long(getFree());
-
-		} else if (MBEAN_ATTR_RAM.getName().equals(attr)) {
-			return new Long(getRam());
 
 		} else if (MBEAN_ATTR_TOTAL.getName().equals(attr)) {
 			return new Long(getTotal());

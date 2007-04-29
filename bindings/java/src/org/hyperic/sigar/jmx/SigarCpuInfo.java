@@ -89,14 +89,14 @@ public class SigarCpuInfo extends AbstractMBean {
 				"sigar", Sigar.class.getName(),
 				"The Sigar instance to use to fetch data from");
 		MBEAN_CONSTR_CPUINDEX = new MBeanConstructorInfo(
-				SigarCpu.class.getName(),
+				SigarCpuInfo.class.getName(),
 				"Creates a new instance for the CPU index specified, " +
 				"using a new Sigar instance to fetch the data. " +
 				"Fails if the CPU index is out of range.",
 				new MBeanParameterInfo[]{
 						MBEAN_PARAM_CPUINDEX});
 		MBEAN_CONSTR_CPUINDEX_SIGAR = new MBeanConstructorInfo(
-				SigarCpu.class.getName(),
+				SigarCpuInfo.class.getName(),
 				"Creates a new instance for the CPU index specified, " +
 				"using the Sigar instance specified to fetch the data. " +
 				"Fails if the CPU index is out of range.",
@@ -104,7 +104,7 @@ public class SigarCpuInfo extends AbstractMBean {
 					MBEAN_PARAM_SIGAR,
 					MBEAN_PARAM_CPUINDEX});
 		MBEAN_INFO = new MBeanInfo(
-				SigarCpu.class.getName(),
+				SigarCpuInfo.class.getName(),
 				"Sigar CPU Info MBean, provides overall information for a " +
 				"single CPU. This information only changes if, for example, " +
 				"a CPU is reducing its clock frequency or shutting down " +

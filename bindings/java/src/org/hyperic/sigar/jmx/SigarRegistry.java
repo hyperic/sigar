@@ -174,30 +174,41 @@ public class SigarRegistry extends AbstractMBean {
 		try {
 			final int cpuCount = sigar.getCpuInfoList().length;
 			for (int i = 0; i < cpuCount; i++) {
+				// add CPU bean
 				SigarCpu nextCpu = new SigarCpu(sigarImpl, i);
-				SigarCpuPerc nextCpuPerc = new SigarCpuPerc(sigarImpl, i);
-				SigarCpuInfo nextCpuInfo = new SigarCpuInfo(sigarImpl, i);
 				try {
 					if (!mbeanServer.isRegistered(new ObjectName(nextCpu.getObjectName())))
 						nextRegistered = mbeanServer.registerMBean(nextCpu, null);
 				} catch (Exception e) { // ignore
 				}
 				// add MBean to set of managed beans
-				managedBeans.add(nextRegistered.getObjectName());
+				if (nextRegistered != null)
+					managedBeans.add(nextRegistered.getObjectName());
+				nextRegistered = null;
+				
+				// add CPU percentage bean
+				SigarCpuPerc nextCpuPerc = new SigarCpuPerc(sigarImpl, i);
 				try {
 					if (!mbeanServer.isRegistered(new ObjectName(nextCpuPerc.getObjectName())))
 						nextRegistered = mbeanServer.registerMBean(nextCpuPerc, null);
 				} catch (Exception e) { // ignore
 				}
 				// add MBean to set of managed beans
-				managedBeans.add(nextRegistered.getObjectName());
+				if (nextRegistered != null)
+					managedBeans.add(nextRegistered.getObjectName());
+				nextRegistered = null;
+				
+				// add CPU info bean
+				SigarCpuInfo nextCpuInfo = new SigarCpuInfo(sigarImpl, i);
 				try {
 					if (!mbeanServer.isRegistered(new ObjectName(nextCpuInfo.getObjectName())))
 						nextRegistered = mbeanServer.registerMBean(nextCpuInfo, null);
 				} catch (Exception e) { // ignore
 				}
 				// add MBean to set of managed beans
-				managedBeans.add(nextRegistered.getObjectName());
+				if (nextRegistered != null)
+					managedBeans.add(nextRegistered.getObjectName());
+				nextRegistered = null;
 			}
 			
 		} catch (SigarException e) {
@@ -212,6 +223,7 @@ public class SigarRegistry extends AbstractMBean {
 		
 		ObjectInstance nextRegistered = null;
 		
+		// add physical memory bean
 		SigarMem mem = new SigarMem(sigarImpl);
 		
 		try {
@@ -221,7 +233,23 @@ public class SigarRegistry extends AbstractMBean {
 		}
 		
 		// add MBean to set of managed beans
-		managedBeans.add(nextRegistered.getObjectName());
+		if (nextRegistered != null)
+			managedBeans.add(nextRegistered.getObjectName());
+		nextRegistered = null;
+		
+		// add swap memory bean
+		SigarSwap swap = new SigarSwap(sigarImpl);
+		try {
+			if (!mbeanServer.isRegistered(new ObjectName(swap.getObjectName())))
+				nextRegistered = mbeanServer.registerMBean(swap, null);
+		} catch (Exception e) { // ignore
+			nextRegistered = null;
+		}
+		
+		// add MBean to set of managed beans
+		if (nextRegistered != null)
+			managedBeans.add(nextRegistered.getObjectName());
+		nextRegistered = null;
 	}
 	
 	/**
