@@ -467,7 +467,7 @@ static int dir_stat_get(sigar_t *sigar,
         return error;
     }
 
-    dirstats->total +=
+    dirstats->total =
         dirstats->files +
         dirstats->subdirs +
         dirstats->symlinks +
@@ -689,7 +689,7 @@ static int dir_stat_get(sigar_t *sigar,
         }
     }
 
-    dirstats->total +=
+    dirstats->total =
         dirstats->files +
         dirstats->subdirs +
         dirstats->symlinks +
