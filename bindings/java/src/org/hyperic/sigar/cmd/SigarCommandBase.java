@@ -38,6 +38,7 @@ import org.hyperic.sigar.util.GetlineCompleter;
 import org.hyperic.sigar.util.PrintfFormat;
 
 import org.hyperic.sigar.shell.CollectionCompleter;
+import org.hyperic.sigar.shell.ProcessQueryCompleter;
 import org.hyperic.sigar.shell.ShellCommandBase;
 import org.hyperic.sigar.shell.ShellCommandExecException;
 import org.hyperic.sigar.shell.ShellCommandUsageException;
@@ -53,6 +54,7 @@ public abstract class SigarCommandBase
     protected SigarProxy proxy;
     protected List output = new ArrayList();
     private CollectionCompleter completer;
+    private GetlineCompleter ptqlCompleter;
     private Collection completions = new ArrayList();
     private PrintfFormat formatter;
     private ArrayList printfItems = new ArrayList();
@@ -66,6 +68,9 @@ public abstract class SigarCommandBase
         
         //provide simple way for handlers to implement tab completion
         this.completer = new CollectionCompleter(shell);
+        if (isPidCompleter()) {
+            this.ptqlCompleter = new ProcessQueryCompleter(shell);
+        }
     }
 
     public SigarCommandBase() {
@@ -205,7 +210,7 @@ public abstract class SigarCommandBase
             return line;
         }
 
-        return line; //XXX bring back ptql completion
+        return this.ptqlCompleter.complete(line);
     }
 
     public String complete(String line) {
