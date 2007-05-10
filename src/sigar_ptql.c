@@ -26,8 +26,11 @@
 #include "pcre.h"
 #endif
 
-#ifdef WIN32
-#define strtoull strtoul /*XXX*/
+/* See http://gcc.gnu.org/ml/libstdc++/2002-03/msg00164.html */
+#if defined(WIN32) || (defined(__hpux) && defined(SIGAR_64BIT))
+#define strtoull strtoul
+#elif (defined(__hpux) && !defined(SIGAR_64BIT))
+#define strtoull __strtoull
 #else
 #include <errno.h>
 #endif
