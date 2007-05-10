@@ -19,7 +19,11 @@
 #ifndef SIGAR_PRIVATE_DOT_H
 #define SIGAR_PRIVATE_DOT_H
 
-#if defined(__LP64__) || defined(__powerpc64__) || defined(__osf__)
+#if defined(_LP64)         || \
+    defined(__LP64__)      || \
+    defined(__64BIT__)     || \
+    defined(__powerpc64__) || \
+    defined(__osf__)
 #define SIGAR_64BIT
 #endif
 
