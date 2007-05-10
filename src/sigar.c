@@ -279,17 +279,18 @@ SIGAR_DECLARE(int) sigar_uptime_string(sigar_t *sigar,
                                        int buflen)
 {
     char *ptr = buffer;
+    int time = (int)uptime->uptime;
     int minutes, hours, days, offset = 0;
 
     /* XXX: get rid of sprintf and/or check for overflow */
-    days = uptime->uptime / (60*60*24);
+    days = time / (60*60*24);
 
     if (days) {
         offset += sprintf(ptr + offset, "%d day%s, ",
                           days, (days > 1) ? "s" : "");
     }
 
-    minutes = (int)uptime->uptime / 60;
+    minutes = time / 60;
     hours = minutes / 60;
     hours = hours % 24;
     minutes = minutes % 60;
