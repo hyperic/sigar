@@ -1212,6 +1212,10 @@ int sigar_proc_env_get(sigar_t *sigar, sigar_pid_t pid,
 int sigar_proc_fd_get(sigar_t *sigar, sigar_pid_t pid,
                       sigar_proc_fd_t *procfd)
 {
+#ifdef SIGAR_64BIT
+    /* XXX no getuser() in 64-bit mode */
+    return SIGAR_ENOTIMPL;
+#else
     int i;
     struct procsinfo pinfo;
     struct user uinfo;
@@ -1234,6 +1238,7 @@ int sigar_proc_fd_get(sigar_t *sigar, sigar_pid_t pid,
     }
 
     return SIGAR_OK;
+#endif
 }
 
 int sigar_proc_exe_get(sigar_t *sigar, sigar_pid_t pid,
