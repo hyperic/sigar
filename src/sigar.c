@@ -1442,7 +1442,11 @@ typedef struct {
 #define RLIMIT_PSIZE (RLIM_NLIMITS+3)
 
 #ifndef RLIMIT_AS
-#define RLIMIT_AS RLIMIT_VMEM
+#  if defined(RLIMIT_VMEM)
+#    define RLIMIT_AS RLIMIT_VMEM
+#  elif defined(RLIMIT_RSS)
+#    define RLIMIT_AS RLIMIT_RSS
+#  endif
 #endif
 
 static rlimit_field_t sigar_rlimits[] = {
