@@ -16,8 +16,11 @@
  * USA.
  */
 
-#define _KERNEL 1 /* for struct file */
-#include <sys/file.h>
+/* pull in time.h before resource.h does w/ _KERNEL */
+#include <sys/time.h>
+#define _KERNEL 1 
+#include <sys/file.h>     /* for struct file */
+#include <sys/resource.h> /* for rlimit32 in 64-bit mode */
 #undef  _KERNEL
 
 #include "sigar.h"
