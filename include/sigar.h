@@ -458,6 +458,10 @@ sigar_file_system_usage_get(sigar_t *sigar,
                             const char *dirname,
                             sigar_file_system_usage_t *fsusage);
 
+SIGAR_DECLARE(int)
+sigar_file_system_ping(sigar_t *sigar,
+                       sigar_file_system_t *fs);
+
 typedef struct {
     enum {
         SIGAR_AF_UNSPEC,

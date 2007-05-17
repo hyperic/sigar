@@ -682,6 +682,46 @@ sigar_file_system_list_destroy(sigar_t *sigar,
     return SIGAR_OK;
 }
 
+#ifndef NFS_PROGRAM
+#define NFS_PROGRAM 100003
+#endif
+
+#ifndef NFS_VERSION
+#define NFS_VERSION 2
+#endif
+
+SIGAR_DECLARE(int)
+sigar_file_system_ping(sigar_t *sigar,
+                       sigar_file_system_t *fs)
+{
+    int status = SIGAR_OK;
+#ifndef WIN32
+    char *ptr;
+
+    if ((fs->type == SIGAR_FSTYPE_NETWORK) &&
+        strEQ(fs->sys_type_name, "nfs") &&
+        (ptr = strchr(fs->dev_name, ':')))
+    {
+        *ptr = '\0'; /* "hostname:/mount" -> "hostname" */
+
+        status = sigar_rpc_ping(fs->dev_name,
+                                SIGAR_NETCONN_UDP,
+                                NFS_PROGRAM, NFS_VERSION);
+
+        if (SIGAR_LOG_IS_DEBUG(sigar)) {
+            sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
+                             "[fs_ping] %s -> %s: %s",
+                             fs->dir_name, fs->dev_name,
+                             ((status == SIGAR_OK) ?
+                              "OK" : sigar_rpc_strerror(status)));
+        }
+
+        *ptr = ':'; /* "hostname" -> "hostname:/mount" */
+    }
+#endif
+    return status;
+}
+
 int sigar_cpu_info_list_create(sigar_cpu_info_list_t *cpu_infos)
 {
     cpu_infos->number = 0;
