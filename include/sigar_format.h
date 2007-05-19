@@ -26,6 +26,16 @@ SIGAR_DECLARE(int) sigar_uptime_string(sigar_t *sigar,
 
 SIGAR_DECLARE(char *) sigar_format_size(sigar_uint64_t size, char *buf);
 
+SIGAR_DECLARE(int) sigar_net_address_equals(sigar_net_address_t *addr1,
+                                            sigar_net_address_t *addr2);
+
+SIGAR_DECLARE(int) sigar_net_address_to_string(sigar_t *sigar,
+                                               sigar_net_address_t *address,
+                                               char *addr_str);
+
+SIGAR_DECLARE(sigar_uint32_t) sigar_net_address_hash(sigar_net_address_t *address);
+
+
 SIGAR_DECLARE(const char *)sigar_net_connection_type_get(int type);
 
 SIGAR_DECLARE(const char *)sigar_net_connection_state_get(int state);

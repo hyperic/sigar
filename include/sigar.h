@@ -469,15 +469,6 @@ typedef struct {
     } addr;
 } sigar_net_address_t;
 
-SIGAR_DECLARE(int) sigar_net_address_equals(sigar_net_address_t *addr1,
-                                            sigar_net_address_t *addr2);
-
-SIGAR_DECLARE(int) sigar_net_address_to_string(sigar_t *sigar,
-                                               sigar_net_address_t *address,
-                                               char *addr_str);
-
-SIGAR_DECLARE(sigar_uint32_t) sigar_net_address_hash(sigar_net_address_t *address);
-
 #define SIGAR_INET6_ADDRSTRLEN 46
 
 #define SIGAR_MAXDOMAINNAMELEN 256

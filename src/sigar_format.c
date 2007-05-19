@@ -28,6 +28,10 @@
 #include <grp.h>
 #include <stdio.h>
 
+#ifndef WIN32
+#include <arpa/inet.h>
+#endif
+
 int sigar_user_name_get(sigar_t *sigar, int uid, char *buf, int buflen)
 {
     struct passwd *pw = NULL;
@@ -280,6 +284,141 @@ SIGAR_DECLARE(int) sigar_uptime_string(sigar_t *sigar,
     return SIGAR_OK;
 }
 
+
+#ifndef WIN32
+#include <netinet/in.h>
+#endif
+
+/* threadsafe alternative to inet_ntoa (inet_ntop4 from apr) */
+int sigar_inet_ntoa(sigar_t *sigar,
+                    sigar_uint32_t address,
+                    char *addr_str)
+{
+    char *next=addr_str;
+    int n=0;
+    const unsigned char *src =
+        (const unsigned char *)&address;
+
+    do {
+        unsigned char u = *src++;
+        if (u > 99) {
+            *next++ = '0' + u/100;
+            u %= 100;
+            *next++ = '0' + u/10;
+            u %= 10;
+        }
+        else if (u > 9) {
+            *next++ = '0' + u/10;
+            u %= 10;
+        }
+        *next++ = '0' + u;
+        *next++ = '.';
+        n++;
+    } while (n < 4);
+
+    *--next = 0;
+
+    return SIGAR_OK;
+}
+
+static int sigar_ether_ntoa(char *buff, unsigned char *ptr)
+{
+    sprintf(buff, "%02X:%02X:%02X:%02X:%02X:%02X",
+            (ptr[0] & 0xff), (ptr[1] & 0xff), (ptr[2] & 0xff),
+            (ptr[3] & 0xff), (ptr[4] & 0xff), (ptr[5] & 0xff));
+    return SIGAR_OK;
+}
+
+SIGAR_DECLARE(int) sigar_net_address_equals(sigar_net_address_t *addr1,
+                                            sigar_net_address_t *addr2)
+                                            
+{
+    if (addr1->family != addr2->family) {
+        return EINVAL;
+    }
+
+    switch (addr1->family) {
+      case SIGAR_AF_INET:
+        return memcmp(&addr1->addr.in, &addr2->addr.in, sizeof(addr1->addr.in));
+      case SIGAR_AF_INET6:
+        return memcmp(&addr1->addr.in6, &addr2->addr.in6, sizeof(addr1->addr.in6));
+      case SIGAR_AF_LINK:
+        return memcmp(&addr1->addr.mac, &addr2->addr.mac, sizeof(addr1->addr.mac));
+      default:
+        return EINVAL;
+    }
+}
+
+#if !defined(WIN32) && !defined(NETWARE) && !defined(__hpux)
+#define sigar_inet_ntop inet_ntop
+#define sigar_inet_ntop_errno errno
+#else
+#define sigar_inet_ntop(af, src, dst, size) NULL
+#define sigar_inet_ntop_errno EINVAL
+#endif
+
+SIGAR_DECLARE(int) sigar_net_address_to_string(sigar_t *sigar,
+                                               sigar_net_address_t *address,
+                                               char *addr_str)
+{
+    switch (address->family) {
+      case SIGAR_AF_INET6:
+        if (sigar_inet_ntop(AF_INET6, (const void *)&address->addr.in6,
+                            addr_str, SIGAR_INET6_ADDRSTRLEN))
+        {
+            return SIGAR_OK;
+        }
+        else {
+            return sigar_inet_ntop_errno;
+        }
+      case SIGAR_AF_INET:
+        return sigar_inet_ntoa(sigar, address->addr.in, addr_str);
+      case SIGAR_AF_UNSPEC:
+        return sigar_inet_ntoa(sigar, 0, addr_str); /*XXX*/
+      case SIGAR_AF_LINK:
+        return sigar_ether_ntoa(addr_str, &address->addr.mac[0]);
+      default:
+        return EINVAL;
+    }
+}
+
+SIGAR_DECLARE(sigar_uint32_t) sigar_net_address_hash(sigar_net_address_t *address)
+{
+    sigar_uint32_t hash = 0;
+    unsigned char *data;
+    int i=0, size, elts;
+
+    switch (address->family) {
+      case SIGAR_AF_UNSPEC:
+      case SIGAR_AF_INET:
+        return address->addr.in;
+      case SIGAR_AF_INET6:
+        data = (unsigned char *)&address->addr.in6;
+        size = sizeof(address->addr.in6);
+        elts = 4;
+        break;
+      case SIGAR_AF_LINK:
+        data = (unsigned char *)&address->addr.mac;
+        size = sizeof(address->addr.mac);
+        elts = 2;
+        break;
+      default:
+        return -1;
+    }
+
+    while (i<size) {
+        int j=0;
+        int component=0;
+        while (j<elts && i<size) {
+            component = (component << 8) + data[i];
+            j++; 
+            i++;
+        }
+        hash += component;
+    }
+
+    return hash;
+}
 
 SIGAR_DECLARE(const char *)sigar_net_connection_type_get(int type)
 {

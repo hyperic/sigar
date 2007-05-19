@@ -54,6 +54,10 @@
 
 char *sigar_uitoa(char *buf, unsigned int n, int *len);
 
+int sigar_inet_ntoa(sigar_t *sigar,
+                    sigar_uint32_t address,
+                    char *addr_str);
+
 struct hostent *sigar_gethostbyname(const char *name,
                                     sigar_hostent_t *data);
 
