@@ -24,13 +24,12 @@
 #include "sigar_os.h"
 
 #include <errno.h>
-#include <pwd.h>
-#include <grp.h>
 #include <stdio.h>
 
 #ifndef WIN32
 #include <arpa/inet.h>
-#endif
+#include <pwd.h>
+#include <grp.h>
 
 int sigar_user_name_get(sigar_t *sigar, int uid, char *buf, int buflen)
 {
@@ -114,6 +113,8 @@ int sigar_user_id_get(sigar_t *sigar, const char *name, int *uid)
     *uid = (int)pw->pw_uid;
     return SIGAR_OK;
 }
+
+#endif /* WIN32 */
 
 static char *sigar_error_string(int err)
 {
