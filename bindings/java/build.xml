@@ -209,6 +209,7 @@
      <fileset dir="../../include">
          <include name="sigar.h"/>
          <include name="sigar_fileinfo.h"/>
+         <include name="sigar_format.h"/>
      </fileset>
    </copy>
   </target>
