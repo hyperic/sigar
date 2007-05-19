@@ -4,6 +4,7 @@
 
 #include "sigar.h"
 #include "sigar_fileinfo.h"
+#include "sigar_format.h"
 
 typedef sigar_t * Sigar;
 typedef sigar_net_address_t Sigar__NetAddress;
