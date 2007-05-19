@@ -190,13 +190,6 @@ typedef struct {
 SIGAR_DECLARE(int) sigar_uptime_get(sigar_t *sigar,
                                     sigar_uptime_t *uptime);
 
-SIGAR_DECLARE(int) sigar_uptime_string(sigar_t *sigar, 
-                                       sigar_uptime_t *uptime,
-                                       char *buffer,
-                                       int buflen);
-
-SIGAR_DECLARE(char *) sigar_format_size(sigar_uint64_t size, char *buf);
-
 typedef struct {
     double loadavg[3];
 } sigar_loadavg_t;
@@ -705,10 +698,6 @@ SIGAR_DECLARE(int)
 sigar_net_listen_address_get(sigar_t *sigar,
                              unsigned long port,
                              sigar_net_address_t *address);
-
-SIGAR_DECLARE(const char *)sigar_net_connection_type_get(int type);
-
-SIGAR_DECLARE(const char *)sigar_net_connection_state_get(int state);
 
 typedef struct {
     char user[32];

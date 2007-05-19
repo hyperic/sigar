@@ -24,6 +24,7 @@
 #include "sigar_ptql.h"
 #include "sigar_util.h"
 #include "sigar_os.h"
+#include "sigar_format.h"
 
 #include <string.h>
 
