@@ -23,7 +23,7 @@ import java.util.List;
 public class VMwareServer extends VMwareObject {
     native void destroy();
 
-    private native int create();
+    private native void create();
 
     public native boolean connect(ConnectParams params)
         throws VMwareException;
