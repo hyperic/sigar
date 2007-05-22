@@ -71,7 +71,7 @@ public class VM extends VMwareObject {
 
     native void destroy();
 
-    private static native int create();
+    private static native void create();
 
     private native void connect(ConnectParams params, String config, int mks)
         throws VMwareException;
@@ -329,6 +329,6 @@ public class VM extends VMwareObject {
         throws VMwareException;
 
     public VM() {
-        this.ptr = create();
+        create();
     }
 }

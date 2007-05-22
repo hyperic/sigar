@@ -19,7 +19,7 @@
 #ifndef VMCONTROL_WRAPPER_H
 #define VMCONTROL_WRAPPER_H
 
-#if defined(WIN32) || defined(__linux__) && !defined(__LP64__)
+#if defined(WIN32) || defined(__linux__)
 
 #define VMCONTROL_WRAPPER_SUPPORTED
 

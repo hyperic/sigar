@@ -20,8 +20,8 @@ package org.hyperic.sigar.vmware;
 
 public class ConnectParams extends VMwareObject {
 
-    private static native int create(String host, int port,
-                                     String user, String pass);
+    private native void create(String host, int port,
+                               String user, String pass);
 
     native void destroy();
 
@@ -32,6 +32,6 @@ public class ConnectParams extends VMwareObject {
     public ConnectParams(String host, int port,
                          String user, String pass)
     {
-        this.ptr = create(host, port, user, pass);
+        create(host, port, user, pass);
     }
 }

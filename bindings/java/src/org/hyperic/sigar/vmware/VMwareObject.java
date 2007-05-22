@@ -26,7 +26,8 @@ import org.hyperic.sigar.SigarLoader;
 abstract class VMwareObject {
     public static final boolean LOADED;
 
-    protected int ptr = 0;
+    int ptr = 0;
+    long ptr64 = 0;
 
     private static native boolean init(String lib);
 
@@ -81,9 +82,10 @@ abstract class VMwareObject {
     abstract void destroy();
 
     public void dispose() {
-        if (this.ptr != 0) {
+        if ((this.ptr != 0) || (this.ptr64 != 0)) {
             destroy();
             this.ptr = 0;
+            this.ptr64 = 0;
         }
     }
 

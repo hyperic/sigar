@@ -65,11 +65,29 @@ static void vmware_throw_last_error(JNIEnv *env, void *ptr, int type)
 #define vmware_throw_last_server_error() \
     vmware_throw_last_error(env, server, VMWARE_EX_SERVER)
 
-static jint vmware_get_pointer(JNIEnv *env, jobject obj)
+static void *vmware_get_pointer(JNIEnv *env, jobject obj)
 {
     jclass cls = JENV->GetObjectClass(env, obj);
+#ifdef __LP64__
+    jfieldID field = JENV->GetFieldID(env, cls, "ptr64", "J");
+    return (void *)JENV->GetLongField(env, obj, field);
+#else
     jfieldID field = JENV->GetFieldID(env, cls, "ptr", "I");
-    return JENV->GetIntField(env, obj, field);
+    return (void *)JENV->GetIntField(env, obj, field);
+#endif
+}
+
+static void vmware_set_pointer(JNIEnv *env, jobject obj, const void *ptr) {
+    jfieldID pointer_field;
+    jclass cls = JENV->GetObjectClass(env, obj);
+
+#ifdef __LP64__
+    pointer_field = JENV->GetFieldID(env, cls, "ptr64", "J");
+    JENV->SetLongField(env, obj, pointer_field, (jlong)ptr);
+#else
+    pointer_field = JENV->GetFieldID(env, cls, "ptr", "I");
+    JENV->SetIntField(env, obj, pointer_field, (int)ptr);
+#endif
 }
 
 #define dVM(obj) \
@@ -110,11 +128,11 @@ JNIEXPORT jboolean VMWARE_JNI(VMwareObject_init)
     return VMControl_Init() && VMControl_VMInit();
 }
 
-JNIEXPORT jint VMWARE_JNI(ConnectParams_create)
-(JNIEnv *env, jclass classinstance,
+JNIEXPORT void VMWARE_JNI(ConnectParams_create)
+(JNIEnv *env, jobject obj,
  jstring jhost, jint port, jstring juser, jstring jpass)
 {
-    jint ptr;
+    VMControlConnectParams *params;
     const char *host=NULL;
     const char *user=NULL;
     const char *pass=NULL;
@@ -129,7 +147,7 @@ JNIEXPORT jint VMWARE_JNI(ConnectParams_create)
         pass = JENV->GetStringUTFChars(env, jpass, NULL);
     }
 
-    ptr = (jint)VMControl_ConnectParamsNew(host, port, user, pass);
+    params = VMControl_ConnectParamsNew(host, port, user, pass);
 
     if (host) {
         JENV->ReleaseStringUTFChars(env, jhost, host);
@@ -141,7 +159,7 @@ JNIEXPORT jint VMWARE_JNI(ConnectParams_create)
         JENV->ReleaseStringUTFChars(env, jpass, pass);
     }
 
-    return ptr;
+    vmware_set_pointer(env, obj, params);
 }
 
 JNIEXPORT void VMWARE_JNI(ConnectParams_destroy)
@@ -151,10 +169,10 @@ JNIEXPORT void VMWARE_JNI(ConnectParams_destroy)
     VMControl_ConnectParamsDestroy(params);
 }
 
-JNIEXPORT jint VMWARE_JNI(VMwareServer_create)
-(JNIEnv *env, jclass classinstance)
+JNIEXPORT void VMWARE_JNI(VMwareServer_create)
+(JNIEnv *env, jobject obj)
 {
-    return (jint)VMControl_ServerNewEx();
+    vmware_set_pointer(env, obj, VMControl_ServerNewEx());
 }
 
 JNIEXPORT void VMWARE_JNI(VMwareServer_destroy)
@@ -287,10 +305,10 @@ JNIEXPORT jstring VMWARE_JNI(VMwareServer_exec)
     return retval;
 }
 
-JNIEXPORT jint VMWARE_JNI(VM_create)
-(JNIEnv *env, jclass classinstance)
+JNIEXPORT void VMWARE_JNI(VM_create)
+(JNIEnv *env, jclass obj)
 {
-    return (jint)VMControl_VMNewEx();
+    vmware_set_pointer(env, obj, VMControl_VMNewEx());
 }
 
 JNIEXPORT void VMWARE_JNI(VM_destroy)

@@ -25,11 +25,14 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hyperic.jni.ArchName;
 import org.hyperic.sigar.SigarLoader;
 import org.hyperic.sigar.win32.RegistryKey;
 import org.hyperic.sigar.win32.Win32Exception;
 
 public class VMControlLibrary {
+    private static final boolean IS64 = ArchName.is64();
+
     public static final String REGISTRY_ROOT =
         "SOFTWARE\\VMware, Inc.";
 
@@ -42,7 +45,8 @@ public class VMControlLibrary {
     private static final String VMCONTROL_TAR =
         getProperty("control.tar", VMWARE_LIB + "/perl/control.tar");
 
-    private static final String VMCONTROL = "vmcontrol";
+    private static final String VMCONTROL =
+        "vmcontrol" + (IS64 ? "64" : "");
 
     private static final String VMCONTROL_DLL =
         VMCONTROL + "lib.dll";
@@ -230,13 +234,6 @@ public class VMControlLibrary {
             throw new IOException("Cannot write to: " + dir);
         }
 
-        File libssl = getLibSSL();
-        File libcrypto = getLibCrypto();
-
-        if (!libssl.exists()) {
-            throw new FileNotFoundException(libssl.toString());
-        }
-
         File obj = new File(dir, VMCONTROL_OBJ);
         if (!obj.exists()) {
             //extract vmcontrol.o
@@ -259,24 +256,37 @@ public class VMControlLibrary {
         link_args.add("-o");
         link_args.add(out.getPath());
         link_args.add(obj.getPath());
-
-        //Skip rpath for ESX 3.x
-        if (!new File(libssl.getParent(), "libc.so.6").exists()) {
-            final String rpath = "-Wl,-rpath";
-
-            link_args.add(rpath);
-            link_args.add(libssl.getParent());
-
-            //check if libcrypto is in a different directory
-            if (!libssl.getParent().equals(libcrypto.getParent())) {
-                link_args.add(rpath);
-                link_args.add(libcrypto.getParent());
-            }
+        
+        if (IS64) {
+            link_args.add("-lcrypto");
+            link_args.add("-lssl");
         }
+        else {
+            File libssl = getLibSSL();
+            File libcrypto = getLibCrypto();
 
-        link_args.add(libssl.getPath());
-        link_args.add(libcrypto.getPath());
+            if (!libssl.exists()) {
+                throw new FileNotFoundException(libssl.toString());
+            }
 
+            //Skip rpath for ESX 3.x
+            if (!new File(libssl.getParent(), "libc.so.6").exists()) {
+                final String rpath = "-Wl,-rpath";
+
+                link_args.add(rpath);
+                link_args.add(libssl.getParent());
+
+                //check if libcrypto is in a different directory
+                if (!libssl.getParent().equals(libcrypto.getParent())) {
+                    link_args.add(rpath);
+                    link_args.add(libcrypto.getParent());
+                }
+            }
+
+            link_args.add(libssl.getPath());
+            link_args.add(libcrypto.getPath());
+        }
+        
         exec((String[])link_args.toArray(new String[0]));
 
         setSharedLibrary(out.getPath());
