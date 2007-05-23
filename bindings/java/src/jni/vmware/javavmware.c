@@ -341,7 +341,7 @@ JNIEXPORT void VMWARE_JNI(VM_connect)
     const char *config =
         JENV->GetStringUTFChars(env, jconfig, NULL);    
 
-    jboolean retval =
+    Bool retval =
         VMControl_VMConnectEx(vm, params, config, mks);
 
     JENV->ReleaseStringUTFChars(env, jconfig, config);
