@@ -18,6 +18,8 @@
 
 package org.hyperic.sigar.win32;
 
+import java.io.PrintStream;
+import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -113,7 +115,7 @@ public class ServiceConfig {
     String description;
     String password;
     String name;
-
+    String[] argv = null;
     ServiceConfig() {}
 
     public ServiceConfig(String name) {
@@ -140,6 +142,24 @@ public class ServiceConfig {
     public void setPath(String path) {
         this.path = path;
     }
+
+    public String[] getArgv() {
+        if (this.argv == null) {
+            this.argv = Win32.parseCommandLine(getPath());
+        }
+        return this.argv;
+    }
+
+    public String getExe() {
+        String[] args = getArgv();
+        if (args.length == 0) {
+            return null;
+        }
+        else {
+            return args[0];
+        }
+    }
+
     /**
      * @return Returns the dependencies.
      */
@@ -313,5 +333,19 @@ public class ServiceConfig {
      */
     public void setName(String name) {
         this.name = name;
+    }
+
+    public void list(PrintStream out) throws Win32Exception {
+        out.println("name..........[" + getName() + "]");
+        out.println("display.......[" + getDisplayName() + "]");
+        out.println("description...[" + getDescription() + "]");
+        out.println("start type....[" + getStartTypeString() + "]");
+        out.println("start name....[" + getStartName() + "]"); 
+
+        out.println("type.........."  + getTypeList());
+        out.println("path..........[" + getPath() + "]");
+        out.println("exe...........[" + getExe() + "]");
+        out.println("deps.........."  + Arrays.asList(getDependencies()));
+        out.println("error ctl.....[" + getErrorControlString() + "]");
     }
 }

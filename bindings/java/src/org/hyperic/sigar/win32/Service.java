@@ -18,8 +18,11 @@
 
 package org.hyperic.sigar.win32;
 
+import java.io.File;
+import java.io.FileFilter;
 import java.io.PrintStream;
 import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
 
 public class Service extends Win32 {
@@ -101,6 +104,51 @@ public class Service extends Win32 {
     }
 
     public static native List getServiceNames() throws Win32Exception;
+
+    private static class ExeFilter implements FileFilter {
+        private String name;
+        private ExeFilter(String name) {
+            this.name = name.toLowerCase();
+        }
+
+        public boolean accept(File file) {
+            return this.name.equals(file.getName().toLowerCase());
+        }
+    }
+
+    public static List getServiceConfigs(String exe)
+        throws Win32Exception {
+
+        return getServiceConfigs(new ExeFilter(exe));
+    }
+
+    public static List getServiceConfigs(FileFilter filter)
+        throws Win32Exception {
+
+        List services = new ArrayList();
+        List names = Service.getServiceNames();
+
+        for (int i=0; i<names.size(); i++) {
+            Service service = null;
+            try {
+                service = new Service((String)names.get(i));
+                ServiceConfig config = service.getConfig();
+                String path = config.getExe().trim();
+                if (!filter.accept(new File(path))) {
+                    continue;
+                }
+                services.add(config);
+            } catch (Win32Exception e){
+                continue;
+            } finally {
+                if (service != null) {
+                    service.close();
+                }
+            }
+        }
+
+        return services;
+    }
 
     public Service(String serviceName) throws Win32Exception
     {
@@ -339,18 +387,8 @@ public class Service extends Win32 {
                                                      ServiceConfig config) throws Win32Exception;
 
     public void list(PrintStream out) throws Win32Exception {
-        ServiceConfig config = getConfig();
-        out.println("name..........[" + config.getName() + "]");
-        out.println("display.......[" + config.getDisplayName() + "]");
-        out.println("description...[" + config.getDescription() + "]");
+        getConfig().list(out);
         out.println("status........[" + getStatusString() + "]");
-        out.println("start type....[" + config.getStartTypeString() + "]");
-        out.println("start name....[" + config.getStartName() + "]"); 
-
-        out.println("type.........."  + config.getTypeList());
-        out.println("path..........[" + config.getPath() + "]");
-        out.println("deps.........."  + Arrays.asList(config.getDependencies()));
-        out.println("error ctl.....[" + config.getErrorControlString() + "]");
     }
     
     public static void main(String[] args) throws Exception {
@@ -370,6 +408,15 @@ public class Service extends Win32 {
                 service.start(timeout);
             }
             System.out.println(service.getStatusString());
+            return;
+        }
+        else if ((args.length == 1) && (args[0].endsWith(EXE_EXT))) {
+            services = getServiceConfigs(args[0]);
+            for (int i=0; i<services.size(); i++) {
+                ServiceConfig config = (ServiceConfig)services.get(i);
+                config.list(System.out);
+                System.out.println("");
+            }
             return;
         }
         else {
