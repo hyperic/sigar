@@ -100,6 +100,7 @@ public class TestPTQL extends SigarTestCase {
         "Pid.Pid.eq=foo",
         "Cpu.Percent.ge=x",
         "Port.foo.eq=8080",
+        "Port.tcp.gt=8080",
         "",
         null,
         //disabled for testing w/ -Dsigar.ptql.native=true

@@ -856,6 +856,11 @@ static int ptql_env_match(sigar_t *sigar,
 static int ptql_branch_init_port(ptql_parse_branch_t *parsed,
                                  ptql_branch_t *branch)
 {
+    /* only 'eq' is supported here */
+    if (branch->op_name != PTQL_OP_EQ) {
+        return SIGAR_PTQL_MALFORMED_QUERY;
+    }
+
     if (strEQ(parsed->attr, "tcp")) {
         branch->flags = SIGAR_NETCONN_TCP;
     }
