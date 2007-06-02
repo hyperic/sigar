@@ -1914,6 +1914,7 @@ static int proc_net_read(sigar_net_connection_walker_t *walker,
 
         conn.uid = sigar_strtoul(ptr);
 
+        SKIP_WHILE(ptr, ' ');
         SKIP_PAST(ptr, ' '); /* timeout */
 
         conn.inode = sigar_strtoul(ptr);
