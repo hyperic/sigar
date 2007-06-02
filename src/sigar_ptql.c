@@ -704,16 +704,24 @@ static int ptql_pid_match(sigar_t *sigar,
                           sigar_pid_t pid,
                           void *data)
 {
+    ptql_branch_t *branch =
+        (ptql_branch_t *)data;
     sigar_pid_t match_pid;
+    int matched;
     int status =
-        ptql_pid_get(sigar,
-                     (ptql_branch_t *)data, &match_pid);
+        ptql_pid_get(sigar, branch, &match_pid);
 
     if (status != SIGAR_OK) {
         return status;
     }
 
-    return (pid == match_pid) ? SIGAR_OK : !SIGAR_OK;
+#ifdef SIGAR_64BIT
+    matched = ptql_op_ui64[branch->op_name](branch, pid, match_pid);
+#else
+    matched = ptql_op_ui32[branch->op_name](branch, pid, match_pid);
+#endif
+
+    return matched ? SIGAR_OK : 1;
 }
 
 static int ptql_args_branch_init(ptql_parse_branch_t *parsed,
