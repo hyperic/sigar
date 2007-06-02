@@ -618,9 +618,19 @@ enum {
 };
 
 #ifdef SIGAR_64BIT
+
 #define str2pid(value, ptr) strtoull(value, &ptr, 10)
+
+#define pid_branch_match(branch, pid, match_pid) \
+    ptql_op_ui64[branch->op_name](branch, pid, match_pid)
+
 #else
+
 #define str2pid(value, ptr) strtoul(value, &ptr, 10)
+
+#define pid_branch_match(branch, pid, match_pid) \
+    ptql_op_ui32[branch->op_name](branch, pid, match_pid)
+
 #endif
 
 static int ptql_branch_init_pid(ptql_parse_branch_t *parsed,
@@ -715,11 +725,7 @@ static int ptql_pid_match(sigar_t *sigar,
         return status;
     }
 
-#ifdef SIGAR_64BIT
-    matched = ptql_op_ui64[branch->op_name](branch, pid, match_pid);
-#else
-    matched = ptql_op_ui32[branch->op_name](branch, pid, match_pid);
-#endif
+    matched = pid_branch_match(branch, pid, match_pid);
 
     return matched ? SIGAR_OK : 1;
 }
