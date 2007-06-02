@@ -103,10 +103,6 @@ public class TestPTQL extends SigarTestCase {
         "Port.tcp.gt=8080",
         "",
         null,
-        //disabled for testing w/ -Dsigar.ptql.native=true
-        //where these do not throw an exception
-        //"Pid.PidFile.ne=pid.file",
-        //"Pid.Service.ne=Eventlog",
     };
 
     public TestPTQL(String name) {
