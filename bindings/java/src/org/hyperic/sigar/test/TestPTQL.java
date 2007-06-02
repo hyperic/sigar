@@ -29,19 +29,23 @@ import org.hyperic.sigar.ptql.MalformedQueryException;
 public class TestPTQL extends SigarTestCase {
 
     private static final String THIS_PROCESS = "Pid.Pid.eq=$$";
+    private static final String OTHER_PROCESS = "Pid.Pid.ne=$$";
+    private static final String JAVA_PROCESS = "State.Name.eq=java";
+    private static final String OTHER_JAVA_PROCESS =
+        JAVA_PROCESS + "," + OTHER_PROCESS;
 
     private ProcessQueryFactory qf;
 
     private static final String[] OK_QUERIES = {
-        "State.Name.eq=java", //all java processs
+        JAVA_PROCESS, //all java processs
         "Exe.Name.ew=java",   //similar
-        "State.Name.eq=java,Exe.Cwd.eq=$user.dir", //process running this test
-        "State.Name.eq=java,Exe.Cwd.eq=$PWD", //getenv
+        JAVA_PROCESS + ",Exe.Cwd.eq=$user.dir", //process running this test
+        JAVA_PROCESS + ",Exe.Cwd.eq=$PWD", //getenv
         "State.Name.ne=java,Exe.Cwd.eq=$user.dir", //parent(s) of process running this test
         "State.Name.sw=httpsd,State.Name.Pne=$1", //httpsd parent process
         "State.Name.ct=ssh", //anything ssh, "ssh", "ssh-agent", "sshd"
-        "State.Name.eq=java,Args.-1.ew=AgentClient", //hq agents
-        "Cred.Uid.eq=1003,State.Name.eq=java,Args.-1.ew=AgentClient", //my hq agent
+        JAVA_PROCESS + ",Args.-1.ew=AgentDaemon", //hq agents
+        "Cred.Uid.eq=1003,State.Name.eq=java,Args.-1.ew=AgentDaemon", //my hq agent
         "Cred.Uid.gt=0,Cred.Uid.lt=1000", //range of users
         "Cred.Uid.eq=1003,Cred.Gid.eq=1003", //me
         "CredName.User.eq=dougm", //me
@@ -66,11 +70,11 @@ public class TestPTQL extends SigarTestCase {
         "Pid.Service.eq=Eventlog",
         "Pid.Service.eq=NOSUCHSERVICE",
         "Pid.Service.eq=Hyperic HQ Agent",
-        "State.Name.eq=java,Pid.Pid.ne=$$", //all java procs cept this one
+        OTHER_JAVA_PROCESS, //all java procs cept this one
         "Cpu.Percent.ge=0.2",
         "State.Name.sw=java,Args.*.eq=org.jboss.Main", //jboss
-        "State.Name.eq=java,Args.*.eq=com.ibm.ws.runtime.WsServer", //websphere
-        "State.Name.eq=java,Args.-1.eq=weblogic.Server", //weblogic
+        JAVA_PROCESS + ",Args.*.eq=com.ibm.ws.runtime.WsServer", //websphere
+        JAVA_PROCESS + ",Args.-1.eq=weblogic.Server", //weblogic
         "State.Name.eq=perl,Args.*.eq=v", //testing w/ exp/fork.pl
     };
 
@@ -131,6 +135,13 @@ public class TestPTQL extends SigarTestCase {
                 assertTrue(pid + "==" + pids[0],
                            pid == pids[0]);
             }
+            if (qs.indexOf(OTHER_PROCESS) != -1) {
+                long pid = sigar.getPid();
+                for (int i=0; i<pids.length; i++) {
+                    assertTrue(pid + "!=" + pids[i],
+                               pid != pids[i]);
+                }
+            }
             return pids.length;
         } catch (SigarNotImplementedException e) {
             return 0;
@@ -140,6 +151,10 @@ public class TestPTQL extends SigarTestCase {
     private void testOK(Sigar sigar) throws Exception {
         assertTrue(THIS_PROCESS,
                    runQuery(sigar, THIS_PROCESS) == 1);
+
+        assertTrue(JAVA_PROCESS + " vs. " + OTHER_JAVA_PROCESS,
+                   runQuery(sigar, JAVA_PROCESS) != 
+                   runQuery(sigar, OTHER_JAVA_PROCESS));
 
         for (int i=0; i<OK_QUERIES.length; i++) {
             String qs = OK_QUERIES[i];
