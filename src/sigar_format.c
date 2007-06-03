@@ -28,6 +28,9 @@
 
 #ifndef WIN32
 #include <arpa/inet.h>
+#ifdef __OpenBSD__
+#include <sys/socket.h>
+#endif
 #include <pwd.h>
 #include <grp.h>
 
