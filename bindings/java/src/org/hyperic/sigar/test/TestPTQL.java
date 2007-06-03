@@ -101,6 +101,7 @@ public class TestPTQL extends SigarTestCase {
         "Cpu.Percent.ge=x",
         "Port.foo.eq=8080",
         "Port.tcp.gt=8080",
+        "Cpu.Sys.ew=lots",
         "",
         null,
     };
