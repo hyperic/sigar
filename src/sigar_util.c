@@ -459,13 +459,13 @@ int sigar_cpu_mhz_from_model(char *model)
 #ifdef SIGAR_HPUX
 #include <nfs/nfs.h>
 #endif
-#if defined(__FreeBSD__) || defined(__sun) || defined(DARWIN)
+#if defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__sun) || defined(DARWIN)
 #include <arpa/inet.h>
 #endif
 #if defined(__sun) || defined(SIGAR_HPUX)
 #include <rpc/clnt_soc.h>
 #endif
-#if defined(_AIX) || defined(SIGAR_HPUX)
+#if defined(_AIX) || defined(SIGAR_HPUX) || defined(__OpenBSD__)
 #include <sys/socket.h>
 #endif
 
