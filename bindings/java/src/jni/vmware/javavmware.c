@@ -612,7 +612,7 @@ JNIEXPORT void VMWARE_JNI(VM_suspend)
     }                          
 }
 
-JNIEXPORT void VMWARE_JNI(VM_createSnapshot)
+JNIEXPORT void VMWARE_JNI(VM_createNamedSnapshot)
 (JNIEnv *env, jclass obj,
  jstring jname, jstring jdescr,
  jboolean quiesce, jboolean memory)
@@ -629,6 +629,21 @@ JNIEXPORT void VMWARE_JNI(VM_createSnapshot)
 
     JENV->ReleaseStringUTFChars(env, jname, name);
     JENV->ReleaseStringUTFChars(env, jdescr, descr);
+}
+
+/* VMware server version has no args */
+typedef Bool (*VMControl_VMmakeSnapshot)(VMControlVM *);
+
+JNIEXPORT void VMWARE_JNI(VM_createDefaultSnapshot)
+(JNIEnv *env, jclass obj)
+{
+    dVM(obj);
+    VMControl_VMmakeSnapshot makeSnapshot =
+        (VMControl_VMmakeSnapshot)VMControl_VMCreateSnapshot;
+        
+    if (!makeSnapshot(vm)) {
+        vmware_throw_last_vm_error();
+    }                          
 }
 
 JNIEXPORT void VMWARE_JNI(VM_revertToSnapshot)

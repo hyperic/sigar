@@ -305,10 +305,25 @@ public class VM extends VMwareObject {
         resume(POWEROP_MODE_DEFAULT);
     }
 
-    public native void createSnapshot(String name,
-                                      String description,
-                                      boolean quiesce,
-                                      boolean memory) throws VMwareException;
+    private native void createNamedSnapshot(String name,
+                                            String description,
+                                            boolean quiesce,
+                                            boolean memory) throws VMwareException;
+
+    private native void createDefaultSnapshot() throws VMwareException;
+
+    public void createSnapshot(String name,
+                               String description,
+                               boolean quiesce,
+                               boolean memory) throws VMwareException {
+
+        if (isESX()) {
+            createNamedSnapshot(name, description, quiesce, memory);
+        }
+        else {
+            createDefaultSnapshot();
+        }
+    }
 
     public native void revertToSnapshot() throws VMwareException;
 
