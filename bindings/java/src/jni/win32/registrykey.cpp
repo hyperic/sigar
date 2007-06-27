@@ -115,7 +115,7 @@ JNIEXPORT jlong SIGAR_JNI(win32_RegistryKey_RegOpenKey)
 
     /* required under IBM/WebSphere 4.0 for certain keys */
     if (lpSubkey[len] != '\0') {
-        copy = wcsdup(lpSubkey);
+        copy = _wcsdup(lpSubkey);
         copy[len] = '\0';
     }
     else {
@@ -143,7 +143,7 @@ JNIEXPORT jint SIGAR_JNI(win32_RegistryKey_RegQueryIntValue)
     LONG    lErr;
     /* required under IBM/WebSphere 4.0 for certain keys */
     if (lpValueName[len] != '\0') {
-        copy = wcsdup(lpValueName);
+        copy = _wcsdup(lpValueName);
         copy[len] = '\0';
     }
     else {
@@ -206,7 +206,7 @@ JNIEXPORT jstring SIGAR_JNI(win32_RegistryKey_RegQueryStringValue)
     LONG    lErr;
     /* required under IBM/WebSphere 4.0 for certain keys */
     if (lpValueName[len] != '\0') {
-        copy = wcsdup(lpValueName);
+        copy = _wcsdup(lpValueName);
         copy[len] = '\0';
     }
     else {

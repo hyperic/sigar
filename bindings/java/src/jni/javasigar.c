@@ -1323,7 +1323,7 @@ JNIEXPORT jlongArray SIGAR_JNI(ptql_SigarProcessQuery_find)
 JNIEXPORT jboolean SIGAR_JNI(util_Getline_isatty)
 (JNIEnv *env, jclass cls)
 {
-    return isatty(fileno(stdin)) ? JNI_TRUE : JNI_FALSE;
+    return sigar_isatty(sigar_fileno(stdin)) ? JNI_TRUE : JNI_FALSE;
 }
 
 JNIEXPORT jstring SIGAR_JNI(util_Getline_getline)

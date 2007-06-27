@@ -660,13 +660,13 @@ gl_putc(int c)
        CharToOemBuff((char const *)&c,&ch,1);
 #endif
 
-       write(1, &ch, 1);
+       sigar_write(1, &ch, 1);
     }
 #if defined(unix) || defined(MSDOS) || defined(WIN32) || defined(R__MWERKS)
 #ifdef TIOCSETP         /* BSD in RAW mode, map NL to NL,CR */
     if (ch == '\n') {
         ch = '\r';
-        write(1, &ch, 1);
+        sigar_write(1, &ch, 1);
     }
 #endif
 #endif
@@ -684,11 +684,11 @@ gl_puts(char *buf)
     {
      char *OemBuf = (char *)malloc(2*len);
      CharToOemBuff(buf,OemBuf,len);
-     write(1, OemBuf, len);
+     sigar_write(1, OemBuf, len);
      free(OemBuf);
     }
 #else
-    write(1, buf, len);
+    sigar_write(1, buf, len);
 #endif
 }
 
@@ -702,11 +702,11 @@ gl_error(char *buf)
     {
       char *OemBuf = (char *)malloc(2*len);
       CharToOemBuff(buf,OemBuf,len);
-      write(2, OemBuf, len);
+      sigar_write(2, OemBuf, len);
       free(OemBuf);
     }
 #else
-    write(2, buf, len);
+    sigar_write(2, buf, len);
 #endif
     exit(1);
 }
@@ -718,7 +718,7 @@ gl_init()
     if (gl_init_done < 0) {             /* -1 only on startup */
         hist_init();
     }
-    if (isatty(0) == 0 || isatty(1) == 0)
+    if (sigar_isatty(0) == 0 || sigar_isatty(1) == 0)
         gl_notty = 1;
     gl_char_init();
     gl_init_done = 1;
@@ -756,7 +756,7 @@ SIGAR_DECLARE(void)
 sigar_getline_windowchanged()
 {
 #ifdef TIOCGWINSZ
-   if (isatty(0)) {
+   if (sigar_isatty(0)) {
       static char lenv[32], cenv[32];
       struct winsize wins;
       ioctl(0, TIOCGWINSZ, &wins);

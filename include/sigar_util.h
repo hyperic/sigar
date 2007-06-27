@@ -44,6 +44,16 @@
 #define sigar_isupper(c) \
     (isupper(((unsigned char)(c))))
 
+#ifdef WIN32
+#define sigar_fileno _fileno
+#define sigar_isatty _isatty
+#define sigar_write  _write
+#else
+#define sigar_fileno fileno
+#define sigar_isatty isatty
+#define sigar_write  write
+#endif
+
 #ifndef PROC_FS_ROOT
 #define PROC_FS_ROOT "/proc/"
 #endif

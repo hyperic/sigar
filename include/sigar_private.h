@@ -86,8 +86,11 @@
 #define sigar_strdup(s) \
     dmalloc_strdup(__FILE__, __LINE__, s, 0);
 #else
-#define sigar_strdup(s) \
-    strdup(s)
+#  ifdef WIN32
+#    define sigar_strdup(s) _strdup(s)
+#  else
+#    define sigar_strdup(s) strdup(s)
+#  endif
 #endif
 
 #define SIGAR_ZERO(s) \

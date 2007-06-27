@@ -2410,7 +2410,7 @@ sigar_net_interface_list_get(sigar_t *sigar,
         }
 
         if (iflist) {
-            iflist->data[iflist->number++] = strdup(name);
+            iflist->data[iflist->number++] = sigar_strdup(name);
         }
 
         key = netif_hash(name);

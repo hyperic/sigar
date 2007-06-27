@@ -531,7 +531,7 @@ static int ptql_branch_list_destroy(ptql_branch_list_t *branches)
 static int ptql_branch_init_any(ptql_parse_branch_t *parsed,
                                 ptql_branch_t *branch)
 {
-    branch->data.str = strdup(parsed->attr);
+    branch->data.str = sigar_strdup(parsed->attr);
     branch->data_size = strlen(parsed->attr);
     return SIGAR_OK;
 }
@@ -654,14 +654,14 @@ static int ptql_branch_init_pid(ptql_parse_branch_t *parsed,
     }
     else if (strEQ(parsed->attr, "PidFile")) {
         branch->flags = PTQL_PID_FILE;
-        branch->data.str = strdup(parsed->value);
+        branch->data.str = sigar_strdup(parsed->value);
         branch->data_size = strlen(parsed->value);
         return SIGAR_OK;
     }
     else if (strEQ(parsed->attr, "Service")) {
         branch->flags = PTQL_PID_SERVICE;
 #ifdef WIN32
-        branch->data.str = strdup(parsed->value);
+        branch->data.str = sigar_strdup(parsed->value);
         branch->data_size = strlen(parsed->value);
 #endif
         return SIGAR_OK;
@@ -1148,7 +1148,7 @@ static int ptql_branch_add(ptql_parse_branch_t *parsed,
         }
         else {
             if ((ptr = getenv(parsed->value+1))) {
-                branch->value.str = strdup(ptr);
+                branch->value.str = sigar_strdup(ptr);
             }
             else {
                 branch->value.str = NULL;
@@ -1212,7 +1212,7 @@ static int ptql_branch_add(ptql_parse_branch_t *parsed,
       case PTQL_VALUE_TYPE_ANY:
         branch->match.str = ptql_op_str[branch->op_name];
         if (!is_set) {
-            branch->value.str = strdup(parsed->value);
+            branch->value.str = sigar_strdup(parsed->value);
         }
         break;
     }
@@ -1233,14 +1233,14 @@ static int ptql_branch_compare(const void *b1, const void *b2)
 SIGAR_DECLARE(int) sigar_ptql_query_create(sigar_ptql_query_t **queryp,
                                            char *ptql)
 {
-    char *ptr, *ptql_copy = strdup(ptql);
+    char *ptr, *ptql_copy = sigar_strdup(ptql);
     int status = SIGAR_OK;
     int has_ref = 0;
     sigar_ptql_query_t *query =
         *queryp = malloc(sizeof(*query));
 
 #ifdef PTQL_DEBUG
-    query->ptql = strdup(ptql);
+    query->ptql = sigar_strdup(ptql);
 #endif
 
     ptql = ptql_copy;

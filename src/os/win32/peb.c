@@ -131,7 +131,7 @@ int sigar_parse_proc_args(sigar_t *sigar, WCHAR *buf,
     for (i=0; i<num; i++) {
         SIGAR_W2A(args[i], arg, SIGAR_CMDLINE_MAX);
         SIGAR_PROC_ARGS_GROW(procargs);
-        procargs->data[procargs->number++] = strdup(arg);
+        procargs->data[procargs->number++] = sigar_strdup(arg);
     }
 
     GlobalFree(args);
