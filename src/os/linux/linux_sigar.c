@@ -1608,6 +1608,23 @@ static int get_cpu_info(sigar_t *sigar, sigar_cpu_info_t *info,
     return found;
 }
 
+/* /proc/cpuinfo MHz will change w/ AMD + PowerNow */
+static void get_cpuinfo_max_freq(sigar_cpu_info_t *cpu_info, int num)
+{
+    int status;
+    char max_freq[PATH_MAX];
+    snprintf(max_freq, sizeof(max_freq),
+             "/sys/devices/system/cpu/cpu%d"
+             "/cpufreq/cpuinfo_max_freq", num);
+
+    status =
+        sigar_file2str(max_freq, max_freq, sizeof(max_freq)-1);
+
+    if (status == SIGAR_OK) {
+        cpu_info->mhz = atoi(max_freq) / 1000;
+    }
+}
+
 int sigar_cpu_info_list_get(sigar_t *sigar,
                             sigar_cpu_info_list_t *cpu_infos)
 {
@@ -1624,6 +1641,9 @@ int sigar_cpu_info_list_get(sigar_t *sigar,
         if (hthread && (i++ % sigar->lcpu)) {
             continue; /* fold logical processors if HT */
         }
+
+        get_cpuinfo_max_freq(&cpu_infos->data[cpu_infos->number],
+                             cpu_infos->number);
 
         ++cpu_infos->number;
         SIGAR_CPU_INFO_LIST_GROW(cpu_infos);
