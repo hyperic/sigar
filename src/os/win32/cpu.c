@@ -99,6 +99,10 @@ static unsigned int HTSupported(void)
             // Genuine Intel with hyper-Threading technology
             return Regedx & HT_BIT;
         }
+        else {
+            // Assume AMD
+            return Regedx & HT_BIT;
+        }
     }
 
     return 0;    // Not genuine Intel processor
