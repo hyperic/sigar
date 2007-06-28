@@ -105,15 +105,17 @@ int sigar_get_kstats(sigar_t *sigar)
         for (i=0, id=0; i<ncpu; id++) {
             kstat_t *cpu_info, *cpu_stat;
 
-            if (!(cpu_stat = kstat_lookup(kc, "cpu_stat", id, NULL))) {
+            if (!(cpu_info = kstat_lookup(kc, "cpu_info", id, NULL))) {
                 continue;
             }
 
+            if (!(cpu_stat = kstat_lookup(kc, "cpu_stat", id, NULL))) {
+                /* XXX warn, faulted cpu? */
+            }
+
+            sigar->ks.cpu_info[i] = cpu_info;
             sigar->ks.cpu[i] = cpu_stat;
             sigar->ks.cpuid[i] = id;
-            if ((cpu_info = kstat_lookup(kc, "cpu_info", id, NULL))) {
-                sigar->ks.cpu_info[i] = cpu_info;
-            }
 
             if (is_debug) {
                 sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
