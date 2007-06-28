@@ -151,11 +151,7 @@ int sigar_os_open(sigar_t **sigar)
 
     (*sigar)->last_proc_stat.pid = -1;
 
-#ifdef __i386__
     (*sigar)->ht_enabled = -1;
-#else
-    (*sigar)->ht_enabled = 0;
-#endif
 
     if (stat(PROC_DISKSTATS, &sb) == 0) {
         (*sigar)->iostat = IOSTAT_DISKSTATS;
@@ -193,14 +189,16 @@ char *sigar_os_error_string(sigar_t *sigar, int err)
     return NULL;
 }
 
-#ifdef __i386__
 #define INTEL_ID 0x756e6547
+#define AMD_ID   0x68747541
 
-static void sigar_cpuid(unsigned long request,
-                        unsigned long *eax,
-                        unsigned long *ebx,
-                        unsigned long *ecx,
-                        unsigned long *edx)
+#if defined(__i386__)
+#define SIGAR_HAS_CPUID
+static void sigar_cpuid(sigar_uint32_t request,
+                        sigar_uint32_t *eax,
+                        sigar_uint32_t *ebx,
+                        sigar_uint32_t *ecx,
+                        sigar_uint32_t *edx)
 {
 #if 0
     /* does not compile w/ -fPIC */
@@ -225,10 +223,26 @@ static void sigar_cpuid(unsigned long request,
                   : "memory");
 #endif
 }
+#elif defined(__amd64__)
+#define SIGAR_HAS_CPUID
+static void sigar_cpuid(unsigned int request,
+                        unsigned int *eax,
+                        unsigned int *ebx,
+                        unsigned int *ecx,
+                        unsigned int *edx)
+{
+    /* http://svn.red-bean.com/repos/minor/trunk/gc/barriers-amd64.c */
+    asm volatile ("cpuid\n\t"
+                  : "=a" (*eax), "=b" (*ebx), "=c" (*ecx), "=d" (*edx)
+                  : "0" (request)
+                  : "memory");
+}
+#endif
 
+#ifdef SIGAR_HAS_CPUID
 static int is_ht_enabled(sigar_t *sigar)
 {
-    unsigned long eax, ebx, ecx, edx;
+    sigar_uint32_t eax, ebx, ecx, edx;
 
     if (sigar->ht_enabled != -1) {
         /* only check once */
@@ -240,14 +254,14 @@ static int is_ht_enabled(sigar_t *sigar)
 
     sigar_cpuid(0, &eax, &ebx, &ecx, &edx);
 
-    if (ebx == INTEL_ID) {
+    if ((ebx == INTEL_ID) || (ebx == AMD_ID)) {
         sigar_cpuid(1, &eax, &ebx, &ecx, &edx);
 
         if (edx & (1<<28)) {
 #ifdef DETECT_HT_ENABLED
-            unsigned long apic_id =
+            sigar_uint32_t apic_id =
                 (ebx & 0xFF000000) >> 24;
-            unsigned long log_id, phy_id_mask=0xFF, i=1;
+            sigar_uint32_t log_id, phy_id_mask=0xFF, i=1;
 #endif
             sigar->lcpu = (ebx & 0x00FF0000) >> 16;
 #ifdef DETECT_HT_ENABLED
