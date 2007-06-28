@@ -300,6 +300,11 @@ static int get_chip_brand(sigar_t *sigar, int processor,
     }
 }
 
+static void free_chip_id(void *ptr)
+{
+    /*noop*/
+}
+
 static int get_chip_id(sigar_t *sigar, int processor)
 {
     kstat_t *ksp = sigar->ks.cpu_info[processor];
@@ -313,18 +318,6 @@ static int get_chip_id(sigar_t *sigar, int processor)
     }
     else {
         return -1;
-    }
-}
-
-static int is_same_chip(sigar_t *sigar, int processor, int num)
-{
-    int chip_id = get_chip_id(sigar, processor);
-
-    if ((chip_id == -1) || (chip_id != (num-1))) {
-        return 0;
-    }
-    else {
-        return 1;
     }
 }
 
@@ -361,7 +354,7 @@ int sigar_cpu_list_get(sigar_t *sigar, sigar_cpu_list_t *cpulist)
     uint_t cpuinfo[CPU_STATES];
     unsigned int i;
     int is_debug = SIGAR_LOG_IS_DEBUG(sigar);
-    int reported_virtual = 0;
+    sigar_cache_t *chips;
 
     if (sigar_kstat_update(sigar) == -1) {
         return errno;
@@ -386,10 +379,15 @@ int sigar_cpu_list_get(sigar_t *sigar, sigar_cpu_list_t *cpulist)
                          "[cpu_list] OS reports %d CPUs",
                          sigar->ncpu);
     }
-                         
+
+    chips = sigar_cache_new(16);
+    chips->free_value = free_chip_id;
+
     for (i=0; i<sigar->ncpu; i++) {
         sigar_cpu_t *cpu;
         char *buf;
+        int chip_id;
+        sigar_cache_entry_t *ent;
 
         if (!CPU_ONLINE(sigar->ks.cpuid[i])) {
             sigar_log_printf(sigar, SIGAR_LOG_INFO,
@@ -431,21 +429,31 @@ int sigar_cpu_list_get(sigar_t *sigar, sigar_cpu_list_t *cpulist)
         buf = ksp->ks_data;
         buf += sizeof(kmutex_t);
         memcpy(&cpuinfo[0], buf, sizeof(cpuinfo));
+        chip_id = get_chip_id(sigar, i);
 
-        if (is_same_chip(sigar, i, cpulist->number)) {
-            /* merge times of logical processors */
-            cpu = &cpulist->data[cpulist->number-1];
-
-            if (is_debug && !reported_virtual++) {
-                sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
-                                 "[cpu_list] Merging times of"
-                                 " logical processors");
-            }
-        }
-        else {
+        if (chip_id == -1) {
             SIGAR_CPU_LIST_GROW(cpulist);
             cpu = &cpulist->data[cpulist->number++];
             SIGAR_ZERO(cpu);
+        }
+        else {
+            /* merge times of logical processors */
+            ent = sigar_cache_get(chips, chip_id);
+            if (ent->value) {
+                cpu = (sigar_cpu_t *)ent->value;
+            }
+            else {
+                SIGAR_CPU_LIST_GROW(cpulist);
+                cpu = &cpulist->data[cpulist->number++];
+                SIGAR_ZERO(cpu);
+                ent->value = cpu;
+                if (is_debug) {
+                    sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
+                                     "[cpu_list] Merging times of"
+                                     " logical processors for chip_id=%d",
+                                     chip_id);
+                }
+            }
         }
 
         cpu->user += SIGAR_TICK2MSEC(cpuinfo[CPU_USER]);
@@ -455,7 +463,9 @@ int sigar_cpu_list_get(sigar_t *sigar, sigar_cpu_list_t *cpulist)
         cpu->nice += 0; /* no cpu->nice */
         cpu->total = cpu->user + cpu->sys + cpu->idle + cpu->wait;
     }
-    
+
+    sigar_cache_destroy(chips);
+
     return SIGAR_OK;
 }
 
@@ -1627,6 +1637,8 @@ int sigar_cpu_info_list_get(sigar_t *sigar,
     unsigned int i;
     int status = SIGAR_OK;
     int brand = -1;
+    sigar_cache_t *chips;
+    int is_debug = SIGAR_LOG_IS_DEBUG(sigar);
 
     if (sigar_kstat_update(sigar) == -1) { /* for sigar->ncpu */
         return errno;
@@ -1654,12 +1666,29 @@ int sigar_cpu_info_list_get(sigar_t *sigar,
     }
 
     sigar_cpu_info_list_create(cpu_infos);
+    chips = sigar_cache_new(16);
+    chips->free_value = free_chip_id;
 
     for (i=0; i<sigar->ncpu; i++) {
         sigar_cpu_info_t *info;
+        int chip_id = get_chip_id(sigar, i);
 
-        if (is_same_chip(sigar, i, cpu_infos->number)) {
-            continue;
+        if (chip_id != -1) {
+            sigar_cache_entry_t *ent =
+                sigar_cache_get(chips, chip_id);
+
+            if (ent->value) {
+                continue;
+            }
+            else {
+                ent->value = chips; /*anything non-NULL*/
+                if (is_debug) {
+                    sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
+                                     "[cpu_list] Merging info of"
+                                     " logical processors for chip_id=%d",
+                                     chip_id);
+                }
+            }
         }
 
         SIGAR_CPU_INFO_LIST_GROW(cpu_infos);
@@ -1695,6 +1724,8 @@ int sigar_cpu_info_list_get(sigar_t *sigar,
         info->mhz = stats.pi_clock;
         info->cache_size = SIGAR_FIELD_NOTIMPL; /*XXX*/
     }
+
+    sigar_cache_destroy(chips);
 
     return SIGAR_OK;
 }
