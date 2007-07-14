@@ -870,6 +870,33 @@ sigar_net_stat_port_get(sigar_t *sigar,
     return sigar_net_connection_walk(&walker);
 }
 
+static int tcp_curr_estab_count(sigar_net_connection_walker_t *walker,
+                                sigar_net_connection_t *conn)
+{
+    if ((conn->state == SIGAR_TCP_ESTABLISHED) ||
+        (conn->state == SIGAR_TCP_CLOSE_WAIT))
+    {
+        ((sigar_tcp_stat_t *)walker->data)->curr_estab++;
+    }
+
+    return SIGAR_OK;
+}
+
+/* TCP-MIB::tcpCurrEstab */
+int sigar_tcp_stat_curr_estab(sigar_t *sigar, sigar_tcp_stat_t *tcpstat)
+{
+    sigar_net_connection_walker_t walker;
+
+    walker.sigar = sigar;
+    walker.data = tcpstat;
+    walker.add_connection = tcp_curr_estab_count;
+    walker.flags = SIGAR_NETCONN_CLIENT|SIGAR_NETCONN_TCP;
+
+    tcpstat->curr_estab = 0;
+
+    return sigar_net_connection_walk(&walker);
+}
+
 int sigar_who_list_create(sigar_who_list_t *wholist)
 {
     wholist->number = 0;
