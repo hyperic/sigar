@@ -2165,7 +2165,9 @@ sigar_tcp_stat_get(sigar_t *sigar,
     tcpstat->passive_opens = mib.tcps_accepts;
     tcpstat->attempt_fails = mib.tcps_conndrops;
     tcpstat->estab_resets = mib.tcps_drops;
-    tcpstat->curr_estab = 0; /*XXX*/
+    if (sigar_tcp_stat_curr_estab(sigar, tcpstat) != SIGAR_OK) {
+        tcpstat->curr_estab = -1;
+    }
     tcpstat->in_segs = mib.tcps_rcvtotal;
     tcpstat->out_segs = mib.tcps_sndtotal - mib.tcps_sndrexmitpack;
     tcpstat->retrans_segs = mib.tcps_sndrexmitpack;
