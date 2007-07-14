@@ -874,6 +874,58 @@ my %classes = (
          name => 'all_outbound_total', type => 'Int',
       },
     ],
+    TcpStat => [
+      {
+         name => 'max_conn', type => 'Int',
+         desc => '',
+         plat => ''
+      },
+      {
+         name => 'active_opens', type => 'Long',
+         desc => '',
+         plat => ''
+      },
+      {
+         name => 'passive_opens', type => 'Long',
+         desc => '',
+         plat => ''
+      },
+      {
+         name => 'attempt_fails', type => 'Long',
+         desc => '',
+         plat => ''
+      },
+      {
+         name => 'estab_resets', type => 'Long',
+         desc => '',
+         plat => ''
+      },
+      {
+         name => 'curr_estab', type => 'Long',
+         desc => '',
+         plat => ''
+      },
+      {
+         name => 'in_segs', type => 'Long',
+         desc => '',
+         plat => ''
+      },
+      {
+         name => 'out_segs', type => 'Long',
+         desc => '',
+         plat => ''
+      },
+      {
+         name => 'retrans_segs', type => 'Long',
+         desc => '',
+         plat => ''
+      },
+      {
+         name => 'out_rsts', type => 'Long',
+         desc => '',
+         plat => ''
+      },
+    ],
     ResourceLimit => [
       {
          name => 'cpu_cur',

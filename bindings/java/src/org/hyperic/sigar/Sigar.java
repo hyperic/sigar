@@ -778,6 +778,15 @@ public class Sigar implements SigarProxy {
         throws SigarException;
 
     /**
+     * TCP-MIB stats
+     * @exception SigarException on failure.
+     */
+    public TcpStat getTcpStat()
+        throws SigarException {
+        return TcpStat.fetch(this);
+    }
+
+    /**
      * Get general network info.
      * @exception SigarException on failure.
      */
