@@ -2152,7 +2152,26 @@ SIGAR_DECLARE(int)
 sigar_tcp_stat_get(sigar_t *sigar,
                    sigar_tcp_stat_t *tcpstat)
 {
-    return SIGAR_ENOTIMPL;
+    struct tcpstat mib;
+    int var[4] = { CTL_NET, PF_INET, IPPROTO_TCP, TCPCTL_STATS };
+    size_t len = sizeof(mib);
+
+    if (sysctl(var, NMIB(var), &mib, &len, NULL, 0) < 0) {
+        return errno;
+    }
+
+    tcpstat->max_conn = -1;
+    tcpstat->active_opens = mib.tcps_connattempt;
+    tcpstat->passive_opens = mib.tcps_accepts;
+    tcpstat->attempt_fails = mib.tcps_conndrops;
+    tcpstat->estab_resets = mib.tcps_drops;
+    tcpstat->curr_estab = 0; /*XXX*/
+    tcpstat->in_segs = mib.tcps_rcvtotal;
+    tcpstat->out_segs = mib.tcps_sndtotal - mib.tcps_sndrexmitpack;
+    tcpstat->retrans_segs = mib.tcps_sndrexmitpack;
+    tcpstat->out_rsts = mib.tcps_sndctrl - mib.tcps_closed;
+
+    return SIGAR_OK;
 }
 
 #ifdef __FreeBSD__
