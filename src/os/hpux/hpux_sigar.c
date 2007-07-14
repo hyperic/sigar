@@ -1037,11 +1037,54 @@ int sigar_net_connection_walk(sigar_net_connection_walker_t *walker)
     return SIGAR_OK;
 }
 
+#define tcpsoff(x) sigar_offsetof(sigar_tcp_stat_t, x)
+
+static struct {
+    unsigned int id;
+    size_t offset;
+} tcps_lu[] = {
+#if 0
+    { ID_tcpRtoAlgorithm, tcpsoff(xxx) },
+    { ID_tcpRtoMin, tcpsoff(xxx) },
+    { ID_tcpRtoMax, tcpsoff(xxx) },
+#endif
+    { ID_tcpMaxConn, tcpsoff(max_conn) },
+    { ID_tcpActiveOpens, tcpsoff(active_opens) },
+    { ID_tcpPassiveOpens, tcpsoff(passive_opens) },
+    { ID_tcpAttemptFails, tcpsoff(attempt_fails) },
+    { ID_tcpEstabResets, tcpsoff(estab_resets) },
+    { ID_tcpCurrEstab, tcpsoff(curr_estab) },
+    { ID_tcpInSegs, tcpsoff(in_segs) },
+    { ID_tcpOutSegs, tcpsoff(out_segs) },
+    { ID_tcpRetransSegs, tcpsoff(retrans_segs) },
+#if 0
+    { ID_tcpInErrs, tcpsoff(in_errs) },
+#endif
+    { ID_tcpOutRsts, tcpsoff(out_rsts) }
+};
+
 SIGAR_DECLARE(int)
 sigar_tcp_stat_get(sigar_t *sigar,
                    sigar_tcp_stat_t *tcpstat)
 {
-    return SIGAR_ENOTIMPL;
+    int i;
+
+    for (i=0; i<sizeof(tcps_lu)/sizeof(tcps_lu[0]); i++) {
+        struct nmparms parms;
+        int val;
+        unsigned int len = sizeof(val);
+        parms.objid = tcps_lu[i].id;
+        parms.buffer = &val;
+        parms.len = &len;        
+
+        if (sigar_get_mib_info(sigar, &parms) != SIGAR_OK) {
+            val = -1;
+        }
+
+        *(sigar_uint64_t *)((char *)tcpstat + tcps_lu[i].offset) = val;
+    }
+
+    return SIGAR_OK;
 }
 
 int sigar_proc_port_get(sigar_t *sigar, int protocol,
