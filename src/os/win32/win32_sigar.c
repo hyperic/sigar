@@ -224,6 +224,7 @@ static sigar_iphlpapi_t sigar_iphlpapi = {
     { "GetUdpTable", NULL },
     { "AllocateAndGetTcpExTableFromStack", NULL },
     { "AllocateAndGetUdpExTableFromStack", NULL },
+    { "GetTcpStatistics", NULL },
     { "GetNetworkParams", NULL },
     { "GetAdaptersInfo", NULL },
     { "GetAdaptersAddresses", NULL },
@@ -2734,11 +2735,40 @@ sigar_net_connection_walk(sigar_net_connection_walker_t *walker)
     return SIGAR_OK;
 }
 
+#define sigar_GetTcpStatistics \
+    sigar->iphlpapi.get_tcp_stats.func
+
 SIGAR_DECLARE(int)
 sigar_tcp_stat_get(sigar_t *sigar,
                    sigar_tcp_stat_t *tcpstat)
 {
-    return SIGAR_ENOTIMPL;
+    MIB_TCPSTATS mib;
+    int status;
+
+    DLLMOD_INIT(iphlpapi, FALSE);
+
+    if (!sigar_GetTcpStatistics) {
+        return SIGAR_ENOTIMPL;
+    }
+
+    status = sigar_GetTcpStatistics(&mib);
+
+    if (status != NO_ERROR) {
+        return status;
+    }
+
+    tcpstat->max_conn = mib.dwMaxConn;
+    tcpstat->active_opens = mib.dwActiveOpens;
+    tcpstat->passive_opens = mib.dwPassiveOpens;
+    tcpstat->attempt_fails = mib.dwAttemptFails;
+    tcpstat->estab_resets = mib.dwEstabResets;
+    tcpstat->curr_estab = mib.dwCurrEstab;
+    tcpstat->in_segs = mib.dwInSegs;
+    tcpstat->out_segs = mib.dwOutSegs;
+    tcpstat->retrans_segs = mib.dwRetransSegs;
+    tcpstat->out_rsts = mib.dwOutRsts;
+
+    return SIGAR_OK;
 }
 
 #define sigar_GetTcpExTable \
