@@ -1219,6 +1219,10 @@ my %cmds = (
        Solaris => '',
        Win32   => '',
     },
+    TcpStat => {
+       Linux   => 'cat /proc/net/snmp',
+       Solaris => 'netstat -s -P tcp',
+    },
 );
 
 my %jfields = (
