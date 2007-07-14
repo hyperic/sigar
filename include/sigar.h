@@ -684,7 +684,24 @@ sigar_net_stat_port_get(sigar_t *sigar,
                         sigar_net_address_t *address,
                         unsigned long port);
 
-    
+/* TCP-MIB */
+typedef struct {
+    sigar_uint32_t max_conn;
+    sigar_uint64_t active_opens;
+    sigar_uint64_t passive_opens;
+    sigar_uint64_t attempt_fails;
+    sigar_uint64_t estab_resets;
+    sigar_uint64_t curr_estab;
+    sigar_uint64_t in_segs;
+    sigar_uint64_t out_segs;
+    sigar_uint64_t retrans_segs;
+    sigar_uint64_t out_rsts;
+} sigar_tcp_stat_t;
+
+SIGAR_DECLARE(int)
+sigar_tcp_stat_get(sigar_t *sigar,
+                   sigar_tcp_stat_t *tcpstat);
+
 SIGAR_DECLARE(int)
 sigar_net_listen_address_get(sigar_t *sigar,
                              unsigned long port,

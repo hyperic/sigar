@@ -2734,6 +2734,13 @@ sigar_net_connection_walk(sigar_net_connection_walker_t *walker)
     return SIGAR_OK;
 }
 
+SIGAR_DECLARE(int)
+sigar_tcp_stat_get(sigar_t *sigar,
+                   sigar_tcp_stat_t *tcpstat)
+{
+    return SIGAR_ENOTIMPL;
+}
+
 #define sigar_GetTcpExTable \
     sigar->iphlpapi.get_tcpx_table.func
 

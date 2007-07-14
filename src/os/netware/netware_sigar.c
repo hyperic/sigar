@@ -678,3 +678,10 @@ sigar_net_interface_list_get(sigar_t *sigar,
 
     return SIGAR_OK;
 }
+
+SIGAR_DECLARE(int)
+sigar_tcp_stat_get(sigar_t *sigar,
+                   sigar_tcp_stat_t *tcpstat)
+{
+    return SIGAR_ENOTIMPL;
+}
