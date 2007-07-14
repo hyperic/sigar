@@ -2352,7 +2352,35 @@ SIGAR_DECLARE(int)
 sigar_tcp_stat_get(sigar_t *sigar,
                    sigar_tcp_stat_t *tcpstat)
 {
-    return SIGAR_ENOTIMPL;
+    char *data;
+    int len;
+    int rc;
+    struct opthdr *op;
+    int status = SIGAR_ENOENT;
+    mib2_tcp_t *mib;
+
+    while ((rc = get_mib2(&sigar->mib2, &op, &data, &len)) == GET_MIB2_OK) {
+        if ((op->level == MIB2_TCP) && (op->name == 0)) {
+            status = SIGAR_OK;
+            mib = (mib2_tcp_t *)data;
+            break;
+        }
+    }
+
+    if (status == SIGAR_OK) {
+        tcpstat->max_conn = mib->tcpMaxConn;
+        tcpstat->active_opens = mib->tcpActiveOpens;
+        tcpstat->passive_opens = mib->tcpPassiveOpens;
+        tcpstat->attempt_fails = mib->tcpAttemptFails;
+        tcpstat->estab_resets = mib->tcpEstabResets;
+        tcpstat->curr_estab = mib->tcpCurrEstab;
+        tcpstat->in_segs = mib->tcpInSegs;
+        tcpstat->out_segs = mib->tcpOutSegs;
+        tcpstat->retrans_segs = mib->tcpRetransSegs;
+        tcpstat->out_rsts = mib->tcpOutRsts;
+    }
+
+    return status;
 }
 
 int sigar_proc_port_get(sigar_t *sigar, int protocol,
