@@ -59,10 +59,9 @@ int sigar_perfstat_disk(perfstat_id_t *id,
 
 int sigar_perfstat_diskadapter(perfstat_id_t *id,
                                perfstat_diskadapter_t *adapter,
-                               size_t size,
                                int num)
 {
-    return perfstat_diskadapter(id, adapter, size, num);
+    return perfstat_diskadapter(id, adapter, sizeof(*adapter), num);
 }
 
 int sigar_perfstat_diskpath(perfstat_id_t *id,
