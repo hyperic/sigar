@@ -477,7 +477,7 @@ typedef struct { /* utilization of protocols */
 			      u_longlong_t commit;      /* NFS V3 server commit requests */
 		      } server; /* nfsv3 server */
 		} nfsv3;
-	} dummy_name;
+	} u;
 } perfstat_protocol_t;
 
 extern int perfstat_cpu_total(perfstat_id_t *name,
