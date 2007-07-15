@@ -45,6 +45,14 @@ int sigar_perfstat_pagingspace(perfstat_id_t *id,
     return perfstat_pagingspace(id, pagingspace, size, num);
 }
 
+int sigar_perfstat_memory_total(perfstat_id_t *id,
+                                perfstat_memory_total_t *memory,
+                                size_t size,
+                                int num)
+{
+    return perfstat_memory_total(id, memory, size, num);
+}
+
 int sigar_perfstat_disk(perfstat_id_t *id,
                         perfstat_disk_t *disk,
                         size_t size,
@@ -53,12 +61,44 @@ int sigar_perfstat_disk(perfstat_id_t *id,
     return perfstat_disk(id, disk, size, num);
 }
 
+int sigar_perfstat_diskadapter(perfstat_id_t *id,
+                               perfstat_diskadapter_t *adapter,
+                               size_t size,
+                               int num)
+{
+    return perfstat_diskadapter(id, adapter, size, num);
+}
+
+int sigar_perfstat_diskpath(perfstat_id_t *id,
+                            perfstat_diskpath_t *diskpath,
+                            size_t size,
+                            int num)
+{
+    return perfstat_diskpath(id, diskpath, size, num);
+}
+
 int sigar_perfstat_netinterface(perfstat_id_t *id,
                                 perfstat_netinterface_t *netinterface)
 
 {
     return perfstat_netinterface(id, netinterface,
                                  sizeof(*netinterface), 1);
+}
+
+int sigar_perfstat_netbuffer(perfstat_id_t *id,
+                             perfstat_netbuffer_t *netbuffer,
+                             size_t size,
+                             int num)
+{
+    return perfstat_netbuffer(id, netbuffer, size, num);
+}
+
+int sigar_perfstat_protocol(perfstat_id_t *id,
+                            perfstat_protocol_t *proto,
+                            int size,
+                            int num)
+{
+    return perfstat_protocol(id, proto, size, num);
 }
 
 /*
