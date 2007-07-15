@@ -28,7 +28,7 @@
 
 #ifndef WIN32
 #include <arpa/inet.h>
-#if defined(__OpenBSD__) || defined(__FreeBSD__)
+#if defined(__OpenBSD__) || defined(__FreeBSD__) || defined(_AIX)
 #include <sys/socket.h>
 #endif
 #include <pwd.h>
