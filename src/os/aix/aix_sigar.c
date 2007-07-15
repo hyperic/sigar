@@ -137,22 +137,13 @@ static int kread(sigar_t *sigar, void *data, int size, long offset)
 int sigar_os_open(sigar_t **sigar)
 {
     int status, i;
-    void *dlhandle;
     int kmem = -1;
-    vminfo_func_t vminfo = NULL;
     struct utsname name;
-
-    if ((dlhandle = dlopen("/unix", RTLD_NOW))) {
-        vminfo = (vminfo_func_t)dlsym(dlhandle, "vmgetinfo");
-
-        dlclose(dlhandle);
-    }
 
     kmem = open("/dev/kmem", O_RDONLY);
 
     *sigar = malloc(sizeof(**sigar));
 
-    (*sigar)->getvminfo = vminfo;
     (*sigar)->getprocfd = NULL; /*XXX*/
     (*sigar)->kmem = kmem;
     (*sigar)->dmem = -1;
@@ -383,6 +374,23 @@ static int sigar_perfstat_init(sigar_t *sigar)
         return ENOENT;
     }
 
+    sigar->perfstat.mem =
+        (perfstat_mem_func_t)dlsym(handle,
+                                   "sigar_perfstat_memory");
+
+    if (!sigar->perfstat.mem) {
+        if (SIGAR_LOG_IS_DEBUG(sigar)) {
+            sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
+                             "dlsym(sigar_perfstat_memory) failed: %s",
+                             dlerror());
+        }
+
+        dlclose(handle);
+
+        sigar->perfstat.avail = -1;
+        return ENOENT;
+    }
+
     sigar->perfstat.disk =
         (perfstat_disk_func_t)dlsym(handle,
                                     "sigar_perfstat_disk");
@@ -428,35 +436,38 @@ static int sigar_perfstat_init(sigar_t *sigar)
 
 int sigar_mem_get(sigar_t *sigar, sigar_mem_t *mem)
 {
-    struct vminfo vm;
-
-#if 0
-    /* XXX: wtf, this is supposed to be a modern way
-     * to get the same values below.  yet it works on 4.3.3
-     * but not 5.1
-     */
-    if (!sigar->getvminfo) {
-        return EPERM;
-    }
-
-    if (sigar->getvminfo(&vm, VMINFO, sizeof(vm)) != 0) {
-        return errno;
-    }
-
-#else
     int status;
 
-    status = kread(sigar, &vm, sizeof(vm),
-                   sigar->koffsets[KOFFSET_VMINFO]);
+    if (sigar_perfstat_init(sigar) == SIGAR_OK) {
+        perfstat_memory_total_t minfo;
 
-    if (status != SIGAR_OK) {
-        return status;
+        sigar_log(sigar, SIGAR_LOG_DEBUG, "[mem] using libperfstat");
+
+        if (sigar->perfstat.mem(&minfo) == 1) {
+            mem->total = PAGESHIFT(minfo.real_total);
+            mem->free  = PAGESHIFT(minfo.real_free);
+        }
+        else {
+            return errno;
+        }            
     }
-#endif
+    else {
+        struct vminfo vm;
 
-    mem->total  = PAGESHIFT(vm.memsizepgs); /* lsattr -El sys0 -a realmem */
-    mem->free   = PAGESHIFT(vm.numfrb);
-    mem->used   = mem->total - mem->free;
+        sigar_log(sigar, SIGAR_LOG_DEBUG, "[mem] using /dev/kmem");
+
+        status = kread(sigar, &vm, sizeof(vm),
+                       sigar->koffsets[KOFFSET_VMINFO]);
+
+        if (status != SIGAR_OK) {
+            return status;
+        }
+
+        mem->total = PAGESHIFT(vm.memsizepgs); /* lsattr -El sys0 -a realmem */
+        mem->free  = PAGESHIFT(vm.numfrb);
+    }
+
+    mem->used = mem->total - mem->free;
     mem->actual_used = mem->used;
     mem->actual_free = mem->free;
     

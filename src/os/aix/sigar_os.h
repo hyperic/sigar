@@ -44,8 +44,6 @@ typedef struct {
     char **devs;
 } swaps_t;
 
-typedef int (*vminfo_func_t) (void *, int, int);
-
 typedef int (*proc_fd_func_t) (sigar_t *, sigar_pid_t, sigar_proc_fd_t *);
 
 typedef int (*perfstat_cpu_total_func_t)(perfstat_cpu_total_t *);
@@ -57,6 +55,8 @@ typedef int (*perfstat_cpu_func_t)(perfstat_id_t *,
 typedef int (*perfstat_swap_func_t)(perfstat_id_t *,
                                     perfstat_pagingspace_t *,
                                     int);
+
+typedef int (*perfstat_mem_func_t)(perfstat_memory_total_t *);
 
 typedef int (*perfstat_disk_func_t)(perfstat_id_t *,
                                     perfstat_disk_t *,
@@ -73,13 +73,13 @@ struct sigar_t {
     int dmem;
     /* offsets for seeking on kmem */
     long koffsets[KOFFSET_MAX];
-    vminfo_func_t getvminfo;
     proc_fd_func_t getprocfd;
     struct {
         int avail;
         perfstat_cpu_func_t cpu;
         perfstat_cpu_total_func_t cpu_total;
         perfstat_swap_func_t swap;
+        perfstat_mem_func_t mem;
         perfstat_disk_func_t disk;
         perfstat_ifstat_func_t ifstat;
         thread_rusage_func_t thread_rusage;
