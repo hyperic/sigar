@@ -44,10 +44,9 @@ int sigar_perfstat_pagingspace(perfstat_id_t *id,
     return perfstat_pagingspace(id, pagingspace, sizeof(*pagingspace), num);
 }
 
-int sigar_perfstat_memory(perfstat_id_t *id,
-                          perfstat_memory_total_t *memory)
+int sigar_perfstat_memory(perfstat_memory_total_t *memory)
 {
-    return perfstat_memory_total(id, memory, sizeof(*memory), 1);
+    return perfstat_memory_total(NULL, memory, sizeof(*memory), 1);
 }
 
 int sigar_perfstat_disk(perfstat_id_t *id,
