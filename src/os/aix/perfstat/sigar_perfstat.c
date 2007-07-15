@@ -25,40 +25,36 @@
  *  desired_number Must be set to 1."
  * so we just hardcode that in our wrapper.
  */
-int sigar_perfstat_cpu_total(perfstat_cpu_total_t *cpu_total, size_t size)
+int sigar_perfstat_cpu_total(perfstat_cpu_total_t *cpu_total)
 {
-    return perfstat_cpu_total(NULL, cpu_total, size, 1);
+    return perfstat_cpu_total(NULL, cpu_total, sizeof(*cpu_total), 1);
 }
 
 int sigar_perfstat_cpu(perfstat_id_t *id,
                        perfstat_cpu_t *cpu,
-                       size_t size, int num)
+                       int num)
 {
-    return perfstat_cpu(id, cpu, size, num);
+    return perfstat_cpu(id, cpu, sizeof(*cpu), num);
 }
 
 int sigar_perfstat_pagingspace(perfstat_id_t *id,
                                perfstat_pagingspace_t *pagingspace,
-                               size_t size,
                                int num)
 {
-    return perfstat_pagingspace(id, pagingspace, size, num);
+    return perfstat_pagingspace(id, pagingspace, sizeof(*pagingspace), num);
 }
 
-int sigar_perfstat_memory_total(perfstat_id_t *id,
-                                perfstat_memory_total_t *memory,
-                                size_t size,
-                                int num)
+int sigar_perfstat_memory(perfstat_id_t *id,
+                          perfstat_memory_total_t *memory)
 {
-    return perfstat_memory_total(id, memory, size, num);
+    return perfstat_memory_total(id, memory, sizeof(*memory), 1);
 }
 
 int sigar_perfstat_disk(perfstat_id_t *id,
                         perfstat_disk_t *disk,
-                        size_t size,
                         int num)
 {
-    return perfstat_disk(id, disk, size, num);
+    return perfstat_disk(id, disk, sizeof(*disk), num);
 }
 
 int sigar_perfstat_diskadapter(perfstat_id_t *id,
@@ -71,10 +67,9 @@ int sigar_perfstat_diskadapter(perfstat_id_t *id,
 
 int sigar_perfstat_diskpath(perfstat_id_t *id,
                             perfstat_diskpath_t *diskpath,
-                            size_t size,
                             int num)
 {
-    return perfstat_diskpath(id, diskpath, size, num);
+    return perfstat_diskpath(id, diskpath, sizeof(*diskpath), num);
 }
 
 int sigar_perfstat_netinterface(perfstat_id_t *id,
@@ -87,18 +82,16 @@ int sigar_perfstat_netinterface(perfstat_id_t *id,
 
 int sigar_perfstat_netbuffer(perfstat_id_t *id,
                              perfstat_netbuffer_t *netbuffer,
-                             size_t size,
                              int num)
 {
-    return perfstat_netbuffer(id, netbuffer, size, num);
+    return perfstat_netbuffer(id, netbuffer, sizeof(*netbuffer), num);
 }
 
 int sigar_perfstat_protocol(perfstat_id_t *id,
                             perfstat_protocol_t *proto,
-                            int size,
                             int num)
 {
-    return perfstat_protocol(id, proto, size, num);
+    return perfstat_protocol(id, proto, sizeof(*proto), num);
 }
 
 /*

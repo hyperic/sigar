@@ -48,19 +48,19 @@ typedef int (*vminfo_func_t) (void *, int, int);
 
 typedef int (*proc_fd_func_t) (sigar_t *, sigar_pid_t, sigar_proc_fd_t *);
 
-typedef int (*perfstat_cpu_total_func_t)(perfstat_cpu_total_t *, size_t);
+typedef int (*perfstat_cpu_total_func_t)(perfstat_cpu_total_t *);
 
 typedef int (*perfstat_cpu_func_t)(perfstat_id_t *,
                                    perfstat_cpu_t *,
-                                   size_t, int);
+                                   int);
 
 typedef int (*perfstat_swap_func_t)(perfstat_id_t *,
                                     perfstat_pagingspace_t *,
-                                    size_t, int);
+                                    int);
 
 typedef int (*perfstat_disk_func_t)(perfstat_id_t *,
                                     perfstat_disk_t *,
-                                    size_t, int);
+                                    int);
 
 typedef int (*perfstat_ifstat_func_t)(perfstat_id_t *,
                                       perfstat_netinterface_t *);

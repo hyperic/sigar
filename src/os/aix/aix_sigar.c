@@ -624,7 +624,7 @@ static int sigar_swap_get_perfstat(sigar_t *sigar, sigar_swap_t *swap)
     SIGAR_ZERO(swap);
 
     do {
-        if (sigar->perfstat.swap(&id, &ps, sizeof(ps), 1) != 1) {
+        if (sigar->perfstat.swap(&id, &ps, 1) != 1) {
             if (SIGAR_LOG_IS_DEBUG(sigar)) {
                 sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
                                  "[swap] dev=%s query failed: %s",
@@ -675,7 +675,7 @@ int sigar_cpu_get(sigar_t *sigar, sigar_cpu_t *cpu)
     if (sigar_perfstat_init(sigar) == SIGAR_OK) {
         sigar_log(sigar, SIGAR_LOG_DEBUG, "[cpu] using libperfstat");
 
-        if (sigar->perfstat.cpu_total(&cpu_data, sizeof(cpu_data)) == 1) {
+        if (sigar->perfstat.cpu_total(&cpu_data) == 1) {
             cpu->user  = SIGAR_TICK2MSEC(cpu_data.user);
             cpu->nice  = SIGAR_FIELD_NOTIMPL; /* N/A */
             cpu->sys   = SIGAR_TICK2MSEC(cpu_data.sys);
@@ -793,7 +793,7 @@ static int sigar_cpu_list_get_pstat(sigar_t *sigar, sigar_cpu_list_t *cpulist)
                              i, id.name);
         }
 
-        if (sigar->perfstat.cpu(&id, &data, sizeof(data), 1) == 1) {
+        if (sigar->perfstat.cpu(&id, &data, 1) == 1) {
             cpu->user  = SIGAR_TICK2MSEC(data.user);
             cpu->nice  = SIGAR_FIELD_NOTIMPL; /* N/A */
             cpu->sys   = SIGAR_TICK2MSEC(data.sys);
@@ -935,7 +935,7 @@ int sigar_loadavg_get(sigar_t *sigar,
         sigar_log(sigar, SIGAR_LOG_DEBUG,
                   "[loadavg] using libperfstat");
 
-        if (sigar->perfstat.cpu_total(&cpu_data, sizeof(cpu_data)) == 1) {
+        if (sigar->perfstat.cpu_total(&cpu_data) == 1) {
             for (i=0; i<3; i++) {
                 loadavg->loadavg[i] = FIXED_TO_DOUBLE(cpu_data.loadavg[i]);
             }
@@ -1560,7 +1560,7 @@ static int create_diskmap_v5(sigar_t *sigar)
         return SIGAR_ENOTIMPL;
     }
 
-    total = sigar->perfstat.disk(NULL, NULL, sizeof(*disk), 0);
+    total = sigar->perfstat.disk(NULL, NULL, 0);
     if (total < 1) {
         return ENOENT;
     }
@@ -1568,7 +1568,7 @@ static int create_diskmap_v5(sigar_t *sigar)
     disk = malloc(total * sizeof(*disk));
     id.name[0] = '\0';
 
-    num = sigar->perfstat.disk(&id, disk, sizeof(*disk), total);
+    num = sigar->perfstat.disk(&id, disk, total);
     if (num < 1) {
         free(disk);
         return ENOENT;
@@ -1645,7 +1645,7 @@ static int get_perfstat_disk_metrics(sigar_t *sigar,
 
     SIGAR_SSTRCPY(id.name, diskio->name);
 
-    if (sigar->perfstat.disk(&id, &disk, sizeof(disk), 1) != 1) {
+    if (sigar->perfstat.disk(&id, &disk, 1) != 1) {
         return ENOENT;
     }
 
@@ -1823,7 +1823,7 @@ static int sigar_get_cpu_mhz_perfstat(sigar_t *sigar)
     perfstat_cpu_total_t data;
 
     if (sigar_perfstat_init(sigar) == SIGAR_OK) {
-        if (sigar->perfstat.cpu_total(&data, sizeof(data)) == 1) {
+        if (sigar->perfstat.cpu_total(&data) == 1) {
             sigar->cpu_mhz = data.processorHZ / 1000000;
             return SIGAR_OK;
         }
