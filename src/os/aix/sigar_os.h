@@ -65,6 +65,10 @@ typedef int (*perfstat_disk_func_t)(perfstat_id_t *,
 typedef int (*perfstat_ifstat_func_t)(perfstat_id_t *,
                                       perfstat_netinterface_t *);
 
+typedef int (*perfstat_protocol_func_t)(perfstat_id_t *,
+                                        perfstat_protocol_t *,
+                                        int);
+
 typedef int (*thread_rusage_func_t)(struct rusage *, int);
 
 struct sigar_t {
@@ -82,6 +86,7 @@ struct sigar_t {
         perfstat_mem_func_t mem;
         perfstat_disk_func_t disk;
         perfstat_ifstat_func_t ifstat;
+        perfstat_protocol_func_t protocol;
         thread_rusage_func_t thread_rusage;
         void *handle;
     } perfstat;

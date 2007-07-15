@@ -425,6 +425,23 @@ static int sigar_perfstat_init(sigar_t *sigar)
         return ENOENT;
     }
 
+    sigar->perfstat.protocol =
+        (perfstat_protocol_func_t)dlsym(handle,
+                                        "sigar_perfstat_protocol");
+
+    if (!sigar->perfstat.protocol) {
+        if (SIGAR_LOG_IS_DEBUG(sigar)) {
+            sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
+                             "dlsym(sigar_perfstat_protocol) failed: %s",
+                             dlerror());
+        }
+
+        dlclose(handle);
+
+        sigar->perfstat.avail = -1;
+        return ENOENT;
+    }
+
     sigar->perfstat.avail = 1;
     sigar->perfstat.handle = handle;
 
@@ -2242,7 +2259,30 @@ SIGAR_DECLARE(int)
 sigar_tcp_stat_get(sigar_t *sigar,
                    sigar_tcp_stat_t *tcpstat)
 {
-    return SIGAR_ENOTIMPL;
+    perfstat_id_t id;
+    perfstat_protocol_t proto;
+
+    if (sigar_perfstat_init(sigar) != SIGAR_OK) {
+        return SIGAR_ENOTIMPL;
+    }
+
+    SIGAR_SSTRCPY(id.name, "tcp");
+
+    if (sigar->perfstat.protocol(&id, &proto, 1) != 1) {
+        return ENOENT;
+    }    
+
+    tcpstat->max_conn = -1;
+    tcpstat->active_opens = proto.u.tcp.initiated;
+    tcpstat->passive_opens = proto.u.tcp.accepted;
+    tcpstat->attempt_fails = proto.u.tcp.dropped;
+    tcpstat->estab_resets = proto.u.tcp.dropped;
+    tcpstat->curr_estab = proto.u.tcp.established;
+    tcpstat->in_segs = proto.u.tcp.ipackets;
+    tcpstat->out_segs = proto.u.tcp.opackets;
+    tcpstat->retrans_segs = 0;
+    /* tcpstat->inerrs = proto.u.tcp.ierrors; */
+    tcpstat->out_rsts = 0;
 }
 
 /* derived from pidentd's k_aix432.c */
