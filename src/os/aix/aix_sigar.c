@@ -1344,10 +1344,13 @@ int sigar_os_fs_type_get(sigar_file_system_t *fsp)
     return fsp->type;
 }
 
+#ifndef MNT_NFS4
 /* another one documented in aix tech ref
- * with no friggin prototype in any header file.
+ * with no friggin prototype in any header file...
+ * ...but added in 5.2
  */
 int mntctl(int command, int size, char *buffer);
+#endif
 
 int sigar_file_system_list_get(sigar_t *sigar,
                                sigar_file_system_list_t *fslist)
