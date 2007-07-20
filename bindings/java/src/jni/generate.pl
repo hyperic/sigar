@@ -164,6 +164,34 @@ my %classes = (
              Win32   => '',
          },
       },
+      {
+         name => 'page_in', type => 'Long',
+         desc => 'Pages in',
+         plat => '*',
+         cmd  => {
+             AIX     => '',
+             Darwin  => '',
+             FreeBSD => '',
+             HPUX    => '',
+             Linux   => 'vmstat',
+             Solaris => 'vmstat',
+             Win32   => '',
+         },
+      },
+      {
+         name => 'page_out', type => 'Long',
+         desc => 'Pages out',
+         plat => '*',
+         cmd  => {
+             AIX     => '',
+             Darwin  => '',
+             FreeBSD => '',
+             HPUX    => '',
+             Linux   => 'vmstat',
+             Solaris => 'vmstat',
+             Win32   => '',
+         },
+      },
     ],
     Cpu => [
       {
