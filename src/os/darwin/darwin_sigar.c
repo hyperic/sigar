@@ -450,6 +450,7 @@ int sigar_swap_get(sigar_t *sigar, sigar_swap_t *swap)
 
     swap->free = swap->total - swap->used;
 
+    swap->page_in = swap->page_out = -1;
 #elif defined(__FreeBSD__)
     struct kvm_swap kswap[1];
 
@@ -473,6 +474,8 @@ int sigar_swap_get(sigar_t *sigar, sigar_swap_t *swap)
     swap->total = kswap[0].ksw_total * sigar->pagesize;
     swap->used  = kswap[0].ksw_used * sigar->pagesize;
     swap->free  = swap->total - swap->used;
+
+    swap->page_in = swap->page_out = -1;
 #else
     /*XXX OpenBSD*/
 #endif

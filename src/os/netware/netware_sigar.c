@@ -130,6 +130,7 @@ int sigar_swap_get(sigar_t *sigar, sigar_swap_t *swap)
     swap->used  = info.SwapPageCount * PAGESIZE;
     swap->free  = info.SwapFreeCount * PAGESIZE;
     swap->total = swap->used + swap->free;
+    swap->page_in = swap->page_out = -1;
 
     return SIGAR_OK;
 }

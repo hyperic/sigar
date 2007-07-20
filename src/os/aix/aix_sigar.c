@@ -684,6 +684,8 @@ static int sigar_swap_get_perfstat(sigar_t *sigar, sigar_swap_t *swap)
 
 int sigar_swap_get(sigar_t *sigar, sigar_swap_t *swap)
 {
+    swap->page_in = swap->page_out = -1;
+
     if (sigar_perfstat_init(sigar) == SIGAR_OK) {
         sigar_log(sigar, SIGAR_LOG_DEBUG, "[swap] using libperfstat");
         return sigar_swap_get_perfstat(sigar, swap);

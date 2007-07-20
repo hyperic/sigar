@@ -246,6 +246,8 @@ int sigar_swap_get(sigar_t *sigar, sigar_swap_t *swap)
     swap->free  <<= sigar->pagesize;
     swap->used  <<= sigar->pagesize;
 
+    swap->page_in = swap->page_out = -1;
+
     return SIGAR_OK;
 }
 

@@ -37,6 +37,8 @@ int sigar_swap_get(sigar_t *sigar, sigar_swap_t *swap)
     swap->total  = -1;
     swap->used   = -1;
     swap->free   = -1;
+    swap->page_in = -1;
+    swap->page_out = -1;
 
     return SIGAR_OK;
 }

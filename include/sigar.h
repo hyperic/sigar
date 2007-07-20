@@ -134,7 +134,9 @@ typedef struct {
     sigar_uint64_t
         total,
         used, 
-        free;
+        free,
+        page_in,
+        page_out;
 } sigar_swap_t;
 
 SIGAR_DECLARE(int) sigar_swap_get(sigar_t *sigar, sigar_swap_t *swap);
