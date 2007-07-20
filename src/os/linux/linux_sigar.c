@@ -826,6 +826,8 @@ int sigar_proc_mem_get(sigar_t *sigar, sigar_pid_t pid,
     return SIGAR_OK;
 }
 
+#define NO_ID_MSG "[proc_cred] /proc/%lu" PROC_PSTATUS " missing "
+
 int sigar_proc_cred_get(sigar_t *sigar, sigar_pid_t pid,
                         sigar_proc_cred_t *proccred)
 {
@@ -836,17 +838,29 @@ int sigar_proc_cred_get(sigar_t *sigar, sigar_pid_t pid,
         return status;
     }
 
-    ptr = strstr(buffer, "\nUid:");
-    ptr = sigar_skip_token(ptr);
+    if ((ptr = strstr(buffer, "\nUid:"))) {
+        ptr = sigar_skip_token(ptr);
 
-    proccred->uid  = sigar_strtoul(ptr);
-    proccred->euid = sigar_strtoul(ptr);
+        proccred->uid  = sigar_strtoul(ptr);
+        proccred->euid = sigar_strtoul(ptr);
+    }
+    else {
+        sigar_log_printf(sigar, SIGAR_LOG_WARN,
+                         NO_ID_MSG "Uid", pid);
+        return ENOENT;
+    }
 
-    ptr = strstr(ptr, "\nGid:");
-    ptr = sigar_skip_token(ptr);
+    if ((ptr = strstr(ptr, "\nGid:"))) {
+        ptr = sigar_skip_token(ptr);
 
-    proccred->gid  = sigar_strtoul(ptr);
-    proccred->egid = sigar_strtoul(ptr);
+        proccred->gid  = sigar_strtoul(ptr);
+        proccred->egid = sigar_strtoul(ptr);
+    }
+    else {
+        sigar_log_printf(sigar, SIGAR_LOG_WARN,
+                         NO_ID_MSG "Gid", pid);
+        return ENOENT;
+    }
 
     return SIGAR_OK;
 }
