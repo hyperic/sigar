@@ -41,5 +41,8 @@ public class TestSwap extends SigarTestCase {
         assertEqualsTrace("Total-Used==Free",
                           swap.getTotal() - swap.getUsed(),
                           swap.getFree());
+
+        traceln("PageIn=" + swap.getPageIn());
+        traceln("PageOut=" + swap.getPageOut());
     }
 }
