@@ -32,6 +32,7 @@
 #define pageshift(x) ((x) << sigar->pagesize)
 
 #define PROC_MEMINFO PROC_FS_ROOT "meminfo"
+#define PROC_VMSTAT  PROC_FS_ROOT "vmstat"
 #define PROC_MTRR    PROC_FS_ROOT "mtrr"
 #define PROC_STAT    PROC_FS_ROOT "stat"
 #define PROC_UPTIME  PROC_FS_ROOT "uptime"
@@ -424,7 +425,7 @@ int sigar_mem_get(sigar_t *sigar, sigar_mem_t *mem)
 
 int sigar_swap_get(sigar_t *sigar, sigar_swap_t *swap)
 {
-    char buffer[BUFSIZ];
+    char buffer[BUFSIZ], *ptr;
 
     /* XXX: we open/parse the same file here as sigar_mem_get */
     int status = sigar_file2str(PROC_MEMINFO,
@@ -439,6 +440,33 @@ int sigar_swap_get(sigar_t *sigar, sigar_swap_t *swap)
     swap->used   = swap->total - swap->free;
 
     swap->page_in = swap->page_out = -1;
+
+    status = sigar_file2str(PROC_VMSTAT,
+                            buffer, sizeof(buffer));
+
+    if (status == SIGAR_OK) {
+        /* 2.6+ kernel */
+        if ((ptr = strstr(buffer, "\npswpin"))) {
+            ptr = sigar_skip_token(ptr);
+            swap->page_in = sigar_strtoull(ptr);
+            ptr = sigar_skip_token(ptr);
+            swap->page_out = sigar_strtoull(ptr);
+        }
+    }
+    else {
+        /* 2.2, 2.4 kernels */
+        status = sigar_file2str(PROC_STAT,
+                                buffer, sizeof(buffer));
+        if (status != SIGAR_OK) {
+            return status;
+        }
+
+        if ((ptr = strstr(buffer, "\nswap"))) {
+            ptr = sigar_skip_token(ptr);
+            swap->page_in = sigar_strtoull(ptr);
+            swap->page_out = sigar_strtoull(ptr);
+        }
+    }
 
     return SIGAR_OK;
 }
