@@ -786,6 +786,26 @@ public class Sigar implements SigarProxy {
         return TcpStat.fetch(this);
     }
 
+    public NfsClientV2 getNfsClientV2()
+        throws SigarException {
+        return NfsClientV2.fetch(this);
+    }
+
+    public NfsServerV2 getNfsServerV2()
+        throws SigarException {
+        return NfsServerV2.fetch(this);
+    }
+
+    public NfsClientV3 getNfsClientV3()
+        throws SigarException {
+        return NfsClientV3.fetch(this);
+    }
+
+    public NfsServerV3 getNfsServerV3()
+        throws SigarException {
+        return NfsServerV3.fetch(this);
+    }
+
     /**
      * Get general network info.
      * @exception SigarException on failure.

@@ -159,6 +159,14 @@ public interface SigarProxy {
 
     public TcpStat getTcpStat() throws SigarException;
 
+    public NfsClientV2 getNfsClientV2() throws SigarException;
+
+    public NfsServerV2 getNfsServerV2() throws SigarException;
+
+    public NfsClientV3 getNfsClientV3() throws SigarException;
+
+    public NfsServerV3 getNfsServerV3() throws SigarException;
+
     public NetInfo getNetInfo() throws SigarException;
 
     public String getFQDN() throws SigarException;

@@ -34,6 +34,126 @@ sub hash {
 
 #this script generates jni code and java classes for the following table
 
+my $nfs_v2 = [
+   {
+      name => 'getattr', type => 'Long',
+   },
+   {
+      name => 'setattr', type => 'Long',
+   },
+   {
+      name => 'root', type => 'Long',
+   },
+   {
+      name => 'lookup', type => 'Long',
+   },
+   {
+      name => 'readlink', type => 'Long',
+   },
+   {
+      name => 'read', type => 'Long',
+   },
+   {
+      name => 'writecache', type => 'Long',
+   },
+   {
+      name => 'write', type => 'Long',
+   },
+   {
+      name => 'create', type => 'Long',
+   },
+   {
+      name => 'remove', type => 'Long',
+   },
+   {
+      name => 'rename', type => 'Long',
+   },
+   {
+      name => 'link', type => 'Long',
+   },
+   {
+      name => 'symlink', type => 'Long',
+   },
+   {
+      name => 'mkdir', type => 'Long',
+   },
+   {
+      name => 'rmdir', type => 'Long',
+   },
+   {
+      name => 'readdir', type => 'Long',
+   },
+   {
+      name => 'fsstat', type => 'Long',
+   },
+];
+
+my $nfs_v3 = [
+   {
+      name => 'getattr', type => 'Long',
+   },
+   {
+      name => 'setattr', type => 'Long',
+   },
+   {
+      name => 'lookup', type => 'Long',
+   },
+   {
+      name => 'access', type => 'Long',
+   },
+   {
+      name => 'readlink', type => 'Long',
+   },
+   {
+      name => 'read', type => 'Long',
+   },
+   {
+      name => 'write', type => 'Long',
+   },
+   {
+      name => 'create', type => 'Long',
+   },
+   {
+      name => 'mkdir', type => 'Long',
+   },
+   {
+      name => 'symlink', type => 'Long',
+   },
+   {
+      name => 'mknod', type => 'Long',
+   },
+   {
+      name => 'remove', type => 'Long',
+   },
+   {
+      name => 'rmdir', type => 'Long',
+   },
+   {
+      name => 'rename', type => 'Long',
+   },
+   {
+      name => 'link', type => 'Long',
+   },
+   {
+      name => 'readdir', type => 'Long',
+   },
+   {
+      name => 'readdirplus', type => 'Long',
+   },
+   {
+      name => 'fsstat', type => 'Long',
+   },
+   {
+      name => 'fsinfo', type => 'Long',
+   },
+   {
+      name => 'pathconf', type => 'Long',
+   },
+   {
+      name => 'commit', type => 'Long',
+   },
+];
+
 my %classes = (
     Mem => [
       {
@@ -954,6 +1074,10 @@ my %classes = (
          plat => ''
       },
     ],
+    NfsClientV2 => $nfs_v2,
+    NfsServerV2 => $nfs_v2,
+    NfsClientV3 => $nfs_v3,
+    NfsServerV3 => $nfs_v3,
     ResourceLimit => [
       {
          name => 'cpu_cur',
