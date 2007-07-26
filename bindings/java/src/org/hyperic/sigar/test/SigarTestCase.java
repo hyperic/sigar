@@ -22,7 +22,7 @@ import java.io.PrintStream;
 import java.io.IOException;
 import java.io.File;
 import java.io.FileInputStream;
-
+import java.lang.reflect.Method;
 import java.util.Properties;
 
 import junit.framework.TestCase;
@@ -155,5 +155,18 @@ public abstract class SigarTestCase extends TestCase {
     public void assertEqualsTrace(String msg, long expected, long actual) {
         traceln(msg + "=" + actual + "/" + expected);
         assertEquals(msg, expected, actual);
+    }
+
+    public void traceMethods(Object obj) throws Exception {
+        Class cls = obj.getClass();
+        Method[] methods = cls.getDeclaredMethods();
+        traceln("");
+        for (int i=0; i<methods.length; i++) {
+            String name = methods[i].getName();
+            if (!name.startsWith("get")) {
+                continue;
+            }
+            traceln(name + "=" + methods[i].invoke(obj, new Object[0]));
+        }
     }
 }
