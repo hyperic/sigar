@@ -704,6 +704,74 @@ SIGAR_DECLARE(int)
 sigar_tcp_stat_get(sigar_t *sigar,
                    sigar_tcp_stat_t *tcpstat);
 
+typedef struct {
+    sigar_uint64_t null;
+    sigar_uint64_t getattr;
+    sigar_uint64_t setattr;
+    sigar_uint64_t root;
+    sigar_uint64_t lookup;
+    sigar_uint64_t readlink;
+    sigar_uint64_t read;
+    sigar_uint64_t writecache;
+    sigar_uint64_t write;
+    sigar_uint64_t create;
+    sigar_uint64_t remove;
+    sigar_uint64_t rename;
+    sigar_uint64_t link;
+    sigar_uint64_t symlink;
+    sigar_uint64_t mkdir;
+    sigar_uint64_t rmdir;
+    sigar_uint64_t readdir;
+    sigar_uint64_t fsstat;
+} sigar_nfs_v2_t;
+
+typedef sigar_nfs_v2_t sigar_nfs_client_v2_t;
+typedef sigar_nfs_v2_t sigar_nfs_server_v2_t;
+
+SIGAR_DECLARE(int)
+sigar_nfs_client_v2_get(sigar_t *sigar,
+                        sigar_nfs_client_v2_t *nfsstat);
+
+SIGAR_DECLARE(int)
+sigar_nfs_server_v2_get(sigar_t *sigar,
+                        sigar_nfs_server_v2_t *nfsstat);
+
+typedef struct {
+    sigar_uint64_t null;
+    sigar_uint64_t getattr;
+    sigar_uint64_t setattr;
+    sigar_uint64_t lookup;
+    sigar_uint64_t access;
+    sigar_uint64_t readlink;
+    sigar_uint64_t read;
+    sigar_uint64_t write;
+    sigar_uint64_t create;
+    sigar_uint64_t mkdir;
+    sigar_uint64_t symlink;
+    sigar_uint64_t mknod;
+    sigar_uint64_t remove;
+    sigar_uint64_t rmdir;
+    sigar_uint64_t rename;
+    sigar_uint64_t link;
+    sigar_uint64_t readdir;
+    sigar_uint64_t readdirplus;
+    sigar_uint64_t fsstat;
+    sigar_uint64_t fsinfo;
+    sigar_uint64_t pathconf;
+    sigar_uint64_t commit;
+} sigar_nfs_v3_t;
+
+typedef sigar_nfs_v3_t sigar_nfs_client_v3_t;
+typedef sigar_nfs_v3_t sigar_nfs_server_v3_t;
+
+SIGAR_DECLARE(int)
+sigar_nfs_client_v3_get(sigar_t *sigar,
+                        sigar_nfs_client_v3_t *nfsstat);
+
+SIGAR_DECLARE(int)
+sigar_nfs_server_v3_get(sigar_t *sigar,
+                        sigar_nfs_server_v3_t *nfsstat);
+
 SIGAR_DECLARE(int)
 sigar_net_listen_address_get(sigar_t *sigar,
                              unsigned long port,

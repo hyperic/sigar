@@ -686,3 +686,27 @@ sigar_tcp_stat_get(sigar_t *sigar,
 {
     return SIGAR_ENOTIMPL;
 }
+
+int sigar_nfs_client_v2_get(sigar_t *sigar,
+                            sigar_nfs_client_v2_t *nfsstat)
+{
+    return SIGAR_ENOTIMPL;
+}
+
+int sigar_nfs_server_v2_get(sigar_t *sigar,
+                            sigar_nfs_server_v2_t *nfsstat)
+{
+    return SIGAR_ENOTIMPL;
+}
+
+int sigar_nfs_client_v3_get(sigar_t *sigar,
+                            sigar_nfs_client_v3_t *nfsstat)
+{
+    return SIGAR_ENOTIMPL;
+}
+
+int sigar_nfs_server_v3_get(sigar_t *sigar,
+                            sigar_nfs_server_v3_t *nfsstat)
+{
+    return SIGAR_ENOTIMPL;
+}
