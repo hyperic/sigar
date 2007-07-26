@@ -2168,28 +2168,129 @@ sigar_tcp_stat_get(sigar_t *sigar,
     return status;
 }
 
+static int sigar_proc_nfs_gets(char *file, char *tok,
+                               char *buffer, size_t size)
+{
+    int status = ENOENT;
+    int len = strlen(tok);
+    FILE *fp = fopen(file, "r");
+    
+    if (!fp) {
+        return SIGAR_ENOTIMPL;
+    }
+
+    while (fgets(buffer, size, fp)) {
+        if (strnEQ(buffer, tok, len)) {
+            status = SIGAR_OK;
+            break;
+        }
+    }
+
+    fclose(fp);
+
+    return status;
+}
+
+static int sigar_nfs_v2_get(char *file, sigar_nfs_v2_t *nfsstat)
+{
+    char buffer[BUFSIZ], *ptr=buffer;
+    int status =
+        sigar_proc_nfs_gets(file,
+                            "proc2", buffer, sizeof(buffer));
+
+    if (status != SIGAR_OK) {
+        return status;
+    }
+
+    ptr = sigar_skip_multiple_token(ptr, 2);
+
+    nfsstat->null = sigar_strtoull(ptr);
+    nfsstat->getattr = sigar_strtoull(ptr);
+    nfsstat->setattr = sigar_strtoull(ptr);
+    nfsstat->root = sigar_strtoull(ptr);
+    nfsstat->lookup = sigar_strtoull(ptr);
+    nfsstat->readlink = sigar_strtoull(ptr);
+    nfsstat->read = sigar_strtoull(ptr);
+    nfsstat->writecache = sigar_strtoull(ptr);
+    nfsstat->write = sigar_strtoull(ptr);
+    nfsstat->create = sigar_strtoull(ptr);
+    nfsstat->remove = sigar_strtoull(ptr);
+    nfsstat->rename = sigar_strtoull(ptr);
+    nfsstat->link = sigar_strtoull(ptr);
+    nfsstat->symlink = sigar_strtoull(ptr);
+    nfsstat->mkdir = sigar_strtoull(ptr);
+    nfsstat->rmdir = sigar_strtoull(ptr);
+    nfsstat->readdir = sigar_strtoull(ptr);
+    nfsstat->fsstat = sigar_strtoull(ptr);
+
+    return SIGAR_OK;
+}
+
 int sigar_nfs_client_v2_get(sigar_t *sigar,
                             sigar_nfs_client_v2_t *nfsstat)
 {
-    return SIGAR_ENOTIMPL;
+    return sigar_nfs_v2_get(PROC_FS_ROOT "net/rpc/nfs",
+                            (sigar_nfs_v2_t *)nfsstat);
 }
 
 int sigar_nfs_server_v2_get(sigar_t *sigar,
                             sigar_nfs_server_v2_t *nfsstat)
 {
-    return SIGAR_ENOTIMPL;
+    return sigar_nfs_v2_get(PROC_FS_ROOT "net/rpc/nfsd",
+                            (sigar_nfs_v2_t *)nfsstat);
+}
+
+static int sigar_nfs_v3_get(char *file, sigar_nfs_v3_t *nfsstat)
+{
+    char buffer[BUFSIZ], *ptr=buffer;
+    int status =
+        sigar_proc_nfs_gets(file,
+                            "proc3", buffer, sizeof(buffer));
+
+    if (status != SIGAR_OK) {
+        return status;
+    }
+
+    ptr = sigar_skip_multiple_token(ptr, 2);
+
+    nfsstat->null = sigar_strtoull(ptr);
+    nfsstat->getattr = sigar_strtoull(ptr);
+    nfsstat->setattr = sigar_strtoull(ptr);
+    nfsstat->lookup = sigar_strtoull(ptr);
+    nfsstat->access = sigar_strtoull(ptr);
+    nfsstat->readlink = sigar_strtoull(ptr);
+    nfsstat->read = sigar_strtoull(ptr);
+    nfsstat->write = sigar_strtoull(ptr);
+    nfsstat->create = sigar_strtoull(ptr);
+    nfsstat->mkdir = sigar_strtoull(ptr);
+    nfsstat->symlink = sigar_strtoull(ptr);
+    nfsstat->mknod = sigar_strtoull(ptr);
+    nfsstat->remove = sigar_strtoull(ptr);
+    nfsstat->rmdir = sigar_strtoull(ptr);
+    nfsstat->rename = sigar_strtoull(ptr);
+    nfsstat->link = sigar_strtoull(ptr);
+    nfsstat->readdir = sigar_strtoull(ptr);
+    nfsstat->readdirplus = sigar_strtoull(ptr);
+    nfsstat->fsstat = sigar_strtoull(ptr);
+    nfsstat->fsinfo = sigar_strtoull(ptr);
+    nfsstat->pathconf = sigar_strtoull(ptr);
+    nfsstat->commit = sigar_strtoull(ptr);
+
+    return SIGAR_OK;
 }
 
 int sigar_nfs_client_v3_get(sigar_t *sigar,
                             sigar_nfs_client_v3_t *nfsstat)
 {
-    return SIGAR_ENOTIMPL;
+    return sigar_nfs_v3_get(PROC_FS_ROOT "net/rpc/nfs",
+                            (sigar_nfs_v3_t *)nfsstat);
 }
 
 int sigar_nfs_server_v3_get(sigar_t *sigar,
                             sigar_nfs_server_v3_t *nfsstat)
 {
-    return SIGAR_ENOTIMPL;
+    return sigar_nfs_v3_get(PROC_FS_ROOT "net/rpc/nfsd",
+                            (sigar_nfs_v3_t *)nfsstat);
 }
 
 int sigar_proc_port_get(sigar_t *sigar, int protocol,
