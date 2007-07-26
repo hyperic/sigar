@@ -84,7 +84,7 @@
 #ifdef DMALLOC
 /* linux has its own strdup macro, make sure we use dmalloc's */
 #define sigar_strdup(s) \
-    dmalloc_strdup(__FILE__, __LINE__, s, 0);
+    dmalloc_strndup(__FILE__, __LINE__, (s), -1, 0)
 #else
 #  ifdef WIN32
 #    define sigar_strdup(s) _strdup(s)
