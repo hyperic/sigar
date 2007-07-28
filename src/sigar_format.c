@@ -34,6 +34,9 @@
 #include <pwd.h>
 #include <grp.h>
 
+/* sysconf(_SC_GET{PW,GR}_R_SIZE_MAX) */
+#define R_SIZE_MAX 1024
+
 int sigar_user_name_get(sigar_t *sigar, int uid, char *buf, int buflen)
 {
     struct passwd *pw = NULL;
@@ -41,7 +44,7 @@ int sigar_user_name_get(sigar_t *sigar, int uid, char *buf, int buflen)
 
 # ifdef HAVE_GETPWUID_R
     struct passwd pwbuf;
-    char buffer[512];
+    char buffer[R_SIZE_MAX];
 
     if (getpwuid_r(uid, &pwbuf, buffer, sizeof(buffer), &pw) != 0) {
         return errno;
@@ -68,7 +71,7 @@ int sigar_group_name_get(sigar_t *sigar, int gid, char *buf, int buflen)
 
 # ifdef HAVE_GETGRGID_R
     struct group grbuf;
-    char buffer[512];
+    char buffer[R_SIZE_MAX];
 
     if (getgrgid_r(gid, &grbuf, buffer, sizeof(buffer), &gr) != 0) {
         return errno;
@@ -102,7 +105,7 @@ int sigar_user_id_get(sigar_t *sigar, const char *name, int *uid)
 
 # ifdef HAVE_GETPWNAM_R
     struct passwd pwbuf;
-    char buf[512];
+    char buf[R_SIZE_MAX];
 
     if (getpwnam_r(name, &pwbuf, buf, sizeof(buf), &pw) != 0) {
         return errno;
