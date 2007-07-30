@@ -2385,10 +2385,74 @@ sigar_tcp_stat_get(sigar_t *sigar,
     return status;
 }
 
+static int sigar_nfs_get(sigar_t *sigar,
+                         char *type, 
+                         char **names,
+                         char *nfsstat)
+{
+    size_t offset;
+    kstat_t *ksp;
+    int i;
+
+    if (sigar_kstat_update(sigar) == -1) {
+        return errno;
+    }
+
+    if (!(ksp = kstat_lookup(sigar->kc, "nfs", 0, type))) {
+        return SIGAR_ENOTIMPL;
+    }
+
+    if (kstat_read(sigar->kc, ksp, NULL) < 0) {
+        return errno;
+    }
+
+    for (i=0, offset=0;
+         names[i];
+         i++, offset+=sizeof(sigar_uint64_t))
+    {
+        sigar_uint64_t val;
+        kstat_named_t *kv =
+            kstat_data_lookup(ksp, names[i]);
+
+        if (kv) {
+            val = kv->value.ui64;
+        }
+        else {
+            val = -1;
+        }
+
+        *(sigar_uint64_t *)((char *)nfsstat + offset) = val;
+    }
+
+    return SIGAR_OK;
+}
+
+static char *nfs_v2_names[] = {
+    "null",
+    "getattr",
+    "setattr",
+    "root",
+    "lookup",
+    "readlink",
+    "read",
+    "wrcache",
+    "write",
+    "create",
+    "remove",
+    "rename",
+    "link",
+    "symlink",
+    "mkdir",
+    "rmdir",
+    "readdir",
+    "statfs",
+    NULL
+};
+
 int sigar_nfs_client_v2_get(sigar_t *sigar,
                             sigar_nfs_client_v2_t *nfsstat)
 {
-    return SIGAR_ENOTIMPL;
+    return sigar_nfs_get(sigar, "rfsreqcnt_v2", nfs_v2_names, (char *)nfsstat);
 }
 
 int sigar_nfs_server_v2_get(sigar_t *sigar,
@@ -2397,10 +2461,36 @@ int sigar_nfs_server_v2_get(sigar_t *sigar,
     return SIGAR_ENOTIMPL;
 }
 
+static char *nfs_v3_names[] = {
+    "null",
+    "getattr",
+    "setattr",
+    "lookup",
+    "access",
+    "readlink",
+    "read",
+    "write",
+    "create",
+    "mkdir",
+    "symlink",
+    "mknod",
+    "remove",
+    "rmdir",
+    "rename",
+    "link",
+    "readdir",
+    "readdirplus",
+    "fsstat",
+    "fsinfo",
+    "pathconf",
+    "commit",
+    NULL
+};
+
 int sigar_nfs_client_v3_get(sigar_t *sigar,
                             sigar_nfs_client_v3_t *nfsstat)
 {
-    return SIGAR_ENOTIMPL;
+    return sigar_nfs_get(sigar, "rfsreqcnt_v3", nfs_v3_names, (char *)nfsstat);
 }
 
 int sigar_nfs_server_v3_get(sigar_t *sigar,
