@@ -31,6 +31,9 @@ static sizeof_info_t sizeof_info[] = {
     SIZEOF_INFO(kstat_named_t),
     SIZEOF_INFO(vminfo_t),
     SIZEOF_INFO(cpu_stat_t),
+    SIZEOF_INFO(cpu_sys_stats_t),
+    SIZEOF_INFO(cpu_vm_stats_t),
+    SIZEOF_INFO(cpu_vminfo_t),
     SIZEOF_INFO(kstat_io_t),
     /* procfs */
     SIZEOF_INFO(psinfo_t),
