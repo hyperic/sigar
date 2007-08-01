@@ -2287,28 +2287,132 @@ sigar_tcp_stat_get(sigar_t *sigar,
     tcpstat->out_rsts = 0;
 }
 
+#define NFS_V2_STAT_SET(type) \
+    nfsstat->null = proto.u.nfsv2.type.null; \
+    nfsstat->getattr = proto.u.nfsv2.type.getattr; \
+    nfsstat->setattr = proto.u.nfsv2.type.setattr; \
+    nfsstat->root = proto.u.nfsv2.type.root; \
+    nfsstat->lookup = proto.u.nfsv2.type.lookup; \
+    nfsstat->readlink = proto.u.nfsv2.type.readlink; \
+    nfsstat->read = proto.u.nfsv2.type.read; \
+    nfsstat->writecache = proto.u.nfsv2.type.writecache; \
+    nfsstat->write = proto.u.nfsv2.type.write; \
+    nfsstat->create = proto.u.nfsv2.type.create; \
+    nfsstat->remove = proto.u.nfsv2.type.remove; \
+    nfsstat->rename = proto.u.nfsv2.type.rename; \
+    nfsstat->link = proto.u.nfsv2.type.link; \
+    nfsstat->symlink = proto.u.nfsv2.type.symlink; \
+    nfsstat->mkdir = proto.u.nfsv2.type.mkdir; \
+    nfsstat->rmdir = proto.u.nfsv2.type.rmdir; \
+    nfsstat->readdir = proto.u.nfsv2.type.readdir; \
+    nfsstat->fsstat = proto.u.nfsv2.type.statfs
+
 int sigar_nfs_client_v2_get(sigar_t *sigar,
                             sigar_nfs_client_v2_t *nfsstat)
 {
-    return SIGAR_ENOTIMPL;
+    perfstat_id_t id;
+    perfstat_protocol_t proto;
+
+    if (sigar_perfstat_init(sigar) != SIGAR_OK) {
+        return SIGAR_ENOTIMPL;
+    }
+
+    SIGAR_SSTRCPY(id.name, "nfsv2");
+
+    if (sigar->perfstat.protocol(&id, &proto, 1) != 1) {
+        return ENOENT;
+    }    
+
+    NFS_V2_STAT_SET(client);
+
+    return SIGAR_OK;
 }
 
 int sigar_nfs_server_v2_get(sigar_t *sigar,
                             sigar_nfs_server_v2_t *nfsstat)
 {
-    return SIGAR_ENOTIMPL;
+    perfstat_id_t id;
+    perfstat_protocol_t proto;
+
+    if (sigar_perfstat_init(sigar) != SIGAR_OK) {
+        return SIGAR_ENOTIMPL;
+    }
+
+    SIGAR_SSTRCPY(id.name, "nfsv2");
+
+    if (sigar->perfstat.protocol(&id, &proto, 1) != 1) {
+        return ENOENT;
+    }    
+
+    NFS_V2_STAT_SET(server);
+
+    return SIGAR_OK;
 }
+
+#define NFS_V3_STAT_SET(type) \
+    nfsstat->null = proto.u.nfsv3.type.null; \
+    nfsstat->getattr = proto.u.nfsv3.type.getattr; \
+    nfsstat->setattr = proto.u.nfsv3.type.setattr; \
+    nfsstat->lookup = proto.u.nfsv3.type.lookup; \
+    nfsstat->access = proto.u.nfsv3.type.access; \
+    nfsstat->readlink = proto.u.nfsv3.type.readlink; \
+    nfsstat->read = proto.u.nfsv3.type.read; \
+    nfsstat->write = proto.u.nfsv3.type.write; \
+    nfsstat->create = proto.u.nfsv3.type.create; \
+    nfsstat->mkdir = proto.u.nfsv3.type.mkdir; \
+    nfsstat->symlink = proto.u.nfsv3.type.symlink; \
+    nfsstat->mknod = proto.u.nfsv3.type.mknod; \
+    nfsstat->remove = proto.u.nfsv3.type.remove; \
+    nfsstat->rmdir = proto.u.nfsv3.type.rmdir; \
+    nfsstat->rename = proto.u.nfsv3.type.rename; \
+    nfsstat->link = proto.u.nfsv3.type.link; \
+    nfsstat->readdir = proto.u.nfsv3.type.readdir; \
+    nfsstat->readdirplus = proto.u.nfsv3.type.readdirplus; \
+    nfsstat->fsstat = proto.u.nfsv3.type.fsstat; \
+    nfsstat->fsinfo = proto.u.nfsv3.type.fsinfo; \
+    nfsstat->pathconf = proto.u.nfsv3.type.pathconf; \
+    nfsstat->commit = proto.u.nfsv3.type.commit
 
 int sigar_nfs_client_v3_get(sigar_t *sigar,
                             sigar_nfs_client_v3_t *nfsstat)
 {
-    return SIGAR_ENOTIMPL;
+    perfstat_id_t id;
+    perfstat_protocol_t proto;
+
+    if (sigar_perfstat_init(sigar) != SIGAR_OK) {
+        return SIGAR_ENOTIMPL;
+    }
+
+    SIGAR_SSTRCPY(id.name, "nfsv3");
+
+    if (sigar->perfstat.protocol(&id, &proto, 1) != 1) {
+        return ENOENT;
+    }    
+
+    NFS_V3_STAT_SET(client);
+
+    return SIGAR_OK;
 }
 
 int sigar_nfs_server_v3_get(sigar_t *sigar,
                             sigar_nfs_server_v3_t *nfsstat)
 {
-    return SIGAR_ENOTIMPL;
+    perfstat_id_t id;
+    perfstat_protocol_t proto;
+
+    if (sigar_perfstat_init(sigar) != SIGAR_OK) {
+        return SIGAR_ENOTIMPL;
+    }
+
+    SIGAR_SSTRCPY(id.name, "nfsv3");
+
+    if (sigar->perfstat.protocol(&id, &proto, 1) != 1) {
+        return ENOENT;
+    }    
+
+    NFS_V3_STAT_SET(server);
+
+    return SIGAR_OK;
 }
 
 /* derived from pidentd's k_aix432.c */
