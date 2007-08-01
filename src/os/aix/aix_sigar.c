@@ -644,6 +644,7 @@ static int sigar_swap_get_swapqry(sigar_t *sigar, sigar_swap_t *swap)
 
 static int sigar_swap_get_perfstat(sigar_t *sigar, sigar_swap_t *swap)
 {
+    perfstat_memory_total_t minfo;
     perfstat_pagingspace_t ps;
     perfstat_id_t id;
 
@@ -679,6 +680,11 @@ static int sigar_swap_get_perfstat(sigar_t *sigar, sigar_swap_t *swap)
 
     swap->free = swap->total - swap->used;
 
+    if (sigar->perfstat.mem(&minfo) == 1) {
+        swap->page_in = minfo.pgins;
+        swap->page_out = minfo.pgouts;
+    }
+            
     return SIGAR_OK;
 }
 
