@@ -2358,18 +2358,16 @@ sigar_tcp_stat_get(sigar_t *sigar,
     int len;
     int rc;
     struct opthdr *op;
-    int status = SIGAR_ENOENT;
-    mib2_tcp_t *mib;
+    mib2_tcp_t *mib = NULL;
 
     while ((rc = get_mib2(&sigar->mib2, &op, &data, &len)) == GET_MIB2_OK) {
         if ((op->level == MIB2_TCP) && (op->name == 0)) {
-            status = SIGAR_OK;
             mib = (mib2_tcp_t *)data;
             break;
         }
     }
 
-    if (status == SIGAR_OK) {
+    if (mib) {
         tcpstat->max_conn = mib->tcpMaxConn;
         tcpstat->active_opens = mib->tcpActiveOpens;
         tcpstat->passive_opens = mib->tcpPassiveOpens;
@@ -2380,9 +2378,11 @@ sigar_tcp_stat_get(sigar_t *sigar,
         tcpstat->out_segs = mib->tcpOutSegs;
         tcpstat->retrans_segs = mib->tcpRetransSegs;
         tcpstat->out_rsts = mib->tcpOutRsts;
+        return SIGAR_OK;
     }
-
-    return status;
+    else {
+        return SIGAR_ENOTIMPL;
+    }
 }
 
 static int sigar_nfs_get(sigar_t *sigar,
