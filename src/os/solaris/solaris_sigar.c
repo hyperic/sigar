@@ -249,11 +249,16 @@ int sigar_swap_get(sigar_t *sigar, sigar_swap_t *swap)
     swap->free  <<= sigar->pagesize;
     swap->used  <<= sigar->pagesize;
 
-    swap->page_in = swap->page_out = 0;
-
+    swap->page_in = swap->page_out = SIGAR_FIELD_NOTIMPL;
+    
     if (sigar_kstat_update(sigar) == -1) {
         return errno;
     }
+    if (!kstat_lookup(sigar->kc, "cpu", -1, "vm")) {
+        return SIGAR_OK;
+    }
+
+    swap->page_in = swap->page_out = 0;
 
     /* XXX: optimize out kstat_lookup */
     /* XXX: these stats do not exist in this form on solaris 8
