@@ -226,6 +226,9 @@ int sigar_mem_get(sigar_t *sigar, sigar_mem_t *mem)
 
 int sigar_swap_get(sigar_t *sigar, sigar_swap_t *swap)
 {
+    unsigned int i, id;
+    kstat_t *ksp;
+    kstat_named_t *kn;
     struct anoninfo anon;
 
     /* XXX vm/anon.h says:
@@ -246,7 +249,34 @@ int sigar_swap_get(sigar_t *sigar, sigar_swap_t *swap)
     swap->free  <<= sigar->pagesize;
     swap->used  <<= sigar->pagesize;
 
-    swap->page_in = swap->page_out = -1;
+    swap->page_in = swap->page_out = 0;
+
+    if (sigar_kstat_update(sigar) == -1) {
+        return errno;
+    }
+
+    /* XXX: optimize out kstat_lookup */
+    /* XXX: these stats do not exist in this form on solaris 8
+     * they are in the raw cpu_stat struct, but thats not
+     * binary compatible
+     */
+    /* XXX: not tested on 9. */
+    for (i=0, id=0; i<sigar->ncpu; id++) {
+        if (!(ksp = kstat_lookup(sigar->kc, "cpu", id, "vm"))) {
+            continue;
+        }
+        i++;
+        if (kstat_read(sigar->kc, ksp, NULL) < 0) {
+            continue;
+        }
+
+        if ((kn = (kstat_named_t *)kstat_data_lookup(ksp, "pgin"))) {
+            swap->page_in += kn->value.i64;  /* vmstat -s | grep "page ins" */
+        }
+        if ((kn = (kstat_named_t *)kstat_data_lookup(ksp, "pgout"))) {
+            swap->page_out += kn->value.i64; /* vmstat -s | grep "page outs" */
+        }
+    }
 
     return SIGAR_OK;
 }
