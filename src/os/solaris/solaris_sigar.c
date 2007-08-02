@@ -2458,7 +2458,7 @@ int sigar_nfs_client_v2_get(sigar_t *sigar,
 int sigar_nfs_server_v2_get(sigar_t *sigar,
                             sigar_nfs_server_v2_t *nfsstat)
 {
-    return SIGAR_ENOTIMPL;
+    return sigar_nfs_get(sigar, "rfsproccnt_v2", nfs_v2_names, (char *)nfsstat);
 }
 
 static char *nfs_v3_names[] = {
@@ -2496,7 +2496,7 @@ int sigar_nfs_client_v3_get(sigar_t *sigar,
 int sigar_nfs_server_v3_get(sigar_t *sigar,
                             sigar_nfs_server_v3_t *nfsstat)
 {
-    return SIGAR_ENOTIMPL;
+    return sigar_nfs_get(sigar, "rfsproccnt_v3", nfs_v3_names, (char *)nfsstat);
 }
 
 int sigar_proc_port_get(sigar_t *sigar, int protocol,
