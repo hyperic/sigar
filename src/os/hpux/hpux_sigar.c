@@ -100,6 +100,7 @@ int sigar_mem_get(sigar_t *sigar, sigar_mem_t *mem)
 int sigar_swap_get(sigar_t *sigar, sigar_swap_t *swap)
 {
     struct pst_swapinfo swapinfo;
+    struct pst_vminfo vminfo;
     int i=0;
 
     swap->total = swap->free = 0;
@@ -117,7 +118,10 @@ int sigar_swap_get(sigar_t *sigar, sigar_swap_t *swap)
 
     swap->used = swap->total - swap->free;
 
-    swap->page_in = swap->page_out = -1;    
+    pstat_getvminfo(&vminfo, sizeof(vminfo), 1, 0);
+
+    swap->page_in = vminfo.psv_spgin;
+    swap->page_out = vminfo.psv_spgout;
 
     return SIGAR_OK;
 }
