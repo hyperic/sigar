@@ -133,8 +133,9 @@ static DWORD perfbuf_grow(sigar_t *sigar)
     return sigar->perfbuf_size;
 }
 
-static PERF_OBJECT_TYPE *get_perf_object(sigar_t *sigar, char *counter_key,
-                                         DWORD *err)
+static PERF_OBJECT_TYPE *get_perf_object_inst(sigar_t *sigar,
+                                              char *counter_key,
+                                              DWORD inst, DWORD *err)
 {
     DWORD retval, type, bytes;
     WCHAR wcounter_key[MAX_PATH+1];
@@ -167,7 +168,7 @@ static PERF_OBJECT_TYPE *get_perf_object(sigar_t *sigar, char *counter_key,
      * functions are in use by the same process.
      * confucius say what the fuck.
      */
-    if (object->NumInstances == PERF_NO_INSTANCES) {
+    if (inst && (object->NumInstances == PERF_NO_INSTANCES)) {
         int i;
 
         for (i=0; i<block->NumObjectTypes; i++) {
@@ -181,6 +182,46 @@ static PERF_OBJECT_TYPE *get_perf_object(sigar_t *sigar, char *counter_key,
     else {
         return object;
     }
+}
+
+#define get_perf_object(sigar, counter_key, err) \
+    get_perf_object_inst(sigar, counter_key, 1, err)
+
+static int get_swap_counters(sigar_t *sigar, sigar_swap_t *swap)
+{
+    int status;
+    PERF_OBJECT_TYPE *object =
+        get_perf_object_inst(sigar, "4" /* Memory */, 0, &status);
+    PERF_INSTANCE_DEFINITION *inst;
+    PERF_COUNTER_DEFINITION *counter;
+    BYTE *data;
+    DWORD i;
+
+    if (!object) {
+        return status;
+    }
+
+    data = (BYTE *)((BYTE *)object + object->DefinitionLength);
+
+    for (i=0, counter = PdhFirstCounter(object);
+         i<object->NumCounters;
+         i++, counter = PdhNextCounter(counter))
+    {
+        DWORD offset = counter->CounterOffset;
+
+        switch (counter->CounterNameTitleIndex) {
+          case 48: /* "Pages Output/sec" */
+            swap->page_out = *((DWORD *)(data + offset));
+            break;
+          case 822: /* "Pages Input/sec" */
+            swap->page_in = *((DWORD *)(data + offset));
+            break;
+          default:
+            continue;
+        }
+    }
+
+    return SIGAR_OK;
 }
 
 static void get_sysinfo(sigar_t *sigar)
@@ -522,6 +563,7 @@ SIGAR_DECLARE(int) sigar_mem_get(sigar_t *sigar, sigar_mem_t *mem)
 
 SIGAR_DECLARE(int) sigar_swap_get(sigar_t *sigar, sigar_swap_t *swap)
 {
+    int status;
     DLLMOD_INIT(kernel, TRUE);
 
     if (sigar_GlobalMemoryStatusEx) {
@@ -545,7 +587,10 @@ SIGAR_DECLARE(int) sigar_swap_get(sigar_t *sigar, sigar_swap_t *swap)
 
     swap->used = swap->total - swap->free;
 
-    swap->page_in = swap->page_out = -1;
+    if (get_swap_counters(sigar, swap) != SIGAR_OK) {
+        swap->page_in = SIGAR_FIELD_NOTIMPL;
+        swap->page_out = SIGAR_FIELD_NOTIMPL;
+    }
 
     return SIGAR_OK;
 }
