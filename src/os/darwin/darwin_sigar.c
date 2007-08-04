@@ -340,15 +340,15 @@ static int sigar_vmstat(sigar_t *sigar, struct vmmeter *vmstat)
 int sigar_mem_get(sigar_t *sigar, sigar_mem_t *mem)
 {
 #ifdef DARWIN
-    int status;
     vm_statistics_data_t vmstat;
     uint64_t mem_total;
 #else
     unsigned long mem_total;
-    int mem_free;
+    struct vmmeter vmstat;
 #endif
     int mib[2];
     size_t len;
+    int status;
 
     mib[0] = CTL_HW;
 
@@ -377,14 +377,8 @@ int sigar_mem_get(sigar_t *sigar, sigar_mem_t *mem)
 
     mem->free = vmstat.free_count * sigar->pagesize;
 #elif defined(__FreeBSD__)
-    len = sizeof(mem_free);
-    if (sysctlbyname("vm.stats.vm.v_free_count",
-                     &mem_free, &len, NULL, 0) == -1)
-    {
-        mem->free = 0; /*XXX*/
-    }
-    else {
-        mem->free = mem_free;
+    if ((status = sigar_vmstat(sigar, &vmstat)) == SIGAR_OK) {
+        mem->free = vmstat.v_free_count;
         mem->free *= sigar->pagesize;
     }
 #else
