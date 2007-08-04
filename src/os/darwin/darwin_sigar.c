@@ -244,7 +244,7 @@ char *sigar_os_error_string(sigar_t *sigar, int err)
     }
 }
 
-#ifdef DARWIN
+#if defined(DARWIN)
 static int sigar_vmstat(sigar_t *sigar, vm_statistics_data_t *vmstat)
 {
     kern_return_t status;
@@ -259,6 +259,17 @@ static int sigar_vmstat(sigar_t *sigar, vm_statistics_data_t *vmstat)
     else {
         return errno;
     }
+}
+#elif defined(__FreeBSD__)
+static int sigar_vmstat(sigar_t *sigar, struct vmmeter *vmstat)
+{
+    int status;
+
+    status = kread(sigar, vmstat, sizeof(*vmstat),
+                   sigar->koffsets[KOFFSET_VMMETER]);
+
+    /* XXX sysctlbyname("vm.stats.vm.*", ...) */
+    return status;
 }
 #endif
 
@@ -411,13 +422,13 @@ static int getswapinfo_sysctl(struct kvm_swap *swap_ary,
 
 int sigar_swap_get(sigar_t *sigar, sigar_swap_t *swap)
 {
+    int status;
 #if defined(DARWIN)
     DIR *dirp;
     struct dirent *ent;
     char swapfile[SSTRLEN(VM_DIR) + SSTRLEN("/") + SSTRLEN(SWAPFILE) + 12];
     struct stat swapstat;
     struct statfs vmfs;
-    int status;
     vm_statistics_data_t vmstat;
 
     swap->used = swap->total = swap->free = 0;
@@ -473,6 +484,7 @@ int sigar_swap_get(sigar_t *sigar, sigar_swap_t *swap)
     swap->page_out = vmstat.pageouts;
 #elif defined(__FreeBSD__)
     struct kvm_swap kswap[1];
+    struct vmmeter vmstat;
 
     if (getswapinfo_sysctl(kswap, 1) != SIGAR_OK) {
         if (!sigar->kmem) {
@@ -495,7 +507,13 @@ int sigar_swap_get(sigar_t *sigar, sigar_swap_t *swap)
     swap->used  = kswap[0].ksw_used * sigar->pagesize;
     swap->free  = swap->total - swap->used;
 
-    swap->page_in = swap->page_out = -1;
+    if ((status = sigar_vmstat(sigar, &vmstat)) == SIGAR_OK) {
+        swap->page_in = vmstat.v_swapin + vmstat.v_vnodein;
+        swap->page_out = vmstat.v_swapout + vmstat.v_vnodeout;
+    }
+    else {
+        swap->page_in = swap->page_out = -1;
+    }
 #else
     /*XXX OpenBSD*/
 #endif
