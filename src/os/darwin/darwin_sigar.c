@@ -398,14 +398,6 @@ int sigar_mem_get(sigar_t *sigar, sigar_mem_t *mem)
 #define SIGAR_FS_BLOCKS_TO_BYTES(buf, f) \
     (((sigar_uint64_t)buf.f * (buf.f_bsize / 512)) >> 1)
 
-#define VM_DIR "/private/var/vm"
-#define SWAPFILE "swapfile"
-
-#define NL_SWAPBLIST 0
-#define NL_SWDEVT 1
-#define NL_NSWDEV 2
-#define NL_DMMAX 3
-
 #define SWI_MAXMIB 3
 
 #ifdef SIGAR_FREEBSD5
@@ -482,58 +474,18 @@ int sigar_swap_get(sigar_t *sigar, sigar_swap_t *swap)
 {
     int status;
 #if defined(DARWIN)
-    DIR *dirp;
-    struct dirent *ent;
-    char swapfile[SSTRLEN(VM_DIR) + SSTRLEN("/") + SSTRLEN(SWAPFILE) + 12];
-    struct stat swapstat;
-    struct statfs vmfs;
+    struct xsw_usage sw_usage;
+    size_t size = sizeof(sw_usage);
+    int mib[] = { CTL_VM, VM_SWAPUSAGE };
     vm_statistics_data_t vmstat;
 
-    swap->used = swap->total = swap->free = 0;
-
-    if (!(dirp = opendir(VM_DIR))) {
+    if (sysctl(mib, NMIB(mib), &sw_usage, &size, NULL, 0) < 0) {
         return errno;
     }
 
-    /* looking for "swapfile0", "swapfile1", etc. */
-    while ((ent = readdir(dirp))) {
-        char *ptr = swapfile;
-
-        if ((ent->d_namlen < SSTRLEN(SWAPFILE)+1) || /* n/a, see comment above */
-            (ent->d_namlen > SSTRLEN(SWAPFILE)+11)) /* ensure no overflow */
-        {
-            continue;
-        }
-
-        if (!strnEQ(ent->d_name, SWAPFILE, SSTRLEN(SWAPFILE))) {
-            continue;
-        }
-        
-        /* sprintf(swapfile, "%s/%s", VM_DIR, ent->d_name) */
-
-        memcpy(ptr, VM_DIR, SSTRLEN(VM_DIR));
-        ptr += SSTRLEN(VM_DIR);
-
-        *ptr++ = '/';
-
-        memcpy(ptr, ent->d_name, ent->d_namlen+1);
-
-        if (stat(swapfile, &swapstat) < 0) {
-            continue;
-        }
-
-        swap->used += swapstat.st_size;
-    }
-
-    closedir(dirp);
-
-    if (statfs(VM_DIR, &vmfs) < 0) {
-        return errno;
-    }
-
-    swap->total = SIGAR_FS_BLOCKS_TO_BYTES(vmfs, f_bfree) + swap->used;
-
-    swap->free = swap->total - swap->used;
+    swap->total = sw_usage.xsu_total;
+    swap->used = sw_usage.xsu_used;
+    swap->free = sw_usage.xsu_avail;
 
     if ((status = sigar_vmstat(sigar, &vmstat)) != SIGAR_OK) {
         return status;
