@@ -264,12 +264,76 @@ static int sigar_vmstat(sigar_t *sigar, vm_statistics_data_t *vmstat)
 static int sigar_vmstat(sigar_t *sigar, struct vmmeter *vmstat)
 {
     int status;
+    size_t size = sizeof(unsigned int);
 
     status = kread(sigar, vmstat, sizeof(*vmstat),
                    sigar->koffsets[KOFFSET_VMMETER]);
 
-    /* XXX sysctlbyname("vm.stats.vm.*", ...) */
-    return status;
+    if (status == SIGAR_OK) {
+        return SIGAR_OK;
+    }
+
+    SIGAR_ZERO(vmstat);
+
+    /* derived from src/usr.bin/vmstat/vmstat.c */
+    /* only collect the ones we actually use */
+#define GET_VM_STATS(cat, name, used) \
+    if (used) sysctlbyname("vm.stats." #cat "." #name, &vmstat->name, &size, NULL, 0)
+
+    /* sys */
+    GET_VM_STATS(sys, v_swtch, 0);
+    GET_VM_STATS(sys, v_trap, 0);
+    GET_VM_STATS(sys, v_syscall, 0);
+    GET_VM_STATS(sys, v_intr, 0);
+    GET_VM_STATS(sys, v_soft, 0);
+
+    /* vm */
+    GET_VM_STATS(vm, v_vm_faults, 0);
+    GET_VM_STATS(vm, v_cow_faults, 0);
+    GET_VM_STATS(vm, v_cow_optim, 0);
+    GET_VM_STATS(vm, v_zfod, 0);
+    GET_VM_STATS(vm, v_ozfod, 0);
+    GET_VM_STATS(vm, v_swapin, 1);
+    GET_VM_STATS(vm, v_swapout, 1);
+    GET_VM_STATS(vm, v_swappgsin, 0);
+    GET_VM_STATS(vm, v_swappgsout, 0);
+    GET_VM_STATS(vm, v_vnodein, 1);
+    GET_VM_STATS(vm, v_vnodeout, 1);
+    GET_VM_STATS(vm, v_vnodepgsin, 0);
+    GET_VM_STATS(vm, v_vnodepgsout, 0);
+    GET_VM_STATS(vm, v_intrans, 0);
+    GET_VM_STATS(vm, v_reactivated, 0);
+    GET_VM_STATS(vm, v_pdwakeups, 0);
+    GET_VM_STATS(vm, v_pdpages, 0);
+    GET_VM_STATS(vm, v_dfree, 0);
+    GET_VM_STATS(vm, v_pfree, 0);
+    GET_VM_STATS(vm, v_tfree, 0);
+    GET_VM_STATS(vm, v_page_size, 0);
+    GET_VM_STATS(vm, v_page_count, 0);
+    GET_VM_STATS(vm, v_free_reserved, 0);
+    GET_VM_STATS(vm, v_free_target, 0);
+    GET_VM_STATS(vm, v_free_min, 0);
+    GET_VM_STATS(vm, v_free_count, 1);
+    GET_VM_STATS(vm, v_wire_count, 0);
+    GET_VM_STATS(vm, v_active_count, 0);
+    GET_VM_STATS(vm, v_inactive_target, 0);
+    GET_VM_STATS(vm, v_inactive_count, 0);
+    GET_VM_STATS(vm, v_cache_count, 0);
+    GET_VM_STATS(vm, v_cache_min, 0);
+    GET_VM_STATS(vm, v_cache_max, 0);
+    GET_VM_STATS(vm, v_pageout_free_min, 0);
+    GET_VM_STATS(vm, v_interrupt_free_min, 0);
+    GET_VM_STATS(vm, v_forks, 0);
+    GET_VM_STATS(vm, v_vforks, 0);
+    GET_VM_STATS(vm, v_rforks, 0);
+    GET_VM_STATS(vm, v_kthreads, 0);
+    GET_VM_STATS(vm, v_forkpages, 0);
+    GET_VM_STATS(vm, v_vforkpages, 0);
+    GET_VM_STATS(vm, v_rforkpages, 0);
+    GET_VM_STATS(vm, v_kthreadpages, 0);
+#undef GET_VM_STATS
+
+    return SIGAR_OK;
 }
 #endif
 
