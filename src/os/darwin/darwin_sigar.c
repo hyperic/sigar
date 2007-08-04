@@ -244,12 +244,29 @@ char *sigar_os_error_string(sigar_t *sigar, int err)
     }
 }
 
+#ifdef DARWIN
+static int sigar_vmstat(sigar_t *sigar, vm_statistics_data_t *vmstat)
+{
+    kern_return_t status;
+    mach_msg_type_number_t count = sizeof(*vmstat) / sizeof(integer_t);
+
+    status = host_statistics(sigar->mach_port, HOST_VM_INFO,
+                             (host_info_t)vmstat, &count);
+
+    if (status == KERN_SUCCESS) {
+        return SIGAR_OK;
+    }
+    else {
+        return errno;
+    }
+}
+#endif
+
 int sigar_mem_get(sigar_t *sigar, sigar_mem_t *mem)
 {
 #ifdef DARWIN
+    int status;
     vm_statistics_data_t vmstat;
-    kern_return_t status;
-    mach_msg_type_number_t count = sizeof(vmstat) / sizeof(integer_t);
     uint64_t mem_total;
 #else
     unsigned long mem_total;
@@ -279,11 +296,8 @@ int sigar_mem_get(sigar_t *sigar, sigar_mem_t *mem)
     mem->total = mem_total;
 
 #if defined(DARWIN)
-    status = host_statistics(sigar->mach_port, HOST_VM_INFO,
-                             (host_info_t)&vmstat, &count);
-
-    if (status != KERN_SUCCESS) {
-        return errno;
+    if ((status = sigar_vmstat(sigar, &vmstat)) != SIGAR_OK) {
+        return status;
     }
 
     mem->free = vmstat.free_count * sigar->pagesize;
