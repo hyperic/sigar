@@ -33,6 +33,10 @@
 #include <mach/thread_info.h>
 #include <mach/vm_map.h>
 #include <mach/shared_memory_server.h>
+#include <sys/mount.h>
+#include <nfs/rpcv2.h>
+#include <nfs/nfsproto.h>
+#include <nfs/nfs.h>
 #include <Gestalt.h>
 #else
 #include <sys/dkstat.h>
@@ -2227,6 +2231,45 @@ sigar_tcp_stat_get(sigar_t *sigar,
     return SIGAR_OK;
 }
 
+static int get_nfsstats(struct nfsstats *stats)
+{
+    size_t len = sizeof(*stats);
+    int mib[] = { CTL_VFS, 2, NFS_NFSSTATS };
+
+    if (sysctl(mib, NMIB(mib), &stats, &len, NULL, 0) < 0) {
+        return errno;
+    }
+    else {
+        return SIGAR_OK;
+    }
+}
+
+static void map_nfs_stats(sigar_nfs_v3_t *nfsstat, int *rpc)
+{
+    nfsstat->null = rpc[NFSPROC_NULL];
+    nfsstat->getattr = rpc[NFSPROC_GETATTR];
+    nfsstat->setattr = rpc[NFSPROC_SETATTR];
+    nfsstat->lookup = rpc[NFSPROC_LOOKUP];
+    nfsstat->access = rpc[NFSPROC_ACCESS];
+    nfsstat->readlink = rpc[NFSPROC_READLINK];
+    nfsstat->read = rpc[NFSPROC_READ];
+    nfsstat->write = rpc[NFSPROC_WRITE];
+    nfsstat->create = rpc[NFSPROC_CREATE];
+    nfsstat->mkdir = rpc[NFSPROC_MKDIR];
+    nfsstat->symlink = rpc[NFSPROC_SYMLINK];
+    nfsstat->mknod = rpc[NFSPROC_MKNOD];
+    nfsstat->remove = rpc[NFSPROC_REMOVE];
+    nfsstat->rmdir = rpc[NFSPROC_RMDIR];
+    nfsstat->rename = rpc[NFSPROC_RENAME];
+    nfsstat->link = rpc[NFSPROC_LINK];
+    nfsstat->readdir = rpc[NFSPROC_READDIR];
+    nfsstat->readdirplus = rpc[NFSPROC_READDIRPLUS];
+    nfsstat->fsstat = rpc[NFSPROC_FSSTAT];
+    nfsstat->fsinfo = rpc[NFSPROC_FSINFO];
+    nfsstat->pathconf = rpc[NFSPROC_PATHCONF];
+    nfsstat->commit = rpc[NFSPROC_COMMIT];
+}
+
 int sigar_nfs_client_v2_get(sigar_t *sigar,
                             sigar_nfs_client_v2_t *nfsstat)
 {
@@ -2242,13 +2285,31 @@ int sigar_nfs_server_v2_get(sigar_t *sigar,
 int sigar_nfs_client_v3_get(sigar_t *sigar,
                             sigar_nfs_client_v3_t *nfsstat)
 {
-    return SIGAR_ENOTIMPL;
+    int status;
+    struct nfsstats stats;
+
+    if ((status = get_nfsstats(&stats)) != SIGAR_OK) {
+        return status;
+    }
+
+    map_nfs_stats((sigar_nfs_v3_t *)nfsstat, &stats.rpccnt[0]);
+
+    return SIGAR_OK;
 }
 
 int sigar_nfs_server_v3_get(sigar_t *sigar,
                             sigar_nfs_server_v3_t *nfsstat)
 {
-    return SIGAR_ENOTIMPL;
+    int status;
+    struct nfsstats stats;
+
+    if ((status = get_nfsstats(&stats)) != SIGAR_OK) {
+        return status;
+    }
+
+    map_nfs_stats((sigar_nfs_v3_t *)nfsstat, &stats.srvrpccnt[0]);
+
+    return SIGAR_OK;
 }
 
 #ifdef __FreeBSD__
