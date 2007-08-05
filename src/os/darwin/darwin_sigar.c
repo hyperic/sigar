@@ -21,6 +21,11 @@
 #include "sigar_util.h"
 #include "sigar_os.h"
 
+#include <sys/param.h>
+#include <sys/mount.h>
+#include <nfs/rpcv2.h>
+#include <nfs/nfsproto.h>
+
 #ifdef DARWIN
 #include <mach/mach_init.h>
 #include <mach/message.h>
@@ -33,10 +38,6 @@
 #include <mach/thread_info.h>
 #include <mach/vm_map.h>
 #include <mach/shared_memory_server.h>
-#include <sys/mount.h>
-#include <nfs/rpcv2.h>
-#include <nfs/nfsproto.h>
-#include <nfs/nfs.h>
 #include <Gestalt.h>
 #else
 #include <sys/dkstat.h>
@@ -46,6 +47,13 @@
 #include <sys/vmmeter.h>
 #include <fcntl.h>
 #include <stdio.h>
+#endif
+
+#ifdef __FreeBSD__
+#include <nfsclient/nfs.h>
+#include <nfsserver/nfs.h>
+#else
+#include <nfs/nfs.h>
 #endif
 
 #include <sys/ioctl.h>
@@ -2231,6 +2239,7 @@ sigar_tcp_stat_get(sigar_t *sigar,
     return SIGAR_OK;
 }
 
+#ifndef __FreeBSD__
 static int get_nfsstats(struct nfsstats *stats)
 {
     size_t len = sizeof(*stats);
@@ -2243,6 +2252,7 @@ static int get_nfsstats(struct nfsstats *stats)
         return SIGAR_OK;
     }
 }
+#endif
 
 static void map_nfs_stats(sigar_nfs_v3_t *nfsstat, int *rpc)
 {
@@ -2285,6 +2295,16 @@ int sigar_nfs_server_v2_get(sigar_t *sigar,
 int sigar_nfs_client_v3_get(sigar_t *sigar,
                             sigar_nfs_client_v3_t *nfsstat)
 {
+#ifdef __FreeBSD__
+    struct nfsstats stats;
+    size_t size = sizeof(stats);
+
+    if (sysctlbyname("vfs.nfs.nfsstats", &stats, &size, NULL, 0) == -1) {
+        return errno;
+    }
+
+    map_nfs_stats((sigar_nfs_v3_t *)nfsstat, &stats.rpccnt[0]);
+#else
     int status;
     struct nfsstats stats;
 
@@ -2293,6 +2313,7 @@ int sigar_nfs_client_v3_get(sigar_t *sigar,
     }
 
     map_nfs_stats((sigar_nfs_v3_t *)nfsstat, &stats.rpccnt[0]);
+#endif
 
     return SIGAR_OK;
 }
@@ -2300,6 +2321,16 @@ int sigar_nfs_client_v3_get(sigar_t *sigar,
 int sigar_nfs_server_v3_get(sigar_t *sigar,
                             sigar_nfs_server_v3_t *nfsstat)
 {
+#ifdef __FreeBSD__
+    struct nfsrvstats stats;
+    size_t size = sizeof(stats);
+
+    if (sysctlbyname("vfs.nfsrv.nfsrvstats", &stats, &size, NULL, 0) == -1) {
+        return errno;
+    }
+
+    map_nfs_stats((sigar_nfs_v3_t *)nfsstat, &stats.srvrpccnt[0]);
+#else
     int status;
     struct nfsstats stats;
 
@@ -2308,6 +2339,7 @@ int sigar_nfs_server_v3_get(sigar_t *sigar,
     }
 
     map_nfs_stats((sigar_nfs_v3_t *)nfsstat, &stats.srvrpccnt[0]);
+#endif
 
     return SIGAR_OK;
 }
