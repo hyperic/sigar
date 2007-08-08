@@ -697,11 +697,11 @@ typedef struct {
     sigar_uint64_t out_segs;
     sigar_uint64_t retrans_segs;
     sigar_uint64_t out_rsts;
-} sigar_tcp_stat_t;
+} sigar_tcp_t;
 
 SIGAR_DECLARE(int)
-sigar_tcp_stat_get(sigar_t *sigar,
-                   sigar_tcp_stat_t *tcpstat);
+sigar_tcp_get(sigar_t *sigar,
+              sigar_tcp_t *tcp);
 
 typedef struct {
     sigar_uint64_t null;

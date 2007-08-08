@@ -2786,8 +2786,8 @@ sigar_net_connection_walk(sigar_net_connection_walker_t *walker)
     sigar->iphlpapi.get_tcp_stats.func
 
 SIGAR_DECLARE(int)
-sigar_tcp_stat_get(sigar_t *sigar,
-                   sigar_tcp_stat_t *tcpstat)
+sigar_tcp_get(sigar_t *sigar,
+              sigar_tcp_t *tcp)
 {
     MIB_TCPSTATS mib;
     int status;
@@ -2804,15 +2804,15 @@ sigar_tcp_stat_get(sigar_t *sigar,
         return status;
     }
 
-    tcpstat->active_opens = mib.dwActiveOpens;
-    tcpstat->passive_opens = mib.dwPassiveOpens;
-    tcpstat->attempt_fails = mib.dwAttemptFails;
-    tcpstat->estab_resets = mib.dwEstabResets;
-    tcpstat->curr_estab = mib.dwCurrEstab;
-    tcpstat->in_segs = mib.dwInSegs;
-    tcpstat->out_segs = mib.dwOutSegs;
-    tcpstat->retrans_segs = mib.dwRetransSegs;
-    tcpstat->out_rsts = mib.dwOutRsts;
+    tcp->active_opens = mib.dwActiveOpens;
+    tcp->passive_opens = mib.dwPassiveOpens;
+    tcp->attempt_fails = mib.dwAttemptFails;
+    tcp->estab_resets = mib.dwEstabResets;
+    tcp->curr_estab = mib.dwCurrEstab;
+    tcp->in_segs = mib.dwInSegs;
+    tcp->out_segs = mib.dwOutSegs;
+    tcp->retrans_segs = mib.dwRetransSegs;
+    tcp->out_rsts = mib.dwOutRsts;
 
     return SIGAR_OK;
 }

@@ -1022,7 +1022,7 @@ my %classes = (
          name => 'all_outbound_total', type => 'Int',
       },
     ],
-    TcpStat => [
+    Tcp => [
       {
          name => 'active_opens', type => 'Long',
          desc => '',
@@ -1366,7 +1366,7 @@ my %cmds = (
        Solaris => '',
        Win32   => '',
     },
-    TcpStat => {
+    Tcp => {
        Linux   => 'cat /proc/net/snmp',
        Solaris => 'netstat -s -P tcp',
     },

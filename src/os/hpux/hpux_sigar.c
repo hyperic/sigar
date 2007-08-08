@@ -1070,8 +1070,8 @@ static struct {
 };
 
 SIGAR_DECLARE(int)
-sigar_tcp_stat_get(sigar_t *sigar,
-                   sigar_tcp_stat_t *tcpstat)
+sigar_tcp_get(sigar_t *sigar,
+              sigar_tcp_t *tcp)
 {
     int i;
 
@@ -1087,7 +1087,7 @@ sigar_tcp_stat_get(sigar_t *sigar,
             val = -1;
         }
 
-        *(sigar_uint64_t *)((char *)tcpstat + tcps_lu[i].offset) = val;
+        *(sigar_uint64_t *)((char *)tcp + tcps_lu[i].offset) = val;
     }
 
     return SIGAR_OK;

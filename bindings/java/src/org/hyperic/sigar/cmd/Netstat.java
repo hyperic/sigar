@@ -26,7 +26,7 @@ import org.hyperic.sigar.NetServices;
 import org.hyperic.sigar.SigarException;
 import org.hyperic.sigar.NetConnection;
 import org.hyperic.sigar.NetFlags;
-import org.hyperic.sigar.TcpStat;
+import org.hyperic.sigar.Tcp;
 
 /**
  * Display network connections.
@@ -161,7 +161,7 @@ public class Netstat extends SigarCommandBase {
     }
 
     private void outputTcpStats() throws SigarException {
-        TcpStat stat = this.sigar.getTcpStat();
+        Tcp stat = this.sigar.getTcp();
         final String dnt = "    ";
         println(dnt + stat.getActiveOpens() + " active connections openings");
         println(dnt + stat.getPassiveOpens() + " passive connection openings");

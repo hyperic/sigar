@@ -276,7 +276,7 @@ int sigar_net_connection_list_grow(sigar_net_connection_list_t *connlist);
     SIGAR_ZERO(&ifconfig->hwaddr.addr.mac); \
     ifconfig->hwaddr.family = SIGAR_AF_LINK
 
-int sigar_tcp_stat_curr_estab(sigar_t *sigar, sigar_tcp_stat_t *tcpstat);
+int sigar_tcp_curr_estab(sigar_t *sigar, sigar_tcp_t *tcp);
 
 int sigar_who_list_create(sigar_who_list_t *wholist);
 

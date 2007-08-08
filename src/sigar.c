@@ -876,23 +876,23 @@ static int tcp_curr_estab_count(sigar_net_connection_walker_t *walker,
     if ((conn->state == SIGAR_TCP_ESTABLISHED) ||
         (conn->state == SIGAR_TCP_CLOSE_WAIT))
     {
-        ((sigar_tcp_stat_t *)walker->data)->curr_estab++;
+        ((sigar_tcp_t *)walker->data)->curr_estab++;
     }
 
     return SIGAR_OK;
 }
 
 /* TCP-MIB::tcpCurrEstab */
-int sigar_tcp_stat_curr_estab(sigar_t *sigar, sigar_tcp_stat_t *tcpstat)
+int sigar_tcp_curr_estab(sigar_t *sigar, sigar_tcp_t *tcp)
 {
     sigar_net_connection_walker_t walker;
 
     walker.sigar = sigar;
-    walker.data = tcpstat;
+    walker.data = tcp;
     walker.add_connection = tcp_curr_estab_count;
     walker.flags = SIGAR_NETCONN_CLIENT|SIGAR_NETCONN_TCP;
 
-    tcpstat->curr_estab = 0;
+    tcp->curr_estab = 0;
 
     return sigar_net_connection_walk(&walker);
 }

@@ -157,7 +157,7 @@ public interface SigarProxy {
 
     public Who[] getWhoList() throws SigarException;
 
-    public TcpStat getTcpStat() throws SigarException;
+    public Tcp getTcp() throws SigarException;
 
     public NfsClientV2 getNfsClientV2() throws SigarException;
 

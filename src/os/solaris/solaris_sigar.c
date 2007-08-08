@@ -2386,8 +2386,8 @@ int sigar_net_connection_walk(sigar_net_connection_walker_t *walker)
 }
 
 SIGAR_DECLARE(int)
-sigar_tcp_stat_get(sigar_t *sigar,
-                   sigar_tcp_stat_t *tcpstat)
+sigar_tcp_get(sigar_t *sigar,
+              sigar_tcp_t *tcp)
 {
     char *data;
     int len;
@@ -2403,15 +2403,15 @@ sigar_tcp_stat_get(sigar_t *sigar,
     }
 
     if (mib) {
-        tcpstat->active_opens = mib->tcpActiveOpens;
-        tcpstat->passive_opens = mib->tcpPassiveOpens;
-        tcpstat->attempt_fails = mib->tcpAttemptFails;
-        tcpstat->estab_resets = mib->tcpEstabResets;
-        tcpstat->curr_estab = mib->tcpCurrEstab;
-        tcpstat->in_segs = mib->tcpInSegs;
-        tcpstat->out_segs = mib->tcpOutSegs;
-        tcpstat->retrans_segs = mib->tcpRetransSegs;
-        tcpstat->out_rsts = mib->tcpOutRsts;
+        tcp->active_opens = mib->tcpActiveOpens;
+        tcp->passive_opens = mib->tcpPassiveOpens;
+        tcp->attempt_fails = mib->tcpAttemptFails;
+        tcp->estab_resets = mib->tcpEstabResets;
+        tcp->curr_estab = mib->tcpCurrEstab;
+        tcp->in_segs = mib->tcpInSegs;
+        tcp->out_segs = mib->tcpOutSegs;
+        tcp->retrans_segs = mib->tcpRetransSegs;
+        tcp->out_rsts = mib->tcpOutRsts;
         return SIGAR_OK;
     }
     else {

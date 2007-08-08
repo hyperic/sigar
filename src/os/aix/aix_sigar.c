@@ -2264,8 +2264,8 @@ int sigar_net_connection_walk(sigar_net_connection_walker_t *walker)
 }
 
 SIGAR_DECLARE(int)
-sigar_tcp_stat_get(sigar_t *sigar,
-                   sigar_tcp_stat_t *tcpstat)
+sigar_tcp_get(sigar_t *sigar,
+              sigar_tcp_t *tcp)
 {
     perfstat_id_t id;
     perfstat_protocol_t proto;
@@ -2280,16 +2280,16 @@ sigar_tcp_stat_get(sigar_t *sigar,
         return ENOENT;
     }    
 
-    tcpstat->active_opens = proto.u.tcp.initiated;
-    tcpstat->passive_opens = proto.u.tcp.accepted;
-    tcpstat->attempt_fails = proto.u.tcp.dropped;
-    tcpstat->estab_resets = proto.u.tcp.dropped;
-    tcpstat->curr_estab = proto.u.tcp.established;
-    tcpstat->in_segs = proto.u.tcp.ipackets;
-    tcpstat->out_segs = proto.u.tcp.opackets;
-    tcpstat->retrans_segs = 0;
-    /* tcpstat->inerrs = proto.u.tcp.ierrors; */
-    tcpstat->out_rsts = 0;
+    tcp->active_opens = proto.u.tcp.initiated;
+    tcp->passive_opens = proto.u.tcp.accepted;
+    tcp->attempt_fails = proto.u.tcp.dropped;
+    tcp->estab_resets = proto.u.tcp.dropped;
+    tcp->curr_estab = proto.u.tcp.established;
+    tcp->in_segs = proto.u.tcp.ipackets;
+    tcp->out_segs = proto.u.tcp.opackets;
+    tcp->retrans_segs = 0;
+    /* tcp->inerrs = proto.u.tcp.ierrors; */
+    tcp->out_rsts = 0;
 }
 
 #define NFS_V2_STAT_SET(type) \

@@ -2212,8 +2212,8 @@ int sigar_net_connection_walk(sigar_net_connection_walker_t *walker)
 #endif
 
 SIGAR_DECLARE(int)
-sigar_tcp_stat_get(sigar_t *sigar,
-                   sigar_tcp_stat_t *tcpstat)
+sigar_tcp_get(sigar_t *sigar,
+              sigar_tcp_t *tcp)
 {
     struct tcpstat mib;
     int var[4] = { CTL_NET, PF_INET, IPPROTO_TCP, TCPCTL_STATS };
@@ -2223,17 +2223,17 @@ sigar_tcp_stat_get(sigar_t *sigar,
         return errno;
     }
 
-    tcpstat->active_opens = mib.tcps_connattempt;
-    tcpstat->passive_opens = mib.tcps_accepts;
-    tcpstat->attempt_fails = mib.tcps_conndrops;
-    tcpstat->estab_resets = mib.tcps_drops;
-    if (sigar_tcp_stat_curr_estab(sigar, tcpstat) != SIGAR_OK) {
-        tcpstat->curr_estab = -1;
+    tcp->active_opens = mib.tcps_connattempt;
+    tcp->passive_opens = mib.tcps_accepts;
+    tcp->attempt_fails = mib.tcps_conndrops;
+    tcp->estab_resets = mib.tcps_drops;
+    if (sigar_tcp_curr_estab(sigar, tcp) != SIGAR_OK) {
+        tcp->curr_estab = -1;
     }
-    tcpstat->in_segs = mib.tcps_rcvtotal;
-    tcpstat->out_segs = mib.tcps_sndtotal - mib.tcps_sndrexmitpack;
-    tcpstat->retrans_segs = mib.tcps_sndrexmitpack;
-    tcpstat->out_rsts = mib.tcps_sndctrl - mib.tcps_closed;
+    tcp->in_segs = mib.tcps_rcvtotal;
+    tcp->out_segs = mib.tcps_sndtotal - mib.tcps_sndrexmitpack;
+    tcp->retrans_segs = mib.tcps_sndrexmitpack;
+    tcp->out_rsts = mib.tcps_sndctrl - mib.tcps_closed;
 
     return SIGAR_OK;
 }

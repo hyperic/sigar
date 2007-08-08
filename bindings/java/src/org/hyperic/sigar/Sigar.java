@@ -781,9 +781,9 @@ public class Sigar implements SigarProxy {
      * TCP-MIB stats
      * @exception SigarException on failure.
      */
-    public TcpStat getTcpStat()
+    public Tcp getTcp()
         throws SigarException {
-        return TcpStat.fetch(this);
+        return Tcp.fetch(this);
     }
 
     public NfsClientV2 getNfsClientV2()

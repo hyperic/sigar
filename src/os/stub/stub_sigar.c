@@ -254,8 +254,8 @@ int sigar_net_connection_walk(sigar_net_connection_walker_t *walker)
 }
 
 SIGAR_DECLARE(int)
-sigar_tcp_stat_get(sigar_t *sigar,
-                   sigar_tcp_stat_t *tcpstat)
+sigar_tcp_get(sigar_t *sigar,
+              sigar_tcp_t *tcp)
 {
     return SIGAR_ENOTIMPL;
 }

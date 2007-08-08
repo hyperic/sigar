@@ -20,7 +20,7 @@ package org.hyperic.sigar.test;
 
 import org.hyperic.sigar.Sigar;
 import org.hyperic.sigar.SigarNotImplementedException;
-import org.hyperic.sigar.TcpStat;
+import org.hyperic.sigar.Tcp;
 
 public class TestTcpStat extends SigarTestCase {
 
@@ -30,17 +30,15 @@ public class TestTcpStat extends SigarTestCase {
 
     public void testCreate() throws Exception {
         Sigar sigar = getSigar();
-        TcpStat tcp;
+        Tcp tcp;
         
         try {
-            tcp = sigar.getTcpStat();
+            tcp = sigar.getTcp();
         } catch (SigarNotImplementedException e) {
             return;
         }
 
         traceln("");
-        //assertGtZeroTrace("MaxConn", tcp.getMaxConn()); //XXX -1 on linux
-        traceln("MaxConn=" + tcp.getMaxConn());
         assertGtEqZeroTrace("ActiveOpens", tcp.getActiveOpens());
         assertGtEqZeroTrace("PassiveOpens", tcp.getPassiveOpens());
         assertGtEqZeroTrace("AttemptFails", tcp.getAttemptFails());

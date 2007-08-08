@@ -2126,8 +2126,8 @@ static int sigar_net_connection_get(sigar_t *sigar,
 #define SNMP_TCP_PREFIX "Tcp: "
 
 SIGAR_DECLARE(int)
-sigar_tcp_stat_get(sigar_t *sigar,
-                   sigar_tcp_stat_t *tcpstat)
+sigar_tcp_get(sigar_t *sigar,
+              sigar_tcp_t *tcp)
 {
     FILE *fp;
     char buffer[1024], *ptr=buffer;
@@ -2152,16 +2152,16 @@ sigar_tcp_stat_get(sigar_t *sigar,
         /* assuming field order, same in 2.2, 2.4 and 2.6 kernels */ 
         /* Tcp: RtoAlgorithm RtoMin RtoMax MaxConn */
         ptr = sigar_skip_multiple_token(ptr, 5);
-        tcpstat->active_opens = sigar_strtoull(ptr);
-        tcpstat->passive_opens = sigar_strtoull(ptr);
-        tcpstat->attempt_fails = sigar_strtoull(ptr);
-        tcpstat->estab_resets = sigar_strtoull(ptr);
-        tcpstat->curr_estab = sigar_strtoull(ptr);
-        tcpstat->in_segs = sigar_strtoull(ptr);
-        tcpstat->out_segs = sigar_strtoull(ptr);
-        tcpstat->retrans_segs = sigar_strtoull(ptr);
+        tcp->active_opens = sigar_strtoull(ptr);
+        tcp->passive_opens = sigar_strtoull(ptr);
+        tcp->attempt_fails = sigar_strtoull(ptr);
+        tcp->estab_resets = sigar_strtoull(ptr);
+        tcp->curr_estab = sigar_strtoull(ptr);
+        tcp->in_segs = sigar_strtoull(ptr);
+        tcp->out_segs = sigar_strtoull(ptr);
+        tcp->retrans_segs = sigar_strtoull(ptr);
         (void)sigar_strtoull(ptr); /* InErrs */
-        tcpstat->out_rsts = sigar_strtoull(ptr);
+        tcp->out_rsts = sigar_strtoull(ptr);
     }
 
     return status;
