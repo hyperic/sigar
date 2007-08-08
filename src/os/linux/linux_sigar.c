@@ -2160,7 +2160,7 @@ sigar_tcp_get(sigar_t *sigar,
         tcp->in_segs = sigar_strtoull(ptr);
         tcp->out_segs = sigar_strtoull(ptr);
         tcp->retrans_segs = sigar_strtoull(ptr);
-        (void)sigar_strtoull(ptr); /* InErrs */
+        tcp->in_errs = sigar_strtoull(ptr);
         tcp->out_rsts = sigar_strtoull(ptr);
     }
 

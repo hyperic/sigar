@@ -2411,6 +2411,7 @@ sigar_tcp_get(sigar_t *sigar,
         tcp->in_segs = mib->tcpInSegs;
         tcp->out_segs = mib->tcpOutSegs;
         tcp->retrans_segs = mib->tcpRetransSegs;
+        tcp->in_errs = SIGAR_FIELD_NOTIMPL; /* XXX mib2_ip_t.tcpInErrs */
         tcp->out_rsts = mib->tcpOutRsts;
         return SIGAR_OK;
     }

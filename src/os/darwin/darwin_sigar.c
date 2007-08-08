@@ -2233,6 +2233,11 @@ sigar_tcp_get(sigar_t *sigar,
     tcp->in_segs = mib.tcps_rcvtotal;
     tcp->out_segs = mib.tcps_sndtotal - mib.tcps_sndrexmitpack;
     tcp->retrans_segs = mib.tcps_sndrexmitpack;
+    tcp->in_errs =
+        mib.tcps_rcvbadsum +
+        mib.tcps_rcvbadoff +
+        mib.tcps_rcvmemdrop +
+        mib.tcps_rcvshort;
     tcp->out_rsts = mib.tcps_sndctrl - mib.tcps_closed;
 
     return SIGAR_OK;

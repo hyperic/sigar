@@ -1064,6 +1064,11 @@ my %classes = (
          plat => ''
       },
       {
+         name => 'in_errs', type => 'Long',
+         desc => '',
+         plat => ''
+      },
+      {
          name => 'out_rsts', type => 'Long',
          desc => '',
          plat => ''

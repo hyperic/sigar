@@ -1063,9 +1063,7 @@ static struct {
     { ID_tcpInSegs, tcpsoff(in_segs) },
     { ID_tcpOutSegs, tcpsoff(out_segs) },
     { ID_tcpRetransSegs, tcpsoff(retrans_segs) },
-#if 0
     { ID_tcpInErrs, tcpsoff(in_errs) },
-#endif
     { ID_tcpOutRsts, tcpsoff(out_rsts) }
 };
 

@@ -2812,6 +2812,7 @@ sigar_tcp_get(sigar_t *sigar,
     tcp->in_segs = mib.dwInSegs;
     tcp->out_segs = mib.dwOutSegs;
     tcp->retrans_segs = mib.dwRetransSegs;
+    tcp->in_errs = mib.dwInErrs;
     tcp->out_rsts = mib.dwOutRsts;
 
     return SIGAR_OK;

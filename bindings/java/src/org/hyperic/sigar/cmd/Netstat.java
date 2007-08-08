@@ -171,7 +171,7 @@ public class Netstat extends SigarCommandBase {
         println(dnt + stat.getInSegs() + " segments received");
         println(dnt + stat.getOutSegs() + " segments send out");
         println(dnt + stat.getRetransSegs() + " segments retransmited");
-        //println(dnt + stat.getInErrs() + " bad segments received.");
+        println(dnt + stat.getInErrs() + " bad segments received.");
         println(dnt + stat.getOutRsts() + " resets sent");
     }
 

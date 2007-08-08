@@ -2288,7 +2288,7 @@ sigar_tcp_get(sigar_t *sigar,
     tcp->in_segs = proto.u.tcp.ipackets;
     tcp->out_segs = proto.u.tcp.opackets;
     tcp->retrans_segs = 0;
-    /* tcp->inerrs = proto.u.tcp.ierrors; */
+    tcp->in_errs = proto.u.tcp.ierrors;
     tcp->out_rsts = 0;
 }
 

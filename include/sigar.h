@@ -696,6 +696,7 @@ typedef struct {
     sigar_uint64_t in_segs;
     sigar_uint64_t out_segs;
     sigar_uint64_t retrans_segs;
+    sigar_uint64_t in_errs;
     sigar_uint64_t out_rsts;
 } sigar_tcp_t;
 
