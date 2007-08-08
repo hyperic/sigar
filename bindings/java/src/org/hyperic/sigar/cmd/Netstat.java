@@ -26,6 +26,7 @@ import org.hyperic.sigar.NetServices;
 import org.hyperic.sigar.SigarException;
 import org.hyperic.sigar.NetConnection;
 import org.hyperic.sigar.NetFlags;
+import org.hyperic.sigar.TcpStat;
 
 /**
  * Display network connections.
@@ -43,7 +44,7 @@ public class Netstat extends SigarCommandBase {
         ""
     };
 
-    private static boolean isNumeric, wantPid;
+    private static boolean isNumeric, wantPid, isStat;
 
     public Netstat(Shell shell) {
         super(shell);
@@ -66,6 +67,7 @@ public class Netstat extends SigarCommandBase {
         int proto_flags = 0;
         isNumeric = false;
         wantPid = false;
+        isStat = false;
 
         for (int i=0; i<args.length; i++) {
             String arg = args[i];
@@ -87,6 +89,9 @@ public class Netstat extends SigarCommandBase {
                     break;
                   case 'p':
                     wantPid = true;
+                    break;
+                  case 's':
+                    isStat = true;
                     break;
                   case 't':
                     proto_flags |= NetFlags.CONN_TCP;
@@ -155,6 +160,32 @@ public class Netstat extends SigarCommandBase {
         return address + ":" + port; 
     }
 
+    private void outputTcpStats() throws SigarException {
+        TcpStat stat = this.sigar.getTcpStat();
+        final String dnt = "    ";
+        println(dnt + stat.getActiveOpens() + " active connections openings");
+        println(dnt + stat.getPassiveOpens() + " passive connection openings");
+        println(dnt + stat.getAttemptFails() + " failed connection attempts");
+        println(dnt + stat.getEstabResets() + " connection resets received");
+        println(dnt + stat.getCurrEstab() + " connections established");
+        println(dnt + stat.getInSegs() + " segments received");
+        println(dnt + stat.getOutSegs() + " segments send out");
+        println(dnt + stat.getRetransSegs() + " segments retransmited");
+        //println(dnt + stat.getInErrs() + " bad segments received.");
+        println(dnt + stat.getOutRsts() + " resets sent");
+    }
+
+    private void outputStats(int flags) throws SigarException {
+        if ((flags & NetFlags.CONN_TCP) != 0) {
+            println("Tcp:");
+            try {
+                outputTcpStats();
+            } catch (SigarException e) {
+                println("    " + e);
+            }
+        }
+    }
+
     //XXX currently weak sauce.  should end up like netstat command.
     public void output(String[] args) throws SigarException {
         //default
@@ -162,6 +193,10 @@ public class Netstat extends SigarCommandBase {
 
         if (args.length > 0) {
             flags = getFlags(args, flags);
+            if (isStat) {
+                outputStats(flags);
+                return;
+            }
         }
 
         NetConnection[] connections = this.sigar.getNetConnectionList(flags);
