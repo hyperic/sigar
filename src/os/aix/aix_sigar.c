@@ -2280,7 +2280,6 @@ sigar_tcp_stat_get(sigar_t *sigar,
         return ENOENT;
     }    
 
-    tcpstat->max_conn = -1;
     tcpstat->active_opens = proto.u.tcp.initiated;
     tcpstat->passive_opens = proto.u.tcp.accepted;
     tcpstat->attempt_fails = proto.u.tcp.dropped;

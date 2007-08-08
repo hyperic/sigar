@@ -1053,8 +1053,8 @@ static struct {
     { ID_tcpRtoAlgorithm, tcpsoff(xxx) },
     { ID_tcpRtoMin, tcpsoff(xxx) },
     { ID_tcpRtoMax, tcpsoff(xxx) },
-#endif
     { ID_tcpMaxConn, tcpsoff(max_conn) },
+#endif
     { ID_tcpActiveOpens, tcpsoff(active_opens) },
     { ID_tcpPassiveOpens, tcpsoff(passive_opens) },
     { ID_tcpAttemptFails, tcpsoff(attempt_fails) },

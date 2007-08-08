@@ -1024,11 +1024,6 @@ my %classes = (
     ],
     TcpStat => [
       {
-         name => 'max_conn', type => 'Int',
-         desc => '',
-         plat => ''
-      },
-      {
          name => 'active_opens', type => 'Long',
          desc => '',
          plat => ''

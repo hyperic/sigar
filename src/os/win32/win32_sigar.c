@@ -2804,7 +2804,6 @@ sigar_tcp_stat_get(sigar_t *sigar,
         return status;
     }
 
-    tcpstat->max_conn = mib.dwMaxConn;
     tcpstat->active_opens = mib.dwActiveOpens;
     tcpstat->passive_opens = mib.dwPassiveOpens;
     tcpstat->attempt_fails = mib.dwAttemptFails;

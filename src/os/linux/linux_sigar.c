@@ -2150,9 +2150,8 @@ sigar_tcp_stat_get(sigar_t *sigar,
 
     if (status == SIGAR_OK) {
         /* assuming field order, same in 2.2, 2.4 and 2.6 kernels */ 
-        /* Tcp: RtoAlgorithm RtoMin RtoMax */
-        ptr = sigar_skip_multiple_token(ptr, 4);
-        tcpstat->max_conn = sigar_strtoul(ptr);
+        /* Tcp: RtoAlgorithm RtoMin RtoMax MaxConn */
+        ptr = sigar_skip_multiple_token(ptr, 5);
         tcpstat->active_opens = sigar_strtoull(ptr);
         tcpstat->passive_opens = sigar_strtoull(ptr);
         tcpstat->attempt_fails = sigar_strtoull(ptr);

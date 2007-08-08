@@ -2223,7 +2223,6 @@ sigar_tcp_stat_get(sigar_t *sigar,
         return errno;
     }
 
-    tcpstat->max_conn = -1;
     tcpstat->active_opens = mib.tcps_connattempt;
     tcpstat->passive_opens = mib.tcps_accepts;
     tcpstat->attempt_fails = mib.tcps_conndrops;

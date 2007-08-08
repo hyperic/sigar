@@ -2403,7 +2403,6 @@ sigar_tcp_stat_get(sigar_t *sigar,
     }
 
     if (mib) {
-        tcpstat->max_conn = mib->tcpMaxConn;
         tcpstat->active_opens = mib->tcpActiveOpens;
         tcpstat->passive_opens = mib->tcpPassiveOpens;
         tcpstat->attempt_fails = mib->tcpAttemptFails;

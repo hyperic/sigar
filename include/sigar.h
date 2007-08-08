@@ -688,7 +688,6 @@ sigar_net_stat_port_get(sigar_t *sigar,
 
 /* TCP-MIB */
 typedef struct {
-    sigar_uint32_t max_conn;
     sigar_uint64_t active_opens;
     sigar_uint64_t passive_opens;
     sigar_uint64_t attempt_fails;
