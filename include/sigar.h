@@ -729,11 +729,11 @@ typedef sigar_nfs_v2_t sigar_nfs_server_v2_t;
 
 SIGAR_DECLARE(int)
 sigar_nfs_client_v2_get(sigar_t *sigar,
-                        sigar_nfs_client_v2_t *nfsstat);
+                        sigar_nfs_client_v2_t *nfs);
 
 SIGAR_DECLARE(int)
 sigar_nfs_server_v2_get(sigar_t *sigar,
-                        sigar_nfs_server_v2_t *nfsstat);
+                        sigar_nfs_server_v2_t *nfs);
 
 typedef struct {
     sigar_uint64_t null;
@@ -765,11 +765,11 @@ typedef sigar_nfs_v3_t sigar_nfs_server_v3_t;
 
 SIGAR_DECLARE(int)
 sigar_nfs_client_v3_get(sigar_t *sigar,
-                        sigar_nfs_client_v3_t *nfsstat);
+                        sigar_nfs_client_v3_t *nfs);
 
 SIGAR_DECLARE(int)
 sigar_nfs_server_v3_get(sigar_t *sigar,
-                        sigar_nfs_server_v3_t *nfsstat);
+                        sigar_nfs_server_v3_t *nfs);
 
 SIGAR_DECLARE(int)
 sigar_net_listen_address_get(sigar_t *sigar,

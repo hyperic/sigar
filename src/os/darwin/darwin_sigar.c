@@ -2253,46 +2253,46 @@ static int get_nfsstats(struct nfsstats *stats)
 }
 #endif
 
-static void map_nfs_stats(sigar_nfs_v3_t *nfsstat, int *rpc)
+static void map_nfs_stats(sigar_nfs_v3_t *nfs, int *rpc)
 {
-    nfsstat->null = rpc[NFSPROC_NULL];
-    nfsstat->getattr = rpc[NFSPROC_GETATTR];
-    nfsstat->setattr = rpc[NFSPROC_SETATTR];
-    nfsstat->lookup = rpc[NFSPROC_LOOKUP];
-    nfsstat->access = rpc[NFSPROC_ACCESS];
-    nfsstat->readlink = rpc[NFSPROC_READLINK];
-    nfsstat->read = rpc[NFSPROC_READ];
-    nfsstat->write = rpc[NFSPROC_WRITE];
-    nfsstat->create = rpc[NFSPROC_CREATE];
-    nfsstat->mkdir = rpc[NFSPROC_MKDIR];
-    nfsstat->symlink = rpc[NFSPROC_SYMLINK];
-    nfsstat->mknod = rpc[NFSPROC_MKNOD];
-    nfsstat->remove = rpc[NFSPROC_REMOVE];
-    nfsstat->rmdir = rpc[NFSPROC_RMDIR];
-    nfsstat->rename = rpc[NFSPROC_RENAME];
-    nfsstat->link = rpc[NFSPROC_LINK];
-    nfsstat->readdir = rpc[NFSPROC_READDIR];
-    nfsstat->readdirplus = rpc[NFSPROC_READDIRPLUS];
-    nfsstat->fsstat = rpc[NFSPROC_FSSTAT];
-    nfsstat->fsinfo = rpc[NFSPROC_FSINFO];
-    nfsstat->pathconf = rpc[NFSPROC_PATHCONF];
-    nfsstat->commit = rpc[NFSPROC_COMMIT];
+    nfs->null = rpc[NFSPROC_NULL];
+    nfs->getattr = rpc[NFSPROC_GETATTR];
+    nfs->setattr = rpc[NFSPROC_SETATTR];
+    nfs->lookup = rpc[NFSPROC_LOOKUP];
+    nfs->access = rpc[NFSPROC_ACCESS];
+    nfs->readlink = rpc[NFSPROC_READLINK];
+    nfs->read = rpc[NFSPROC_READ];
+    nfs->write = rpc[NFSPROC_WRITE];
+    nfs->create = rpc[NFSPROC_CREATE];
+    nfs->mkdir = rpc[NFSPROC_MKDIR];
+    nfs->symlink = rpc[NFSPROC_SYMLINK];
+    nfs->mknod = rpc[NFSPROC_MKNOD];
+    nfs->remove = rpc[NFSPROC_REMOVE];
+    nfs->rmdir = rpc[NFSPROC_RMDIR];
+    nfs->rename = rpc[NFSPROC_RENAME];
+    nfs->link = rpc[NFSPROC_LINK];
+    nfs->readdir = rpc[NFSPROC_READDIR];
+    nfs->readdirplus = rpc[NFSPROC_READDIRPLUS];
+    nfs->fsstat = rpc[NFSPROC_FSSTAT];
+    nfs->fsinfo = rpc[NFSPROC_FSINFO];
+    nfs->pathconf = rpc[NFSPROC_PATHCONF];
+    nfs->commit = rpc[NFSPROC_COMMIT];
 }
 
 int sigar_nfs_client_v2_get(sigar_t *sigar,
-                            sigar_nfs_client_v2_t *nfsstat)
+                            sigar_nfs_client_v2_t *nfs)
 {
     return SIGAR_ENOTIMPL;
 }
 
 int sigar_nfs_server_v2_get(sigar_t *sigar,
-                            sigar_nfs_server_v2_t *nfsstat)
+                            sigar_nfs_server_v2_t *nfs)
 {
     return SIGAR_ENOTIMPL;
 }
 
 int sigar_nfs_client_v3_get(sigar_t *sigar,
-                            sigar_nfs_client_v3_t *nfsstat)
+                            sigar_nfs_client_v3_t *nfs)
 {
 #ifdef __FreeBSD__
     struct nfsstats stats;
@@ -2302,7 +2302,7 @@ int sigar_nfs_client_v3_get(sigar_t *sigar,
         return errno;
     }
 
-    map_nfs_stats((sigar_nfs_v3_t *)nfsstat, &stats.rpccnt[0]);
+    map_nfs_stats((sigar_nfs_v3_t *)nfs, &stats.rpccnt[0]);
 #else
     int status;
     struct nfsstats stats;
@@ -2311,14 +2311,14 @@ int sigar_nfs_client_v3_get(sigar_t *sigar,
         return status;
     }
 
-    map_nfs_stats((sigar_nfs_v3_t *)nfsstat, &stats.rpccnt[0]);
+    map_nfs_stats((sigar_nfs_v3_t *)nfs, &stats.rpccnt[0]);
 #endif
 
     return SIGAR_OK;
 }
 
 int sigar_nfs_server_v3_get(sigar_t *sigar,
-                            sigar_nfs_server_v3_t *nfsstat)
+                            sigar_nfs_server_v3_t *nfs)
 {
 #ifdef __FreeBSD__
     struct nfsrvstats stats;
@@ -2328,7 +2328,7 @@ int sigar_nfs_server_v3_get(sigar_t *sigar,
         return errno;
     }
 
-    map_nfs_stats((sigar_nfs_v3_t *)nfsstat, &stats.srvrpccnt[0]);
+    map_nfs_stats((sigar_nfs_v3_t *)nfs, &stats.srvrpccnt[0]);
 #else
     int status;
     struct nfsstats stats;
@@ -2337,7 +2337,7 @@ int sigar_nfs_server_v3_get(sigar_t *sigar,
         return status;
     }
 
-    map_nfs_stats((sigar_nfs_v3_t *)nfsstat, &stats.srvrpccnt[0]);
+    map_nfs_stats((sigar_nfs_v3_t *)nfs, &stats.srvrpccnt[0]);
 #endif
 
     return SIGAR_OK;

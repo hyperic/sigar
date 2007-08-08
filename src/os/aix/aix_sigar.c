@@ -2293,27 +2293,27 @@ sigar_tcp_get(sigar_t *sigar,
 }
 
 #define NFS_V2_STAT_SET(type) \
-    nfsstat->null = proto.u.nfsv2.type.null; \
-    nfsstat->getattr = proto.u.nfsv2.type.getattr; \
-    nfsstat->setattr = proto.u.nfsv2.type.setattr; \
-    nfsstat->root = proto.u.nfsv2.type.root; \
-    nfsstat->lookup = proto.u.nfsv2.type.lookup; \
-    nfsstat->readlink = proto.u.nfsv2.type.readlink; \
-    nfsstat->read = proto.u.nfsv2.type.read; \
-    nfsstat->writecache = proto.u.nfsv2.type.writecache; \
-    nfsstat->write = proto.u.nfsv2.type.write; \
-    nfsstat->create = proto.u.nfsv2.type.create; \
-    nfsstat->remove = proto.u.nfsv2.type.remove; \
-    nfsstat->rename = proto.u.nfsv2.type.rename; \
-    nfsstat->link = proto.u.nfsv2.type.link; \
-    nfsstat->symlink = proto.u.nfsv2.type.symlink; \
-    nfsstat->mkdir = proto.u.nfsv2.type.mkdir; \
-    nfsstat->rmdir = proto.u.nfsv2.type.rmdir; \
-    nfsstat->readdir = proto.u.nfsv2.type.readdir; \
-    nfsstat->fsstat = proto.u.nfsv2.type.statfs
+    nfs->null = proto.u.nfsv2.type.null; \
+    nfs->getattr = proto.u.nfsv2.type.getattr; \
+    nfs->setattr = proto.u.nfsv2.type.setattr; \
+    nfs->root = proto.u.nfsv2.type.root; \
+    nfs->lookup = proto.u.nfsv2.type.lookup; \
+    nfs->readlink = proto.u.nfsv2.type.readlink; \
+    nfs->read = proto.u.nfsv2.type.read; \
+    nfs->writecache = proto.u.nfsv2.type.writecache; \
+    nfs->write = proto.u.nfsv2.type.write; \
+    nfs->create = proto.u.nfsv2.type.create; \
+    nfs->remove = proto.u.nfsv2.type.remove; \
+    nfs->rename = proto.u.nfsv2.type.rename; \
+    nfs->link = proto.u.nfsv2.type.link; \
+    nfs->symlink = proto.u.nfsv2.type.symlink; \
+    nfs->mkdir = proto.u.nfsv2.type.mkdir; \
+    nfs->rmdir = proto.u.nfsv2.type.rmdir; \
+    nfs->readdir = proto.u.nfsv2.type.readdir; \
+    nfs->fsstat = proto.u.nfsv2.type.statfs
 
 int sigar_nfs_client_v2_get(sigar_t *sigar,
-                            sigar_nfs_client_v2_t *nfsstat)
+                            sigar_nfs_client_v2_t *nfs)
 {
     perfstat_id_t id;
     perfstat_protocol_t proto;
@@ -2334,7 +2334,7 @@ int sigar_nfs_client_v2_get(sigar_t *sigar,
 }
 
 int sigar_nfs_server_v2_get(sigar_t *sigar,
-                            sigar_nfs_server_v2_t *nfsstat)
+                            sigar_nfs_server_v2_t *nfs)
 {
     perfstat_id_t id;
     perfstat_protocol_t proto;
@@ -2355,31 +2355,31 @@ int sigar_nfs_server_v2_get(sigar_t *sigar,
 }
 
 #define NFS_V3_STAT_SET(type) \
-    nfsstat->null = proto.u.nfsv3.type.null; \
-    nfsstat->getattr = proto.u.nfsv3.type.getattr; \
-    nfsstat->setattr = proto.u.nfsv3.type.setattr; \
-    nfsstat->lookup = proto.u.nfsv3.type.lookup; \
-    nfsstat->access = proto.u.nfsv3.type.access; \
-    nfsstat->readlink = proto.u.nfsv3.type.readlink; \
-    nfsstat->read = proto.u.nfsv3.type.read; \
-    nfsstat->write = proto.u.nfsv3.type.write; \
-    nfsstat->create = proto.u.nfsv3.type.create; \
-    nfsstat->mkdir = proto.u.nfsv3.type.mkdir; \
-    nfsstat->symlink = proto.u.nfsv3.type.symlink; \
-    nfsstat->mknod = proto.u.nfsv3.type.mknod; \
-    nfsstat->remove = proto.u.nfsv3.type.remove; \
-    nfsstat->rmdir = proto.u.nfsv3.type.rmdir; \
-    nfsstat->rename = proto.u.nfsv3.type.rename; \
-    nfsstat->link = proto.u.nfsv3.type.link; \
-    nfsstat->readdir = proto.u.nfsv3.type.readdir; \
-    nfsstat->readdirplus = proto.u.nfsv3.type.readdirplus; \
-    nfsstat->fsstat = proto.u.nfsv3.type.fsstat; \
-    nfsstat->fsinfo = proto.u.nfsv3.type.fsinfo; \
-    nfsstat->pathconf = proto.u.nfsv3.type.pathconf; \
-    nfsstat->commit = proto.u.nfsv3.type.commit
+    nfs->null = proto.u.nfsv3.type.null; \
+    nfs->getattr = proto.u.nfsv3.type.getattr; \
+    nfs->setattr = proto.u.nfsv3.type.setattr; \
+    nfs->lookup = proto.u.nfsv3.type.lookup; \
+    nfs->access = proto.u.nfsv3.type.access; \
+    nfs->readlink = proto.u.nfsv3.type.readlink; \
+    nfs->read = proto.u.nfsv3.type.read; \
+    nfs->write = proto.u.nfsv3.type.write; \
+    nfs->create = proto.u.nfsv3.type.create; \
+    nfs->mkdir = proto.u.nfsv3.type.mkdir; \
+    nfs->symlink = proto.u.nfsv3.type.symlink; \
+    nfs->mknod = proto.u.nfsv3.type.mknod; \
+    nfs->remove = proto.u.nfsv3.type.remove; \
+    nfs->rmdir = proto.u.nfsv3.type.rmdir; \
+    nfs->rename = proto.u.nfsv3.type.rename; \
+    nfs->link = proto.u.nfsv3.type.link; \
+    nfs->readdir = proto.u.nfsv3.type.readdir; \
+    nfs->readdirplus = proto.u.nfsv3.type.readdirplus; \
+    nfs->fsstat = proto.u.nfsv3.type.fsstat; \
+    nfs->fsinfo = proto.u.nfsv3.type.fsinfo; \
+    nfs->pathconf = proto.u.nfsv3.type.pathconf; \
+    nfs->commit = proto.u.nfsv3.type.commit
 
 int sigar_nfs_client_v3_get(sigar_t *sigar,
-                            sigar_nfs_client_v3_t *nfsstat)
+                            sigar_nfs_client_v3_t *nfs)
 {
     perfstat_id_t id;
     perfstat_protocol_t proto;
@@ -2400,7 +2400,7 @@ int sigar_nfs_client_v3_get(sigar_t *sigar,
 }
 
 int sigar_nfs_server_v3_get(sigar_t *sigar,
-                            sigar_nfs_server_v3_t *nfsstat)
+                            sigar_nfs_server_v3_t *nfs)
 {
     perfstat_id_t id;
     perfstat_protocol_t proto;

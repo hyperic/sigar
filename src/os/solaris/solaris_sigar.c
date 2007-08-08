@@ -2422,7 +2422,7 @@ sigar_tcp_get(sigar_t *sigar,
 static int sigar_nfs_get(sigar_t *sigar,
                          char *type, 
                          char **names,
-                         char *nfsstat)
+                         char *nfs)
 {
     size_t offset;
     kstat_t *ksp;
@@ -2455,7 +2455,7 @@ static int sigar_nfs_get(sigar_t *sigar,
             val = -1;
         }
 
-        *(sigar_uint64_t *)((char *)nfsstat + offset) = val;
+        *(sigar_uint64_t *)((char *)nfs + offset) = val;
     }
 
     return SIGAR_OK;
@@ -2484,15 +2484,15 @@ static char *nfs_v2_names[] = {
 };
 
 int sigar_nfs_client_v2_get(sigar_t *sigar,
-                            sigar_nfs_client_v2_t *nfsstat)
+                            sigar_nfs_client_v2_t *nfs)
 {
-    return sigar_nfs_get(sigar, "rfsreqcnt_v2", nfs_v2_names, (char *)nfsstat);
+    return sigar_nfs_get(sigar, "rfsreqcnt_v2", nfs_v2_names, (char *)nfs);
 }
 
 int sigar_nfs_server_v2_get(sigar_t *sigar,
-                            sigar_nfs_server_v2_t *nfsstat)
+                            sigar_nfs_server_v2_t *nfs)
 {
-    return sigar_nfs_get(sigar, "rfsproccnt_v2", nfs_v2_names, (char *)nfsstat);
+    return sigar_nfs_get(sigar, "rfsproccnt_v2", nfs_v2_names, (char *)nfs);
 }
 
 static char *nfs_v3_names[] = {
@@ -2522,15 +2522,15 @@ static char *nfs_v3_names[] = {
 };
 
 int sigar_nfs_client_v3_get(sigar_t *sigar,
-                            sigar_nfs_client_v3_t *nfsstat)
+                            sigar_nfs_client_v3_t *nfs)
 {
-    return sigar_nfs_get(sigar, "rfsreqcnt_v3", nfs_v3_names, (char *)nfsstat);
+    return sigar_nfs_get(sigar, "rfsreqcnt_v3", nfs_v3_names, (char *)nfs);
 }
 
 int sigar_nfs_server_v3_get(sigar_t *sigar,
-                            sigar_nfs_server_v3_t *nfsstat)
+                            sigar_nfs_server_v3_t *nfs)
 {
-    return sigar_nfs_get(sigar, "rfsproccnt_v3", nfs_v3_names, (char *)nfsstat);
+    return sigar_nfs_get(sigar, "rfsproccnt_v3", nfs_v3_names, (char *)nfs);
 }
 
 int sigar_proc_port_get(sigar_t *sigar, int protocol,

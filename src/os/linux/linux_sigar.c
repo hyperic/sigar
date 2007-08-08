@@ -2190,7 +2190,7 @@ static int sigar_proc_nfs_gets(char *file, char *tok,
     return status;
 }
 
-static int sigar_nfs_v2_get(char *file, sigar_nfs_v2_t *nfsstat)
+static int sigar_nfs_v2_get(char *file, sigar_nfs_v2_t *nfs)
 {
     char buffer[BUFSIZ], *ptr=buffer;
     int status =
@@ -2203,43 +2203,43 @@ static int sigar_nfs_v2_get(char *file, sigar_nfs_v2_t *nfsstat)
 
     ptr = sigar_skip_multiple_token(ptr, 2);
 
-    nfsstat->null = sigar_strtoull(ptr);
-    nfsstat->getattr = sigar_strtoull(ptr);
-    nfsstat->setattr = sigar_strtoull(ptr);
-    nfsstat->root = sigar_strtoull(ptr);
-    nfsstat->lookup = sigar_strtoull(ptr);
-    nfsstat->readlink = sigar_strtoull(ptr);
-    nfsstat->read = sigar_strtoull(ptr);
-    nfsstat->writecache = sigar_strtoull(ptr);
-    nfsstat->write = sigar_strtoull(ptr);
-    nfsstat->create = sigar_strtoull(ptr);
-    nfsstat->remove = sigar_strtoull(ptr);
-    nfsstat->rename = sigar_strtoull(ptr);
-    nfsstat->link = sigar_strtoull(ptr);
-    nfsstat->symlink = sigar_strtoull(ptr);
-    nfsstat->mkdir = sigar_strtoull(ptr);
-    nfsstat->rmdir = sigar_strtoull(ptr);
-    nfsstat->readdir = sigar_strtoull(ptr);
-    nfsstat->fsstat = sigar_strtoull(ptr);
+    nfs->null = sigar_strtoull(ptr);
+    nfs->getattr = sigar_strtoull(ptr);
+    nfs->setattr = sigar_strtoull(ptr);
+    nfs->root = sigar_strtoull(ptr);
+    nfs->lookup = sigar_strtoull(ptr);
+    nfs->readlink = sigar_strtoull(ptr);
+    nfs->read = sigar_strtoull(ptr);
+    nfs->writecache = sigar_strtoull(ptr);
+    nfs->write = sigar_strtoull(ptr);
+    nfs->create = sigar_strtoull(ptr);
+    nfs->remove = sigar_strtoull(ptr);
+    nfs->rename = sigar_strtoull(ptr);
+    nfs->link = sigar_strtoull(ptr);
+    nfs->symlink = sigar_strtoull(ptr);
+    nfs->mkdir = sigar_strtoull(ptr);
+    nfs->rmdir = sigar_strtoull(ptr);
+    nfs->readdir = sigar_strtoull(ptr);
+    nfs->fsstat = sigar_strtoull(ptr);
 
     return SIGAR_OK;
 }
 
 int sigar_nfs_client_v2_get(sigar_t *sigar,
-                            sigar_nfs_client_v2_t *nfsstat)
+                            sigar_nfs_client_v2_t *nfs)
 {
     return sigar_nfs_v2_get(PROC_FS_ROOT "net/rpc/nfs",
-                            (sigar_nfs_v2_t *)nfsstat);
+                            (sigar_nfs_v2_t *)nfs);
 }
 
 int sigar_nfs_server_v2_get(sigar_t *sigar,
-                            sigar_nfs_server_v2_t *nfsstat)
+                            sigar_nfs_server_v2_t *nfs)
 {
     return sigar_nfs_v2_get(PROC_FS_ROOT "net/rpc/nfsd",
-                            (sigar_nfs_v2_t *)nfsstat);
+                            (sigar_nfs_v2_t *)nfs);
 }
 
-static int sigar_nfs_v3_get(char *file, sigar_nfs_v3_t *nfsstat)
+static int sigar_nfs_v3_get(char *file, sigar_nfs_v3_t *nfs)
 {
     char buffer[BUFSIZ], *ptr=buffer;
     int status =
@@ -2252,44 +2252,44 @@ static int sigar_nfs_v3_get(char *file, sigar_nfs_v3_t *nfsstat)
 
     ptr = sigar_skip_multiple_token(ptr, 2);
 
-    nfsstat->null = sigar_strtoull(ptr);
-    nfsstat->getattr = sigar_strtoull(ptr);
-    nfsstat->setattr = sigar_strtoull(ptr);
-    nfsstat->lookup = sigar_strtoull(ptr);
-    nfsstat->access = sigar_strtoull(ptr);
-    nfsstat->readlink = sigar_strtoull(ptr);
-    nfsstat->read = sigar_strtoull(ptr);
-    nfsstat->write = sigar_strtoull(ptr);
-    nfsstat->create = sigar_strtoull(ptr);
-    nfsstat->mkdir = sigar_strtoull(ptr);
-    nfsstat->symlink = sigar_strtoull(ptr);
-    nfsstat->mknod = sigar_strtoull(ptr);
-    nfsstat->remove = sigar_strtoull(ptr);
-    nfsstat->rmdir = sigar_strtoull(ptr);
-    nfsstat->rename = sigar_strtoull(ptr);
-    nfsstat->link = sigar_strtoull(ptr);
-    nfsstat->readdir = sigar_strtoull(ptr);
-    nfsstat->readdirplus = sigar_strtoull(ptr);
-    nfsstat->fsstat = sigar_strtoull(ptr);
-    nfsstat->fsinfo = sigar_strtoull(ptr);
-    nfsstat->pathconf = sigar_strtoull(ptr);
-    nfsstat->commit = sigar_strtoull(ptr);
+    nfs->null = sigar_strtoull(ptr);
+    nfs->getattr = sigar_strtoull(ptr);
+    nfs->setattr = sigar_strtoull(ptr);
+    nfs->lookup = sigar_strtoull(ptr);
+    nfs->access = sigar_strtoull(ptr);
+    nfs->readlink = sigar_strtoull(ptr);
+    nfs->read = sigar_strtoull(ptr);
+    nfs->write = sigar_strtoull(ptr);
+    nfs->create = sigar_strtoull(ptr);
+    nfs->mkdir = sigar_strtoull(ptr);
+    nfs->symlink = sigar_strtoull(ptr);
+    nfs->mknod = sigar_strtoull(ptr);
+    nfs->remove = sigar_strtoull(ptr);
+    nfs->rmdir = sigar_strtoull(ptr);
+    nfs->rename = sigar_strtoull(ptr);
+    nfs->link = sigar_strtoull(ptr);
+    nfs->readdir = sigar_strtoull(ptr);
+    nfs->readdirplus = sigar_strtoull(ptr);
+    nfs->fsstat = sigar_strtoull(ptr);
+    nfs->fsinfo = sigar_strtoull(ptr);
+    nfs->pathconf = sigar_strtoull(ptr);
+    nfs->commit = sigar_strtoull(ptr);
 
     return SIGAR_OK;
 }
 
 int sigar_nfs_client_v3_get(sigar_t *sigar,
-                            sigar_nfs_client_v3_t *nfsstat)
+                            sigar_nfs_client_v3_t *nfs)
 {
     return sigar_nfs_v3_get(PROC_FS_ROOT "net/rpc/nfs",
-                            (sigar_nfs_v3_t *)nfsstat);
+                            (sigar_nfs_v3_t *)nfs);
 }
 
 int sigar_nfs_server_v3_get(sigar_t *sigar,
-                            sigar_nfs_server_v3_t *nfsstat)
+                            sigar_nfs_server_v3_t *nfs)
 {
     return sigar_nfs_v3_get(PROC_FS_ROOT "net/rpc/nfsd",
-                            (sigar_nfs_v3_t *)nfsstat);
+                            (sigar_nfs_v3_t *)nfs);
 }
 
 int sigar_proc_port_get(sigar_t *sigar, int protocol,
