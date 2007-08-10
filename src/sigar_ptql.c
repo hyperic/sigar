@@ -686,8 +686,8 @@ static int ptql_pid_get(sigar_t *sigar,
         if (status != SIGAR_OK) {
             return status;
         }
-        *pid = strtoull(buffer, &ptr, 10);
-        if (strtonum_failed(buffer, ptr)) {
+        *pid = str2pid(buffer, ptr);
+        if ((buffer == ptr) || (errno == ERANGE)) {
             return errno;
         }
     }
