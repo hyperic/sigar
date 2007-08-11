@@ -59,6 +59,10 @@ SIGAR_INLINE kid_t sigar_kstat_update(sigar_t *sigar);
 
 int sigar_get_kstats(sigar_t *sigar);
 
+void sigar_init_multi_kstats(sigar_t *sigar);
+
+void sigar_free_multi_kstats(sigar_t *sigar);
+
 int sigar_get_multi_kstats(sigar_t *sigar,
                            kstat_list_t *kl,
                            const char *name,

@@ -59,6 +59,46 @@ int sigar_get_multi_kstats(sigar_t *sigar,
     return SIGAR_OK;
 }
 
+#define KSTAT_LIST_INIT(sigar, dev) \
+    sigar->koffsets.dev[0] = -1; \
+    sigar->ks.dev.num = 0; \
+    sigar->ks.dev.ks  = NULL; \
+    sigar->ks.dev.name = #dev; \
+    sigar->ks.dev.nlen = sizeof(#dev)-1
+
+void sigar_init_multi_kstats(sigar_t *sigar)
+{
+    KSTAT_LIST_INIT(sigar, lo);
+    KSTAT_LIST_INIT(sigar, hme);
+    KSTAT_LIST_INIT(sigar, dmfe);
+    KSTAT_LIST_INIT(sigar, ge);
+    KSTAT_LIST_INIT(sigar, eri);
+}
+
+void sigar_free_multi_kstats(sigar_t *sigar)
+{
+    if (sigar->ks.lo.num) {
+        free(sigar->ks.lo.ks);
+        KSTAT_LIST_INIT(sigar, lo);
+    }
+    if (sigar->ks.hme.num) {
+        free(sigar->ks.hme.ks);
+        KSTAT_LIST_INIT(sigar, hme);
+    }
+    if (sigar->ks.dmfe.num) {
+        free(sigar->ks.dmfe.ks);
+        KSTAT_LIST_INIT(sigar, dmfe);
+    }
+    if (sigar->ks.ge.num) {
+        free(sigar->ks.ge.ks);
+        KSTAT_LIST_INIT(sigar, ge);
+    }
+    if (sigar->ks.eri.num) {
+        free(sigar->ks.eri.ks);
+        KSTAT_LIST_INIT(sigar, eri);
+    }
+}
+
 int sigar_get_kstats(sigar_t *sigar)
 {
     kstat_ctl_t *kc = sigar->kc;
@@ -128,6 +168,9 @@ int sigar_get_kstats(sigar_t *sigar)
     sigar->ks.system   = kstat_lookup(kc, "unix", -1, "system_misc");
     sigar->ks.syspages = kstat_lookup(kc, "unix", -1, "system_pages");
     sigar->ks.mempages = kstat_lookup(kc, "bunyip", -1, "mempages");
+
+    /* reset offsets on kstat_chain_update */
+    sigar_free_multi_kstats(sigar);
 
     return SIGAR_OK;
 }

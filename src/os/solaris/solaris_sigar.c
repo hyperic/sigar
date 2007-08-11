@@ -33,13 +33,6 @@
 #include <sys/utsname.h>
 #include <dlfcn.h>
 
-#define KSTAT_LIST_INIT(sigar, dev) \
-    sigar->koffsets.dev[0] = -1; \
-    sigar->ks.dev.num = 0; \
-    sigar->ks.dev.ks  = NULL; \
-    sigar->ks.dev.name = #dev; \
-    sigar->ks.dev.nlen = strlen(#dev)
-
 #define PROC_ERRNO ((errno == ENOENT) ? ESRCH : errno)
 
 int sigar_os_open(sigar_t **sig)
@@ -94,16 +87,12 @@ int sigar_os_open(sigar_t **sig)
     sigar->ks.cpuid = NULL;
     sigar->ks.lcpu = 0;
 
-    KSTAT_LIST_INIT(sigar, lo);
-    KSTAT_LIST_INIT(sigar, hme);
-    KSTAT_LIST_INIT(sigar, dmfe);
-    KSTAT_LIST_INIT(sigar, ge);
-    KSTAT_LIST_INIT(sigar, eri);
-
     sigar->koffsets.system[0] = -1;
     sigar->koffsets.mempages[0] = -1;
     sigar->koffsets.syspages[0] = -1;
-    
+
+    sigar_init_multi_kstats(sigar);
+
     if ((status = sigar_get_kstats(sigar)) != SIGAR_OK) {
         fprintf(stderr, "status=%d\n", status);
     } 
@@ -139,21 +128,8 @@ int sigar_os_close(sigar_t *sigar)
 {
     kstat_close(sigar->kc);
 
-    if (sigar->ks.lo.num) {
-        free(sigar->ks.lo.ks);
-    }
-    if (sigar->ks.hme.num) {
-        free(sigar->ks.hme.ks);
-    }
-    if (sigar->ks.dmfe.num) {
-        free(sigar->ks.dmfe.ks);
-    }
-    if (sigar->ks.ge.num) {
-        free(sigar->ks.ge.ks);
-    }
-    if (sigar->ks.eri.num) {
-        free(sigar->ks.eri.ks);
-    }
+    sigar_free_multi_kstats(sigar);
+
     if (sigar->ks.lcpu) {
         free(sigar->ks.cpu);
         free(sigar->ks.cpu_info);
