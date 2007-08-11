@@ -15,7 +15,7 @@ int ptql_test(sigar_t *sigar, char *ptql) {
     }
 
     status =
-        sigar_ptql_query_create(sigar, &query, ptql);
+        sigar_ptql_query_create(&query, ptql);
 
     if (status != SIGAR_OK) {
         return status;
@@ -32,7 +32,7 @@ int ptql_test(sigar_t *sigar, char *ptql) {
 
     sigar_proc_list_destroy(sigar, &proclist);
 
-    sigar_ptql_query_destroy(sigar, query);
+    sigar_ptql_query_destroy(query);
 
     return 0;
 }
