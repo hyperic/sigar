@@ -1070,8 +1070,7 @@ static int ptql_branch_add(ptql_parse_branch_t *parsed,
     PTQL_BRANCH_LIST_GROW(branches);
 
     branch = &branches->data[branches->number++];
-    branch->data.ptr = NULL;
-    branch->data_size = 0;
+    SIGAR_ZERO(branch);
     branch->data_free = data_free;
     branch->value_free = data_free;
     branch->op_flags = parsed->op_flags;
