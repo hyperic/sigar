@@ -964,6 +964,11 @@ my %classes = (
          desc => '',
          plat => ''
       },
+      {
+         name => 'speed', type => 'Long',
+         desc => '',
+         plat => ''
+      },
     ],
     NetConnection => [
       {
