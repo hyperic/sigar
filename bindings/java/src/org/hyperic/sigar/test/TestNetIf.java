@@ -57,6 +57,7 @@ public class TestNetIf extends SigarTestCase {
                 NetInterfaceStat ifstat = sigar.getNetInterfaceStat(name);
                 assertGtEqZeroTrace("RxPackets", ifstat.getRxPackets());
                 assertGtEqZeroTrace("TxPackets", ifstat.getTxPackets());
+                traceMethods(ifstat);
             } catch (SigarNotImplementedException e) {
                 //ok
             } catch (SigarException e) {
