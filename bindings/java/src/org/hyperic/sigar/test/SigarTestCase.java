@@ -166,7 +166,13 @@ public abstract class SigarTestCase extends TestCase {
             if (!name.startsWith("get")) {
                 continue;
             }
-            traceln(name + "=" + methods[i].invoke(obj, new Object[0]));
+            Object val = methods[i].invoke(obj, new Object[0]);
+            if ((val instanceof Long) &&
+                ((Long)val).longValue() == Sigar.FIELD_NOTIMPL)
+            {
+                val = "NOTIMPL";
+            }
+            traceln(name + "=" + val);
         }
     }
 }
