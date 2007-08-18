@@ -284,6 +284,7 @@ static sigar_ntdll_t sigar_ntdll = {
     "ntdll.dll",
     NULL,
     { "NtQuerySystemInformation", NULL },
+    { "NtQueryInformationProcess", NULL },
     { NULL, NULL }
 };
 
@@ -467,9 +468,13 @@ int sigar_os_open(sigar_t **sigar_ptr)
     sigar->pinfo.pid = -1;
     sigar->ws_version = 0;
     sigar->ncpu = 0;
-    sigar->peb = NULL;
 
     return result;
+}
+
+void dllmod_init_ntdll(sigar_t *sigar)
+{
+    DLLMOD_INIT(ntdll, FALSE);
 }
 
 int sigar_os_close(sigar_t *sigar)
@@ -504,10 +509,6 @@ int sigar_os_close(sigar_t *sigar)
 
     if (sigar->netif_adapters) {
         sigar_cache_destroy(sigar->netif_adapters);
-    }
-
-    if (sigar->peb) {
-        free(sigar->peb);
     }
 
     free(sigar);
@@ -1312,7 +1313,7 @@ static int sigar_remote_proc_args_get(sigar_t *sigar, sigar_pid_t pid,
     if (!proc) {
         return GetLastError();
     }
-    
+
     status = sigar_proc_args_peb_get(sigar, proc, procargs);
 
     CloseHandle(proc);

@@ -27,86 +27,104 @@
 #include "sigar_os.h"
 #include <shellapi.h>
 
-#define PAGE_START    0x00020000
-#define CWD_OFFSET    PAGE_START + 0x0290
-#define PATH_OFFSET   PAGE_START + 0x0498
-#define START_ADDRESS PAGE_START + 0x0498
+void dllmod_init_ntdll(sigar_t *sigar);
 
-static int sigar_peb_get(sigar_t *sigar, HANDLE proc, DWORD *base)
+#define sigar_NtQueryInformationProcess \
+    sigar->ntdll.query_proc_info.func
+
+static int sigar_pbi_get(sigar_t *sigar, HANDLE proc, PEB *peb)
 {
-    MEMORY_BASIC_INFORMATION mbi;
-    DWORD bytes;
-    SIZE_T size = sigar->pagesize;
+    int status;
+    PROCESS_BASIC_INFORMATION pbi;
+    DWORD size=sizeof(pbi);
 
-    if (!sigar->peb) {
-        sigar->peb = malloc(sigar->pagesize*2);
+    dllmod_init_ntdll(sigar);
+
+    if (!sigar_NtQueryInformationProcess) {
+        return SIGAR_ENOTIMPL;
     }
 
-    if (!VirtualQueryEx(proc, (char*)START_ADDRESS, &mbi, sizeof(mbi))) {
+    SIGAR_ZERO(&pbi);
+    status =
+        sigar_NtQueryInformationProcess(proc,
+                                        ProcessBasicInformation,
+                                        &pbi,
+                                        size, NULL);
+    if (status != ERROR_SUCCESS) {
+        return status;
+    }
+
+    if (!pbi.PebBaseAddress) {
+        return !SIGAR_OK;
+    }
+
+    size = sizeof(*peb);
+
+    if (ReadProcessMemory(proc, pbi.PebBaseAddress, peb, size, NULL)) {
+        return SIGAR_OK;
+    }
+    else {
         return GetLastError();
     }
-
-    if (mbi.RegionSize > sigar->pagesize) {
-        /* in the event args crosses the first page boundry.
-         * seen with WebSphere.
-         */
-        size *= 2;
-    }
-
-    if (!ReadProcessMemory(proc, mbi.BaseAddress, sigar->peb,
-                           size, &bytes))
-    {
-        return GetLastError();
-    }
-
-    *base = (DWORD)mbi.BaseAddress;
-
-    return SIGAR_OK;
 }
 
-#define SKIP_NULL(scratch) \
-    if (*scratch == '\0') scratch += sizeof(WCHAR)
+static int sigar_rtl_get(sigar_t *sigar, HANDLE proc,
+                         RTL_USER_PROCESS_PARAMETERS *rtl)
+{
+    PEB peb;
+    int status = sigar_pbi_get(sigar, proc, &peb);
+    DWORD size=sizeof(*rtl);
 
-#define PEB_START(scratch, base, offset) \
-    scratch = sigar->peb + ((DWORD)offset - base)
+    if (status != SIGAR_OK) {
+        return status;
+    }
 
-//point scratch to next string (assumes PEB_FIRST)
-#define PEB_NEXT(scratch) \
-    scratch = scratch + (wcslen((LPWSTR)scratch) + 1) * sizeof(WCHAR); \
-    SKIP_NULL(scratch)
+    if (ReadProcessMemory(proc, peb.ProcessParameters, rtl, size, NULL)) {
+        return SIGAR_OK;
+    }
+    else {
+        return GetLastError();
+    }
+}
+
+#define rtl_bufsize(buf, uc) \
+    ((sizeof(buf) < uc.Length) ? sizeof(buf) : uc.Length)
 
 int sigar_proc_exe_peb_get(sigar_t *sigar, HANDLE proc,
                            sigar_proc_exe_t *procexe)
 {
     int status;
-    LPBYTE scratch;
-    DWORD base;
-    WCHAR buf[MAX_PATH];
+    WCHAR buf[MAX_PATH+1];
+    RTL_USER_PROCESS_PARAMETERS rtl;
+    DWORD size;
 
-    if ((status = sigar_peb_get(sigar, proc, &base)) != SIGAR_OK) {
+    if ((status = sigar_rtl_get(sigar, proc, &rtl)) != SIGAR_OK) {
         return status;
     }
 
-    PEB_START(scratch, base, CWD_OFFSET);
+    size = rtl_bufsize(buf, rtl.ImagePathName);
+    memset(buf, '\0', sizeof(buf));
 
-    wcsncpy(buf, (LPWSTR)scratch, MAX_PATH);
-    buf[MAX_PATH-1] = L'\0';
-
-    SIGAR_W2A(buf, procexe->cwd, sizeof(procexe->cwd));
-
-    PEB_START(scratch, base, PATH_OFFSET);
-
-    PEB_NEXT(scratch); //skip PATH
-
-    /* XXX seen on non-english windows, random leading char */
-    if (*(scratch + sizeof(WCHAR)) != L':') {
-        scratch += sizeof(WCHAR);
+    if ((size > 0) &&
+        ReadProcessMemory(proc, rtl.ImagePathName.Buffer, buf, size, NULL))
+    {
+        SIGAR_W2A(buf, procexe->name, sizeof(procexe->name));
+    }
+    else {
+        procexe->name[0] = '\0';
     }
 
-    wcsncpy(buf, (LPWSTR)scratch, MAX_PATH);
-    buf[MAX_PATH-1] = L'\0';
+    size = rtl_bufsize(buf, rtl.CurrentDirectoryName);
+    memset(buf, '\0', sizeof(buf));
 
-    SIGAR_W2A(buf, procexe->name, sizeof(procexe->name));
+    if ((size > 0) &&
+        ReadProcessMemory(proc, rtl.CurrentDirectoryName.Buffer, buf, size, NULL))
+    {
+        SIGAR_W2A(buf, procexe->cwd, sizeof(procexe->cwd));
+    }
+    else {
+        procexe->cwd[0] = '\0';
+    }
 
     return SIGAR_OK;
 }
@@ -143,22 +161,23 @@ int sigar_proc_args_peb_get(sigar_t *sigar, HANDLE proc,
                             sigar_proc_args_t *procargs)
 {
     int status;
-    LPBYTE scratch;
-    DWORD base;
     WCHAR buf[SIGAR_CMDLINE_MAX];
+    RTL_USER_PROCESS_PARAMETERS rtl;
+    DWORD size;
 
-    if ((status = sigar_peb_get(sigar, proc, &base)) != SIGAR_OK) {
+    if ((status = sigar_rtl_get(sigar, proc, &rtl)) != SIGAR_OK) {
         return status;
     }
 
-    PEB_START(scratch, base, PATH_OFFSET);
-
-    PEB_NEXT(scratch); //skip PATH
-
-    PEB_NEXT(scratch); //skip exe name
-
-    wcsncpy(buf, (LPWSTR)scratch, SIGAR_CMDLINE_MAX);
-    buf[SIGAR_CMDLINE_MAX-1] = L'\0';
-
-    return sigar_parse_proc_args(sigar, buf, procargs);
+    size = rtl_bufsize(buf, rtl.CommandLine);
+    memset(buf, '\0', sizeof(buf));
+            
+    if ((size > 0) &&
+        ReadProcessMemory(proc, rtl.CommandLine.Buffer, buf, size, NULL))
+    {
+        return sigar_parse_proc_args(sigar, buf, procargs);
+    }
+    else {
+        return SIGAR_OK;
+    }
 }

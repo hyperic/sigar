@@ -219,6 +219,93 @@ typedef struct {
 
 #define SystemProcessorPerformanceInformation 8
 
+/* PEB decls from msdn docs w/ slight mods */
+#define ProcessBasicInformation 0
+
+typedef struct _UNICODE_STRING {
+    USHORT Length;
+    USHORT MaximumLength;
+    PWSTR  Buffer;
+} UNICODE_STRING, *PUNICODE_STRING;
+
+typedef struct _PEB_LDR_DATA {
+    BYTE Reserved1[8];
+    PVOID Reserved2[3];
+    LIST_ENTRY InMemoryOrderModuleList;
+} PEB_LDR_DATA, *PPEB_LDR_DATA;
+
+typedef struct RTL_DRIVE_LETTER_CURDIR {
+    USHORT              Flags;
+    USHORT              Length;
+    ULONG               TimeStamp;
+    UNICODE_STRING      DosPath;
+} RTL_DRIVE_LETTER_CURDIR, *PRTL_DRIVE_LETTER_CURDIR;
+
+/* from: http://source.winehq.org/source/include/winternl.h */
+typedef struct _RTL_USER_PROCESS_PARAMETERS {
+    ULONG               AllocationSize;
+    ULONG               Size;
+    ULONG               Flags;
+    ULONG               DebugFlags;
+    HANDLE              hConsole;
+    ULONG               ProcessGroup;
+    HANDLE              hStdInput;
+    HANDLE              hStdOutput;
+    HANDLE              hStdError;
+    UNICODE_STRING      CurrentDirectoryName;
+    HANDLE              CurrentDirectoryHandle;
+    UNICODE_STRING      DllPath;
+    UNICODE_STRING      ImagePathName;
+    UNICODE_STRING      CommandLine;
+    PWSTR               Environment;
+    ULONG               dwX;
+    ULONG               dwY;
+    ULONG               dwXSize;
+    ULONG               dwYSize;
+    ULONG               dwXCountChars;
+    ULONG               dwYCountChars;
+    ULONG               dwFillAttribute;
+    ULONG               dwFlags;
+    ULONG               wShowWindow;
+    UNICODE_STRING      WindowTitle;
+    UNICODE_STRING      Desktop;
+    UNICODE_STRING      ShellInfo;
+    UNICODE_STRING      RuntimeInfo;
+    RTL_DRIVE_LETTER_CURDIR DLCurrentDirectory[0x20];
+} RTL_USER_PROCESS_PARAMETERS, *PRTL_USER_PROCESS_PARAMETERS;
+
+/* from msdn docs
+typedef struct _RTL_USER_PROCESS_PARAMETERS {
+    BYTE Reserved1[16];
+    PVOID Reserved2[10];
+    UNICODE_STRING ImagePathName;
+    UNICODE_STRING CommandLine;
+} RTL_USER_PROCESS_PARAMETERS, *PRTL_USER_PROCESS_PARAMETERS;
+*/
+
+typedef struct _PEB {
+    BYTE Reserved1[2];
+    BYTE BeingDebugged;
+    BYTE Reserved2[1];
+    PVOID Reserved3[2];
+    PPEB_LDR_DATA Ldr;
+    PRTL_USER_PROCESS_PARAMETERS ProcessParameters;
+    BYTE Reserved4[104];
+    PVOID Reserved5[52];
+    /*PPS_POST_PROCESS_INIT_ROUTINE*/ PVOID PostProcessInitRoutine;
+    BYTE Reserved6[128];
+    PVOID Reserved7[1];
+    ULONG SessionId;
+} PEB, *PPEB;
+
+typedef struct _PROCESS_BASIC_INFORMATION {
+    PVOID Reserved1;
+    PPEB PebBaseAddress;
+    PVOID Reserved2[2];
+    /*ULONG_PTR*/ UINT_PTR UniqueProcessId;
+    PVOID Reserved3;
+} PROCESS_BASIC_INFORMATION;
+
 typedef struct {
     sigar_pid_t pid;
     int ppid;
@@ -330,6 +417,12 @@ typedef DWORD (CALLBACK *ntdll_query_sys_info)(DWORD,
                                                ULONG,
                                                PULONG);
 
+typedef DWORD (CALLBACK *ntdll_query_proc_info)(HANDLE,
+                                                DWORD,
+                                                PVOID,
+                                                ULONG,
+                                                PULONG);
+
 /* psapi.dll */
 typedef BOOL (CALLBACK *psapi_enum_modules)(HANDLE,
                                             HMODULE *,
@@ -405,6 +498,7 @@ typedef struct {
     sigar_dll_handle_t handle;
 
     SIGAR_DLLFUNC(ntdll, query_sys_info);
+    SIGAR_DLLFUNC(ntdll, query_proc_info);
 
     sigar_dll_func_t end;
 } sigar_ntdll_t;
@@ -457,7 +551,6 @@ struct sigar_t {
 
     WORD ws_version;
     int ws_error;
-    LPBYTE peb; //scratch pad for getting peb info
     int ht_enabled;
     int lcpu; //number of logical cpus
     int winnt;
