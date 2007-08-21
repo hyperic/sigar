@@ -407,6 +407,43 @@ int sigar_wsa_init(sigar_t *sigar)
     return SIGAR_OK;
 }
 
+static int sigar_enable_privilege(char *name)
+{
+    int status;
+    HANDLE handle;
+    TOKEN_PRIVILEGES tok;
+
+    SIGAR_ZERO(&tok);
+
+    if (!OpenProcessToken(GetCurrentProcess(),
+                          TOKEN_ADJUST_PRIVILEGES|TOKEN_QUERY,
+                          &handle))
+    {
+        return GetLastError();
+    }
+
+    if (LookupPrivilegeValue(NULL, name,
+                             &tok.Privileges[0].Luid))
+    {
+        tok.PrivilegeCount = 1;
+        tok.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
+
+        if (AdjustTokenPrivileges(handle, FALSE, &tok, 0, NULL, 0)) {
+            status = SIGAR_OK;
+        }
+        else {
+            status = GetLastError();
+        }
+    }
+    else {
+        status = GetLastError();
+    }
+
+    CloseHandle(handle);
+
+    return status;
+}
+
 int sigar_os_open(sigar_t **sigar_ptr)
 {
     LONG result;
@@ -468,6 +505,9 @@ int sigar_os_open(sigar_t **sigar_ptr)
     sigar->pinfo.pid = -1;
     sigar->ws_version = 0;
     sigar->ncpu = 0;
+
+    /* increase process visibility */
+    sigar_enable_privilege(SE_DEBUG_NAME);
 
     return result;
 }
