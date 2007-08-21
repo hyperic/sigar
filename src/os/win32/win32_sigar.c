@@ -1401,7 +1401,8 @@ static int sigar_remote_proc_env_get(sigar_t *sigar, sigar_pid_t pid,
     if (status == SIGAR_OK) {
         LPBYTE ptr = (LPBYTE)env;
         DWORD size = sizeof(env);
-        UCHAR ent[1024];
+        UCHAR ent[4096];
+
         while ((size > 0) && (*ptr != L'\0')) {
             DWORD len = (wcslen((LPWSTR)ptr) + 1) * sizeof(WCHAR);
             SIGAR_W2A((WCHAR *)ptr, ent, sizeof(ent));
