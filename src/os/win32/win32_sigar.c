@@ -1332,13 +1332,8 @@ int sigar_os_proc_args_get(sigar_t *sigar, sigar_pid_t pid,
     }
 }
 
-static int sigar_local_proc_env_get(sigar_t *sigar, sigar_pid_t pid,
-                                    sigar_proc_env_t *procenv)
+static int sigar_proc_env_parse(UCHAR *ptr, sigar_proc_env_t *procenv)
 {
-    UCHAR *ptr, *env;
-
-    env = ptr = (UCHAR*)GetEnvironmentStrings();
-
     while (*ptr) {
         char *val;
         int klen, vlen, status;
@@ -1367,11 +1362,21 @@ static int sigar_local_proc_env_get(sigar_t *sigar, sigar_pid_t pid,
 
         if (status != SIGAR_OK) {
             /* not an error; just stop iterating */
-            break;
+            return status;
         }
 
         ptr += klen + 1 + vlen + 1;
     }
+
+    return SIGAR_OK;
+}
+
+static int sigar_local_proc_env_get(sigar_t *sigar, sigar_pid_t pid,
+                                    sigar_proc_env_t *procenv)
+{
+    UCHAR *env = (UCHAR*)GetEnvironmentStrings();
+
+    sigar_proc_env_parse(env, procenv);
 
     FreeEnvironmentStrings(env);
 
@@ -1381,114 +1386,32 @@ static int sigar_local_proc_env_get(sigar_t *sigar, sigar_pid_t pid,
 static int sigar_remote_proc_env_get(sigar_t *sigar, sigar_pid_t pid,
                                      sigar_proc_env_t *procenv)
 {
-    FARPROC rgetenv, fstrlen;
-    HANDLE proc, thread, kdll;
-    PVOID data=NULL;
-    const char *key;
-    char *value;
-    DWORD rv, thrid, bytes, datalen=0, size;
-    LPVOID addr;
     int status;
+    HANDLE proc = open_process(pid);
+    WCHAR env[4096];
 
-    /*
-     * Do not FreeLibrary(kdll), see:
-     * http://msdn2.microsoft.com/en-us/library/ms683199.aspx
-     */
-    if (!(kdll = GetModuleHandle("msvcrt.dll"))) {
+    if (!proc) {
         return GetLastError();
     }
 
-    if (!(rgetenv = GetProcAddress(kdll, "getenv"))) {
-        return GetLastError();
-    }
+    status = sigar_proc_env_peb_get(sigar, proc, env, sizeof(env));
 
-    if (!(kdll = GetModuleHandle("kernel32.dll"))) {
-        return GetLastError();
-    }
-
-    if (!(fstrlen = GetProcAddress(kdll, "lstrlenA"))) {
-        return GetLastError();
-    }
-
-    if (!(proc = OpenProcess(MAXIMUM_ALLOWED, 0, (DWORD)pid))) {
-        return GetLastError();
-    }
-
-    key  = procenv->key;
-    size = procenv->klen+1;
-    addr = VirtualAllocEx(proc, NULL, size,
-                          MEM_COMMIT, PAGE_EXECUTE_READWRITE);
-    if (!addr) {
-        CloseHandle(proc);
-        return GetLastError(); 
-    }
-
-    if (!WriteProcessMemory(proc, addr, (char*)&key[0], size, 0)) {
-        VirtualFreeEx(proc, addr, size, 0);
-        CloseHandle(proc);
-        return GetLastError(); 
-    }
-
-    thread = CreateRemoteThread(proc, NULL, 0,
-                                (LPTHREAD_START_ROUTINE)rgetenv,
-                                addr, 0, &thrid);
-    if (!thread) {
-        VirtualFreeEx(proc, addr, size, 0);
-        CloseHandle(proc);
-        return GetLastError(); 
-    }
-
-    WaitForSingleObject(thread, INFINITE);
-    GetExitCodeThread(thread, (LPDWORD)(&data));
-    CloseHandle(thread);
-    VirtualFreeEx(proc, addr, size, 0);
-
-    if (!data) {
-        CloseHandle(proc);
-        return SIGAR_OK;
-    }
-
-    thread = CreateRemoteThread(proc, NULL, 0,
-                                (LPTHREAD_START_ROUTINE)fstrlen,
-                                data, 0, &thrid);
-    if (!thread) {
-        CloseHandle(proc);
-        return GetLastError();
-    }
-
-    WaitForSingleObject(thread, INFINITE);
-    GetExitCodeThread(thread, &datalen);
-    CloseHandle(thread);
-
-    if (!datalen) {
-        CloseHandle(proc);
-        return GetLastError();
-    }
-
-    value = HeapAlloc(GetProcessHeap(),
-                      HEAP_ZERO_MEMORY,
-                      datalen);
-
-    if (!value) {
-        CloseHandle(proc);
-        return GetLastError();
-    }
-
-    if (ReadProcessMemory(proc, data, value,
-                          datalen+1, &bytes))
-    {
-        procenv->env_getter(procenv->data,
-                            key, strlen(key),
-                            value, bytes-1);
-
-        status = SIGAR_OK;
-    }
-    else {
-        status = GetLastError();
-    }
-
-    HeapFree(GetProcessHeap(), 0, value);
     CloseHandle(proc);
+
+    if (status == SIGAR_OK) {
+        LPBYTE ptr = (LPBYTE)env;
+        DWORD size = sizeof(env);
+        UCHAR ent[1024];
+        while ((size > 0) && (*ptr != L'\0')) {
+            DWORD len = (wcslen((LPWSTR)ptr) + 1) * sizeof(WCHAR);
+            SIGAR_W2A((WCHAR *)ptr, ent, sizeof(ent));
+            if (sigar_proc_env_parse(ent, procenv) != SIGAR_OK) {
+                break;
+            }
+            size -= len;
+            ptr += len;
+        }
+    }
 
     return status;
 }
@@ -1523,12 +1446,7 @@ SIGAR_DECLARE(int) sigar_proc_env_get(sigar_t *sigar, sigar_pid_t pid,
         }
     }
     else {
-        if (procenv->type == SIGAR_PROC_ENV_KEY) {
-            return sigar_remote_proc_env_get(sigar, pid, procenv);
-        }
-        else {
-            return SIGAR_ENOTIMPL;
-        }
+        return sigar_remote_proc_env_get(sigar, pid, procenv);
     }
 }
 

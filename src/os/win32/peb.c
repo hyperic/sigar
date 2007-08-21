@@ -181,3 +181,24 @@ int sigar_proc_args_peb_get(sigar_t *sigar, HANDLE proc,
         return SIGAR_OK;
     }
 }
+
+int sigar_proc_env_peb_get(sigar_t *sigar, HANDLE proc,
+                           WCHAR *buf, DWORD size)
+{
+    int status;
+    RTL_USER_PROCESS_PARAMETERS rtl;
+
+    if ((status = sigar_rtl_get(sigar, proc, &rtl)) != SIGAR_OK) {
+        return status;
+    }
+
+    memset(buf, '\0', size);
+
+    /* -2 to ensure \0\0 terminator */
+    if (ReadProcessMemory(proc, rtl.Environment, buf, size-2, NULL)) {
+        return SIGAR_OK;
+    }
+    else {
+        return GetLastError();
+    }
+}

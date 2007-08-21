@@ -564,6 +564,9 @@ int sigar_proc_exe_peb_get(sigar_t *sigar, HANDLE proc,
 int sigar_proc_args_peb_get(sigar_t *sigar, HANDLE proc,
                             sigar_proc_args_t *procargs);
 
+int sigar_proc_env_peb_get(sigar_t *sigar, HANDLE proc,
+                           WCHAR *env, DWORD envlen);
+
 int sigar_parse_proc_args(sigar_t *sigar, WCHAR *buf,
                           sigar_proc_args_t *procargs);
 
