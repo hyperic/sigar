@@ -83,6 +83,7 @@ public class TestPTQL extends SigarTestCase {
         "Args.-1.eq=weblogic.Server,Env.WEBLOGIC_CLASSPATH.re=.*weblogic.jar.*", //weblogic
         "State.Name.re=https?d.*|[Aa]pache2?$,State.Name.Pne=$1", //apache
         "State.Name.re=post(master|gres),State.Name.Pne=$1,Args.0.re=.*post(master|gres)$", //postgresql
+        "State.Name.re=cfmx7|java,State.Name.Pne=$1,Args.*.ct=jrun.jar", //coldfusion
     };
 
     private static final String[] MALFORMED_QUERIES = {
