@@ -41,7 +41,14 @@
 typedef struct ptql_parse_branch_t ptql_parse_branch_t;
 typedef struct ptql_branch_t ptql_branch_t;
 
-typedef int (*ptql_get_t)(sigar_t *sigar, sigar_pid_t pid, void *data);
+/* adhere to calling convention, else risk stack corruption */
+#ifdef WIN32
+#define SIGAPI WINAPI
+#else
+#define SIGAPI
+#endif
+
+typedef int (SIGAPI *ptql_get_t)(sigar_t *sigar, sigar_pid_t pid, void *data);
 typedef int (*ptql_branch_init_t)(ptql_parse_branch_t *parsed, ptql_branch_t *branch);
 
 typedef int (*ptql_op_ui64_t)(ptql_branch_t *branch,
@@ -710,9 +717,9 @@ static int ptql_pid_get(sigar_t *sigar,
     return SIGAR_OK;
 }
 
-static int ptql_pid_match(sigar_t *sigar,
-                          sigar_pid_t pid,
-                          void *data)
+static int SIGAPI ptql_pid_match(sigar_t *sigar,
+                                 sigar_pid_t pid,
+                                 void *data)
 {
     ptql_branch_t *branch =
         (ptql_branch_t *)data;
@@ -750,9 +757,9 @@ static int ptql_args_branch_init(ptql_parse_branch_t *parsed,
     return SIGAR_OK;
 }
 
-static int ptql_args_match(sigar_t *sigar,
-                           sigar_pid_t pid,
-                           void *data)
+static int SIGAPI ptql_args_match(sigar_t *sigar,
+                                  sigar_pid_t pid,
+                                  void *data)
 {
     ptql_branch_t *branch =
         (ptql_branch_t *)data;
@@ -818,9 +825,9 @@ static int sigar_proc_env_get_key(void *data,
     return SIGAR_OK;
 }
 
-static int ptql_env_match(sigar_t *sigar,
-                          sigar_pid_t pid,
-                          void *data)
+static int SIGAPI ptql_env_match(sigar_t *sigar,
+                                 sigar_pid_t pid,
+                                 void *data)
 {
     ptql_branch_t *branch =
         (ptql_branch_t *)data;
@@ -876,9 +883,9 @@ static int ptql_branch_init_port(ptql_parse_branch_t *parsed,
     return SIGAR_OK;
 }
 
-static int ptql_port_match(sigar_t *sigar,
-                           sigar_pid_t pid,
-                           void *data)
+static int SIGAPI ptql_port_match(sigar_t *sigar,
+                                  sigar_pid_t pid,
+                                  void *data)
 {
     ptql_branch_t *branch =
         (ptql_branch_t *)data;
