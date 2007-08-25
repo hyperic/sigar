@@ -21,6 +21,8 @@ package org.hyperic.sigar.cmd;
 import java.io.IOException;
 import java.io.BufferedReader;
 import java.io.Reader;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.hyperic.sigar.Sigar;
 import org.hyperic.sigar.SigarException;
@@ -32,6 +34,30 @@ import org.hyperic.sigar.FileWatcherThread;
  * Display the last part of files to the standard output.
  */
 public class Tail {
+
+    public boolean follow;
+    public int number = 10;
+    public List files = new ArrayList();
+
+    public void parseArgs(String args[]) throws SigarException {
+        for (int i=0; i<args.length; i++) {
+            String arg = args[i];
+            if (arg.charAt(0) != '-') {
+                this.files.add(arg);
+                continue;
+            }
+            arg = arg.substring(1);
+            if (arg.equals("f")) {
+                this.follow = true;
+            }
+            else if (Character.isDigit(arg.charAt(0))) {
+                this.number = Integer.parseInt(arg);
+            }
+            else {
+                throw new SigarException("Unknown argument: " + args[i]);
+            }
+        }
+    }
 
     public static void main(String[] args) throws SigarException {
         Sigar sigar = new Sigar();
