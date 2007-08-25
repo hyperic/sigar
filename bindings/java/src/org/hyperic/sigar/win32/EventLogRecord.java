@@ -18,6 +18,8 @@
 
 package org.hyperic.sigar.win32;
 
+import java.util.Date;
+
 /**
  * Class to represent event log records
  */
@@ -93,6 +95,19 @@ public class EventLogRecord {
         return this.eventType;
     }
 
+    public String getEventTypeString() {
+        switch (this.eventType) {
+            case EventLog.EVENTLOG_ERROR_TYPE:
+                return "Error";
+            case EventLog.EVENTLOG_WARNING_TYPE:
+                return "Warning";
+            case EventLog.EVENTLOG_INFORMATION_TYPE:
+                return "Information";
+            default:
+                return "Unknown";
+        }
+    }
+
     /**
      * Get the application which triggered the event
      */
@@ -135,11 +150,10 @@ public class EventLogRecord {
     public String toString()
     {
         return
-            "recordNumber=" + recordNumber + " " +
-            "source=" + source + " " +
-            "computerName=" + computerName + " " +
-            "user=" + user + " " +
-            "message=" + message;
+        "[" + new Date(getTimeGenerated() * 1000) + "] " +
+        "[" + getEventTypeString() + "] " +
+        "[" + getSource() + "] " +
+        getMessage();
     }
 }
 
