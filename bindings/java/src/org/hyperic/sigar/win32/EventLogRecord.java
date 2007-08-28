@@ -103,6 +103,10 @@ public class EventLogRecord {
                 return "Warning";
             case EventLog.EVENTLOG_INFORMATION_TYPE:
                 return "Information";
+            case EventLog.EVENTLOG_AUDIT_SUCCESS:
+                return "Success Audit";
+            case EventLog.EVENTLOG_AUDIT_FAILURE:
+                return "Failure Audit";
             default:
                 return "Unknown";
         }
