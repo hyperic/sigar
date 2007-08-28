@@ -33,10 +33,10 @@ public class EventLogTail {
         if (tail.number < max) {
             max = tail.number;
         }
-        int last = log.getNewestRecord();
+        int last = log.getNewestRecord()+1;
         int first = last - max;
 
-        for (int i=first; i<=last; i++) {
+        for (int i=first; i<last; i++) {
             EventLogRecord record = log.read(i);
             System.out.println(record);
         }
