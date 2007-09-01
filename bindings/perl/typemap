@@ -34,6 +34,11 @@ Sigar::NetInfo T_PTROBJ
 Sigar::DirUsage T_PTROBJ
 Sigar::SysInfo T_PTROBJ
 Sigar::NetStat T_PTROBJ
+Sigar::Tcp T_PTROBJ
+Sigar::NfsClientV2 T_PTROBJ
+Sigar::NfsServerV2 T_PTROBJ
+Sigar::NfsClientV3 T_PTROBJ
+Sigar::NfsServerV3 T_PTROBJ
 
 OUTPUT
 T_NETADDR

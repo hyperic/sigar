@@ -39,6 +39,11 @@ typedef sigar_net_info_t * Sigar__NetInfo;
 typedef sigar_dir_usage_t * Sigar__DirUsage;
 typedef sigar_sys_info_t * Sigar__SysInfo; 
 typedef sigar_net_stat_t * Sigar__NetStat; 
+typedef sigar_tcp_t * Sigar__Tcp;
+typedef sigar_nfs_client_v2_t * Sigar__NfsClientV2;
+typedef sigar_nfs_server_v2_t * Sigar__NfsServerV2;
+typedef sigar_nfs_client_v3_t * Sigar__NfsClientV3;
+typedef sigar_nfs_server_v3_t * Sigar__NfsServerV3;
 
 /* Perl < 5.6 */
 #ifndef aTHX_
