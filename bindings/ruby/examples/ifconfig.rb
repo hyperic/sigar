@@ -10,8 +10,18 @@ iflist.each do |ifname|
   hwaddr = ifconfig.hwaddr
 
   puts ifname + "\t" + "Link encap:" + encap + hwaddr
-  ptp = "" #XXX
-  bcast = "" #XXX
+
+  if (flags & Sigar::IFF_POINTOPOINT) != 0
+    ptp = "  P-t-P:" + ifconfig.destination
+  else
+    ptp = ""
+  end
+
+  if (flags & Sigar::IFF_BROADCAST) != 0
+    bcast = "  Bcast:" + ifconfig.broadcast
+  else
+    bcast = ""
+  end
 
   puts "\t" + "inet addr:" + ifconfig.address +
     ptp + bcast + " Mask:" + ifconfig.netmask
