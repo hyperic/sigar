@@ -1,9 +1,7 @@
 use ExtUtils::MakeMaker;
 
 use Config;
-use File::Copy 'cp';
 use lib qw(.. lib);
-use Sigar::ArchName ();
 use SigarWrapper ();
 
 my $installdir;
@@ -22,7 +20,11 @@ else {
 
 SigarWrapper::generate(Perl => '.');
 
-my $archname = Sigar::ArchName->get_name();
+my $archname = SigarWrapper::archname();
+my $libname = 'sigar';
+if ($archname) {
+    $libname .= '-' . $archname;
+}
 
 my $ccname = $Config{ccname};
 
@@ -34,7 +36,7 @@ my $define = {
 WriteMakefile(
     'NAME'		=> 'Sigar',
     'VERSION_FROM'	=> 'Sigar.pm',
-    'LIBS'		=> ["-L$installdir/lib -lsigar-$archname"],
+    'LIBS'		=> ["-L$installdir/lib -l$libname"],
     'INC'		=> "-I$installdir/include",
     'DEFINE'            => $define,
     'depend'            => { 'Sigar.c' => 'Sigar_generated.xs' },
