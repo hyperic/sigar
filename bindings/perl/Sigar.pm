@@ -44,48 +44,5 @@ sub IFF_ALLMULTI() { 0x200 }
 
 sub IFF_MULTICAST() { 0x800 }
 
-sub net_interface_flags_string {
-    my($flags) = @_;
-    my $retval = "";
-
-    if ($flags == 0) {
-        $retval .= "[NO FLAGS] ";
-    }
-    if ($flags & IFF_UP) {
-        $retval .= "UP ";
-    }
-    if ($flags & IFF_BROADCAST) {
-        $retval .= "BROADCAST ";
-    }
-    if ($flags & IFF_DEBUG) {
-        $retval .= "DEBUG ";
-    }
-    if ($flags & IFF_LOOPBACK) {
-        $retval .= "LOOPBACK ";
-    }
-    if ($flags & IFF_POINTOPOINT) {
-        $retval .= "POINTOPOINT ";
-    }
-    if ($flags & IFF_NOTRAILERS) {
-        $retval .= "NOTRAILERS ";
-    }
-    if ($flags & IFF_RUNNING) {
-        $retval .= "RUNNING ";
-    }
-    if ($flags & IFF_NOARP) {
-        $retval .= "NOARP ";
-    }
-    if ($flags & IFF_PROMISC) {
-        $retval .= "PROMISC ";
-    }
-    if ($flags & IFF_ALLMULTI) {
-        $retval .= "ALLMULTI ";
-    }
-    if ($flags & IFF_MULTICAST) {
-        $retval .= "MULTICAST ";
-    }
-
-    return $retval;
-}
 1;
 __END__

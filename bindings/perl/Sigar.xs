@@ -161,6 +161,19 @@ format_size(size)
     RETVAL
 
 char *
+net_interface_flags_string(size)
+    UV size
+
+    PREINIT:
+    char buffer[1024];
+
+    CODE:
+    RETVAL = sigar_net_interface_flags_to_string(size, buffer);
+
+    OUTPUT:
+    RETVAL
+
+char *
 sigar_fqdn(sigar)
     Sigar sigar
 
