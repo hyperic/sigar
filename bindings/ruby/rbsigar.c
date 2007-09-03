@@ -35,6 +35,12 @@ static VALUE rb_sigar_format_size(VALUE rclass, VALUE size)
     return rb_str_new2(sigar_format_size(NUM2LL(size), buffer));
 }
 
+static VALUE rb_sigar_net_interface_flags_to_s(VALUE rclass, VALUE flags)
+{
+    char buffer[1024];
+    return rb_str_new2(sigar_net_interface_flags_to_string(NUM2LL(flags), buffer));
+}
+
 static VALUE rb_sigar_net_address_to_string(sigar_net_address_t address)
 {
     char addr_str[SIGAR_INET6_ADDRSTRLEN];
@@ -159,6 +165,8 @@ void Init_rbsigar(void)
 
     rb_define_singleton_method(rclass, "new", rb_sigar_new, 0);
     rb_define_singleton_method(rclass, "format_size", rb_sigar_format_size, 1);
+    rb_define_singleton_method(rclass, "net_interface_flags_to_s",
+                               rb_sigar_net_interface_flags_to_s, 1);
 
     /* generated */
     rb_sigar_define_module_methods(rclass);

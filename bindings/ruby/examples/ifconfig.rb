@@ -17,7 +17,7 @@ iflist.each do |ifname|
     ptp + bcast + " Mask:" + ifconfig.netmask
 
   puts "\t" +
-    flags.to_s + #XXX
+    Sigar.net_interface_flags_to_s(flags) +
     " MTU:" + ifconfig.mtu.to_s +
     " Metric:" + ifconfig.metric.to_s
 
