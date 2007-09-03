@@ -536,6 +536,8 @@ SIGAR_DECLARE(int) sigar_net_route_list_destroy(sigar_t *sigar,
 #define SIGAR_IFF_MULTICAST   0x800
 #define SIGAR_IFF_SLAVE       0x1000
 
+#define SIGAR_NULL_HWADDR "00:00:00:00:00:00"
+
 typedef struct {
     char name[16];
     char type[64];
