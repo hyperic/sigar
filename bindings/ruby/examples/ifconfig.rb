@@ -7,7 +7,13 @@ iflist.each do |ifname|
   ifconfig = sigar.net_interface_config(ifname)
   flags = ifconfig.flags
   encap = ifconfig.type
+
   hwaddr = ifconfig.hwaddr
+  if hwaddr == Sigar::NULL_HWADDR
+    hwaddr = ""
+  else
+    hwaddr = " HWaddr " + hwaddr
+  end
 
   puts ifname + "\t" + "Link encap:" + encap + hwaddr
 
