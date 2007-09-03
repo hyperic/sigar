@@ -2078,6 +2078,121 @@ sub finish {
     $self->SUPER::finish;
 }
 
+package SigarWrapper::Ruby;
+
+our @ISA = qw(SigarWrapper);
+
+our %field_types = (
+    Long   => "rb_ll2inum",
+    Double => "rb_float_new",
+    Int    => "rb_int2inum",
+    Char   => "CHR2FIX",
+    String => "rb_str_new2",
+    NetAddress => "rb_sigar_net_address_to_string",
+);
+
+my $rx_file = 'rbsigar_generated.rx';
+
+sub sources {
+    return $rx_file;
+}
+
+sub start {
+    my $self = shift;
+    $self->SUPER::start;
+    $self->{cfh} = $self->create($rx_file);
+}
+
+sub add_method {
+    my($self, $class, $name) = @_;
+    push @{ $self->{methods}->{$class} }, $name;
+}
+
+sub generate_class {
+    my($self, $func) = @_;
+
+    my $fh = $self->{cfh};
+    my $class = $func->{name};
+    my $cname = $func->{cname};
+    my $ruby_class = "rb_cSigar$class";
+    my $proto = 'VALUE obj';
+    my $args = 'sigar';
+
+    if ($func->{num_args} == 1) {
+        my $arg_type;
+        if ($func->{is_proc}) {
+            $arg_type = 'NUM2UINT';
+        }
+        else {
+            $arg_type = 'StringValuePtr';
+        }
+        $proto .= ", VALUE $func->{arg}";
+        $args .= ", $arg_type($func->{arg})";
+    }
+
+    print $fh <<EOF if $func->{has_get};
+static VALUE $ruby_class;
+
+static VALUE rb_sigar_$cname($proto)
+{
+    int status;
+    sigar_t *sigar = rb_sigar_get(obj);
+    $func->{sigar_type} *RETVAL  = malloc(sizeof(*RETVAL));
+
+    if ((status = $func->{sigar_function}($args, RETVAL)) != SIGAR_OK) {
+        rb_raise(rb_eArgError, "%s", sigar_strerror(sigar, status));
+    }
+
+    return Data_Wrap_Struct($ruby_class, 0, rb_sigar_free, RETVAL);
+}
+EOF
+
+    for my $field (@{ $func->{fields} }) {
+        my $name = $field->{name};
+        my $type = $field_types{ $field->{type} };
+
+        $self->add_method($class, $name);
+
+        print $fh <<EOF;
+static VALUE rb_sigar_${class}_${name}(VALUE self)
+{
+    $func->{sigar_type} *$cname;
+    Data_Get_Struct(self, $func->{sigar_type}, $cname);
+    return $type($cname->$name);    
+}
+EOF
+    }
+}
+
+sub finish {
+    my $self = shift;
+
+    my $fh = $self->{cfh};
+
+    print $fh "static void rb_sigar_define_module_methods(VALUE rclass)\n{\n";
+
+    my $mappings = SigarWrapper::get_mappings();
+
+    for my $func (@$mappings) {
+        my $name = $func->{cname};
+        my $args = $func->{num_args};
+        next unless $func->{has_get};
+        print $fh qq{    rb_define_method(rclass, "$name", rb_sigar_$name, $args);\n};
+    }
+
+    for my $class (sort keys %{ $self->{methods} }) {
+        my $rclass = "rb_cSigar$class";
+        print $fh qq{    $rclass = rb_define_class_under(rclass, "$class", rb_cObject);\n};
+        for my $method (@{ $self->{methods}->{$class} }) {
+            print $fh qq{    rb_define_method($rclass, "$method", rb_sigar_${class}_$method, 0);\n};
+        }
+    }
+
+    print $fh "}\n";
+
+    $self->SUPER::finish;
+}
+
 #XXX not currently supporting netware
 package SigarWrapper::Netware;
 
