@@ -58,6 +58,37 @@ static VALUE rb_sigar_new_list(char *data, unsigned long number,
     return av;
 }
 
+static VALUE rb_sigar_new_strlist(char **data, unsigned long number)
+{
+    unsigned long i;
+    VALUE av = rb_ary_new2(number);
+
+    for (i=0; i<number; i++) {
+        rb_ary_push(av, rb_str_new2(data[i]));
+    }
+
+    return av;
+}
+
+static VALUE rb_sigar_net_interface_list(VALUE obj)
+{
+    int status;
+    sigar_t *sigar = rb_sigar_get(obj);
+    sigar_net_interface_list_t iflist;
+    VALUE RETVAL;
+
+    status = sigar_net_interface_list_get(sigar, &iflist);
+    if (status != SIGAR_OK) {
+        RB_SIGAR_CROAK;
+    }
+
+    RETVAL = rb_sigar_new_strlist(iflist.data, iflist.number);
+
+    sigar_net_interface_list_destroy(sigar, &iflist);
+
+    return RETVAL;
+}
+
 static VALUE rb_cSigarNetStat;
 
 static VALUE rb_sigar_net_stat(VALUE obj)
@@ -124,6 +155,7 @@ void Init_rbsigar(void)
     VALUE rclass = rb_define_class("Sigar", rb_cObject);
 
     rb_define_method(rclass, "file_system_list", rb_sigar_file_system_list, 0);
+    rb_define_method(rclass, "net_interface_list", rb_sigar_net_interface_list, 0);
 
     rb_define_singleton_method(rclass, "new", rb_sigar_new, 0);
     rb_define_singleton_method(rclass, "format_size", rb_sigar_format_size, 1);
