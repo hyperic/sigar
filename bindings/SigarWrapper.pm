@@ -20,7 +20,12 @@ sub archname {
         return 'x86-winnt';
     }
     elsif ($os =~ /linux/) {
-        return 'x86-linux';
+	if ($arch =~ /_64/) {
+	    return 'amd64-linux';
+	}
+	else {
+	    return 'x86-linux';
+	}
     }
     elsif ($os =~ /hpux/) {
         if ($vers =~ /11\./) {
