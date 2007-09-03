@@ -144,7 +144,11 @@
     <mkdir dir="${build}/src"/>
 
     <exec executable="${perl}" dir=".">
-      <arg value="src/jni/generate.pl"/>
+      <arg value="-Mlib=.."/>
+      <arg value="-MSigarWrapper"/>
+      <arg value="-e"/>
+      <arg value="generate"/>
+      <arg value="Java"/>
       <arg value="${build}/src"/>
     </exec>
 
