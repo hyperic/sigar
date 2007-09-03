@@ -29,6 +29,12 @@ static VALUE rb_sigar_new(VALUE module)
     return Data_Wrap_Struct(module, 0, rb_sigar_close, sigar);
 }
 
+static VALUE rb_sigar_format_size(VALUE rclass, VALUE size)
+{
+    char buffer[56];
+    return rb_str_new2(sigar_format_size(NUM2LL(size), buffer));
+}
+
 static VALUE rb_sigar_net_address_to_string(sigar_net_address_t address)
 {
     char addr_str[SIGAR_INET6_ADDRSTRLEN];
@@ -120,6 +126,7 @@ void Init_rbsigar(void)
     rb_define_method(rclass, "file_system_list", rb_sigar_file_system_list, 0);
 
     rb_define_singleton_method(rclass, "new", rb_sigar_new, 0);
+    rb_define_singleton_method(rclass, "format_size", rb_sigar_format_size, 1);
 
     /* generated */
     rb_sigar_define_module_methods(rclass);
