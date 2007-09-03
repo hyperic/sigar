@@ -177,6 +177,9 @@ static VALUE rb_sigar_net_route(VALUE obj)
 #define RB_SIGAR_CONST_INT(name) \
     rb_define_const(rclass, #name, INT2FIX(SIGAR_##name))
 
+#define RB_SIGAR_CONST_STR(name) \
+    rb_define_const(rclass, #name, rb_obj_freeze(rb_str_new2(SIGAR_##name)))
+
 static void Init_rbsigar_constants(VALUE rclass)
 {
     RB_SIGAR_CONST_INT(IFF_UP);
@@ -190,6 +193,8 @@ static void Init_rbsigar_constants(VALUE rclass)
     RB_SIGAR_CONST_INT(IFF_PROMISC);
     RB_SIGAR_CONST_INT(IFF_ALLMULTI);
     RB_SIGAR_CONST_INT(IFF_MULTICAST);
+
+    RB_SIGAR_CONST_STR(NULL_HWADDR);
 }
 
 void Init_rbsigar(void)
