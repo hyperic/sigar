@@ -38,7 +38,5 @@ else {
     XSLoader::load(__PACKAGE__, $VERSION);
 }
 
-sub NULL_HWADDR() { "00:00:00:00:00:00" }
-
 1;
 __END__

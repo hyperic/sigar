@@ -137,6 +137,9 @@ static int proc_env_getvalue(void *data,
 #define XS_SIGAR_CONST_IV(name) \
     (void)newCONSTSUB(stash, #name, newSViv(SIGAR_##name))
 
+#define XS_SIGAR_CONST_PV(name) \
+    (void)newCONSTSUB(stash, #name, newSVpv(SIGAR_##name, 0))
+
 static void boot_Sigar_constants(pTHX)
 {
     HV *stash = gv_stashpv("Sigar", TRUE);
@@ -151,6 +154,7 @@ static void boot_Sigar_constants(pTHX)
     XS_SIGAR_CONST_IV(IFF_PROMISC);
     XS_SIGAR_CONST_IV(IFF_ALLMULTI);
     XS_SIGAR_CONST_IV(IFF_MULTICAST);
+    XS_SIGAR_CONST_PV(NULL_HWADDR);
 }
 
 MODULE = Sigar   PACKAGE = Sigar
