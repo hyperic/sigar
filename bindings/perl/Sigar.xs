@@ -134,11 +134,33 @@ static int proc_env_getvalue(void *data,
     return SIGAR_OK;
 }
 
+#define XS_SIGAR_CONST_IV(name) \
+    (void)newCONSTSUB(stash, #name, newSViv(SIGAR_##name))
+
+static void boot_Sigar_constants(pTHX)
+{
+    HV *stash = gv_stashpv("Sigar", TRUE);
+    XS_SIGAR_CONST_IV(IFF_UP);
+    XS_SIGAR_CONST_IV(IFF_BROADCAST);
+    XS_SIGAR_CONST_IV(IFF_DEBUG);
+    XS_SIGAR_CONST_IV(IFF_LOOPBACK);
+    XS_SIGAR_CONST_IV(IFF_POINTOPOINT);
+    XS_SIGAR_CONST_IV(IFF_NOTRAILERS);
+    XS_SIGAR_CONST_IV(IFF_RUNNING);
+    XS_SIGAR_CONST_IV(IFF_NOARP);
+    XS_SIGAR_CONST_IV(IFF_PROMISC);
+    XS_SIGAR_CONST_IV(IFF_ALLMULTI);
+    XS_SIGAR_CONST_IV(IFF_MULTICAST);
+}
+
 MODULE = Sigar   PACKAGE = Sigar
 
 PROTOTYPES: disable
 
 INCLUDE: Sigar_generated.xs
+
+BOOT:
+    boot_Sigar_constants(aTHX);
 
 MODULE = Sigar   PACKAGE = Sigar   PREFIX = sigar_
 
