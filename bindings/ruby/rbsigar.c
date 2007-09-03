@@ -174,6 +174,24 @@ static VALUE rb_sigar_net_route(VALUE obj)
 
 #include "./rbsigar_generated.rx"
 
+#define RB_SIGAR_CONST_INT(name) \
+    rb_define_const(rclass, #name, INT2FIX(SIGAR_##name))
+
+static void Init_rbsigar_constants(VALUE rclass)
+{
+    RB_SIGAR_CONST_INT(IFF_UP);
+    RB_SIGAR_CONST_INT(IFF_BROADCAST);
+    RB_SIGAR_CONST_INT(IFF_DEBUG);
+    RB_SIGAR_CONST_INT(IFF_LOOPBACK);
+    RB_SIGAR_CONST_INT(IFF_POINTOPOINT);
+    RB_SIGAR_CONST_INT(IFF_NOTRAILERS);
+    RB_SIGAR_CONST_INT(IFF_RUNNING);
+    RB_SIGAR_CONST_INT(IFF_NOARP);
+    RB_SIGAR_CONST_INT(IFF_PROMISC);
+    RB_SIGAR_CONST_INT(IFF_ALLMULTI);
+    RB_SIGAR_CONST_INT(IFF_MULTICAST);
+}
+
 void Init_rbsigar(void)
 {
     VALUE rclass = rb_define_class("Sigar", rb_cObject);
@@ -185,6 +203,8 @@ void Init_rbsigar(void)
     rb_define_singleton_method(rclass, "format_size", rb_sigar_format_size, 1);
     rb_define_singleton_method(rclass, "net_interface_flags_to_s",
                                rb_sigar_net_interface_flags_to_s, 1);
+
+    Init_rbsigar_constants(rclass);
 
     /* generated */
     rb_sigar_define_module_methods(rclass);
