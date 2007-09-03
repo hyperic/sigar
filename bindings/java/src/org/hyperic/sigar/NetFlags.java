@@ -155,38 +155,7 @@ public class NetFlags {
      * @return String representation of network interface flags.
      * @see org.hyperic.sigar.NetInterfaceConfig#getFlags
      */
-    public static String getIfFlagsString(long flags) {
-        String retval = "";
-
-        if (flags == 0)
-            retval += "[NO FLAGS] ";
-        if ((flags & IFF_UP) > 0)
-            retval += "UP ";
-        if ((flags & IFF_BROADCAST) > 0)
-            retval += "BROADCAST ";
-        if ((flags & IFF_DEBUG) > 0)
-            retval += "DEBUG ";
-        if ((flags & IFF_LOOPBACK) > 0)
-            retval += "LOOPBACK ";
-        if ((flags & IFF_POINTOPOINT) > 0)
-            retval += "POINTOPOINT ";
-        if ((flags & IFF_NOTRAILERS) > 0)
-            retval += "NOTRAILERS ";
-        if ((flags & IFF_RUNNING) > 0)
-            retval += "RUNNING ";
-        if ((flags & IFF_NOARP) > 0)
-            retval += "NOARP ";
-        if ((flags & IFF_PROMISC) > 0)
-            retval += "PROMISC ";
-        if ((flags & IFF_ALLMULTI) > 0)
-            retval += "ALLMULTI ";
-        if ((flags & IFF_SLAVE) > 0)
-            retval += "SLAVE ";
-        if ((flags & IFF_MULTICAST) > 0)
-            retval += "MULTICAST ";
-
-        return retval;
-    }
+    public static native String getIfFlagsString(long flags);
 
     public static boolean isAnyAddress(String address) {
         return

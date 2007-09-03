@@ -480,6 +480,8 @@ SIGAR_DECLARE(const char *)sigar_net_connection_state_get(int state)
 
 SIGAR_DECLARE(char *) sigar_net_interface_flags_to_string(sigar_uint64_t flags, char *buf)
 {
+    *buf = '\0';
+
     if (flags == 0) {
         strcat(buf, "[NO FLAGS] ");
     }

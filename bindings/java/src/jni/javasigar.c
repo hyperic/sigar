@@ -827,6 +827,14 @@ JNIEXPORT jobjectArray SIGAR_JNIx(getNetRouteList)
     return routearray;
 }
 
+JNIEXPORT jstring SIGAR_JNI(NetFlags_getIfFlagsString)
+(JNIEnv *env, jclass cls, jlong flags)
+{
+    char buf[1024];
+    sigar_net_interface_flags_to_string(flags, buf);
+    return JENV->NewStringUTF(env, buf);
+}
+
 JNIEXPORT jobjectArray SIGAR_JNIx(getNetConnectionList)
 (JNIEnv *env, jobject sigar_obj, jint flags)
 {
