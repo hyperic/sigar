@@ -2,8 +2,9 @@ use ExtUtils::MakeMaker;
 
 use Config;
 use File::Copy 'cp';
-use lib qw(lib);
+use lib qw(.. lib);
 use Sigar::ArchName ();
+use SigarWrapper ();
 
 my $installdir;
 if ($ARGV[0]) {
@@ -19,15 +20,7 @@ else {
     }
 }
 
-my $generated_xs = "Sigar_generated.xs";
-my $build_xs = "../java/build/src/$generated_xs";
-if (-e $build_xs) {
-    #XXX should be done in the generated Makefile
-    if ((stat $generated_xs)[9] < (stat $build_xs)[9]) {
-        print "Updating $generated_xs from $build_xs\n";
-        cp $build_xs, $generated_xs;
-    }
-}
+SigarWrapper::generate(Perl => '.');
 
 my $archname = Sigar::ArchName->get_name();
 
