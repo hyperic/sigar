@@ -40,5 +40,7 @@ SIGAR_DECLARE(const char *)sigar_net_connection_type_get(int type);
 
 SIGAR_DECLARE(const char *)sigar_net_connection_state_get(int state);
 
+SIGAR_DECLARE(char *) sigar_net_interface_flags_to_string(sigar_uint64_t flags, char *buf);
+
 #endif
 

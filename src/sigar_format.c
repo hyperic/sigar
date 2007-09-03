@@ -478,3 +478,44 @@ SIGAR_DECLARE(const char *)sigar_net_connection_state_get(int state)
     }
 }
 
+SIGAR_DECLARE(char *) sigar_net_interface_flags_to_string(sigar_uint64_t flags, char *buf)
+{
+    if (flags == 0) {
+        strcat(buf, "[NO FLAGS] ");
+    }
+    if (flags & SIGAR_IFF_UP) {
+        strcat(buf, "UP ");
+    }
+    if (flags & SIGAR_IFF_BROADCAST) {
+        strcat(buf, "BROADCAST ");
+    }
+    if (flags & SIGAR_IFF_DEBUG) {
+        strcat(buf, "DEBUG ");
+    }
+    if (flags & SIGAR_IFF_LOOPBACK) {
+        strcat(buf, "LOOPBACK ");
+    }
+    if (flags & SIGAR_IFF_POINTOPOINT) {
+        strcat(buf, "POINTOPOINT ");
+    }
+    if (flags & SIGAR_IFF_NOTRAILERS) {
+        strcat(buf, "NOTRAILERS ");
+    }
+    if (flags & SIGAR_IFF_RUNNING) {
+        strcat(buf, "RUNNING ");
+    }
+    if (flags & SIGAR_IFF_NOARP) {
+        strcat(buf, "NOARP ");
+    }
+    if (flags & SIGAR_IFF_PROMISC) {
+        strcat(buf, "PROMISC ");
+    }
+    if (flags & SIGAR_IFF_ALLMULTI) {
+        strcat(buf, "ALLMULTI ");
+    }
+    if (flags & SIGAR_IFF_MULTICAST) {
+        strcat(buf, "MULTICAST ");
+    }
+
+    return buf;
+}
