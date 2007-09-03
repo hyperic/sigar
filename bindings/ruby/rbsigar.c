@@ -115,8 +115,7 @@ static VALUE rb_sigar_net_route(VALUE obj)
 
 void Init_rbsigar(void)
 {
-    VALUE module = rb_define_module("Hyperic");
-    VALUE rclass = rb_define_class_under(module, "Sigar", rb_cObject);
+    VALUE rclass = rb_define_class("Sigar", rb_cObject);
 
     rb_define_method(rclass, "file_system_list", rb_sigar_file_system_list, 0);
 
