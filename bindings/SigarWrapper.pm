@@ -2245,6 +2245,171 @@ sub finish {
     $self->SUPER::finish;
 }
 
+package SigarWrapper::PHP;
+
+our @ISA = qw(SigarWrapper);
+
+our %field_types = (
+    Long   => "RETURN_LONG",
+    Double => "RETURN_DOUBLE",
+    Int    => "RETURN_LONG",
+    Char   => "RETURN_LONG",
+    String => "PHP_SIGAR_RETURN_STRING",
+    NetAddress => "PHP_SIGAR_RETURN_NETADDR",
+);
+
+my $php_file = 'php_sigar_generated.c';
+
+sub sources {
+    return $php_file;
+}
+
+sub start {
+    my $self = shift;
+    $self->SUPER::start;
+    $self->{cfh} = $self->create($php_file);
+}
+
+sub generate_class {
+    my($self, $func) = @_;
+
+    my $cfh = $self->{cfh};
+    my $class = $func->{name};
+    my $cname = $func->{cname};
+    my $php_class = "Sigar::$class";
+    my $parse_args = "";
+    my $vars = "";
+    my $args = 'sigar';
+    my $arginfo = $args;
+
+    if ($func->{num_args} == 1) {
+        if ($func->{is_proc}) {
+            $parse_args = 'zSIGAR_PARSE_PID;';
+            $arginfo .= '_pid';
+            $vars = "long $func->{arg};\n";
+        }
+        else {
+            $parse_args .= 'zSIGAR_PARSE_NAME;';
+            $arginfo .= '_name';
+            $vars = "char *$func->{arg}; int $func->{arg}_len;\n";
+        }
+        $args .= ", $func->{arg}";
+    }
+
+    my $prefix = "php_$func->{sigar_prefix}_";
+    my $functions = $prefix . 'functions';
+    my $handlers = $prefix . 'object_handlers';
+    my $init = $prefix . 'init';
+
+    my $ctor = $prefix . 'new';
+
+    my(@functions);
+
+    for my $field (@{ $func->{fields} }) {
+        my $name = $field->{name};
+        my $type = $field_types{ $field->{type} };
+        my $method = $prefix . $name;
+
+        push @functions, { name => $name, me => $method };
+        print $cfh <<EOF;
+static PHP_FUNCTION($method)
+{
+    $func->{sigar_type} *$cname = ($func->{sigar_type} *)zSIGAR_OBJ;
+    $type($cname->$name);
+}
+EOF
+    }
+
+    print $cfh <<EOF;
+static zend_object_handlers $handlers;
+
+static zend_object_value $ctor(zend_class_entry *class_type TSRMLS_DC)
+{
+    return php_sigar_ctor(php_sigar_obj_dtor,
+                          &$handlers,
+                          NULL,
+                          class_type);
+}
+
+static zend_function_entry ${functions}[] = {
+EOF
+
+    for my $func (@functions) {
+        print $cfh "    PHP_ME_MAPPING($func->{name}, $func->{me}, NULL)\n";
+    }
+
+    print $cfh <<EOF;
+    {NULL, NULL, NULL}
+};
+EOF
+
+    print $cfh <<EOF;
+static void $init(void)
+{
+    zend_class_entry ce;
+
+    PHP_SIGAR_INIT_HANDLERS($handlers);
+    INIT_CLASS_ENTRY(ce, "$php_class", $functions);
+    ce.create_object = $ctor;
+    zend_register_internal_class(&ce TSRMLS_CC);
+}
+EOF
+
+    print $cfh <<EOF if $func->{has_get};
+static PHP_FUNCTION($func->{sigar_function})
+{
+    int status;
+    zSIGAR;
+
+    $func->{sigar_type} *RETVAL = emalloc(sizeof(*RETVAL));
+    $vars
+    $parse_args
+
+    if ((status = $func->{sigar_function}($args, RETVAL)) != SIGAR_OK) {
+        efree(RETVAL);
+        RETURN_FALSE;
+    }
+    else {
+        php_sigar_obj_new("$php_class", return_value)->ptr = RETVAL;
+    }
+}
+EOF
+}
+
+sub finish {
+    my $self = shift;
+
+    my $mappings = $self->get_mappings;
+    my $cfh = $self->{cfh};
+    my $nl = '\\' . "\n";
+
+    print $cfh "#define PHP_SIGAR_FUNCTIONS $nl";
+    for my $func (@$mappings) {
+        next unless $func->{has_get};
+        #XXX PHP_ME_MAPPING has another arg in 5.2
+        print $cfh "    PHP_ME_MAPPING($func->{cname}, $func->{sigar_function}, NULL)";
+        if ($func == $mappings->[-1]) {
+            print $cfh "\n";
+        }
+        else {
+            print $cfh $nl;
+        }
+    }
+
+    print $cfh "#define PHP_SIGAR_INIT $nl";
+    for my $func (@$mappings) {
+        print $cfh "    php_$func->{sigar_prefix}_init()";
+        if ($func == $mappings->[-1]) {
+            print $cfh "\n";
+        }
+        else {
+            print $cfh ";$nl";
+        }
+    }
+
+    $self->SUPER::finish;
+}
+
 #XXX not currently supporting netware
 package SigarWrapper::Netware;
 
