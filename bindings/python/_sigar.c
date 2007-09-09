@@ -104,7 +104,15 @@ static int pysigar_parse_uint64(PyObject *args, sigar_uint64_t *val)
         return !SIGAR_OK;
     }
 
-    *val = PyInt_AsUnsignedLongLongMask(obj);
+    if (PyInt_Check(obj)) {
+        *val = PyInt_AsUnsignedLongLongMask(obj);
+    }
+    else if (PyLong_Check(obj)) {
+        *val = PyLong_AsUnsignedLongLong(obj);
+    }
+    else {
+        return !SIGAR_OK;
+    }
     return SIGAR_OK;
 }
 
