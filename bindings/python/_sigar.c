@@ -140,9 +140,10 @@ static PyObject *pysigar_new_list(char *data, unsigned long number,
 
     for (i=0; i<number; i++, data += size) {
         void *ent = malloc(size);
-        PyObject *obj = PyType_GenericAlloc(type, 0);
+        PyObject *self = PyType_GenericAlloc(type, 0);
         memcpy(ent, data, size);
-        PyTuple_SET_ITEM(av, i, obj);
+        PySIGAR_OBJ->ptr = ent;
+        PyTuple_SET_ITEM(av, i, self);
     }
 
     return av;
