@@ -2192,7 +2192,9 @@ static VALUE rb_sigar_$cname($proto)
     $func->{sigar_type} *RETVAL  = malloc(sizeof(*RETVAL));
 
     if ((status = $func->{sigar_function}($args, RETVAL)) != SIGAR_OK) {
+        free(RETVAL);
         rb_raise(rb_eArgError, "%s", sigar_strerror(sigar, status));
+        return Qnil;
     }
 
     return Data_Wrap_Struct($ruby_class, 0, rb_sigar_free, RETVAL);
