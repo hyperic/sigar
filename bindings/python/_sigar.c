@@ -116,6 +116,42 @@ static int pysigar_parse_uint64(PyObject *args, sigar_uint64_t *val)
     return SIGAR_OK;
 }
 
+static PyObject *pysigar_new_strlist(char **data, unsigned long number)
+{
+    unsigned long i;
+    PyObject *av;
+
+    if (!(av = PyTuple_New(number))) {
+        return NULL;
+    }
+
+    for (i=0; i<number; i++) {
+        PyTuple_SET_ITEM(av, i, PyString_FromString(data[i]));
+    }
+
+    return av;
+}
+
+static PyObject *pysigar_net_interface_list(PyObject *self, PyObject *args)
+{
+    int status;
+    sigar_t *sigar = PySIGAR;
+    sigar_net_interface_list_t iflist;
+    PyObject *RETVAL;
+
+    status = sigar_net_interface_list_get(sigar, &iflist);
+    if (status != SIGAR_OK) {
+        PySigar_Croak();
+        return NULL;
+    }
+
+    RETVAL = pysigar_new_strlist(iflist.data, iflist.number);
+
+    sigar_net_interface_list_destroy(sigar, &iflist);
+
+    return RETVAL;
+}
+
 static PyObject *pysigar_format_size(PyObject *self, PyObject *args)
 {
     char buffer[56];
@@ -131,6 +167,7 @@ static PyObject *pysigar_format_size(PyObject *self, PyObject *args)
 
 static PyMethodDef pysigar_methods[] = {
     { "close", pysigar_close, METH_NOARGS, NULL },
+    { "net_interface_list", pysigar_net_interface_list, METH_NOARGS, NULL },
     PY_SIGAR_METHODS
     {NULL}
 };
