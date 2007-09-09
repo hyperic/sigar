@@ -132,6 +132,45 @@ static PyObject *pysigar_new_strlist(char **data, unsigned long number)
     return av;
 }
 
+static PyObject *pysigar_new_list(char *data, unsigned long number,
+                                  int size, PyTypeObject *type)
+{
+    unsigned long i;
+    PyObject *av = PyTuple_New(number);
+
+    for (i=0; i<number; i++, data += size) {
+        void *ent = malloc(size);
+        PyObject *obj = PyType_GenericAlloc(type, 0);
+        memcpy(ent, data, size);
+        PyTuple_SET_ITEM(av, i, obj);
+    }
+
+    return av;
+}
+
+static PyObject *pysigar_file_system_list(PyObject *self, PyObject *args)
+{
+    int status;
+    sigar_t *sigar = PySIGAR;
+    sigar_file_system_list_t fslist;
+    PyObject *RETVAL;
+
+    status = sigar_file_system_list_get(sigar, &fslist);
+    if (status != SIGAR_OK) {
+        PySigar_Croak();
+        return NULL;
+    }
+
+    RETVAL = pysigar_new_list((char *)&fslist.data[0],
+                              fslist.number,
+                              sizeof(*fslist.data),
+                              &pysigar_PySigarFileSystemType);
+
+    sigar_file_system_list_destroy(sigar, &fslist);
+
+    return RETVAL;
+}
+
 static PyObject *pysigar_net_interface_list(PyObject *self, PyObject *args)
 {
     int status;
@@ -168,6 +207,7 @@ static PyObject *pysigar_format_size(PyObject *self, PyObject *args)
 static PyMethodDef pysigar_methods[] = {
     { "close", pysigar_close, METH_NOARGS, NULL },
     { "net_interface_list", pysigar_net_interface_list, METH_NOARGS, NULL },
+    { "file_system_list", pysigar_file_system_list, METH_NOARGS, NULL },
     PY_SIGAR_METHODS
     {NULL}
 };
