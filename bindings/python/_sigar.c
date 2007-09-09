@@ -96,6 +96,31 @@ static PyObject *pysigar_close(PyObject *self, PyObject *args)
     return Py_None;
 }
 
+static int pysigar_parse_uint64(PyObject *args, sigar_uint64_t *val)
+{
+    PyObject *obj;
+
+    if (!PyArg_ParseTuple(args, "O", &obj)) {
+        return !SIGAR_OK;
+    }
+
+    *val = PyInt_AsUnsignedLongLongMask(obj);
+    return SIGAR_OK;
+}
+
+static PyObject *pysigar_format_size(PyObject *self, PyObject *args)
+{
+    char buffer[56];
+    sigar_uint64_t size;
+
+    if (pysigar_parse_uint64(args, &size) == SIGAR_OK) {
+        return PyString_FromString(sigar_format_size(size, buffer));
+    }
+    else {
+        return NULL;
+    }
+}
+
 static PyMethodDef pysigar_methods[] = {
     { "close", pysigar_close, METH_NOARGS, NULL },
     PY_SIGAR_METHODS
@@ -146,6 +171,7 @@ static PyTypeObject pysigar_PySigarType = {
 
 static PyMethodDef pysigar_module_methods[] = {
     { "open", pysigar_open, METH_NOARGS, NULL },
+    { "format_size", pysigar_format_size, METH_VARARGS, NULL },
     {NULL}
 };
 
