@@ -14,4 +14,5 @@ _sigar = Extension(
     undef_macros=[])
 
 setup(name="pysigar", version="0.1",
+      py_modules = ['sigar'],
       ext_modules=[_sigar])
