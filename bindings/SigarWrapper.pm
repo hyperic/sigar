@@ -2410,6 +2410,193 @@ sub finish {
     $self->SUPER::finish;
 }
 
+package SigarWrapper::Python;
+
+our @ISA = qw(SigarWrapper);
+
+our %field_types = (
+    Long   => "PyLong_FromUnsignedLongLong",
+    Double => "PyFloat_FromDouble",
+    Int    => "PyInt_FromLong",
+    Char   => "PySigarInt_FromChar",
+    String => "PyString_FromString",
+    NetAddress => "PySigarString_FromNetAddr",
+);
+
+my $c_file = '_sigar_generated.c';
+
+sub sources {
+    return $c_file;
+}
+
+sub start {
+    my $self = shift;
+    $self->SUPER::start;
+    $self->{cfh} = $self->create($c_file);
+}
+
+sub pyclass {
+    my $class = shift;
+    return "Sigar.$class";
+}
+
+sub pytype {
+    my $class = shift;
+    return 'pysigar_PySigar' . $class . 'Type';
+}
+
+sub generate_class {
+    my($self, $func) = @_;
+
+    my $cfh = $self->{cfh};
+    my $pyclass = pyclass($func->{name});
+    my $pytype = pytype($func->{name});
+    my $cname = $func->{cname};
+    my $parse_args = "";
+    my $vars = "";
+    my $args = 'sigar';
+
+    if ($func->{num_args} == 1) {
+        if ($func->{is_proc}) {
+            $parse_args = 'PySigar_ParsePID;';
+            $vars = "long $func->{arg};\n";
+        }
+        else {
+            $parse_args .= 'PySigar_ParseName;';
+            $vars = "char *$func->{arg}; int $func->{arg}_len;\n";
+        }
+        $args .= ", $func->{arg}";
+    }
+
+    my $prefix = "py$func->{sigar_prefix}_";
+    my $methods = $prefix . 'methods';
+    my $dtor = 'pysigar_free';
+
+    for my $field (@{ $func->{fields} }) {
+        my $name = $field->{name};
+        my $type = $field_types{ $field->{type} };
+        my $method = $prefix . $name;
+
+        print $cfh <<EOF;
+static PyObject *$method(PyObject *self, PyObject *args)
+{
+    $func->{sigar_type} *$cname = ($func->{sigar_type} *)PySIGAR_OBJ->ptr;
+    return $type($cname->$name);
+}
+EOF
+    }
+
+    print $cfh "static PyMethodDef $methods [] = {\n";
+    for my $field (@{ $func->{fields} }) {
+        my $name = $field->{name};
+        print $cfh qq(    { "$name", ${prefix}$name, METH_NOARGS, "$name" },\n);
+    }
+    print $cfh "    {NULL}\n};\n";
+
+    print $cfh <<EOF;
+static PyTypeObject $pytype = {
+    PyObject_HEAD_INIT(NULL)
+    0,                         /*ob_size*/
+    "$pyclass",                /*tp_name*/
+    sizeof(PySigarObject),     /*tp_basicsize*/
+    0,                         /*tp_itemsize*/
+    pysigar_free,              /*tp_dealloc*/
+    0,                         /*tp_print*/
+    0,                         /*tp_getattr*/
+    0,                         /*tp_setattr*/
+    0,                         /*tp_compare*/
+    0,                         /*tp_repr*/
+    0,                         /*tp_as_number*/
+    0,                         /*tp_as_sequence*/
+    0,                         /*tp_as_mapping*/
+    0,                         /*tp_hash */
+    0,                         /*tp_call*/
+    0,                         /*tp_str*/
+    0,                         /*tp_getattro*/
+    0,                         /*tp_setattro*/
+    0,                         /*tp_as_buffer*/
+    PySigar_TPFLAGS,           /*tp_flags*/
+    0,                         /*tp_doc*/
+    0,                         /*tp_traverse*/
+    0,                         /*tp_clear*/
+    0,                         /*tp_richcompare*/
+    0,                         /*tp_weaklistoffset*/
+    0,                         /*tp_iter*/
+    0,                         /*tp_iternext*/
+    $methods,                  /*tp_methods*/
+    0,                         /*tp_members*/
+    0,                         /*tp_getset*/
+    0,                         /*tp_base*/
+    0,                         /*tp_dict*/
+    0,                         /*tp_descr_get*/
+    0,                         /*tp_descr_set*/
+    0,                         /*tp_dictoffset*/
+    0,                         /*tp_init*/
+    0,                         /*tp_alloc*/
+    0                          /*tp_new*/
+};
+EOF
+
+    print $cfh <<EOF if $func->{has_get};
+static PyObject *py$func->{sigar_function}(PyObject *self, PyObject *args)
+{
+    int status;
+    sigar_t *sigar = PySIGAR;
+    $func->{sigar_type} *RETVAL = malloc(sizeof(*RETVAL));
+    $vars
+    $parse_args
+
+    if ((status = $func->{sigar_function}($args, RETVAL)) != SIGAR_OK) {
+        free(RETVAL);
+        PySigar_Croak();
+        return NULL;
+    }
+    else {
+        PyObject *self = PySigar_new($pytype);
+        PySIGAR_OBJ->ptr = RETVAL;
+        return self;
+    }
+}
+EOF
+}
+
+sub finish {
+    my $self = shift;
+
+    my $mappings = $self->get_mappings;
+    my $cfh = $self->{cfh};
+    my $nl = '\\' . "\n";
+
+    print $cfh "#define PY_SIGAR_METHODS $nl";
+    for my $func (@$mappings) {
+        next unless $func->{has_get};
+        my $arginfo = $func->{num_args} ? 'METH_VARARGS' : 'METH_NOARGS';
+        print $cfh qq(    {"$func->{cname}", py$func->{sigar_function}, $arginfo, NULL},);
+        if ($func == $mappings->[-1]) {
+            print $cfh "\n";
+        }
+        else {
+            print $cfh $nl;
+        }
+    }
+
+    print $cfh "#define PY_SIGAR_ADD_TYPES $nl";
+    for my $func (@$mappings) {
+        next unless $func->{has_get};
+        my $pyclass = pyclass($func->{name});
+        my $pytype = pytype($func->{name});
+        print $cfh qq{    PySigar_AddType("$pyclass", $pytype)};
+        if ($func == $mappings->[-1]) {
+            print $cfh "\n";
+        }
+        else {
+            print $cfh ";$nl";
+        }
+    }
+
+    $self->SUPER::finish;
+}
+
 #XXX not currently supporting netware
 package SigarWrapper::Netware;
 
