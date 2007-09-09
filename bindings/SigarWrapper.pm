@@ -2584,7 +2584,6 @@ sub finish {
 
     print $cfh "#define PY_SIGAR_ADD_TYPES $nl";
     for my $func (@$mappings) {
-        next unless $func->{has_get};
         my $pyclass = pyclass($func->{name});
         my $pytype = pytype($func->{name});
         print $cfh qq{    PySigar_AddType("$pyclass", $pytype)};
