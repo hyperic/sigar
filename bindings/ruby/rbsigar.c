@@ -59,12 +59,14 @@ static VALUE rb_sigar_net_interface_flags_to_s(VALUE rclass, VALUE flags)
     return rb_str_new2(sigar_net_interface_flags_to_string(NUM2LL(flags), buffer));
 }
 
-static VALUE rb_sigar_net_address_to_string(sigar_net_address_t address)
+static VALUE rb_sigar_net_address_to_string(sigar_net_address_t *address)
 {
     char addr_str[SIGAR_INET6_ADDRSTRLEN];
-    sigar_net_address_to_string(NULL, &address, addr_str);
+    sigar_net_address_to_string(NULL, address, addr_str);
     return rb_str_new2(addr_str);
 }
+
+#define rb_sigar_net_address_to_s(a) rb_sigar_net_address_to_string(&a) 
 
 static VALUE rb_sigar_new_list(char *data, unsigned long number,
                                int size, VALUE rclass)

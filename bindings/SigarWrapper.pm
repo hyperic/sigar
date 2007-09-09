@@ -2140,7 +2140,7 @@ our %field_types = (
     Int    => "rb_int2inum",
     Char   => "CHR2FIX",
     String => "rb_str_new2",
-    NetAddress => "rb_sigar_net_address_to_string",
+    NetAddress => "rb_sigar_net_address_to_s",
 );
 
 my $rx_file = 'rbsigar_generated.rx';
