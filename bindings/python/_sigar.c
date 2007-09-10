@@ -261,6 +261,33 @@ static PyMethodDef pysigar_module_methods[] = {
     {NULL}
 };
 
+#define PY_SIGAR_CONST_INT(name) \
+    PyDict_SetItemString(dict, #name, o=PyInt_FromLong(SIGAR_##name)); Py_DECREF(o)
+
+#define PY_SIGAR_CONST_STR(name) \
+    PyDict_SetItemString(dict, #name, o=PyString_FromString(SIGAR_##name)); Py_DECREF(o)
+
+static void init_pysigar_constants(PyObject *dict)
+{
+    PyObject *o;
+
+    PY_SIGAR_CONST_INT(FIELD_NOTIMPL);
+
+    PY_SIGAR_CONST_INT(IFF_UP);
+    PY_SIGAR_CONST_INT(IFF_BROADCAST);
+    PY_SIGAR_CONST_INT(IFF_DEBUG);
+    PY_SIGAR_CONST_INT(IFF_LOOPBACK);
+    PY_SIGAR_CONST_INT(IFF_POINTOPOINT);
+    PY_SIGAR_CONST_INT(IFF_NOTRAILERS);
+    PY_SIGAR_CONST_INT(IFF_RUNNING);
+    PY_SIGAR_CONST_INT(IFF_NOARP);
+    PY_SIGAR_CONST_INT(IFF_PROMISC);
+    PY_SIGAR_CONST_INT(IFF_ALLMULTI);
+    PY_SIGAR_CONST_INT(IFF_MULTICAST);
+
+    PY_SIGAR_CONST_STR(NULL_HWADDR);
+}
+
 PyMODINIT_FUNC
 init_sigar(void) 
 {
@@ -270,4 +297,6 @@ init_sigar(void)
     PySigar_AddType("Sigar", pysigar_PySigarType);
 
     PY_SIGAR_ADD_TYPES;
+
+    init_pysigar_constants(PyModule_GetDict(module));
 }
