@@ -21,7 +21,7 @@ package org.hyperic.sigar.ptql;
 /**
  * @deprecated
  */
-public class QueryLoadException extends Exception {
+public class QueryLoadException extends RuntimeException {
 
     public QueryLoadException() {
     }
