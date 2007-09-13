@@ -18,7 +18,10 @@
 
 package org.hyperic.sigar.test;
 
+import org.hyperic.sigar.CurrentProcessSummary;
 import org.hyperic.sigar.Sigar;
+import org.hyperic.sigar.SigarProxy;
+import org.hyperic.sigar.SigarProxyCache;
 import org.hyperic.sigar.ProcStat;
 
 public class TestProcStat extends SigarTestCase {
@@ -40,5 +43,8 @@ public class TestProcStat extends SigarTestCase {
         //if this is a real problem, can just change to:
         //assertTrue(stat.getTotal() > 1);
         assertTrue(pids.length == stat.getTotal());
+        traceln(stat.toString());
+        SigarProxy proxy = SigarProxyCache.newInstance(getSigar());
+        traceln(CurrentProcessSummary.get(proxy).toString());
     }
 }
