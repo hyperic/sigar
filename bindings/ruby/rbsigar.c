@@ -125,9 +125,28 @@ static VALUE rb_sigar_net_stat(VALUE obj)
 
 static VALUE rb_cSigarNetConnection;
 
-static VALUE rb_sigar_net_connection(VALUE obj)
+static VALUE rb_sigar_net_connection_list(VALUE obj, VALUE flags)
 {
-    return obj; /*XXX*/
+    int status;
+    unsigned int i;
+    sigar_t *sigar = rb_sigar_get(obj);
+    sigar_net_connection_list_t connlist;
+    VALUE RETVAL;
+
+    status = sigar_net_connection_list_get(sigar, &connlist, NUM2UINT(flags));
+
+    if (status != SIGAR_OK) {
+        RB_SIGAR_CROAK;
+    }
+
+    RETVAL = rb_sigar_new_list((char *)&connlist.data[0],
+                               connlist.number,
+                               sizeof(*connlist.data),
+                               rb_cSigarNetConnection);
+
+    sigar_net_connection_list_destroy(sigar, &connlist);
+
+    return RETVAL;
 }
 
 static VALUE rb_cSigarCpuInfo;
@@ -280,6 +299,13 @@ static void Init_rbsigar_constants(VALUE rclass)
     RB_SIGAR_CONST_INT(IFF_ALLMULTI);
     RB_SIGAR_CONST_INT(IFF_MULTICAST);
 
+    RB_SIGAR_CONST_INT(NETCONN_CLIENT);
+    RB_SIGAR_CONST_INT(NETCONN_SERVER);
+    RB_SIGAR_CONST_INT(NETCONN_TCP);
+    RB_SIGAR_CONST_INT(NETCONN_UDP);
+    RB_SIGAR_CONST_INT(NETCONN_RAW);
+    RB_SIGAR_CONST_INT(NETCONN_UNIX);
+
     RB_SIGAR_CONST_STR(NULL_HWADDR);
 }
 
@@ -289,6 +315,7 @@ void Init_rbsigar(void)
 
     rb_define_method(rclass, "cpu_info_list", rb_sigar_cpu_info_list, 0);
     rb_define_method(rclass, "file_system_list", rb_sigar_file_system_list, 0);
+    rb_define_method(rclass, "net_connection_list", rb_sigar_net_connection_list, 1);
     rb_define_method(rclass, "net_interface_list", rb_sigar_net_interface_list, 0);
     rb_define_method(rclass, "who_list", rb_sigar_who_list, 0);
     rb_define_method(rclass, "proc_args", rb_sigar_proc_args, 1);
