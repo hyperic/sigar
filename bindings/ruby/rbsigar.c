@@ -179,9 +179,26 @@ static VALUE rb_sigar_file_system_list(VALUE obj)
 
 static VALUE rb_cSigarWho;
 
-static VALUE rb_sigar_who(VALUE obj)
+static VALUE rb_sigar_who_list(VALUE obj)
 {
-    return obj; /*XXX*/
+    int status;
+    sigar_t *sigar = rb_sigar_get(obj);
+    sigar_who_list_t list;
+    VALUE RETVAL;
+
+    status = sigar_who_list_get(sigar, &list);
+    if (status != SIGAR_OK) {
+        RB_SIGAR_CROAK;
+    }
+
+    RETVAL = rb_sigar_new_list((char *)&list.data[0],
+                               list.number,
+                               sizeof(*list.data),
+                               rb_cSigarWho);
+
+    sigar_who_list_destroy(sigar, &list);
+
+    return RETVAL;
 }
 
 static VALUE rb_cSigarNetRoute;
@@ -223,6 +240,7 @@ void Init_rbsigar(void)
     rb_define_method(rclass, "cpu_info_list", rb_sigar_cpu_info_list, 0);
     rb_define_method(rclass, "file_system_list", rb_sigar_file_system_list, 0);
     rb_define_method(rclass, "net_interface_list", rb_sigar_net_interface_list, 0);
+    rb_define_method(rclass, "who_list", rb_sigar_who_list, 0);
 
     rb_define_singleton_method(rclass, "new", rb_sigar_new, 0);
     rb_define_singleton_method(rclass, "format_size", rb_sigar_format_size, 1);
