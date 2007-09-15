@@ -131,9 +131,26 @@ static VALUE rb_sigar_net_connection(VALUE obj)
 
 static VALUE rb_cSigarCpuInfo;
 
-static VALUE rb_sigar_cpu_info(VALUE obj)
+static VALUE rb_sigar_cpu_info_list(VALUE obj)
 {
-    return obj; /*XXX*/
+    int status;
+    sigar_t *sigar = rb_sigar_get(obj);
+    sigar_cpu_info_list_t cpu_infos;
+    VALUE RETVAL;
+
+    status = sigar_cpu_info_list_get(sigar, &cpu_infos);
+    if (status != SIGAR_OK) {
+        RB_SIGAR_CROAK;
+    }
+
+    RETVAL = rb_sigar_new_list((char *)&cpu_infos.data[0],
+                               cpu_infos.number,
+                               sizeof(*cpu_infos.data),
+                               rb_cSigarCpuInfo);
+
+    sigar_cpu_info_list_destroy(sigar, &cpu_infos);
+
+    return RETVAL;
 }
 
 static VALUE rb_cSigarFileSystem;
@@ -203,6 +220,7 @@ void Init_rbsigar(void)
 {
     VALUE rclass = rb_define_class("Sigar", rb_cObject);
 
+    rb_define_method(rclass, "cpu_info_list", rb_sigar_cpu_info_list, 0);
     rb_define_method(rclass, "file_system_list", rb_sigar_file_system_list, 0);
     rb_define_method(rclass, "net_interface_list", rb_sigar_net_interface_list, 0);
 
