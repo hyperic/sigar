@@ -208,6 +208,25 @@ static VALUE rb_sigar_net_route(VALUE obj)
     return obj; /*XXX*/
 }
 
+static VALUE rb_sigar_proc_args(VALUE obj, VALUE pid)
+{
+    int status;
+    sigar_t *sigar = rb_sigar_get(obj);
+    sigar_proc_args_t args;
+    VALUE RETVAL;
+
+    status = sigar_proc_args_get(sigar, NUM2UINT(pid), &args);
+    if (status != SIGAR_OK) {
+        RB_SIGAR_CROAK;
+    }
+
+    RETVAL = rb_sigar_new_strlist(args.data, args.number);
+
+    sigar_proc_args_destroy(sigar, &args);
+
+    return RETVAL;
+}
+
 #include "./rbsigar_generated.rx"
 
 #define RB_SIGAR_CONST_INT(name) \
@@ -241,6 +260,7 @@ void Init_rbsigar(void)
     rb_define_method(rclass, "file_system_list", rb_sigar_file_system_list, 0);
     rb_define_method(rclass, "net_interface_list", rb_sigar_net_interface_list, 0);
     rb_define_method(rclass, "who_list", rb_sigar_who_list, 0);
+    rb_define_method(rclass, "proc_args", rb_sigar_proc_args, 1);
 
     rb_define_singleton_method(rclass, "new", rb_sigar_new, 0);
     rb_define_singleton_method(rclass, "format_size", rb_sigar_format_size, 1);
