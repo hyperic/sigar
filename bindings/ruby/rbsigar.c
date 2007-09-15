@@ -22,6 +22,7 @@
 #include "sigar_format.h"
 
 #define RB_SIGAR_CROAK rb_raise(rb_eArgError, "%s", sigar_strerror(sigar, status))
+#define NUM2PID NUM2UINT
 
 static sigar_t *rb_sigar_get(VALUE obj)
 {
@@ -215,7 +216,8 @@ static VALUE rb_sigar_proc_args(VALUE obj, VALUE pid)
     sigar_proc_args_t args;
     VALUE RETVAL;
 
-    status = sigar_proc_args_get(sigar, NUM2UINT(pid), &args);
+    status = sigar_proc_args_get(sigar, NUM2PID(pid), &args);
+
     if (status != SIGAR_OK) {
         RB_SIGAR_CROAK;
     }
@@ -223,6 +225,35 @@ static VALUE rb_sigar_proc_args(VALUE obj, VALUE pid)
     RETVAL = rb_sigar_new_strlist(args.data, args.number);
 
     sigar_proc_args_destroy(sigar, &args);
+
+    return RETVAL;
+}
+
+static int rb_sigar_env_getall(void *data,
+                               const char *key, int klen,
+                               char *val, int vlen)
+{
+    rb_hash_aset(*((VALUE*)data),
+                 rb_str_new(key, klen),
+                 rb_str_new(val, vlen));
+    return SIGAR_OK;
+}
+
+static VALUE rb_sigar_proc_env(VALUE obj, VALUE pid)
+{
+    int status;
+    sigar_t *sigar = rb_sigar_get(obj);
+    sigar_proc_env_t procenv;
+    VALUE RETVAL = rb_hash_new();
+
+    procenv.type = SIGAR_PROC_ENV_ALL;
+    procenv.env_getter = rb_sigar_env_getall;
+    procenv.data = &RETVAL;
+
+    status = sigar_proc_env_get(sigar, NUM2PID(pid), &procenv);
+    if (status != SIGAR_OK) {
+        RB_SIGAR_CROAK;
+    }
 
     return RETVAL;
 }
@@ -261,6 +292,7 @@ void Init_rbsigar(void)
     rb_define_method(rclass, "net_interface_list", rb_sigar_net_interface_list, 0);
     rb_define_method(rclass, "who_list", rb_sigar_who_list, 0);
     rb_define_method(rclass, "proc_args", rb_sigar_proc_args, 1);
+    rb_define_method(rclass, "proc_env", rb_sigar_proc_env, 1);
 
     rb_define_singleton_method(rclass, "new", rb_sigar_new, 0);
     rb_define_singleton_method(rclass, "format_size", rb_sigar_format_size, 1);
