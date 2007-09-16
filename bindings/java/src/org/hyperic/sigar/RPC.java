@@ -56,11 +56,13 @@ public class RPC {
 
     private static void parse(String fileName) {
         programs = new HashMap();
+        /* XXX
         NetServices.parse("/etc/rpc", new NetServices.EntryReader() {
             public void process(String program, String num, List aliases) {
                 programs.put(program, num);
             }
         });
+        */
     }
 
     /**
