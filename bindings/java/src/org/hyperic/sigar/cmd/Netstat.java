@@ -22,7 +22,6 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 
-import org.hyperic.sigar.NetServices;
 import org.hyperic.sigar.SigarException;
 import org.hyperic.sigar.NetConnection;
 import org.hyperic.sigar.NetFlags;
@@ -119,12 +118,12 @@ public class Netstat extends SigarCommandBase {
         return flags;
     }
 
-    private String formatPort(String proto, long port) {
+    private String formatPort(int proto, long port) {
         if (port == 0) {
             return "*";
         }
         if (!isNumeric) {
-            String service = NetServices.getName(proto, port);
+            String service = this.sigar.getNetServicesName(proto, port);
             if (service != null) {
                 return service;
             }
@@ -132,7 +131,7 @@ public class Netstat extends SigarCommandBase {
         return String.valueOf(port);
     }
 
-    private String formatAddress(String proto, String ip,
+    private String formatAddress(int proto, String ip,
                                  long portnum, int max) {
         
         String port = formatPort(proto, portnum);
@@ -216,11 +215,11 @@ public class Netstat extends SigarCommandBase {
 
             ArrayList items = new ArrayList();
             items.add(proto);
-            items.add(formatAddress(proto,
+            items.add(formatAddress(conn.getType(),
                                     conn.getLocalAddress(),
                                     conn.getLocalPort(),
                                     LADDR_LEN));
-            items.add(formatAddress(proto,
+            items.add(formatAddress(conn.getType(),
                                     conn.getRemoteAddress(),
                                     conn.getRemotePort(),
                                     RADDR_LEN));
