@@ -18,9 +18,14 @@
 
 package org.hyperic.sigar;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.StringTokenizer;
 
 public class RPC {
 
@@ -56,13 +61,37 @@ public class RPC {
 
     private static void parse(String fileName) {
         programs = new HashMap();
-        /* XXX
-        NetServices.parse("/etc/rpc", new NetServices.EntryReader() {
-            public void process(String program, String num, List aliases) {
-                programs.put(program, num);
+        File file = new File(fileName);
+        if (!file.exists()) {
+            return;
+        }
+        BufferedReader reader = null;
+
+        try {
+            reader = new BufferedReader(new FileReader(file));
+            String line;
+            while ((line = reader.readLine()) != null) {
+                line = line.trim();
+                if ((line.length() == 0) || (line.charAt(0) == '#')) {
+                    continue;
+                }
+                StringTokenizer st = new StringTokenizer(line, " \t");
+                if (st.countTokens() < 2) {
+                    continue;
+                }
+                String name = st.nextToken().trim();
+                String num = st.nextToken().trim();
+                programs.put(name, num);
             }
-        });
-        */
+        } catch (IOException e) {
+            return;
+        } finally {
+            if (reader != null) {
+                try {
+                    reader.close();
+                } catch (IOException e) { }
+            }
+        }
     }
 
     /**
