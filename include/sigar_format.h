@@ -42,5 +42,8 @@ SIGAR_DECLARE(const char *)sigar_net_connection_state_get(int state);
 
 SIGAR_DECLARE(char *) sigar_net_interface_flags_to_string(sigar_uint64_t flags, char *buf);
 
+SIGAR_DECLARE(char *)sigar_net_services_name_get(sigar_t *sigar,
+                                                 int protocol, unsigned long port);
+
 #endif
 

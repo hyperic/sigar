@@ -521,3 +521,86 @@ SIGAR_DECLARE(char *) sigar_net_interface_flags_to_string(sigar_uint64_t flags, 
 
     return buf;
 }
+
+#ifdef WIN32
+#define NET_SERVICES_FILE "C:\\windows\\system32\\drivers\\etc\\services"
+#else
+#define NET_SERVICES_FILE "/etc/services"
+#endif
+
+static int net_services_parse(sigar_cache_t *names, char *type)
+{
+    FILE *fp;
+    char buffer[8192], *ptr;
+    char *file;
+
+
+    if (!(file = getenv("SIGAR_NET_SERVICES_FILE"))) {
+        file = NET_SERVICES_FILE;
+    }
+
+    if (!(fp = fopen(file, "r"))) {
+        return errno;
+    }
+
+    while ((ptr = fgets(buffer, sizeof(buffer), fp))) {
+        int port;
+        char name[256], proto[56];
+        sigar_cache_entry_t *entry;
+
+        while (sigar_isspace(*ptr)) {
+            ++ptr;
+        }
+        if ((*ptr == '#') || (*ptr == '\0')) {
+            continue;
+        }
+
+        if (sscanf(ptr, "%s%d/%s", name, &port, proto) != 3) {
+            continue;
+        }
+        if (!strEQ(type, proto)) {
+            continue;
+        }
+
+        entry = sigar_cache_get(names, port);
+        if (!entry->value) {
+            entry->value = strdup(name);
+        }
+    }
+
+    fclose(fp);
+    return SIGAR_OK;
+}
+
+SIGAR_DECLARE(char *)sigar_net_services_name_get(sigar_t *sigar,
+                                                 int protocol, unsigned long port)
+{
+    sigar_cache_entry_t *entry;
+    sigar_cache_t **names;
+    char *pname;
+
+    switch (protocol) {
+      case SIGAR_NETCONN_TCP:
+        names = &sigar->net_services_tcp;
+        pname = "tcp";
+        break;
+      case SIGAR_NETCONN_UDP:
+        names = &sigar->net_services_udp;
+        pname = "udp";
+        break;
+      default:
+        return NULL;
+    }
+
+    if (*names == NULL) {
+        *names = sigar_cache_new(1024);
+        net_services_parse(*names, pname);
+    }
+
+    if ((entry = sigar_cache_find(*names, port))) {
+        return (char *)entry->value;
+    }
+    else {
+        return NULL;
+    }
+}

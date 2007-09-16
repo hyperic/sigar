@@ -50,6 +50,8 @@ SIGAR_DECLARE(int) sigar_open(sigar_t **sigar)
         (*sigar)->self_path = NULL;
         (*sigar)->proc_cpu = NULL;
         (*sigar)->net_listen = NULL;
+        (*sigar)->net_services_tcp = NULL;
+        (*sigar)->net_services_udp = NULL;
     }
 
     return status;
@@ -68,6 +70,12 @@ SIGAR_DECLARE(int) sigar_close(sigar_t *sigar)
     }
     if (sigar->net_listen) {
         sigar_cache_destroy(sigar->net_listen);
+    }
+    if (sigar->net_services_tcp) {
+        sigar_cache_destroy(sigar->net_services_tcp);
+    }
+    if (sigar->net_services_udp) {
+        sigar_cache_destroy(sigar->net_services_udp);
     }
 
     return sigar_os_close(sigar);
