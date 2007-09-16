@@ -760,6 +760,8 @@ public class Sigar implements SigarProxy {
         return getNetListenAddress(Long.parseLong(port));
     }
 
+    public native String getNetServicesName(int protocol, long port);
+
     public NetStat getNetStat()
         throws SigarException {
         NetStat netstat = new NetStat();

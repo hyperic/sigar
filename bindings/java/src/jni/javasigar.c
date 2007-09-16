@@ -960,6 +960,20 @@ JNIEXPORT jstring SIGAR_JNIx(getNetListenAddress)
     return jnet_address_to_string(env, sigar, &address);
 }
 
+JNIEXPORT jstring SIGAR_JNIx(getNetServicesName)
+(JNIEnv *env, jobject sigar_obj, jint protocol, jlong port)
+{
+    char *name;
+    dSIGAR(NULL);
+
+    if ((name = sigar_net_services_name_get(sigar, protocol, port))) {
+        return JENV->NewStringUTF(env, name);
+    }
+    else {
+        return NULL;
+    }
+}
+
 JNIEXPORT jstring SIGAR_JNI(NetConnection_getTypeString)
 (JNIEnv *env, jobject obj)
 {
