@@ -14,7 +14,7 @@ def format_port(sigar, proto, port, is_numeric)
   end
   if !is_numeric
     service = sigar.net_services_name(proto, port)
-    if service != false
+    if service != nil
       return service
     end
   end

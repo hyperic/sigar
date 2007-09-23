@@ -212,7 +212,7 @@ static VALUE rb_sigar_net_services_name(VALUE obj, VALUE protocol, VALUE port)
         return rb_str_new2(name);
     }
     else {
-        Qnil;
+        return Qnil;
     }
 }
 
