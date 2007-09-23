@@ -60,6 +60,16 @@ static VALUE rb_sigar_net_interface_flags_to_s(VALUE rclass, VALUE flags)
     return rb_str_new2(sigar_net_interface_flags_to_string(NUM2LL(flags), buffer));
 }
 
+static VALUE rb_sigar_net_connection_type_to_s(VALUE rclass, VALUE type)
+{
+    return rb_str_new2(sigar_net_connection_type_get(NUM2INT(type)));
+}
+
+static VALUE rb_sigar_net_connection_state_to_s(VALUE rclass, VALUE state)
+{
+    return rb_str_new2(sigar_net_connection_state_get(NUM2INT(state)));
+}
+
 static VALUE rb_sigar_net_address_to_string(sigar_net_address_t *address)
 {
     char addr_str[SIGAR_INET6_ADDRSTRLEN];
@@ -147,6 +157,19 @@ static VALUE rb_sigar_net_connection_list(VALUE obj, VALUE flags)
     sigar_net_connection_list_destroy(sigar, &connlist);
 
     return RETVAL;
+}
+
+static VALUE rb_sigar_net_services_name(VALUE obj, VALUE protocol, VALUE port)
+{
+    sigar_t *sigar = rb_sigar_get(obj);
+    char *name;
+
+    if ((name = sigar_net_services_name_get(sigar, NUM2UINT(protocol), NUM2UINT(port)))) {
+        return rb_str_new2(name);
+    }
+    else {
+        Qnil;
+    }
 }
 
 static VALUE rb_cSigarCpuInfo;
@@ -317,6 +340,7 @@ void Init_rbsigar(void)
     rb_define_method(rclass, "file_system_list", rb_sigar_file_system_list, 0);
     rb_define_method(rclass, "net_connection_list", rb_sigar_net_connection_list, 1);
     rb_define_method(rclass, "net_interface_list", rb_sigar_net_interface_list, 0);
+    rb_define_method(rclass, "net_services_name", rb_sigar_net_services_name, 2);
     rb_define_method(rclass, "who_list", rb_sigar_who_list, 0);
     rb_define_method(rclass, "proc_args", rb_sigar_proc_args, 1);
     rb_define_method(rclass, "proc_env", rb_sigar_proc_env, 1);
@@ -325,6 +349,10 @@ void Init_rbsigar(void)
     rb_define_singleton_method(rclass, "format_size", rb_sigar_format_size, 1);
     rb_define_singleton_method(rclass, "net_interface_flags_to_s",
                                rb_sigar_net_interface_flags_to_s, 1);
+    rb_define_singleton_method(rclass, "net_connection_type_to_s",
+                               rb_sigar_net_connection_type_to_s, 1);
+    rb_define_singleton_method(rclass, "net_connection_state_to_s",
+                               rb_sigar_net_connection_state_to_s, 1);
 
     Init_rbsigar_constants(rclass);
 
