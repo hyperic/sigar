@@ -107,6 +107,18 @@ static VALUE rb_sigar_new_strlist(char **data, unsigned long number)
     return av;
 }
 
+static VALUE rb_sigar_new_intlist(int *data, int number)
+{
+    int i;
+    VALUE av = rb_ary_new2(number);
+
+    for (i=0; i<number; i++) {
+        rb_ary_push(av, rb_int2inum(data[i]));
+    }
+
+    return av;
+}
+
 static VALUE rb_sigar_net_interface_list(VALUE obj)
 {
     int status;
@@ -128,9 +140,41 @@ static VALUE rb_sigar_net_interface_list(VALUE obj)
 
 static VALUE rb_cSigarNetStat;
 
-static VALUE rb_sigar_net_stat(VALUE obj)
+static VALUE rb_sigar_net_stat_get(VALUE obj, VALUE flags, VALUE address, int port)
 {
-    return obj; /*XXX*/
+    int status;
+    int has_port = (port != -1);
+    sigar_t *sigar = rb_sigar_get(obj);
+    sigar_net_stat_t *RETVAL = malloc(sizeof(*RETVAL));
+
+    if (has_port) {
+        /*XXX*/
+        status = SIGAR_ENOTIMPL;
+    }
+    else {
+        status = sigar_net_stat_get(sigar, RETVAL, NUM2INT(flags));
+    }
+
+    if (status != SIGAR_OK) {
+        free(RETVAL);
+        RB_SIGAR_CROAK;
+    }
+
+    return Data_Wrap_Struct(rb_cSigarNetStat, 0, rb_sigar_free, RETVAL);
+}
+
+static VALUE rb_sigar_net_stat(VALUE obj, VALUE flags)
+{
+    return rb_sigar_net_stat_get(obj, flags, Qnil, -1);
+}
+
+static VALUE rb_sigar_NetStat_tcp_states(VALUE self)
+{
+    sigar_net_stat_t *net_stat;
+
+    Data_Get_Struct(self, sigar_net_stat_t, net_stat);
+
+    return rb_sigar_new_intlist(&net_stat->tcp_states[0], SIGAR_TCP_UNKNOWN);
 }
 
 static VALUE rb_cSigarNetConnection;
@@ -341,6 +385,7 @@ void Init_rbsigar(void)
     rb_define_method(rclass, "net_connection_list", rb_sigar_net_connection_list, 1);
     rb_define_method(rclass, "net_interface_list", rb_sigar_net_interface_list, 0);
     rb_define_method(rclass, "net_services_name", rb_sigar_net_services_name, 2);
+    rb_define_method(rclass, "net_stat", rb_sigar_net_stat, 1);
     rb_define_method(rclass, "who_list", rb_sigar_who_list, 0);
     rb_define_method(rclass, "proc_args", rb_sigar_proc_args, 1);
     rb_define_method(rclass, "proc_env", rb_sigar_proc_env, 1);
@@ -358,4 +403,5 @@ void Init_rbsigar(void)
 
     /* generated */
     rb_sigar_define_module_methods(rclass);
+    rb_define_method(rb_cSigarNetStat, "tcp_states", rb_sigar_NetStat_tcp_states, 0);
 }
