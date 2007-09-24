@@ -17,6 +17,7 @@
  */
 
 #include <ruby.h>
+#include <errno.h>
 #include "sigar.h"
 #include "sigar_fileinfo.h"
 #include "sigar_format.h"
@@ -138,18 +139,42 @@ static VALUE rb_sigar_net_interface_list(VALUE obj)
     return RETVAL;
 }
 
+static int rb_sigar_str2net_address(VALUE bytes, sigar_net_address_t *address)
+{
+    long len = RSTRING(bytes)->len;
+
+    switch (len) {
+      case 4:
+        address->family = SIGAR_AF_INET;
+        break;
+      case 4*4:
+        address->family = SIGAR_AF_INET6;
+        break;
+      default:
+        return EINVAL;
+    }
+
+    memcpy(RSTRING(bytes)->ptr, &address->addr.in6, len);
+
+    return SIGAR_OK;
+}
+
 static VALUE rb_cSigarNetStat;
 
-static VALUE rb_sigar_net_stat_get(VALUE obj, VALUE flags, VALUE address, int port)
+static VALUE rb_sigar_net_stat_get(VALUE obj, VALUE flags, VALUE bytes, int port)
 {
     int status;
     int has_port = (port != -1);
     sigar_t *sigar = rb_sigar_get(obj);
     sigar_net_stat_t *RETVAL = malloc(sizeof(*RETVAL));
+    sigar_net_address_t address;
 
     if (has_port) {
-        /*XXX*/
-        status = SIGAR_ENOTIMPL;
+        status = rb_sigar_str2net_address(bytes, &address);
+        if (status == SIGAR_OK) {
+            status = sigar_net_stat_port_get(sigar, RETVAL, NUM2INT(flags),
+                                             &address, port);
+        }
     }
     else {
         status = sigar_net_stat_get(sigar, RETVAL, NUM2INT(flags));
@@ -166,6 +191,11 @@ static VALUE rb_sigar_net_stat_get(VALUE obj, VALUE flags, VALUE address, int po
 static VALUE rb_sigar_net_stat(VALUE obj, VALUE flags)
 {
     return rb_sigar_net_stat_get(obj, flags, Qnil, -1);
+}
+
+static VALUE rb_sigar_net_stat_port(VALUE obj, VALUE flags, VALUE address, VALUE port)
+{
+    return rb_sigar_net_stat_get(obj, flags, address, NUM2INT(port));
 }
 
 static VALUE rb_sigar_NetStat_tcp_states(VALUE self)
@@ -401,6 +431,7 @@ void Init_rbsigar(void)
     rb_define_method(rclass, "net_interface_list", rb_sigar_net_interface_list, 0);
     rb_define_method(rclass, "net_services_name", rb_sigar_net_services_name, 2);
     rb_define_method(rclass, "net_stat", rb_sigar_net_stat, 1);
+    rb_define_method(rclass, "net_stat_port", rb_sigar_net_stat_port, 3);
     rb_define_method(rclass, "who_list", rb_sigar_who_list, 0);
     rb_define_method(rclass, "proc_args", rb_sigar_proc_args, 1);
     rb_define_method(rclass, "proc_env", rb_sigar_proc_env, 1);
