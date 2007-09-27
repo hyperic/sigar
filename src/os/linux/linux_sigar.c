@@ -1174,8 +1174,6 @@ int sigar_file_system_list_get(sigar_t *sigar,
     return SIGAR_OK;
 }
 
-#define FSDEV_NONE "__NONE__"
-
 #define FSDEV_ID(sb) (sb.st_ino + sb.st_dev)
 
 #define FSDEV_IS_DEV(dev) strnEQ(dev, "/dev/", 5)
@@ -1183,20 +1181,18 @@ int sigar_file_system_list_get(sigar_t *sigar,
 #define ST_MAJOR(sb) major((sb).st_rdev)
 #define ST_MINOR(sb) minor((sb).st_rdev)
 
-static void fsdev_free(void *ptr)
-{
-    if (ptr != FSDEV_NONE) {
-        free(ptr);
-    }
-}
+typedef struct {
+    char name[256];
+} iodev_t;
 
-static char *get_fsdev(sigar_t *sigar,
-                       const char *dirname,
-                       char *fsdev)
+static iodev_t *get_fsdev(sigar_t *sigar,
+                          const char *dirname)
 {
     sigar_cache_entry_t *entry;
     struct stat sb;
     sigar_uint64_t id;
+    sigar_file_system_list_t fslist;
+    int i, status;
     int debug = SIGAR_LOG_IS_DEBUG(sigar);
 
     if (stat(dirname, &sb) < 0) {
@@ -1212,73 +1208,68 @@ static char *get_fsdev(sigar_t *sigar,
 
     if (!sigar->fsdev) {
         sigar->fsdev = sigar_cache_new(15);
-        sigar->fsdev->free_value = fsdev_free;
     }
 
     entry = sigar_cache_get(sigar->fsdev, id);
 
-    if (entry->value == NULL) {
-        sigar_file_system_list_t fslist;
-        int status = sigar_file_system_list_get(sigar, &fslist);
-        int i;
+    if (entry->value != NULL) {
+        return (iodev_t *)entry->value;
+    }
 
-        if (status != SIGAR_OK) {
-            sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
-                             "[fsdev] file_system_list failed: %s",
-                             sigar_strerror(sigar, status));
-            return NULL;
-        }
+    status = sigar_file_system_list_get(sigar, &fslist);
 
-        for (i=0; i<fslist.number; i++) {
-            sigar_file_system_t *fsp = &fslist.data[i];
+    if (status != SIGAR_OK) {
+        sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
+                         "[fsdev] file_system_list failed: %s",
+                         sigar_strerror(sigar, status));
+        return NULL;
+    }
 
-            if (fsp->type == SIGAR_FSTYPE_LOCAL_DISK) {
-                int retval = stat(fsp->dir_name, &sb);
-                sigar_cache_entry_t *ent;
-                char *ptr;
+    for (i=0; i<fslist.number; i++) {
+        sigar_file_system_t *fsp = &fslist.data[i];
 
-                if (retval < 0) {
-                    if (debug) {
-                        sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
-                                         "[fsdev] inode stat(%s) failed",
-                                         fsp->dir_name);
-                    }
-                    return NULL; /* cant cache w/o inode */
+        if (fsp->type == SIGAR_FSTYPE_LOCAL_DISK) {
+            int retval = stat(fsp->dir_name, &sb);
+            sigar_cache_entry_t *ent;
+
+            if (retval < 0) {
+                if (debug) {
+                    sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
+                                     "[fsdev] inode stat(%s) failed",
+                                     fsp->dir_name);
                 }
+                return NULL; /* cant cache w/o inode */
+            }
 
-                ent = sigar_cache_get(sigar->fsdev, FSDEV_ID(sb));
-                if (ent->value) {
-                    continue; /* already cached */
+            ent = sigar_cache_get(sigar->fsdev, FSDEV_ID(sb));
+            if (ent->value) {
+                continue; /* already cached */
+            }
+
+            if (FSDEV_IS_DEV(fsp->dev_name)) {
+                iodev_t *iodev;
+                ent->value = iodev = malloc(sizeof(*iodev));
+                SIGAR_ZERO(iodev);
+                SIGAR_SSTRCPY(iodev->name, fsp->dev_name);
+
+                if (debug) {
+                    sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
+                                     "[fsdev] map %s -> %s",
+                                     fsp->dir_name, iodev->name);
                 }
-
-                ptr = fsp->dev_name;
-                if (FSDEV_IS_DEV(ptr)) {
-                    ent->value = sigar_strdup(ptr);
-                    if (debug) {
-                        sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
-                                         "[fsdev] map %s -> %s",
-                                         fsp->dir_name, (char*)ent->value);
-                    }
-                    continue;
-                }
-
-                ent->value = FSDEV_NONE;
             }
         }
-
-        sigar_file_system_list_destroy(sigar, &fslist);
     }
 
-    if (entry->value == FSDEV_NONE) {
-        return NULL;
-    }
-    else if (entry->value == NULL) {
-        entry->value = FSDEV_NONE;
-        return NULL;
+    sigar_file_system_list_destroy(sigar, &fslist);
+
+    if (entry->value &&
+        (((iodev_t *)entry->value)->name[0] != '\0'))
+    {
+        return (iodev_t *)entry->value;
     }
     else {
-        strcpy(fsdev, (char*)entry->value);
-        return fsdev;
+        return NULL;
     }
 }
 
@@ -1289,12 +1280,13 @@ static int get_iostat_sys(sigar_t *sigar,
     char stat[1025], dev[1025];
     char *name, *ptr, *fsdev;
     int partition, status;
+    iodev_t *iodev;
 
-    name = fsdev = get_fsdev(sigar, dirname, dev);
-
-    if (!name) {
+    if (!(iodev = get_fsdev(sigar, dirname))) {
         return ENOENT;
     }
+
+    name = fsdev = iodev->name;
 
     if (FSDEV_IS_DEV(name)) {
         name += 5; /* strip "/dev/" */
@@ -1333,22 +1325,24 @@ static int get_iostat_proc_dstat(sigar_t *sigar,
                                  sigar_file_system_usage_t *fsusage)
 {
     FILE *fp;
-    char buffer[1025], dev[1025];
+    char buffer[1025];
     char *ptr;
     struct stat sb;
+    iodev_t *iodev;
 
-    if (!get_fsdev(sigar, dirname, dev)) {
+    if (!(iodev = get_fsdev(sigar, dirname))) {
         return ENOENT;
     }
 
-    if (stat(dev, &sb) < 0) {
+    if (stat(iodev->name, &sb) < 0) {
         return errno;
     }
 
     if (SIGAR_LOG_IS_DEBUG(sigar)) {
         sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
                          PROC_DISKSTATS " %s -> %s [%d,%d]",
-                         dirname, dev, ST_MAJOR(sb), ST_MINOR(sb));
+                         dirname, iodev->name,
+                         ST_MAJOR(sb), ST_MINOR(sb));
     }
 
     if (!(fp = fopen(PROC_DISKSTATS, "r"))) {
@@ -1423,22 +1417,24 @@ static int get_iostat_procp(sigar_t *sigar,
                             sigar_file_system_usage_t *fsusage)
 {
     FILE *fp;
-    char buffer[1025], dev[1025];
+    char buffer[1025];
     char *ptr;
     struct stat sb;
+    iodev_t *iodev;
 
-    if (!get_fsdev(sigar, dirname, dev)) {
+    if (!(iodev = get_fsdev(sigar, dirname))) {
         return ENOENT;
     }
 
-    if (stat(dev, &sb) < 0) {
+    if (stat(iodev->name, &sb) < 0) {
         return errno;
     }
 
     if (SIGAR_LOG_IS_DEBUG(sigar)) {
         sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
                          PROC_PARTITIONS " %s -> %s [%d,%d]",
-                         dirname, dev, ST_MAJOR(sb), ST_MINOR(sb));
+                         dirname, iodev->name,
+                         ST_MAJOR(sb), ST_MINOR(sb));
     }
 
     if (!(fp = fopen(PROC_PARTITIONS, "r"))) {
