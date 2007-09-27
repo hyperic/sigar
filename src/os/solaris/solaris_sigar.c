@@ -1464,6 +1464,7 @@ static int create_fsdev_cache(sigar_t *sigar)
     sigar_file_system_list_t fslist;
     int i, j;
     int status;
+    int debug = SIGAR_LOG_IS_DEBUG(sigar);
 
     sigar->fsdev = sigar_cache_new(15);
 
@@ -1491,6 +1492,12 @@ static int create_fsdev_cache(sigar_t *sigar)
                 continue;
             }
             device[len] = '\0';
+
+            if (debug) {
+                sigar_log_printf(sigar, SIGAR_LOG_DEBUG, "[fsdev] name=%s, dev=%s",
+                                 fsp->dev_name, device);
+            }
+
             while (strnEQ(ptr, "../", 3)) {
                 ptr += 3;
             }
@@ -1524,6 +1531,15 @@ static int create_fsdev_cache(sigar_t *sigar)
                         fs_kstat->partition = partition;
                         ent = sigar_cache_get(sigar->fsdev, FSDEV_ID(sb));
                         ent->value = fs_kstat;
+
+                        if (debug) {
+                            sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
+                                             "[fsdev] map %s -> %s%d,%c",
+                                             fsp->dir_name,
+                                             fs_kstat->module,
+                                             fs_kstat->instance,
+                                             fs_kstat->partition);
+                        }
                     }
                     break;
                 }
