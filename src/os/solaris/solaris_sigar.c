@@ -453,13 +453,14 @@ int sigar_cpu_list_get(sigar_t *sigar, sigar_cpu_list_t *cpulist)
             /* merge times of logical processors */
             ent = sigar_cache_get(chips, chip_id);
             if (ent->value) {
-                cpu = (sigar_cpu_t *)ent->value;
+                cpu = &cpulist->data[(int)ent->value];
             }
             else {
                 SIGAR_CPU_LIST_GROW(cpulist);
+                ent->value = (void *)(int)cpulist->number;
                 cpu = &cpulist->data[cpulist->number++];
                 SIGAR_ZERO(cpu);
-                ent->value = cpu;
+
                 if (is_debug) {
                     sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
                                      "[cpu_list] Merging times of"
