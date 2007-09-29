@@ -1043,7 +1043,7 @@ int sigar_net_connection_walk(sigar_net_connection_walker_t *walker)
     return SIGAR_OK;
 }
 
-#define tcpsoff(x) sigar_offsetof(sigar_tcp_stat_t, x)
+#define tcpsoff(x) sigar_offsetof(sigar_tcp_t, x)
 
 static struct {
     unsigned int id;
