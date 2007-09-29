@@ -681,8 +681,8 @@ sigar_net_interface_list_get(sigar_t *sigar,
 }
 
 SIGAR_DECLARE(int)
-sigar_tcp_stat_get(sigar_t *sigar,
-                   sigar_tcp_stat_t *tcpstat)
+sigar_tcp_get(sigar_t *sigar,
+              sigar_tcp_t *tcp)
 {
     return SIGAR_ENOTIMPL;
 }
