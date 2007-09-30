@@ -453,12 +453,12 @@ int sigar_cpu_list_get(sigar_t *sigar, sigar_cpu_list_t *cpulist)
             /* merge times of logical processors */
             ent = sigar_cache_get(chips, chip_id);
             if (ent->value) {
-                cpu = &cpulist->data[(int)ent->value];
+                cpu = &cpulist->data[(int)ent->value-1];
             }
             else {
                 SIGAR_CPU_LIST_GROW(cpulist);
-                ent->value = (void *)(int)cpulist->number;
                 cpu = &cpulist->data[cpulist->number++];
+                ent->value = (void *)(int)cpulist->number;
                 SIGAR_ZERO(cpu);
 
                 if (is_debug) {
