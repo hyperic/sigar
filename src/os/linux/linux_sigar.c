@@ -2441,6 +2441,8 @@ static void redhat_vendor_parse(char *line, sigar_sys_info_t *info)
 
 #define RHEL_PREFIX "Red Hat Enterprise Linux "
 #define CENTOS_VENDOR "CentOS"
+#define SL_VENDOR "Scientific Linux"
+
     if (strnEQ(line, RHEL_PREFIX, sizeof(RHEL_PREFIX)-1)) {
         snprintf(info->vendor_version,
                  sizeof(info->vendor_version),
@@ -2449,6 +2451,9 @@ static void redhat_vendor_parse(char *line, sigar_sys_info_t *info)
     }
     else if (strnEQ(line, CENTOS_VENDOR, sizeof(CENTOS_VENDOR)-1)) {
         SIGAR_SSTRCPY(info->vendor, CENTOS_VENDOR);
+    }
+    else if (strnEQ(line, SL_VENDOR, sizeof(SL_VENDOR)-1)) {
+        SIGAR_SSTRCPY(info->vendor, SL_VENDOR);
     }
 }
 
