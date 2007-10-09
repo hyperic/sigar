@@ -1402,6 +1402,8 @@ static int get_iostat_proc_dstat(sigar_t *sigar,
             fsusage->disk_read_bytes  *= 512;
             fsusage->disk_write_bytes *= 512;
 
+            fsusage->disk_time = use;
+
             fclose(fp);
             return status;
         }
@@ -1459,9 +1461,10 @@ static int get_iostat_procp(sigar_t *sigar,
             ptr = sigar_skip_token(ptr);  /* wmerge */ 
             fsusage->disk_write_bytes = sigar_strtoull(ptr); /* wsect */
             fsusage->disk_writes = sigar_strtoull(ptr); /* wio */
-            /* wuse, running, use */
-            ptr = sigar_skip_multiple_token(ptr, 3);
-            fsusage->disk_queue       = sigar_strtoull(ptr); /* aveq */
+            ptr = sigar_skip_token(ptr);  /* wuse */ 
+            ptr = sigar_skip_token(ptr); /* running */
+            fsusage->disk_time = sigar_strtoull(ptr); /* use */
+            fsusage->disk_queue  = sigar_strtoull(ptr); /* aveq */
             fsusage->disk_queue /= 1000;
 
             /* convert sectors to bytes (512 is fixed size in 2.6 kernels) */
@@ -1501,6 +1504,8 @@ int sigar_file_system_usage_get(sigar_t *sigar,
     fsusage->free_files = buf.f_ffree;
     fsusage->use_percent = sigar_file_system_usage_calc_used(sigar, fsusage);
 
+    SIGAR_DISK_STATS_NOTIMPL(fsusage); /* init */
+
     /*
      * 2.2 has metrics /proc/stat, but wtf is the device mapping?
      * 2.4 has /proc/partitions w/ the metrics.
@@ -1531,8 +1536,6 @@ int sigar_file_system_usage_get(sigar_t *sigar,
       case IOSTAT_NONE:
         break;
     }
-
-    SIGAR_DISK_STATS_NOTIMPL(fsusage);
 
     return SIGAR_OK;
 }
