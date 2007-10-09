@@ -314,6 +314,9 @@ int sigar_group_name_get(sigar_t *sigar, int gid, char *buf, int buflen);
     fsusage->disk_read_bytes = fsusage->disk_write_bytes = \
     fsusage->disk_queue = fsusage->disk_time = SIGAR_FIELD_NOTIMPL;
 
+/* key used for filesystem (/) -> device (/dev/hda1) mapping */
+#define SIGAR_FSDEV_ID(sb) ((sb).st_ino + (sb).st_dev)
+
 #if defined(WIN32) || defined(NETWARE)
 int sigar_get_iftype(const char *name, int *type, int *inst);
 #endif

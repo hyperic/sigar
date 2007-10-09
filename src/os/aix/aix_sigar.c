@@ -1507,8 +1507,6 @@ int sigar_file_system_list_get(sigar_t *sigar,
 
 #define LSPV_CMD "/usr/sbin/lspv"
 
-#define FSDEV_ID(sb) (sb.st_ino + sb.st_dev)
-
 typedef struct {
     char *name;
     long addr;
@@ -1576,7 +1574,7 @@ static int create_diskmap_v4(sigar_t *sigar)
                 aix_diskio_t *diskio = malloc(sizeof(*diskio));
                 diskio->name = strdup(disk);
                 diskio->addr = -1;
-                ent = sigar_cache_get(sigar->diskmap, FSDEV_ID(sb));
+                ent = sigar_cache_get(sigar->diskmap, SIGAR_FSDEV_ID(sb));
                 ent->value = diskio;
             }
         }
@@ -1642,7 +1640,7 @@ static int create_diskmap_v5(sigar_t *sigar)
                     aix_diskio_t *diskio = malloc(sizeof(*diskio));
                     diskio->name = strdup(disk[i].name);
                     diskio->addr = -1;
-                    ent = sigar_cache_get(sigar->diskmap, FSDEV_ID(sb));
+                    ent = sigar_cache_get(sigar->diskmap, SIGAR_FSDEV_ID(sb));
                     ent->value = diskio;
                 }
 
@@ -1811,7 +1809,7 @@ int sigar_file_system_usage_get(sigar_t *sigar,
     status = stat(dirname, &sb);
     if (status == 0) {
         sigar_cache_entry_t *ent =
-            sigar_cache_get(sigar->diskmap, FSDEV_ID(sb));
+            sigar_cache_get(sigar->diskmap, SIGAR_FSDEV_ID(sb));
         if (!ent->value) {
             return SIGAR_OK;
         }

@@ -1174,8 +1174,6 @@ int sigar_file_system_list_get(sigar_t *sigar,
     return SIGAR_OK;
 }
 
-#define FSDEV_ID(sb) (sb.st_ino + sb.st_dev)
-
 #define FSDEV_IS_DEV(dev) strnEQ(dev, "/dev/", 5)
 
 #define ST_MAJOR(sb) major((sb).st_rdev)
@@ -1204,7 +1202,7 @@ static iodev_t *get_fsdev(sigar_t *sigar,
         return NULL;
     }
 
-    id = FSDEV_ID(sb);
+    id = SIGAR_FSDEV_ID(sb);
 
     if (!sigar->fsdev) {
         sigar->fsdev = sigar_cache_new(15);
@@ -1241,7 +1239,7 @@ static iodev_t *get_fsdev(sigar_t *sigar,
                 return NULL; /* cant cache w/o inode */
             }
 
-            ent = sigar_cache_get(sigar->fsdev, FSDEV_ID(sb));
+            ent = sigar_cache_get(sigar->fsdev, SIGAR_FSDEV_ID(sb));
             if (ent->value) {
                 continue; /* already cached */
             }

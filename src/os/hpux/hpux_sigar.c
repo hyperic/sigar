@@ -560,8 +560,6 @@ int sigar_file_system_list_get(sigar_t *sigar,
 #define SIGAR_FS_BLOCKS_TO_BYTES(buf, f) \
     (((sigar_uint64_t)buf.f * (buf.f_bsize / 512)) >> 1)
 
-#define FSDEV_ID(sb) (sb.st_ino + sb.st_dev)
-
 static int create_fsdev_cache(sigar_t *sigar)
 {
     sigar_file_system_list_t fslist;
@@ -586,7 +584,7 @@ static int create_fsdev_cache(sigar_t *sigar)
                 continue;
             }
 
-            ent = sigar_cache_get(sigar->fsdev, FSDEV_ID(sb));
+            ent = sigar_cache_get(sigar->fsdev, SIGAR_FSDEV_ID(sb));
             ent->value = strdup(fsp->dev_name);
         }
     }
@@ -628,7 +626,7 @@ int sigar_file_system_usage_get(sigar_t *sigar,
         char *devname;
         int retval;
 
-        ent = sigar_cache_get(sigar->fsdev, FSDEV_ID(sb));
+        ent = sigar_cache_get(sigar->fsdev, SIGAR_FSDEV_ID(sb));
         if (ent->value == NULL) {
             return SIGAR_OK;
         }

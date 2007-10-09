@@ -1457,8 +1457,6 @@ static fsdev_path_t *get_fsdev_paths(sigar_t *sigar,
     return mapping;
 }
 
-#define FSDEV_ID(sb) (sb.st_ino + sb.st_dev)
-
 static int create_fsdev_cache(sigar_t *sigar)
 {
     fsdev_path_t *paths, *mapping;
@@ -1530,7 +1528,7 @@ static int create_fsdev_cache(sigar_t *sigar)
                         SIGAR_SSTRCPY(fs_kstat->module, paths->name);
                         fs_kstat->instance = paths->instance;
                         fs_kstat->partition = partition;
-                        ent = sigar_cache_get(sigar->fsdev, FSDEV_ID(sb));
+                        ent = sigar_cache_get(sigar->fsdev, SIGAR_FSDEV_ID(sb));
                         ent->value = fs_kstat;
 
                         if (debug) {
@@ -1650,7 +1648,7 @@ int sigar_file_system_usage_get(sigar_t *sigar,
     if (stat(dirname, &sb) < 0) {
         return SIGAR_OK;
     }
-    ent = sigar_cache_get(sigar->fsdev, FSDEV_ID(sb));
+    ent = sigar_cache_get(sigar->fsdev, SIGAR_FSDEV_ID(sb));
     if (ent->value == NULL) {
         return SIGAR_OK;
     }
