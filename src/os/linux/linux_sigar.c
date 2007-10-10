@@ -1273,7 +1273,7 @@ static iodev_t *get_fsdev(sigar_t *sigar,
 
 static int get_iostat_sys(sigar_t *sigar,
                           const char *dirname,
-                          sigar_file_system_usage_t *fsusage)
+                          sigar_disk_usage_t *fsusage)
 {
     char stat[1025], dev[1025];
     char *name, *ptr, *fsdev;
@@ -1320,7 +1320,7 @@ static int get_iostat_sys(sigar_t *sigar,
 
 static int get_iostat_proc_dstat(sigar_t *sigar,
                                  const char *dirname,
-                                 sigar_file_system_usage_t *fsusage)
+                                 sigar_disk_usage_t *fsusage)
 {
     FILE *fp;
     char buffer[1025];
@@ -1415,7 +1415,7 @@ static int get_iostat_proc_dstat(sigar_t *sigar,
 
 static int get_iostat_procp(sigar_t *sigar,
                             const char *dirname,
-                            sigar_file_system_usage_t *fsusage)
+                            sigar_disk_usage_t *fsusage)
 {
     FILE *fp;
     char buffer[1025];
@@ -1479,6 +1479,35 @@ static int get_iostat_procp(sigar_t *sigar,
     return ENOENT;
 }
 
+static int sigar_disk_usage_get(sigar_t *sigar, const char *name,
+                                sigar_disk_usage_t *usage)
+{
+    SIGAR_DISK_STATS_NOTIMPL(usage); /* init */
+
+    /*
+     * 2.2 has metrics /proc/stat, but wtf is the device mapping?
+     * 2.4 has /proc/partitions w/ the metrics.
+     * 2.6 has /proc/partitions w/o the metrics.
+     *     instead the metrics are within the /proc-like /sys filesystem.
+     *     also has /proc/diskstats
+     */
+    switch (sigar->iostat) {
+      case IOSTAT_SYS:
+        return get_iostat_sys(sigar, name, usage);
+      case IOSTAT_DISKSTATS:
+        return get_iostat_proc_dstat(sigar, name, usage);
+      case IOSTAT_PARTITIONS:
+        return get_iostat_procp(sigar, name, usage);
+      /*
+       * case IOSTAT_SOME_OTHER_WIERD_THING:
+       * break;
+       */
+      case IOSTAT_NONE:
+      default:
+        return ENOENT;
+    }
+}
+
 #include <sys/vfs.h>
 
 #define SIGAR_FS_BLOCKS_TO_BYTES(buf, f) \
@@ -1502,38 +1531,8 @@ int sigar_file_system_usage_get(sigar_t *sigar,
     fsusage->free_files = buf.f_ffree;
     fsusage->use_percent = sigar_file_system_usage_calc_used(sigar, fsusage);
 
-    SIGAR_DISK_STATS_NOTIMPL(fsusage); /* init */
-
-    /*
-     * 2.2 has metrics /proc/stat, but wtf is the device mapping?
-     * 2.4 has /proc/partitions w/ the metrics.
-     * 2.6 has /proc/partitions w/o the metrics.
-     *     instead the metrics are within the /proc-like /sys filesystem.
-     *     also has /proc/diskstats
-     */
-    switch (sigar->iostat) {
-      case IOSTAT_SYS:
-        if (get_iostat_sys(sigar, dirname, fsusage) == SIGAR_OK) {
-            return SIGAR_OK;
-        }
-        break;
-      case IOSTAT_DISKSTATS:
-        if (get_iostat_proc_dstat(sigar, dirname, fsusage) == SIGAR_OK) {
-            return SIGAR_OK;
-        }
-        break;
-      case IOSTAT_PARTITIONS:
-        if (get_iostat_procp(sigar, dirname, fsusage) == SIGAR_OK) {
-            return SIGAR_OK;
-        }
-        break;
-      /*
-       * case IOSTAT_SOME_OTHER_WIERD_THING:
-       * break;
-       */
-      case IOSTAT_NONE:
-        break;
-    }
+    (void)sigar_disk_usage_get(sigar, dirname,
+                               (sigar_disk_usage_t *)fsusage);
 
     return SIGAR_OK;
 }
