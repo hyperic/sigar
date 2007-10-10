@@ -1780,9 +1780,9 @@ static PERF_INSTANCE_DEFINITION *get_disk_instance(sigar_t *sigar,
     return PdhFirstInstance(object);
 }
 
-static int get_disk_metrics(sigar_t *sigar,
-                            const char *dirname,
-                            sigar_file_system_usage_t *fsusage)
+static int sigar_disk_usage_get(sigar_t *sigar,
+                                const char *dirname,
+                                sigar_disk_usage_t *fsusage)
 {
     DWORD i, err;
     PERF_OBJECT_TYPE *object =
@@ -1872,7 +1872,8 @@ sigar_file_system_usage_get(sigar_t *sigar,
     fsusage->files      = SIGAR_FIELD_NOTIMPL;
     fsusage->free_files = SIGAR_FIELD_NOTIMPL;
 
-    status = get_disk_metrics(sigar, dirname, fsusage);
+    status = sigar_disk_usage_get(sigar, dirname,
+                                  (sigar_disk_usage_t *)fsusage);
     if (status != SIGAR_OK) {
         SIGAR_DISK_STATS_NOTIMPL(fsusage);
     }
