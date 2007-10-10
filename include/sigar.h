@@ -432,24 +432,32 @@ SIGAR_DECLARE(int)
 sigar_file_system_list_destroy(sigar_t *sigar,
                                sigar_file_system_list_t *fslist);
 
+#define SIGAR_DISK_USAGE_T \
+    sigar_uint64_t disk_reads; \
+    sigar_uint64_t disk_writes; \
+    sigar_uint64_t disk_write_bytes; \
+    sigar_uint64_t disk_read_bytes; \
+    sigar_uint64_t disk_queue; \
+    sigar_uint64_t disk_rtime; \
+    sigar_uint64_t disk_wtime; \
+    sigar_uint64_t disk_time
+
 typedef struct {
+    SIGAR_DISK_USAGE_T;
+} sigar_disk_usage_t;
+
+typedef struct {
+    SIGAR_DISK_USAGE_T;
     double use_percent;
-    sigar_uint64_t
-        total,
-        free,
-        used,
-        avail,
-        files,
-        free_files,
-        disk_reads,
-        disk_writes,
-        disk_write_bytes,
-        disk_read_bytes,
-        disk_queue,
-        disk_rtime,
-        disk_wtime,
-        disk_time;
+    sigar_uint64_t total;
+    sigar_uint64_t free;
+    sigar_uint64_t used;
+    sigar_uint64_t avail;
+    sigar_uint64_t files;
+    sigar_uint64_t free_files;
 } sigar_file_system_usage_t;
+
+#undef SIGAR_DISK_USAGE_T
 
 SIGAR_DECLARE(int)
 sigar_file_system_usage_get(sigar_t *sigar,
