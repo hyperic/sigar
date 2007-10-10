@@ -15,9 +15,9 @@ int main(int argc, char **argv) {
         if (strncmp(kp->ks_name, "kstat_", 6) == 0) {
             continue;
         }
-        fprintf(stdout, "%-5s %s.%s[%d]\n",
+        fprintf(stdout, "%-5s %s::%s.%s[%d]\n",
                 kstat_type_names[kp->ks_type],
-                kp->ks_module, kp->ks_name, kp->ks_instance);
+                kp->ks_class, kp->ks_module, kp->ks_name, kp->ks_instance);
     }
 
     kstat_close(kc);
