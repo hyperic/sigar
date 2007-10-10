@@ -433,6 +433,7 @@ sigar_file_system_list_destroy(sigar_t *sigar,
                                sigar_file_system_list_t *fslist);
 
 typedef struct {
+    double use_percent;
     sigar_uint64_t
         total,
         free,
@@ -448,7 +449,6 @@ typedef struct {
         disk_rtime,
         disk_wtime,
         disk_time;
-    double use_percent;
 } sigar_file_system_usage_t;
 
 SIGAR_DECLARE(int)
