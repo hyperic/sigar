@@ -70,6 +70,9 @@ typedef enum {
 } perf_proc_offsets_t;
 
 typedef enum {
+    PERF_IX_DISK_TIME,
+    PERF_IX_DISK_READ_TIME,
+    PERF_IX_DISK_WRITE_TIME,
     PERF_IX_DISK_READ,
     PERF_IX_DISK_WRITE,
     PERF_IX_DISK_READ_BYTES,
@@ -78,6 +81,9 @@ typedef enum {
     PERF_IX_DISK_MAX
 } perf_disk_offsets_t;
 
+#define PERF_TITLE_DISK_TIME 200 /* % Disk Time */
+#define PERF_TITLE_DISK_READ_TIME 202 /* % Disk Read Time */
+#define PERF_TITLE_DISK_WRITE_TIME 204 /* % Disk Write Time */
 #define PERF_TITLE_DISK_READ  208
 #define PERF_TITLE_DISK_WRITE 210
 #define PERF_TITLE_DISK_READ_BYTES  220
@@ -1727,6 +1733,18 @@ static PERF_INSTANCE_DEFINITION *get_disk_instance(sigar_t *sigar,
         DWORD offset = counter->CounterOffset;
 
         switch (counter->CounterNameTitleIndex) {
+          case PERF_TITLE_DISK_TIME:
+            perf_offsets[PERF_IX_DISK_TIME] = offset;
+            found = 1;
+            break;
+          case PERF_TITLE_DISK_READ_TIME:
+            perf_offsets[PERF_IX_DISK_READ_TIME] = offset;
+            found = 1;
+            break;
+          case PERF_TITLE_DISK_WRITE_TIME:
+            perf_offsets[PERF_IX_DISK_WRITE_TIME] = offset;
+            found = 1;
+            break;
           case PERF_TITLE_DISK_READ:
             perf_offsets[PERF_IX_DISK_READ] = offset;
             found = 1;
@@ -1807,6 +1825,9 @@ static int get_disk_metrics(sigar_t *sigar,
         }
 
         if (strnEQ(drive, dirname, 2)) {
+            fsusage->disk_time   = PERF_VAL(PERF_IX_DISK_TIME);
+            fsusage->disk_rtime  = PERF_VAL(PERF_IX_DISK_READ_TIME);
+            fsusage->disk_wtime  = PERF_VAL(PERF_IX_DISK_WRITE_TIME);
             fsusage->disk_reads  = PERF_VAL(PERF_IX_DISK_READ);
             fsusage->disk_writes = PERF_VAL(PERF_IX_DISK_WRITE);
             fsusage->disk_read_bytes  = PERF_VAL(PERF_IX_DISK_READ_BYTES);
