@@ -84,10 +84,10 @@ typedef enum {
 #define PERF_TITLE_DISK_TIME 200 /* % Disk Time */
 #define PERF_TITLE_DISK_READ_TIME 202 /* % Disk Read Time */
 #define PERF_TITLE_DISK_WRITE_TIME 204 /* % Disk Write Time */
-#define PERF_TITLE_DISK_READ  208
-#define PERF_TITLE_DISK_WRITE 210
-#define PERF_TITLE_DISK_READ_BYTES  220
-#define PERF_TITLE_DISK_WRITE_BYTES 222
+#define PERF_TITLE_DISK_READ  214 /* Disk Reads/sec */
+#define PERF_TITLE_DISK_WRITE 216 /* Disk Writes/sec */
+#define PERF_TITLE_DISK_READ_BYTES  220 /* Disk Read Bytes/sec */
+#define PERF_TITLE_DISK_WRITE_BYTES 222 /* Disk Write Bytes/sec */
 #define PERF_TITLE_DISK_QUEUE 198 /* Current Disk Queue Length */
 
 /* 
