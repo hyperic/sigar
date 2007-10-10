@@ -1174,7 +1174,8 @@ int sigar_file_system_list_get(sigar_t *sigar,
     return SIGAR_OK;
 }
 
-#define FSDEV_IS_DEV(dev) strnEQ(dev, "/dev/", 5)
+#define FSDEV_PREFIX "/dev/"
+#define FSDEV_IS_DEV(dev) strnEQ(dev, FSDEV_PREFIX, 5)
 
 #define ST_MAJOR(sb) major((sb).st_rdev)
 #define ST_MINOR(sb) minor((sb).st_rdev)
@@ -1190,8 +1191,23 @@ static iodev_t *get_fsdev(sigar_t *sigar,
     struct stat sb;
     sigar_uint64_t id;
     sigar_file_system_list_t fslist;
-    int i, status;
+    int i, status, is_dev=0;
     int debug = SIGAR_LOG_IS_DEBUG(sigar);
+    char dev_name[SIGAR_FS_NAME_LEN];
+
+    if (!sigar->fsdev) {
+        sigar->fsdev = sigar_cache_new(15);
+    }
+
+    if (*dirname != '/') {
+        snprintf(dev_name, sizeof(dev_name),
+                 FSDEV_PREFIX "%s", dirname);
+        dirname = dev_name;
+        is_dev = 1;
+    }
+    else if (FSDEV_IS_DEV(dirname)) {
+        is_dev = 1;
+    }
 
     if (stat(dirname, &sb) < 0) {
         if (debug) {
@@ -1202,16 +1218,29 @@ static iodev_t *get_fsdev(sigar_t *sigar,
         return NULL;
     }
 
-    id = SIGAR_FSDEV_ID(sb);
-
-    if (!sigar->fsdev) {
-        sigar->fsdev = sigar_cache_new(15);
+    if (is_dev) {
+        id = sb.st_rdev;
+    }
+    else {
+        id = SIGAR_FSDEV_ID(sb);
     }
 
     entry = sigar_cache_get(sigar->fsdev, id);
 
     if (entry->value != NULL) {
         return (iodev_t *)entry->value;
+    }
+
+    if (is_dev) {
+        iodev_t *iodev;
+        entry->value = iodev = malloc(sizeof(*iodev));
+        SIGAR_ZERO(iodev);
+        SIGAR_SSTRCPY(iodev->name, dirname);
+        if (debug) {
+            sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
+                             "[fsdev] %s is_dev=true", dirname);
+        }
+        return iodev;
     }
 
     status = sigar_file_system_list_get(sigar, &fslist);
