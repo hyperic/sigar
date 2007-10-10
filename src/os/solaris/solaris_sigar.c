@@ -1568,6 +1568,9 @@ static int fs_kstat_read(sigar_t *sigar,
     fsusage->disk_read_bytes  = io->nread;
     fsusage->disk_write_bytes = io->nwritten;
     fsusage->disk_queue       = io->wcnt; /* XXX ? */
+    fsusage->disk_rtime       = io->rlentime * 1000;
+    fsusage->disk_wtime       = io->wlentime * 1000;
+    fsusage->disk_time        = fsusage->disk_rtime + fsusage->disk_wtime;
 
     return SIGAR_OK;
 }
