@@ -88,7 +88,7 @@ typedef enum {
 #define PERF_TITLE_DISK_WRITE 210
 #define PERF_TITLE_DISK_READ_BYTES  220
 #define PERF_TITLE_DISK_WRITE_BYTES 222
-#define PERF_TITLE_DISK_QUEUE 1028
+#define PERF_TITLE_DISK_QUEUE 198 /* Current Disk Queue Length */
 
 /* 
  * diff is:
