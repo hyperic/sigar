@@ -445,6 +445,8 @@ typedef struct {
         disk_write_bytes,
         disk_read_bytes,
         disk_queue,
+        disk_rtime,
+        disk_wtime,
         disk_time;
     double use_percent;
 } sigar_file_system_usage_t;

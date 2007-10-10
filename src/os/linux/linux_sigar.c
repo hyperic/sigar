@@ -1379,6 +1379,9 @@ static int get_iostat_proc_dstat(sigar_t *sigar,
                          &aveq);   /* 11 # of millis spent doing I/Os (weighted) */
 
             if (num == 11) {
+                fsusage->disk_rtime = ruse;
+                fsusage->disk_wtime = wuse;
+                fsusage->disk_time = use;
                 fsusage->disk_queue  = aveq / 1000;
             }
             else if (num == 4) {
@@ -1399,8 +1402,6 @@ static int get_iostat_proc_dstat(sigar_t *sigar,
             /* convert sectors to bytes (512 is fixed size in 2.6 kernels) */
             fsusage->disk_read_bytes  *= 512;
             fsusage->disk_write_bytes *= 512;
-
-            fsusage->disk_time = use;
 
             fclose(fp);
             return status;
@@ -1454,12 +1455,11 @@ static int get_iostat_procp(sigar_t *sigar,
             fsusage->disk_reads = sigar_strtoull(ptr); /* rio */
             ptr = sigar_skip_token(ptr);  /* rmerge */ 
             fsusage->disk_read_bytes  = sigar_strtoull(ptr); /* rsect */
-            ptr = sigar_skip_token(ptr);  /* ruse */ 
-
+            fsusage->disk_rtime = sigar_strtoull(ptr); /* ruse */
             ptr = sigar_skip_token(ptr);  /* wmerge */ 
             fsusage->disk_write_bytes = sigar_strtoull(ptr); /* wsect */
             fsusage->disk_writes = sigar_strtoull(ptr); /* wio */
-            ptr = sigar_skip_token(ptr);  /* wuse */ 
+            fsusage->disk_wtime = sigar_strtoull(ptr); /* wuse */
             ptr = sigar_skip_token(ptr); /* running */
             fsusage->disk_time = sigar_strtoull(ptr); /* use */
             fsusage->disk_queue  = sigar_strtoull(ptr); /* aveq */
