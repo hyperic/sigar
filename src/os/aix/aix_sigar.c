@@ -1688,6 +1688,9 @@ static int get_perfstat_disk_metrics(sigar_t *sigar,
     fsusage->disk_read_bytes  = disk.rblks * disk.bsize;
     fsusage->disk_write_bytes = disk.wblks * disk.bsize;
     fsusage->disk_queue       = disk.qdepth;
+    fsusage->disk_time        = disk.time;
+    fsusage->disk_rtime       = SIGAR_FIELD_NOTIMPL;
+    fsusage->disk_wtime       = SIGAR_FIELD_NOTIMPL;
 
     return SIGAR_OK;
 }
@@ -1699,6 +1702,9 @@ static void set_disk_metrics(struct dkstat *dkstat,
     fsusage->disk_writes = dkstat->dk_wblks;
     fsusage->disk_read_bytes  = dkstat->dk_rblks * dkstat->dk_bsize;
     fsusage->disk_write_bytes = dkstat->dk_wblks * dkstat->dk_bsize;
+    fsusage->disk_time        = dkstat->dk_time;
+    fsusage->disk_rtime       = SIGAR_FIELD_NOTIMPL;
+    fsusage->disk_wtime       = SIGAR_FIELD_NOTIMPL;
     if (dkstat->dk_qd_magic == dk_q_depth_magic) {
         fsusage->disk_queue = dkstat->dk_q_depth;
     }
