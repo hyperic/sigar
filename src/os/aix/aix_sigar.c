@@ -1508,16 +1508,9 @@ int sigar_file_system_list_get(sigar_t *sigar,
 #define LSPV_CMD "/usr/sbin/lspv"
 
 typedef struct {
-    char *name;
+    char name[IDENTIFIER_LENGTH];
     long addr;
 } aix_diskio_t;
-
-static void diskio_free(void *data)
-{
-    aix_diskio_t *diskio = (aix_diskio_t *)data;
-    free(diskio->name);
-    free(diskio);
-}
 
 /*
  * dont have per-partition metrics on aix.
@@ -1530,7 +1523,6 @@ static int create_diskmap_v4(sigar_t *sigar)
     char buffer[BUFSIZ], *ptr;
 
     sigar->diskmap = sigar_cache_new(25);
-    sigar->diskmap->free_value = diskio_free;
 
     if (!fp) {
         return ENOENT;
@@ -1538,7 +1530,7 @@ static int create_diskmap_v4(sigar_t *sigar)
 
     while ((ptr = fgets(buffer, sizeof(buffer), fp))) {
         FILE *lfp;
-        char cmd[256], disk[56];
+        char cmd[256], disk[IDENTIFIER_LENGTH];
         char *s;
 
         if (strstr(ptr, " None")) {
@@ -1547,7 +1539,7 @@ static int create_diskmap_v4(sigar_t *sigar)
         if ((s = strchr(ptr, ' '))) {
             *s = '\0';
         }
-        strcpy(disk, ptr);
+        SIGAR_SSTRCPY(disk, ptr);
         snprintf(cmd, sizeof(cmd),
                  LSPV_CMD " -l %s", disk);
         if (!(lfp = popen(cmd, "r"))) {
@@ -1572,7 +1564,7 @@ static int create_diskmap_v4(sigar_t *sigar)
             retval = stat(ptr, &sb);
             if (retval == 0) {
                 aix_diskio_t *diskio = malloc(sizeof(*diskio));
-                diskio->name = strdup(disk);
+                SIGAR_SSTRCPY(diskio->name, disk);
                 diskio->addr = -1;
                 ent = sigar_cache_get(sigar->diskmap, SIGAR_FSDEV_ID(sb));
                 ent->value = diskio;
@@ -1609,7 +1601,6 @@ static int create_diskmap_v5(sigar_t *sigar)
     }
 
     sigar->diskmap = sigar_cache_new(25);
-    sigar->diskmap->free_value = diskio_free;
 
     odm_initialize();
 
@@ -1638,7 +1629,7 @@ static int create_diskmap_v5(sigar_t *sigar)
 
                 if (retval == 0) {
                     aix_diskio_t *diskio = malloc(sizeof(*diskio));
-                    diskio->name = strdup(disk[i].name);
+                    SIGAR_SSTRCPY(diskio->name, disk[i].name);
                     diskio->addr = -1;
                     ent = sigar_cache_get(sigar->diskmap, SIGAR_FSDEV_ID(sb));
                     ent->value = diskio;
