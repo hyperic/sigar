@@ -1674,14 +1674,14 @@ static int get_perfstat_disk_metrics(sigar_t *sigar,
         return ENOENT;
     }
 
-    fsusage->disk_reads = disk.rblks;
-    fsusage->disk_writes = disk.wblks;
-    fsusage->disk_read_bytes  = disk.rblks * disk.bsize;
-    fsusage->disk_write_bytes = disk.wblks * disk.bsize;
-    fsusage->disk_queue       = disk.qdepth;
-    fsusage->disk_time        = disk.time;
-    fsusage->disk_rtime       = SIGAR_FIELD_NOTIMPL;
-    fsusage->disk_wtime       = SIGAR_FIELD_NOTIMPL;
+    fsusage->disk.reads = disk.rblks;
+    fsusage->disk.writes = disk.wblks;
+    fsusage->disk.read_bytes  = disk.rblks * disk.bsize;
+    fsusage->disk.write_bytes = disk.wblks * disk.bsize;
+    fsusage->disk.queue       = disk.qdepth;
+    fsusage->disk.time        = disk.time;
+    fsusage->disk.rtime       = SIGAR_FIELD_NOTIMPL;
+    fsusage->disk.wtime       = SIGAR_FIELD_NOTIMPL;
 
     return SIGAR_OK;
 }
@@ -1689,18 +1689,18 @@ static int get_perfstat_disk_metrics(sigar_t *sigar,
 static void set_disk_metrics(struct dkstat *dkstat,
                              sigar_file_system_usage_t *fsusage)
 {
-    fsusage->disk_reads = dkstat->dk_rblks;
-    fsusage->disk_writes = dkstat->dk_wblks;
-    fsusage->disk_read_bytes  = dkstat->dk_rblks * dkstat->dk_bsize;
-    fsusage->disk_write_bytes = dkstat->dk_wblks * dkstat->dk_bsize;
-    fsusage->disk_time        = dkstat->dk_time;
-    fsusage->disk_rtime       = SIGAR_FIELD_NOTIMPL;
-    fsusage->disk_wtime       = SIGAR_FIELD_NOTIMPL;
+    fsusage->disk.reads = dkstat->dk_rblks;
+    fsusage->disk.writes = dkstat->dk_wblks;
+    fsusage->disk.read_bytes  = dkstat->dk_rblks * dkstat->dk_bsize;
+    fsusage->disk.write_bytes = dkstat->dk_wblks * dkstat->dk_bsize;
+    fsusage->disk.time        = dkstat->dk_time;
+    fsusage->disk.rtime       = SIGAR_FIELD_NOTIMPL;
+    fsusage->disk.wtime       = SIGAR_FIELD_NOTIMPL;
     if (dkstat->dk_qd_magic == dk_q_depth_magic) {
-        fsusage->disk_queue = dkstat->dk_q_depth;
+        fsusage->disk.queue = dkstat->dk_q_depth;
     }
     else {
-        fsusage->disk_queue = SIGAR_FIELD_NOTIMPL;
+        fsusage->disk.queue = SIGAR_FIELD_NOTIMPL;
     }
 }
 
@@ -1794,7 +1794,7 @@ int sigar_file_system_usage_get(sigar_t *sigar,
     fsusage->free_files = buf.f_ffree;
     fsusage->use_percent = sigar_file_system_usage_calc_used(sigar, fsusage);
 
-    SIGAR_DISK_STATS_NOTIMPL(fsusage);
+    SIGAR_DISK_STATS_INIT(&fsusage->disk);
 
     if (!sigar->diskmap) {
         status = create_diskmap(sigar);
