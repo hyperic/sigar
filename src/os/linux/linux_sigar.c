@@ -1302,7 +1302,7 @@ static iodev_t *get_fsdev(sigar_t *sigar,
 
 static int get_iostat_sys(sigar_t *sigar,
                           const char *dirname,
-                          sigar_disk_usage_t *fsusage)
+                          sigar_disk_usage_t *disk)
 {
     char stat[1025], dev[1025];
     char *name, *ptr, *fsdev;
@@ -1336,20 +1336,20 @@ static int get_iostat_sys(sigar_t *sigar,
 
     ptr = dev;
     ptr = sigar_skip_token(ptr);
-    fsusage->disk_reads = sigar_strtoull(ptr);
+    disk->reads = sigar_strtoull(ptr);
     ptr = sigar_skip_token(ptr);
-    fsusage->disk_writes = sigar_strtoull(ptr);
+    disk->writes = sigar_strtoull(ptr);
 
-    fsusage->disk_read_bytes  = SIGAR_FIELD_NOTIMPL;
-    fsusage->disk_write_bytes = SIGAR_FIELD_NOTIMPL;
-    fsusage->disk_queue       = SIGAR_FIELD_NOTIMPL;
+    disk->read_bytes  = SIGAR_FIELD_NOTIMPL;
+    disk->write_bytes = SIGAR_FIELD_NOTIMPL;
+    disk->queue       = SIGAR_FIELD_NOTIMPL;
 
     return SIGAR_OK;
 }
 
 static int get_iostat_proc_dstat(sigar_t *sigar,
                                  const char *dirname,
-                                 sigar_disk_usage_t *fsusage)
+                                 sigar_disk_usage_t *disk)
 {
     FILE *fp;
     char buffer[1025];
@@ -1408,29 +1408,29 @@ static int get_iostat_proc_dstat(sigar_t *sigar,
                          &aveq);   /* 11 # of millis spent doing I/Os (weighted) */
 
             if (num == 11) {
-                fsusage->disk_rtime = ruse;
-                fsusage->disk_wtime = wuse;
-                fsusage->disk_time = use;
-                fsusage->disk_queue  = aveq / 1000;
+                disk->rtime = ruse;
+                disk->wtime = wuse;
+                disk->time = use;
+                disk->queue  = aveq / 1000;
             }
             else if (num == 4) {
                 wio = rsect;
                 rsect = rmerge;
                 wsect = ruse;
-                fsusage->disk_queue = SIGAR_FIELD_NOTIMPL;
+                disk->queue = SIGAR_FIELD_NOTIMPL;
             }
             else {
                 status = ENOENT;
             }
 
-            fsusage->disk_reads = rio;
-            fsusage->disk_writes = wio;
-            fsusage->disk_read_bytes  = rsect;
-            fsusage->disk_write_bytes = wsect;
+            disk->reads = rio;
+            disk->writes = wio;
+            disk->read_bytes  = rsect;
+            disk->write_bytes = wsect;
 
             /* convert sectors to bytes (512 is fixed size in 2.6 kernels) */
-            fsusage->disk_read_bytes  *= 512;
-            fsusage->disk_write_bytes *= 512;
+            disk->read_bytes  *= 512;
+            disk->write_bytes *= 512;
 
             fclose(fp);
             return status;
@@ -1444,7 +1444,7 @@ static int get_iostat_proc_dstat(sigar_t *sigar,
 
 static int get_iostat_procp(sigar_t *sigar,
                             const char *dirname,
-                            sigar_disk_usage_t *fsusage)
+                            sigar_disk_usage_t *disk)
 {
     FILE *fp;
     char buffer[1025];
@@ -1481,22 +1481,22 @@ static int get_iostat_procp(sigar_t *sigar,
         if ((major == ST_MAJOR(sb)) && (minor == ST_MINOR(sb))) {
             ptr = sigar_skip_token(ptr); /* blocks */
             ptr = sigar_skip_token(ptr); /* name */
-            fsusage->disk_reads = sigar_strtoull(ptr); /* rio */
+            disk->reads = sigar_strtoull(ptr); /* rio */
             ptr = sigar_skip_token(ptr);  /* rmerge */ 
-            fsusage->disk_read_bytes  = sigar_strtoull(ptr); /* rsect */
-            fsusage->disk_rtime = sigar_strtoull(ptr); /* ruse */
+            disk->read_bytes  = sigar_strtoull(ptr); /* rsect */
+            disk->rtime = sigar_strtoull(ptr); /* ruse */
             ptr = sigar_skip_token(ptr);  /* wmerge */ 
-            fsusage->disk_write_bytes = sigar_strtoull(ptr); /* wsect */
-            fsusage->disk_writes = sigar_strtoull(ptr); /* wio */
-            fsusage->disk_wtime = sigar_strtoull(ptr); /* wuse */
+            disk->write_bytes = sigar_strtoull(ptr); /* wsect */
+            disk->writes = sigar_strtoull(ptr); /* wio */
+            disk->wtime = sigar_strtoull(ptr); /* wuse */
             ptr = sigar_skip_token(ptr); /* running */
-            fsusage->disk_time = sigar_strtoull(ptr); /* use */
-            fsusage->disk_queue  = sigar_strtoull(ptr); /* aveq */
-            fsusage->disk_queue /= 1000;
+            disk->time = sigar_strtoull(ptr); /* use */
+            disk->queue  = sigar_strtoull(ptr); /* aveq */
+            disk->queue /= 1000;
 
             /* convert sectors to bytes (512 is fixed size in 2.6 kernels) */
-            fsusage->disk_read_bytes  *= 512;
-            fsusage->disk_write_bytes *= 512;
+            disk->read_bytes  *= 512;
+            disk->write_bytes *= 512;
 
             fclose(fp);
             return SIGAR_OK;
@@ -1509,9 +1509,9 @@ static int get_iostat_procp(sigar_t *sigar,
 }
 
 int sigar_disk_usage_get(sigar_t *sigar, const char *name,
-                         sigar_disk_usage_t *usage)
+                         sigar_disk_usage_t *disk)
 {
-    SIGAR_DISK_STATS_NOTIMPL(usage); /* init */
+    SIGAR_DISK_STATS_INIT(disk);
 
     /*
      * 2.2 has metrics /proc/stat, but wtf is the device mapping?
@@ -1522,11 +1522,11 @@ int sigar_disk_usage_get(sigar_t *sigar, const char *name,
      */
     switch (sigar->iostat) {
       case IOSTAT_SYS:
-        return get_iostat_sys(sigar, name, usage);
+        return get_iostat_sys(sigar, name, disk);
       case IOSTAT_DISKSTATS:
-        return get_iostat_proc_dstat(sigar, name, usage);
+        return get_iostat_proc_dstat(sigar, name, disk);
       case IOSTAT_PARTITIONS:
-        return get_iostat_procp(sigar, name, usage);
+        return get_iostat_procp(sigar, name, disk);
       /*
        * case IOSTAT_SOME_OTHER_WIERD_THING:
        * break;
@@ -1560,8 +1560,7 @@ int sigar_file_system_usage_get(sigar_t *sigar,
     fsusage->free_files = buf.f_ffree;
     fsusage->use_percent = sigar_file_system_usage_calc_used(sigar, fsusage);
 
-    (void)sigar_disk_usage_get(sigar, dirname,
-                               (sigar_disk_usage_t *)fsusage);
+    (void)sigar_disk_usage_get(sigar, dirname, &fsusage->disk);
 
     return SIGAR_OK;
 }

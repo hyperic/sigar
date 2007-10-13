@@ -432,22 +432,26 @@ SIGAR_DECLARE(int)
 sigar_file_system_list_destroy(sigar_t *sigar,
                                sigar_file_system_list_t *fslist);
 
-#define SIGAR_DISK_USAGE_T \
-    sigar_uint64_t disk_reads; \
-    sigar_uint64_t disk_writes; \
-    sigar_uint64_t disk_write_bytes; \
-    sigar_uint64_t disk_read_bytes; \
-    sigar_uint64_t disk_queue; \
-    sigar_uint64_t disk_rtime; \
-    sigar_uint64_t disk_wtime; \
-    sigar_uint64_t disk_time
-
 typedef struct {
-    SIGAR_DISK_USAGE_T;
+    sigar_uint64_t reads;
+    sigar_uint64_t writes;
+    sigar_uint64_t write_bytes;
+    sigar_uint64_t read_bytes;
+    sigar_uint64_t queue;
+    sigar_uint64_t rtime;
+    sigar_uint64_t wtime;
+    sigar_uint64_t time;
 } sigar_disk_usage_t;
 
+/* XXX for sigar_file_system_usage_t compat */
+#define disk_reads disk.reads
+#define disk_writes disk.writes
+#define disk_write_bytes disk.write_bytes
+#define disk_read_bytes disk.read_bytes
+#define disk_queue disk.queue
+
 typedef struct {
-    SIGAR_DISK_USAGE_T;
+    sigar_disk_usage_t disk;
     double use_percent;
     sigar_uint64_t total;
     sigar_uint64_t free;
@@ -466,7 +470,7 @@ sigar_file_system_usage_get(sigar_t *sigar,
 
 SIGAR_DECLARE(int) sigar_disk_usage_get(sigar_t *sigar,
                                         const char *name,
-                                        sigar_disk_usage_t *usage);
+                                        sigar_disk_usage_t *disk);
 
 SIGAR_DECLARE(int)
 sigar_file_system_ping(sigar_t *sigar,

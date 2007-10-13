@@ -309,10 +309,13 @@ int sigar_group_name_get(sigar_t *sigar, int gid, char *buf, int buflen);
         return SIGAR_OK; \
     }
 
+#define SIGAR_DISK_STATS_INIT(disk) \
+    (disk)->reads = (disk)->writes = \
+    (disk)->read_bytes = (disk)->write_bytes = \
+    (disk)->queue = (disk)->time = SIGAR_FIELD_NOTIMPL;
+
 #define SIGAR_DISK_STATS_NOTIMPL(fsusage) \
-    fsusage->disk_reads = fsusage->disk_writes = \
-    fsusage->disk_read_bytes = fsusage->disk_write_bytes = \
-    fsusage->disk_queue = fsusage->disk_time = SIGAR_FIELD_NOTIMPL;
+    SIGAR_DISK_STATS_INIT(&fsusage->disk)
 
 /* key used for filesystem (/) -> device (/dev/hda1) mapping */
 #define SIGAR_FSDEV_ID(sb) ((sb).st_ino + (sb).st_dev)
