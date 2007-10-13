@@ -72,7 +72,8 @@ my %platforms = (
     W => "Win32",
 );
 
-my %has_name_arg = map { $_, 1 } qw(FileSystemUsage FileAttrs DirStat DirUsage
+my %has_name_arg = map { $_, 1 } qw(FileSystemUsage DiskUsage
+                                    FileAttrs DirStat DirUsage
                                     NetInterfaceConfig NetInterfaceStat);
 
 my %proc_no_arg = map { $_, 1 } qw(stat);
@@ -759,6 +760,33 @@ our %classes = (
          name => 'use_percent', type => 'Double',
          desc => 'Percent of disk used',
          plat => '*'
+      },
+    ],
+    DiskUsage => [
+      {
+         name => 'reads', type => 'Long',
+         desc => 'Number of physical disk reads',
+         plat => 'AFHLSW'
+      },
+      {
+         name => 'writes', type => 'Long',
+         desc => 'Number of physical disk writes',
+         plat => 'AFHLSW'
+      },
+      {
+         name => 'read_bytes', type => 'Long',
+         desc => 'Number of physical disk bytes read',
+         plat => ''
+      },
+      {
+         name => 'write_bytes', type => 'Long',
+         desc => 'Number of physical disk bytes written',
+         plat => ''
+      },
+      {
+         name => 'queue', type => 'Long',
+         desc => '',
+         plat => ''
       },
     ],
     FileAttrs => [
