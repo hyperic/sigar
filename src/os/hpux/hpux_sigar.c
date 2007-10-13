@@ -644,11 +644,11 @@ int sigar_file_system_usage_get(sigar_t *sigar,
         retval = pstat_getlv(&lv, sizeof(lv), 0, (int)devsb.st_rdev);
 
         if (retval == 1) {
-            fsusage->disk_reads  = lv.psl_rxfer;
-            fsusage->disk_writes = lv.psl_wxfer;
-            fsusage->disk_read_bytes  = lv.psl_rcount;
-            fsusage->disk_write_bytes = lv.psl_wcount;
-            fsusage->disk_queue       = SIGAR_FIELD_NOTIMPL;
+            fsusage->disk.reads  = lv.psl_rxfer;
+            fsusage->disk.writes = lv.psl_wxfer;
+            fsusage->disk.read_bytes  = lv.psl_rcount;
+            fsusage->disk.write_bytes = lv.psl_wcount;
+            fsusage->disk.queue       = SIGAR_FIELD_NOTIMPL;
         }
     }
 
