@@ -117,6 +117,9 @@ public interface SigarProxy {
     public FileSystemUsage getFileSystemUsage(String name)
         throws SigarException;
 
+    public DiskUsage getDiskUsage(String name)
+        throws SigarException;
+
     public FileInfo getFileInfo(String name) throws SigarException;
 
     public FileInfo getLinkInfo(String name) throws SigarException;

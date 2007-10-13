@@ -655,6 +655,19 @@ public class Sigar implements SigarProxy {
     }
 
     /**
+     * Get disk usage.
+     * @param name Name of disk
+     * @exception SigarException on failure.
+     */
+    public DiskUsage getDiskUsage(String name)
+        throws SigarException {
+        if (name == null) {
+            throw new SigarException("name cannot be null");
+        }
+        return DiskUsage.fetch(this, name);
+    }
+
+    /**
      * Get file system usage of a mounted directory.
      * This method checks that the given directory is mounted.
      * Unlike getFileSystemUsage() which only requires that the
