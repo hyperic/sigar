@@ -188,6 +188,12 @@ int sigar_file_system_list_get(sigar_t *sigar,
     return SIGAR_OK;
 }
 
+int sigar_disk_usage_get(sigar_t *sigar, const char *name,
+                         sigar_disk_usage_t *usage)
+{
+    return SIGAR_ENOTIMPL;
+}
+
 int sigar_file_system_usage_get(sigar_t *sigar,
                                 const char *dirname,
                                 sigar_file_system_usage_t *fsusage)

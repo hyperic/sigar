@@ -1508,8 +1508,8 @@ static int get_iostat_procp(sigar_t *sigar,
     return ENOENT;
 }
 
-static int sigar_disk_usage_get(sigar_t *sigar, const char *name,
-                                sigar_disk_usage_t *usage)
+int sigar_disk_usage_get(sigar_t *sigar, const char *name,
+                         sigar_disk_usage_t *usage)
 {
     SIGAR_DISK_STATS_NOTIMPL(usage); /* init */
 

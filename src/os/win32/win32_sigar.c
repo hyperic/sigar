@@ -1780,9 +1780,9 @@ static PERF_INSTANCE_DEFINITION *get_disk_instance(sigar_t *sigar,
     return PdhFirstInstance(object);
 }
 
-static int sigar_disk_usage_get(sigar_t *sigar,
-                                const char *dirname,
-                                sigar_disk_usage_t *fsusage)
+SIGAR_DECLARE(int) sigar_disk_usage_get(sigar_t *sigar,
+                                        const char *dirname,
+                                        sigar_disk_usage_t *fsusage)
 {
     DWORD i, err;
     PERF_OBJECT_TYPE *object =
