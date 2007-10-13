@@ -1782,7 +1782,7 @@ static PERF_INSTANCE_DEFINITION *get_disk_instance(sigar_t *sigar,
 
 SIGAR_DECLARE(int) sigar_disk_usage_get(sigar_t *sigar,
                                         const char *dirname,
-                                        sigar_disk_usage_t *fsusage)
+                                        sigar_disk_usage_t *disk)
 {
     DWORD i, err;
     PERF_OBJECT_TYPE *object =
@@ -1825,14 +1825,14 @@ SIGAR_DECLARE(int) sigar_disk_usage_get(sigar_t *sigar,
         }
 
         if (strnEQ(drive, dirname, 2)) {
-            fsusage->disk_time   = PERF_VAL(PERF_IX_DISK_TIME);
-            fsusage->disk_rtime  = PERF_VAL(PERF_IX_DISK_READ_TIME);
-            fsusage->disk_wtime  = PERF_VAL(PERF_IX_DISK_WRITE_TIME);
-            fsusage->disk_reads  = PERF_VAL(PERF_IX_DISK_READ);
-            fsusage->disk_writes = PERF_VAL(PERF_IX_DISK_WRITE);
-            fsusage->disk_read_bytes  = PERF_VAL(PERF_IX_DISK_READ_BYTES);
-            fsusage->disk_write_bytes = PERF_VAL(PERF_IX_DISK_WRITE_BYTES);
-            fsusage->disk_queue = PERF_VAL(PERF_IX_DISK_QUEUE);
+            disk->time   = PERF_VAL(PERF_IX_DISK_TIME);
+            disk->rtime  = PERF_VAL(PERF_IX_DISK_READ_TIME);
+            disk->wtime  = PERF_VAL(PERF_IX_DISK_WRITE_TIME);
+            disk->reads  = PERF_VAL(PERF_IX_DISK_READ);
+            disk->writes = PERF_VAL(PERF_IX_DISK_WRITE);
+            disk->read_bytes  = PERF_VAL(PERF_IX_DISK_READ_BYTES);
+            disk->write_bytes = PERF_VAL(PERF_IX_DISK_WRITE_BYTES);
+            disk->queue = PERF_VAL(PERF_IX_DISK_QUEUE);
             return SIGAR_OK;
         }
     }
@@ -1872,8 +1872,8 @@ sigar_file_system_usage_get(sigar_t *sigar,
     fsusage->files      = SIGAR_FIELD_NOTIMPL;
     fsusage->free_files = SIGAR_FIELD_NOTIMPL;
 
-    status = sigar_disk_usage_get(sigar, dirname,
-                                  (sigar_disk_usage_t *)fsusage);
+    status = sigar_disk_usage_get(sigar, dirname, &fsusage->disk);
+
     if (status != SIGAR_OK) {
         SIGAR_DISK_STATS_NOTIMPL(fsusage);
     }
