@@ -1554,7 +1554,7 @@ static int create_fsdev_cache(sigar_t *sigar)
 }
 
 static int fs_kstat_read(sigar_t *sigar,
-                         sigar_file_system_usage_t *fsusage,
+                         sigar_disk_usage_t *disk,
                          kstat_t *ksp)
 {
     kstat_io_t *io;
@@ -1563,20 +1563,20 @@ static int fs_kstat_read(sigar_t *sigar,
 
     io = (kstat_io_t *)ksp->ks_data;
 
-    fsusage->disk_reads       = io->reads;
-    fsusage->disk_writes      = io->writes;
-    fsusage->disk_read_bytes  = io->nread;
-    fsusage->disk_write_bytes = io->nwritten;
-    fsusage->disk_queue       = io->wcnt; /* XXX ? */
-    fsusage->disk_rtime       = io->rlentime * 1000;
-    fsusage->disk_wtime       = io->wlentime * 1000;
-    fsusage->disk_time        = fsusage->disk_rtime + fsusage->disk_wtime;
+    disk->reads       = io->reads;
+    disk->writes      = io->writes;
+    disk->read_bytes  = io->nread;
+    disk->write_bytes = io->nwritten;
+    disk->queue       = io->wcnt; /* XXX ? */
+    disk->rtime       = io->rlentime * 1000;
+    disk->wtime       = io->wlentime * 1000;
+    disk->time        = disk->rtime + disk->wtime;
 
     return SIGAR_OK;
 }
 
 static int get_fs_kstat(sigar_t *sigar,
-                        sigar_file_system_usage_t *fsusage,
+                        sigar_disk_usage_t *disk,
                         fs_kstat_t *fsk)
 {
     kstat_t *ksp, *first;
@@ -1600,7 +1600,7 @@ static int get_fs_kstat(sigar_t *sigar,
     if (!ksp->ks_next ||
         !strEQ(ksp->ks_next->ks_module, fsk->module))
     {
-        return fs_kstat_read(sigar, fsusage, first);
+        return fs_kstat_read(sigar, disk, first);
     }
     ksp = ksp->ks_next;
 
@@ -1610,7 +1610,7 @@ static int get_fs_kstat(sigar_t *sigar,
         }
         if ((ptr = strchr(ksp->ks_name, ','))) {
             if (*(ptr+1) == fsk->partition) {
-                return fs_kstat_read(sigar, fsusage, ksp);
+                return fs_kstat_read(sigar, disk, ksp);
             }
         }
 
@@ -1656,7 +1656,7 @@ int sigar_file_system_usage_get(sigar_t *sigar,
         return SIGAR_OK;
     }
 
-    get_fs_kstat(sigar, fsusage, (fs_kstat_t *)ent->value);
+    get_fs_kstat(sigar, &fsusage->disk, (fs_kstat_t *)ent->value);
 
     return SIGAR_OK;
 }
