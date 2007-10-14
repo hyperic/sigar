@@ -39,6 +39,12 @@
 #include <mach/vm_map.h>
 #include <mach/shared_memory_server.h>
 #include <Gestalt.h>
+#include <CFString.h>
+#include <CoreFoundation/CoreFoundation.h>
+#include <IOKit/IOBSD.h>
+#include <IOKit/IOKitLib.h>
+#include <IOKit/IOTypes.h>
+#include <IOKit/storage/IOBlockStorageDriver.h>
 #else
 #include <sys/dkstat.h>
 #include <sys/types.h>
@@ -1535,10 +1541,67 @@ int sigar_file_system_list_get(sigar_t *sigar,
     return SIGAR_OK;
 }
 
+#ifdef DARWIN
+#define IoStatGetValue(key, val) \
+    if ((number = (CFNumberRef)CFDictionaryGetValue(stats, CFSTR(kIOBlockStorageDriverStatistics##key)))) \
+        CFNumberGetValue(number, kCFNumberSInt64Type, &val)
+#endif
+
 int sigar_disk_usage_get(sigar_t *sigar, const char *name,
-                         sigar_disk_usage_t *usage)
+                         sigar_disk_usage_t *disk)
 {
+#if defined(DARWIN)
+    kern_return_t status;
+    io_registry_entry_t parent;
+    io_service_t service;
+    CFDictionaryRef props;
+    CFNumberRef number;
+
+    SIGAR_DISK_STATS_INIT(disk);
+
+    /* e.g. name == "disk0" */
+    service = IOServiceGetMatchingService(kIOMasterPortDefault,
+                                          IOBSDNameMatching(kIOMasterPortDefault, 0, name));
+
+    if (!service) {
+        return errno;
+    }
+
+    status = IORegistryEntryGetParentEntry(service, kIOServicePlane, &parent);
+    if (status != KERN_SUCCESS) {
+        IOObjectRelease(service);
+        return status;
+    }
+
+    status = IORegistryEntryCreateCFProperties(parent,
+                                               (CFMutableDictionaryRef *)&props,
+                                               kCFAllocatorDefault,
+                                               kNilOptions);
+    if (props) {
+        CFDictionaryRef stats =
+            (CFDictionaryRef)CFDictionaryGetValue(props,
+                                                  CFSTR(kIOBlockStorageDriverStatisticsKey));
+
+        if (stats) {
+            IoStatGetValue(ReadsKey, disk->reads);
+            IoStatGetValue(BytesReadKey, disk->read_bytes);
+            IoStatGetValue(TotalReadTimeKey, disk->rtime);
+            IoStatGetValue(WritesKey, disk->writes);
+            IoStatGetValue(BytesWrittenKey, disk->write_bytes);
+            IoStatGetValue(TotalWriteTimeKey, disk->wtime);
+            disk->time = disk->rtime + disk->wtime;
+        }
+
+        CFRelease(props);
+    }
+
+    IOObjectRelease(service);
+    IOObjectRelease(parent);
+
+    return SIGAR_OK;
+#else
     return SIGAR_ENOTIMPL;
+#endif
 }
 
 int sigar_file_system_usage_get(sigar_t *sigar,
