@@ -25,6 +25,7 @@ import org.hyperic.sigar.SigarException;
 import org.hyperic.sigar.FileSystem;
 import org.hyperic.sigar.FileSystemMap;
 import org.hyperic.sigar.FileSystemUsage;
+import org.hyperic.sigar.DiskUsage;
 
 import org.hyperic.sigar.shell.FileCompleter;
 import org.hyperic.sigar.util.GetlineCompleter;
@@ -82,18 +83,13 @@ public class Iostat extends SigarCommandBase {
 
     public void output(String[] args) throws SigarException {
         if (args.length == 1) {
-            FileSystemMap mounts = this.proxy.getFileSystemMap();
-            String name = FileCompleter.expand(args[0]);
-            FileSystem fs = mounts.getMountPoint(name);
-
-            if (fs != null) {
-                printHeader();
-                output(fs);
-                return;
+            String arg = args[0];
+            if ((arg.indexOf('/') != -1) || (arg.indexOf('\\') != -1)) {
+                outputFileSystem(arg);
             }
-
-            throw new SigarException(args[0] +
-                                     " No such file or directory");
+            else {
+                outputDisk(arg);
+            }
         }
         else {
             FileSystem[] fslist = this.proxy.getFileSystemList();
@@ -104,6 +100,51 @@ public class Iostat extends SigarCommandBase {
                 }
             }
         }
+    }
+
+    public void outputFileSystem(String arg) throws SigarException {
+        FileSystemMap mounts = this.proxy.getFileSystemMap();
+        String name = FileCompleter.expand(arg);
+        FileSystem fs = mounts.getMountPoint(name);
+
+        if (fs != null) {
+            printHeader();
+            output(fs);
+            return;
+        }
+
+        throw new SigarException(arg +
+                                 " No such file or directory");
+    }
+
+    public void outputDisk(String name) throws SigarException {
+        DiskUsage disk =
+            this.sigar.getDiskUsage(name);
+
+        ArrayList items = new ArrayList();
+        printHeader();
+        items.add("XXX");
+        items.add("XXX");
+        items.add(String.valueOf(disk.getReads()));
+        items.add(String.valueOf(disk.getWrites()));
+
+        if (disk.getReadBytes() == Sigar.FIELD_NOTIMPL) {
+            items.add("-");
+            items.add("-");
+        }
+        else {
+            items.add(Sigar.formatSize(disk.getReadBytes()));
+            items.add(Sigar.formatSize(disk.getWriteBytes()));
+        }
+
+        if (disk.getQueue() == Sigar.FIELD_NOTIMPL) {
+            items.add("-");
+        }
+        else {
+            items.add(String.valueOf(disk.getQueue()));
+        }
+
+        printf(items);
     }
 
     public void output(FileSystem fs) throws SigarException {
