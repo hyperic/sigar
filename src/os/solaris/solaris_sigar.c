@@ -1561,6 +1561,10 @@ static int fs_kstat_read(sigar_t *sigar,
 
     kstat_read(sigar->kc, ksp, NULL);
 
+    if (ksp->ks_type != KSTAT_TYPE_IO) {
+        return EINVAL;
+    }
+
     io = (kstat_io_t *)ksp->ks_data;
 
     disk->reads       = io->reads;
@@ -1615,6 +1619,29 @@ static int get_fs_kstat(sigar_t *sigar,
         }
 
         ksp = ksp->ks_next;
+    }
+
+    return ENOENT;
+}
+
+int sigar_disk_usage_get(sigar_t *sigar, const char *name,
+                         sigar_disk_usage_t *disk)
+{
+    kstat_t *ksp;
+
+    if (sigar_kstat_update(sigar) == -1) {
+        return errno;
+    }
+
+    SIGAR_DISK_STATS_INIT(disk);
+    /* XXX optimize */
+    for (ksp = sigar->kc->kc_chain;
+         ksp;
+         ksp = ksp->ks_next)
+    {
+        if (strEQ(ksp->ks_name, name)) {
+            return fs_kstat_read(sigar, disk, ksp);
+        }
     }
 
     return ENOENT;
