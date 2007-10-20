@@ -714,6 +714,9 @@ int sigar_os_proc_list_get(sigar_t *sigar,
         if (proc[i].KI_FLAG & P_SYSTEM) {
             continue;
         }
+        if (proc[i].KI_PID == 0) {
+            continue;
+        }
         SIGAR_PROC_LIST_GROW(proclist);
         proclist->data[proclist->number++] = proc[i].KI_PID;
     }
@@ -957,13 +960,44 @@ int sigar_proc_time_get(sigar_t *sigar, sigar_pid_t pid,
 }
 
 #ifdef DARWIN
+/* thread state mapping derived from ps.tproj */
+static const char const thread_states[] = {
+    /*0*/ '-',
+    /*1*/ SIGAR_PROC_STATE_RUN,
+    /*2*/ SIGAR_PROC_STATE_ZOMBIE,
+    /*3*/ SIGAR_PROC_STATE_SLEEP,
+    /*4*/ SIGAR_PROC_STATE_IDLE,
+    /*5*/ SIGAR_PROC_STATE_STOP,
+    /*6*/ SIGAR_PROC_STATE_STOP,
+    /*7*/ '?'
+};
+
+static int thread_state_get(thread_basic_info_data_t *info)
+{
+    switch (info->run_state) {
+      case TH_STATE_RUNNING:
+        return 1;
+      case TH_STATE_UNINTERRUPTIBLE:
+        return 2;
+      case TH_STATE_WAITING:
+        return (info->sleep_time > 20) ? 4 : 3;
+      case TH_STATE_STOPPED:
+        return 5;
+      case TH_STATE_HALTED:
+        return 6;  
+      default:
+        return 7; 
+    }
+}
+
 static int sigar_proc_threads_get(sigar_t *sigar, sigar_pid_t pid,
                                   sigar_proc_state_t *procstate)
 {
     mach_port_t task, self = mach_task_self();
     kern_return_t status;
     thread_array_t threads;
-    mach_msg_type_number_t count;
+    mach_msg_type_number_t count, i;
+    int state = TH_STATE_HALTED + 1;
 
     status = task_for_pid(self, pid, &task);
     if (status != KERN_SUCCESS) {
@@ -976,8 +1010,24 @@ static int sigar_proc_threads_get(sigar_t *sigar, sigar_pid_t pid,
     }
 
     procstate->threads = count;
-		
+
+    for (i=0; i<count; i++) {
+        mach_msg_type_number_t info_count = THREAD_BASIC_INFO_COUNT;
+        thread_basic_info_data_t info;
+
+        status = thread_info(threads[i], THREAD_BASIC_INFO,
+                             (thread_info_t)&info, &info_count);
+        if (status == KERN_SUCCESS) {
+            int tstate = thread_state_get(&info);
+            if (tstate < state) {
+                state = tstate;
+            }
+        }
+    }		
+
     vm_deallocate(self, (vm_address_t)threads, sizeof(thread_t) * count);
+
+    procstate->state = thread_states[state];
 
     return SIGAR_OK;
 }
@@ -1003,8 +1053,7 @@ int sigar_proc_state_get(sigar_t *sigar, sigar_pid_t pid,
 
 #ifdef DARWIN
     sigar_proc_threads_get(sigar, pid, procstate);
-#endif
-
+#else
     switch (pinfo->KI_STAT) {
       case SIDL:
         procstate->state = 'D';
@@ -1022,6 +1071,7 @@ int sigar_proc_state_get(sigar_t *sigar, sigar_pid_t pid,
         procstate->state = 'Z';
         break;
     }
+#endif
 
     return SIGAR_OK;
 }
