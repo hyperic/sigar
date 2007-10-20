@@ -1656,36 +1656,6 @@ static int create_diskmap(sigar_t *sigar)
     return SIGAR_OK;
 }
 
-static int get_perfstat_disk_metrics(sigar_t *sigar,
-                                     sigar_file_system_usage_t *fsusage,
-                                     aix_diskio_t *diskio)
-{
-    perfstat_disk_t disk;
-    perfstat_id_t id;
-
-    sigar_perfstat_init(sigar);
-    if (!sigar->perfstat.disk) {
-        return SIGAR_ENOTIMPL;
-    }
-
-    SIGAR_SSTRCPY(id.name, diskio->name);
-
-    if (sigar->perfstat.disk(&id, &disk, 1) != 1) {
-        return ENOENT;
-    }
-
-    fsusage->disk.reads = disk.rblks;
-    fsusage->disk.writes = disk.wblks;
-    fsusage->disk.read_bytes  = disk.rblks * disk.bsize;
-    fsusage->disk.write_bytes = disk.wblks * disk.bsize;
-    fsusage->disk.queue       = disk.qdepth;
-    fsusage->disk.time        = disk.time;
-    fsusage->disk.rtime       = SIGAR_FIELD_NOTIMPL;
-    fsusage->disk.wtime       = SIGAR_FIELD_NOTIMPL;
-
-    return SIGAR_OK;
-}
-
 static void set_disk_metrics(struct dkstat *dkstat,
                              sigar_file_system_usage_t *fsusage)
 {
@@ -1715,7 +1685,7 @@ static int get_disk_metrics(sigar_t *sigar,
         { "iostat" },
     };
 
-    status = get_perfstat_disk_metrics(sigar, fsusage, diskio);
+    status = sigar_disk_usage_get(sigar, diskio->name, &fsusage->disk);
     if (status == SIGAR_OK) {
         return SIGAR_OK;
     }
@@ -1769,6 +1739,35 @@ static int get_disk_metrics(sigar_t *sigar,
             break;
         }
     }
+
+    return SIGAR_OK;
+}
+
+int sigar_disk_usage_get(sigar_t *sigar, const char *name,
+                         sigar_disk_usage_t *usage)
+{
+    perfstat_disk_t disk;
+    perfstat_id_t id;
+
+    sigar_perfstat_init(sigar);
+    if (!sigar->perfstat.disk) {
+        return SIGAR_ENOTIMPL;
+    }
+
+    SIGAR_SSTRCPY(id.name, name);
+
+    if (sigar->perfstat.disk(&id, &disk, 1) != 1) {
+        return ENOENT;
+    }
+
+    usage->reads = disk.rblks;
+    usage->writes = disk.wblks;
+    usage->read_bytes  = disk.rblks * disk.bsize;
+    usage->write_bytes = disk.wblks * disk.bsize;
+    usage->queue       = disk.qdepth;
+    usage->time        = disk.time;
+    usage->rtime       = SIGAR_FIELD_NOTIMPL;
+    usage->wtime       = SIGAR_FIELD_NOTIMPL;
 
     return SIGAR_OK;
 }
