@@ -620,6 +620,11 @@ our %classes = (
          desc => 'Total number of processes in zombie state',
          plat => '*'
       },
+      {
+         name => 'threads', type => 'Long',
+         desc => 'Total number of threads',
+         plat => '*'
+      },
     ],
     ProcExe => [
       {

@@ -244,6 +244,7 @@ typedef struct {
     sigar_uint64_t zombie;
     sigar_uint64_t stopped;
     sigar_uint64_t idle;
+    sigar_uint64_t threads;
 } sigar_proc_stat_t;
 
 SIGAR_DECLARE(int) sigar_proc_stat_get(sigar_t *sigar,

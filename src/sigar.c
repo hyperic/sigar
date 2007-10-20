@@ -155,6 +155,7 @@ SIGAR_DECLARE(int) sigar_proc_stat_get(sigar_t *sigar,
     sigar_proc_list_t proclist;
 
     SIGAR_ZERO(procstat);
+    procstat->threads = SIGAR_FIELD_NOTIMPL;
 
     if ((status = sigar_proc_list_get(sigar, &proclist)) != SIGAR_OK) {
         return status;
@@ -168,6 +169,10 @@ SIGAR_DECLARE(int) sigar_proc_stat_get(sigar_t *sigar,
         status = sigar_proc_state_get(sigar, proclist.data[i], &state);
         if (status != SIGAR_OK) {
             continue;
+        }
+
+        if (state.threads != SIGAR_FIELD_NOTIMPL) {
+            procstat->threads += state.threads;
         }
 
         switch (state.state) {

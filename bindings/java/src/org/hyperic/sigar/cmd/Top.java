@@ -50,7 +50,7 @@ public class Top {
             stat.getSleeping() + " sleeping, " +
             stat.getRunning()  + " running, " + 
             stat.getZombie()   + " zombie, " +
-            stat.getStopped()  + " stopped";
+            stat.getStopped()  + " stopped... " + stat.getThreads() + " threads";
     }
 
     public static void main(String[] args) throws Exception {
