@@ -91,7 +91,12 @@ public class SigarProxyCache
     }
 
     public static Sigar getSigar(Object proxy) {
-        return getHandler(proxy).sigar;
+        if (proxy.getClass() == Sigar.class) {
+            return (Sigar)proxy;
+        }
+        else {
+            return getHandler(proxy).sigar;
+        }
     }
 
     private String getDebugArgs(Object[] args, Object argKey) {
