@@ -26,6 +26,7 @@ public class MultiProcMem extends ProcMem {
         throws SigarException {
 
         ProcMem mem = new ProcMem();
+        mem.share = Sigar.FIELD_NOTIMPL;
 
         long[] pids = ProcessFinder.find(sigar, query);
 
@@ -33,7 +34,9 @@ public class MultiProcMem extends ProcMem {
             ProcMem pmem = sigar.getProcMem(pids[i]);
             mem.size     += pmem.size;
             mem.resident += pmem.resident;
-            mem.share    += pmem.share;
+            if (pmem.share != Sigar.FIELD_NOTIMPL) {
+                mem.share += pmem.share;
+            }
         }
         
         return mem;
