@@ -312,7 +312,9 @@ int sigar_group_name_get(sigar_t *sigar, int gid, char *buf, int buflen);
 #define SIGAR_DISK_STATS_INIT(disk) \
     (disk)->reads = (disk)->writes = \
     (disk)->read_bytes = (disk)->write_bytes = \
-    (disk)->queue = (disk)->time = SIGAR_FIELD_NOTIMPL;
+    (disk)->queue = (disk)->time = \
+    (disk)->service_time = SIGAR_FIELD_NOTIMPL; \
+    (disk)->snaptime = 0
 
 #define SIGAR_DISK_STATS_NOTIMPL(fsusage) \
     SIGAR_DISK_STATS_INIT(&fsusage->disk)
