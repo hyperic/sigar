@@ -1569,8 +1569,9 @@ static int io_kstat_read(sigar_t *sigar,
     return SIGAR_OK;
 }
 
-int sigar_disk_usage_get(sigar_t *sigar, const char *name,
-                         sigar_disk_usage_t *disk)
+
+static int sigar_kstat_disk_usage_get(sigar_t *sigar, const char *name,
+                                      sigar_disk_usage_t *disk)
 {
     kstat_t *ksp;
 
@@ -1592,7 +1593,65 @@ int sigar_disk_usage_get(sigar_t *sigar, const char *name,
         }
     }
 
-    return ENOENT;
+    return ENXIO;
+}
+
+static int simple_hash(const char *s)
+{
+    int hash = 0;
+    while (*s) {
+        hash = 31*hash + *s++; 
+    }
+    return hash;
+}
+
+int sigar_disk_usage_get(sigar_t *sigar, const char *name,
+                         sigar_disk_usage_t *disk)
+{
+    int status;
+    iodev_t *iodev;
+    sigar_cache_entry_t *ent;
+    sigar_uint64_t id;
+
+    if (!sigar->fsdev) {
+        if (create_fsdev_cache(sigar) != SIGAR_OK) {
+            return SIGAR_OK;
+        }
+    }
+
+    if (*name == '/') {
+        struct stat sb;
+
+        if (stat(name, &sb) < 0) {
+            return errno;
+        }
+
+        id = SIGAR_FSDEV_ID(sb);
+        ent = sigar_cache_get(sigar->fsdev, id);
+        if (ent->value == NULL) {
+            return ENXIO;
+        }
+        iodev = (iodev_t *)ent->value;
+        status = sigar_kstat_disk_usage_get(sigar, iodev->name, disk);
+    }
+    else {
+        status = sigar_kstat_disk_usage_get(sigar, name, disk);
+        if (status != SIGAR_OK) {
+            return status;
+        }
+        id = simple_hash(name); /*XXX*/
+        ent = sigar_cache_get(sigar->fsdev, id);
+        if (ent->value) {
+            iodev = (iodev_t *)ent->value;
+        }
+        else {
+            ent->value = iodev = malloc(sizeof(*iodev));
+            SIGAR_SSTRCPY(iodev->name, name);
+            SIGAR_DISK_STATS_INIT(&iodev->disk);
+        }
+    }
+
+    return status;
 }
 
 int sigar_file_system_usage_get(sigar_t *sigar,
@@ -1600,9 +1659,6 @@ int sigar_file_system_usage_get(sigar_t *sigar,
                                 sigar_file_system_usage_t *fsusage)
 {
     struct statvfs buf;
-    struct stat sb;
-    sigar_cache_entry_t *ent;
-    iodev_t *iodev;
 
     if (statvfs(dirname, &buf) != 0) {
         return errno;
@@ -1616,23 +1672,7 @@ int sigar_file_system_usage_get(sigar_t *sigar,
     fsusage->free_files = buf.f_ffree;
     fsusage->use_percent = sigar_file_system_usage_calc_used(sigar, fsusage);
 
-    SIGAR_DISK_STATS_NOTIMPL(fsusage);
-
-    if (!sigar->fsdev) {
-        if (create_fsdev_cache(sigar) != SIGAR_OK) {
-            return SIGAR_OK;
-        }
-    }
-
-    if (stat(dirname, &sb) < 0) {
-        return SIGAR_OK;
-    }
-    ent = sigar_cache_get(sigar->fsdev, SIGAR_FSDEV_ID(sb));
-    if (ent->value == NULL) {
-        return SIGAR_OK;
-    }
-    iodev = (iodev_t *)ent->value;
-    sigar_disk_usage_get(sigar, iodev->name, &fsusage->disk);
+    sigar_disk_usage_get(sigar, dirname, &fsusage->disk);
 
     return SIGAR_OK;
 }
