@@ -35,6 +35,13 @@ extern "C" {
 #define SIGAR_64BIT
 #endif
 
+/* for printf sigar_uint64_t */
+#ifdef SIGAR_64BIT
+# define SIGAR_F_U64 "%lu"
+#else
+# define SIGAR_F_U64 "%Lu"
+#endif
+
 #if defined(WIN32)
 
 typedef unsigned __int32 sigar_uint32_t;
