@@ -1215,12 +1215,7 @@ static iodev_t *get_fsdev(sigar_t *sigar,
         return NULL;
     }
 
-    if (is_dev) {
-        id = sb.st_rdev;
-    }
-    else {
-        id = SIGAR_FSDEV_ID(sb);
-    }
+    id = SIGAR_FSDEV_ID(sb);
 
     entry = sigar_cache_get(sigar->fsdev, id);
 
