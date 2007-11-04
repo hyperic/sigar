@@ -1362,10 +1362,10 @@ typedef struct {
 } fsdev_path_t;
 
 typedef struct {
-    char module[8];
-    int instance;
-    char partition;
-} fs_kstat_t;
+    char name[256];
+    int is_partition;
+    sigar_disk_usage_t disk;
+} iodev_t;
 
 static fsdev_path_t *get_fsdev_paths(sigar_t *sigar,
                                      sigar_file_system_list_t *fslist)
@@ -1511,29 +1511,27 @@ static int create_fsdev_cache(sigar_t *sigar)
                     sigar_cache_entry_t *ent;
                     struct stat sb;
                     int retval = stat(fsp->dir_name, &sb);
-                    fs_kstat_t *fs_kstat;
+                    iodev_t *iodev;
 
                     if (retval == 0) {
-                        fs_kstat = malloc(sizeof(*fs_kstat));
+                        iodev = malloc(sizeof(*iodev));
 
+                        SIGAR_DISK_STATS_INIT(&iodev->disk);
                         /* e.g. sd9,g
                          * module    == sd
                          * instance  == 9
                          * partition == 8
                          */
-                        SIGAR_SSTRCPY(fs_kstat->module, paths->name);
-                        fs_kstat->instance = paths->instance;
-                        fs_kstat->partition = partition;
+                        snprintf(iodev->name, sizeof(iodev->name), "%s%d,%c",
+                                 paths->name, paths->instance, partition);
+
                         ent = sigar_cache_get(sigar->fsdev, SIGAR_FSDEV_ID(sb));
-                        ent->value = fs_kstat;
+                        ent->value = iodev;
 
                         if (debug) {
                             sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
-                                             "[fsdev] map %s -> %s%d,%c",
-                                             fsp->dir_name,
-                                             fs_kstat->module,
-                                             fs_kstat->instance,
-                                             fs_kstat->partition);
+                                             "[fsdev] map %s -> %s",
+                                             fsp->dir_name, iodev->name);
                         }
                     }
                     break;
@@ -1549,17 +1547,13 @@ static int create_fsdev_cache(sigar_t *sigar)
     return SIGAR_OK;
 }
 
-static int fs_kstat_read(sigar_t *sigar,
+static int io_kstat_read(sigar_t *sigar,
                          sigar_disk_usage_t *disk,
                          kstat_t *ksp)
 {
     kstat_io_t *io;
 
     kstat_read(sigar->kc, ksp, NULL);
-
-    if (ksp->ks_type != KSTAT_TYPE_IO) {
-        return EINVAL;
-    }
 
     io = (kstat_io_t *)ksp->ks_data;
 
@@ -1575,51 +1569,6 @@ static int fs_kstat_read(sigar_t *sigar,
     return SIGAR_OK;
 }
 
-static int get_fs_kstat(sigar_t *sigar,
-                        sigar_disk_usage_t *disk,
-                        fs_kstat_t *fsk)
-{
-    kstat_t *ksp, *first;
-    char *ptr;
-
-    if (sigar_kstat_update(sigar) == -1) {
-        return errno;
-    }
-
-    first = ksp =
-        kstat_lookup(sigar->kc, fsk->module, fsk->instance, NULL);
-
-    if (!ksp) {
-        return ENXIO;
-    }
-
-    /* first entry is for the entire disk.
-     * if there are no partitions specified,
-     * report metrics for the entire disk.
-     */
-    if (!ksp->ks_next ||
-        !strEQ(ksp->ks_next->ks_module, fsk->module))
-    {
-        return fs_kstat_read(sigar, disk, first);
-    }
-    ksp = ksp->ks_next;
-
-    while (ksp) {
-        if (!strEQ(ksp->ks_module, fsk->module)) {
-            break; /* chain goes beyond our module */
-        }
-        if ((ptr = strchr(ksp->ks_name, ','))) {
-            if (*(ptr+1) == fsk->partition) {
-                return fs_kstat_read(sigar, disk, ksp);
-            }
-        }
-
-        ksp = ksp->ks_next;
-    }
-
-    return ENOENT;
-}
-
 int sigar_disk_usage_get(sigar_t *sigar, const char *name,
                          sigar_disk_usage_t *disk)
 {
@@ -1630,13 +1579,16 @@ int sigar_disk_usage_get(sigar_t *sigar, const char *name,
     }
 
     SIGAR_DISK_STATS_INIT(disk);
-    /* XXX optimize */
+
     for (ksp = sigar->kc->kc_chain;
          ksp;
          ksp = ksp->ks_next)
     {
+        if (ksp->ks_type != KSTAT_TYPE_IO) {
+            continue;
+        }
         if (strEQ(ksp->ks_name, name)) {
-            return fs_kstat_read(sigar, disk, ksp);
+            return io_kstat_read(sigar, disk, ksp);
         }
     }
 
@@ -1650,6 +1602,7 @@ int sigar_file_system_usage_get(sigar_t *sigar,
     struct statvfs buf;
     struct stat sb;
     sigar_cache_entry_t *ent;
+    iodev_t *iodev;
 
     if (statvfs(dirname, &buf) != 0) {
         return errno;
@@ -1678,8 +1631,8 @@ int sigar_file_system_usage_get(sigar_t *sigar,
     if (ent->value == NULL) {
         return SIGAR_OK;
     }
-
-    get_fs_kstat(sigar, &fsusage->disk, (fs_kstat_t *)ent->value);
+    iodev = (iodev_t *)ent->value;
+    sigar_disk_usage_get(sigar, iodev->name, &fsusage->disk);
 
     return SIGAR_OK;
 }
