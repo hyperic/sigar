@@ -27,6 +27,14 @@
 extern "C" {
 #endif
 
+#if defined(_LP64)         || \
+    defined(__LP64__)      || \
+    defined(__64BIT__)     || \
+    defined(__powerpc64__) || \
+    defined(__osf__)
+#define SIGAR_64BIT
+#endif
+
 #if defined(WIN32)
 
 typedef unsigned __int32 sigar_uint32_t;
