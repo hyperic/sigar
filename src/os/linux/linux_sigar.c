@@ -1182,6 +1182,7 @@ int sigar_file_system_list_get(sigar_t *sigar,
 
 typedef struct {
     char name[256];
+    int is_partition;
     sigar_disk_usage_t disk;
 } iodev_t;
 
@@ -1278,6 +1279,7 @@ static iodev_t *get_fsdev(sigar_t *sigar,
                 iodev_t *iodev;
                 ent->value = iodev = malloc(sizeof(*iodev));
                 SIGAR_ZERO(iodev);
+                iodev->is_partition = 1;
                 SIGAR_SSTRCPY(iodev->name, fsp->dev_name);
 
                 if (debug) {
@@ -1351,12 +1353,16 @@ static int get_iostat_sys(sigar_t *sigar,
 static int get_iostat_proc_dstat(sigar_t *sigar,
                                  const char *dirname,
                                  sigar_disk_usage_t *disk,
-                                 iodev_t **iodev)
+                                 iodev_t **iodev,
+                                 sigar_disk_usage_t *device_usage)
 {
     FILE *fp;
     char buffer[1025];
     char *ptr;
     struct stat sb;
+    int status=ENOENT;
+
+    SIGAR_DISK_STATS_INIT(device_usage);
 
     if (!(*iodev = get_fsdev(sigar, dirname))) {
         return ENOENT;
@@ -1383,8 +1389,10 @@ static int get_iostat_proc_dstat(sigar_t *sigar,
         major = sigar_strtoul(ptr);
         minor = sigar_strtoul(ptr);
 
-        if ((major == ST_MAJOR(sb)) && (minor == ST_MINOR(sb))) {
-            int num, status=SIGAR_OK;
+        if ((major == ST_MAJOR(sb)) &&
+            ((minor == ST_MINOR(sb)) || (minor == 0)))
+        {
+            int num;
             unsigned long
                 rio, rmerge, rsect, ruse,
                 wio, wmerge, wsect, wuse,
@@ -1433,14 +1441,19 @@ static int get_iostat_proc_dstat(sigar_t *sigar,
             disk->read_bytes  *= 512;
             disk->write_bytes *= 512;
 
-            fclose(fp);
-            return status;
+            if (minor == ST_MINOR(sb)) {
+                status = SIGAR_OK;
+                break;
+            }
+            else if (minor == 0) {
+                memcpy(device_usage, disk, sizeof(*device_usage));
+            }
         }
     }
 
     fclose(fp);
 
-    return ENOENT;
+    return status;
 }
 
 static int get_iostat_procp(sigar_t *sigar,
@@ -1514,6 +1527,7 @@ int sigar_disk_usage_get(sigar_t *sigar, const char *name,
 {
     int status;
     iodev_t *iodev = NULL;
+    sigar_disk_usage_t device_usage;
     SIGAR_DISK_STATS_INIT(disk);
 
     /*
@@ -1528,7 +1542,7 @@ int sigar_disk_usage_get(sigar_t *sigar, const char *name,
         status = get_iostat_sys(sigar, name, disk, &iodev);
         break;
       case IOSTAT_DISKSTATS:
-        status = get_iostat_proc_dstat(sigar, name, disk, &iodev);
+        status = get_iostat_proc_dstat(sigar, name, disk, &iodev, &device_usage);
         break;
       case IOSTAT_PARTITIONS:
         status = get_iostat_procp(sigar, name, disk, &iodev);
@@ -1547,8 +1561,17 @@ int sigar_disk_usage_get(sigar_t *sigar, const char *name,
         sigar_uptime_t uptime;
         sigar_uint64_t interval, ios;
         double tput, util;
+        sigar_disk_usage_t *partition_usage=NULL;
 
         sigar_uptime_get(sigar, &uptime);
+
+        if (iodev->is_partition &&
+            (sigar->iostat == IOSTAT_DISKSTATS))
+        {
+            /* 2.6 kernels do not have per-partition times */
+            partition_usage = disk;
+            disk = &device_usage;
+        }
 
         disk->snaptime = uptime.uptime;
 
@@ -1572,7 +1595,10 @@ int sigar_disk_usage_get(sigar_t *sigar, const char *name,
             disk->service_time = tput ? util / tput : 0.0;
         }
 
-        memcpy(&iodev->disk, &disk, sizeof(&iodev->disk));
+        memcpy(&iodev->disk, disk, sizeof(&iodev->disk));
+        if (partition_usage) {
+            partition_usage->service_time = disk->service_time;
+        }
     }
 
     return status;
