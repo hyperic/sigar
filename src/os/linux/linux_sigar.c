@@ -168,8 +168,6 @@ int sigar_os_open(sigar_t **sigar)
         (*sigar)->iostat = IOSTAT_NONE;
     }
 
-    (*sigar)->fsdev = NULL;
-
     /* hook for using mirrored /proc/net/tcp file */
     (*sigar)->proc_net = getenv("SIGAR_PROC_NET");
 
@@ -178,9 +176,6 @@ int sigar_os_open(sigar_t **sigar)
 
 int sigar_os_close(sigar_t *sigar)
 {
-    if (sigar->fsdev) {
-        sigar_cache_destroy(sigar->fsdev);
-    }
     free(sigar);
     return SIGAR_OK;
 }

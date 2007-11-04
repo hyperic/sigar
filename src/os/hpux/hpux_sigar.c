@@ -49,8 +49,6 @@ int sigar_os_open(sigar_t **sigar)
 
     (*sigar)->pinfo = NULL;
 
-    (*sigar)->fsdev = NULL;
-
     (*sigar)->mib = -1;
     
     return SIGAR_OK;
@@ -61,9 +59,6 @@ int sigar_os_close(sigar_t *sigar)
 {
     if (sigar->pinfo) {
         free(sigar->pinfo);
-    }
-    if (sigar->fsdev) {
-        sigar_cache_destroy(sigar->fsdev);
     }
     if (sigar->mib >= 0) {
         close_mib(sigar->mib);

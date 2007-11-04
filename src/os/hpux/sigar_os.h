@@ -43,7 +43,6 @@ struct sigar_t {
     sigar_pid_t last_pid;
     struct pst_status *pinfo;
 
-    sigar_cache_t *fsdev;
     int mib;
 };
 

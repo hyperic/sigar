@@ -48,6 +48,7 @@ SIGAR_DECLARE(int) sigar_open(sigar_t **sigar)
         (*sigar)->ptql_re_impl = NULL;
         (*sigar)->ptql_re_data = NULL;
         (*sigar)->self_path = NULL;
+        (*sigar)->fsdev = NULL;
         (*sigar)->proc_cpu = NULL;
         (*sigar)->net_listen = NULL;
         (*sigar)->net_services_tcp = NULL;
@@ -64,6 +65,9 @@ SIGAR_DECLARE(int) sigar_close(sigar_t *sigar)
     }
     if (sigar->self_path) {
         free(sigar->self_path);
+    }
+    if (sigar->fsdev) {
+        sigar_cache_destroy(sigar->fsdev);
     }
     if (sigar->proc_cpu) {
         sigar_cache_destroy(sigar->proc_cpu);

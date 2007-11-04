@@ -115,7 +115,6 @@ int sigar_os_open(sigar_t **sig)
     sigar->pfree = NULL;
     sigar->pobjname = NULL;
 
-    sigar->fsdev = NULL;
     sigar->pargs = NULL;
 
     SIGAR_ZERO(&sigar->mib2);
@@ -143,9 +142,6 @@ int sigar_os_close(sigar_t *sigar)
     }
     if (sigar->plib) {
         dlclose(sigar->plib);
-    }
-    if (sigar->fsdev) {
-        sigar_cache_destroy(sigar->fsdev);
     }
     if (sigar->pargs) {
         sigar_cache_destroy(sigar->pargs);
