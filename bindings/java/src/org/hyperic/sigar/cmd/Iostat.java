@@ -36,7 +36,7 @@ import org.hyperic.sigar.util.GetlineCompleter;
 public class Iostat extends SigarCommandBase {
 
     private static final String OUTPUT_FORMAT =
-        "%-15s %-15s %10s %10s %7s %7s %5s";
+        "%-15s %-15s %10s %10s %7s %7s %5s %5s";
 
     private static final String[] HEADER = new String[] {
         "Filesystem",
@@ -46,6 +46,7 @@ public class Iostat extends SigarCommandBase {
         "R-bytes",
         "W-bytes",
         "Queue",
+        "Svctm",
     };
 
     private GetlineCompleter completer;
@@ -79,6 +80,10 @@ public class Iostat extends SigarCommandBase {
 
     public void printHeader() {
         printf(HEADER);
+    }
+
+    private String svctm(double val) {
+        return sprintf("%3.2f", new Object[] { new Double(val) });
     }
 
     public void output(String[] args) throws SigarException {
@@ -144,6 +149,13 @@ public class Iostat extends SigarCommandBase {
             items.add(String.valueOf(disk.getQueue()));
         }
 
+        if (disk.getServiceTime() == Sigar.FIELD_NOTIMPL) {
+            items.add("-");
+        }
+        else {
+            items.add(svctm(disk.getServiceTime()));
+        }
+
         printf(items);
     }
 
@@ -172,6 +184,12 @@ public class Iostat extends SigarCommandBase {
         }
         else {
             items.add(String.valueOf(usage.getDiskQueue()));
+        }
+        if (usage.getDiskServiceTime() == Sigar.FIELD_NOTIMPL) {
+            items.add("-");
+        }
+        else {
+            items.add(svctm(usage.getDiskServiceTime()));
         }
 
         printf(items);
