@@ -762,6 +762,11 @@ our %classes = (
          plat => ''
       },
       {
+         name => 'disk_service_time', type => 'Double',
+         desc => '',
+         plat => ''
+      },
+      {
          name => 'use_percent', type => 'Double',
          desc => 'Percent of disk used',
          plat => '*'
@@ -790,6 +795,11 @@ our %classes = (
       },
       {
          name => 'queue', type => 'Long',
+         desc => '',
+         plat => ''
+      },
+      {
+         name => 'service_time', type => 'Double',
          desc => '',
          plat => ''
       },
