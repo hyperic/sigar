@@ -1226,23 +1226,16 @@ JNIEXPORT void SIGAR_JNI(ptql_SigarProcessQuery_create)
     jboolean is_copy;
     const char *ptql;
     sigar_ptql_query_t *query;
+    sigar_ptql_error_t error;
 
     ptql = JENV->GetStringUTFChars(env, jptql, &is_copy);
-    status = sigar_ptql_query_create(&query, (char *)ptql);
+    status = sigar_ptql_query_create(&query, (char *)ptql, &error);
     if (is_copy) {
         JENV->ReleaseStringUTFChars(env, jptql, ptql);
     }
 
     if (status != SIGAR_OK) {
-        char buf[1024], *msg=buf;
-        if (status == SIGAR_PTQL_MALFORMED_QUERY) {
-            msg = "Malformed query";
-        }
-        else {
-            sigar_strerror_get(status, buf, sizeof(buf));
-        }
-
-        sigar_throw_ptql_malformed(env, msg);
+        sigar_throw_ptql_malformed(env, error.message);
     }
     else {
         sigar_set_pointer(env, obj, query);

@@ -22,6 +22,8 @@
 #include "sigar_ptql.h"
 #include "sigar_os.h"
 
+#include <stdio.h>
+
 #ifdef SIGAR_HAS_PCRE
 #include "pcre.h"
 #endif
@@ -49,7 +51,8 @@ typedef struct ptql_branch_t ptql_branch_t;
 #endif
 
 typedef int (SIGAPI *ptql_get_t)(sigar_t *sigar, sigar_pid_t pid, void *data);
-typedef int (*ptql_branch_init_t)(ptql_parse_branch_t *parsed, ptql_branch_t *branch);
+typedef int (*ptql_branch_init_t)(ptql_parse_branch_t *parsed, ptql_branch_t *branch,
+                                  sigar_ptql_error_t *error);
 
 typedef int (*ptql_op_ui64_t)(ptql_branch_t *branch,
                               sigar_uint64_t haystack,
@@ -535,8 +538,29 @@ static int ptql_branch_list_destroy(ptql_branch_list_t *branches)
     return SIGAR_OK;
 }
 
+#ifdef WIN32
+#define vsnprintf _vsnprintf
+#endif
+
+#define PTQL_ERRNAN \
+    ptql_error(error, "Query value '%s' is not a number", parsed->value)
+
+static int ptql_error(sigar_ptql_error_t *error, const char *format, ...)
+{
+    va_list args;
+
+    if (error != NULL) {
+        va_start(args, format);
+        vsnprintf(error->message, sizeof(error->message), format, args);
+        va_end(args);
+    }
+
+    return SIGAR_PTQL_MALFORMED_QUERY;
+}
+
 static int ptql_branch_init_any(ptql_parse_branch_t *parsed,
-                                ptql_branch_t *branch)
+                                ptql_branch_t *branch,
+                                sigar_ptql_error_t *error)
 {
     branch->data.str = sigar_strdup(parsed->attr);
     branch->data_size = strlen(parsed->attr);
@@ -641,7 +665,8 @@ enum {
 #endif
 
 static int ptql_branch_init_pid(ptql_parse_branch_t *parsed,
-                                ptql_branch_t *branch)
+                                ptql_branch_t *branch,
+                                sigar_ptql_error_t *error)
 {
     branch->op_flags |= PTQL_OP_FLAG_PID;
 
@@ -654,7 +679,7 @@ static int ptql_branch_init_pid(ptql_parse_branch_t *parsed,
             char *ptr;
             branch->data.pid = str2pid(parsed->value, ptr);
             if (strtonum_failed(parsed->value, ptr)) {
-                return EINVAL;
+                return PTQL_ERRNAN;
             }
         }
         return SIGAR_OK;
@@ -672,10 +697,10 @@ static int ptql_branch_init_pid(ptql_parse_branch_t *parsed,
         branch->data_size = strlen(parsed->value);
 #endif
         return SIGAR_OK;
-
     }
     else {
-        return EINVAL;
+        return ptql_error(error, "Unsupported %s attribute: %s",
+                          parsed->name, parsed->attr);
     }
 }
 
@@ -738,7 +763,8 @@ static int SIGAPI ptql_pid_match(sigar_t *sigar,
 }
 
 static int ptql_args_branch_init(ptql_parse_branch_t *parsed,
-                                 ptql_branch_t *branch)
+                                 ptql_branch_t *branch,
+                                 sigar_ptql_error_t *error)
 {
     if (strEQ(parsed->attr, "*")) {
         branch->op_flags |= PTQL_OP_FLAG_GLOB;
@@ -751,7 +777,7 @@ static int ptql_args_branch_init(ptql_parse_branch_t *parsed,
 
         if (strtonum_failed(parsed->attr, end)) {
             /* conversion failed */
-            return errno;
+            return ptql_error(error, "%s is not a number", parsed->attr);
         }
     }
     return SIGAR_OK;
@@ -861,11 +887,15 @@ static int SIGAPI ptql_env_match(sigar_t *sigar,
 }
 
 static int ptql_branch_init_port(ptql_parse_branch_t *parsed,
-                                 ptql_branch_t *branch)
+                                 ptql_branch_t *branch,
+                                 sigar_ptql_error_t *error)
 {
+    char *ptr;
+
     /* only 'eq' is supported here */
     if (branch->op_name != PTQL_OP_EQ) {
-        return SIGAR_PTQL_MALFORMED_QUERY;
+        return ptql_error(error, "%s requires 'eq' operator",
+                          parsed->name);
     }
 
     if (strEQ(parsed->attr, "tcp")) {
@@ -875,10 +905,14 @@ static int ptql_branch_init_port(ptql_parse_branch_t *parsed,
         branch->flags = SIGAR_NETCONN_UDP;
     }
     else {
-        return EINVAL;
+        return ptql_error(error, "Unsupported %s protocol: %s",
+                             parsed->name, parsed->attr);
     }
 
-    branch->data.ui32 = atoi(parsed->value); /*XXX*/
+    branch->data.ui32 = strtoul(parsed->value, &ptr, 10);
+    if (strtonum_failed(parsed->value, ptr)) {
+        return PTQL_ERRNAN;
+    }
 
     return SIGAR_OK;
 }
@@ -1011,11 +1045,12 @@ static ptql_entry_t ptql_map[] = {
     { NULL }
 };
 
-static int ptql_branch_parse(char *query, ptql_parse_branch_t *branch)
+static int ptql_branch_parse(char *query, ptql_parse_branch_t *branch,
+                             sigar_ptql_error_t *error)
 {
     char *ptr = strchr(query, '=');
     if (!ptr) {
-        return SIGAR_PTQL_MALFORMED_QUERY;
+        return ptql_error(error, "Missing '='");
     }
 
     branch->op_flags = 0;
@@ -1029,7 +1064,7 @@ static int ptql_branch_parse(char *query, ptql_parse_branch_t *branch)
         query = ++ptr;
     }
     else {
-        return SIGAR_PTQL_MALFORMED_QUERY;
+        return ptql_error(error, "Missing '.'");
     }
 
     if ((ptr = strchr(query, '.'))) {
@@ -1038,7 +1073,7 @@ static int ptql_branch_parse(char *query, ptql_parse_branch_t *branch)
         query = ++ptr;
     }
     else {
-        return SIGAR_PTQL_MALFORMED_QUERY;
+        return ptql_error(error, "Missing '.'");
     }
 
     if (*query) {
@@ -1050,7 +1085,7 @@ static int ptql_branch_parse(char *query, ptql_parse_branch_t *branch)
                 branch->op_flags |= PTQL_OP_FLAG_PARENT;
                 break;
               default:
-                return EINVAL;
+                return ptql_error(error, "Unsupported modifier: %c", flag);
             }
 
             ++query;
@@ -1059,14 +1094,15 @@ static int ptql_branch_parse(char *query, ptql_parse_branch_t *branch)
         branch->op = query;
     }
     else {
-        return SIGAR_PTQL_MALFORMED_QUERY;
+        return ptql_error(error, "Missing query");
     }
 
     return SIGAR_OK;
 }
 
 static int ptql_branch_add(ptql_parse_branch_t *parsed,
-                           ptql_branch_list_t *branches)
+                           ptql_branch_list_t *branches,
+                           sigar_ptql_error_t *error)
 {
     ptql_branch_t *branch;
     ptql_entry_t *entry = NULL;
@@ -1084,7 +1120,7 @@ static int ptql_branch_add(ptql_parse_branch_t *parsed,
 
     branch->op_name = ptql_op_code_get(parsed->op);
     if (branch->op_name == PTQL_OP_MAX) {
-        return SIGAR_PTQL_MALFORMED_QUERY;
+        return ptql_error(error, "Unsupported operator: %s", parsed->op);
     }
 
     for (i=0; ptql_map[i].name; i++) {
@@ -1095,7 +1131,7 @@ static int ptql_branch_add(ptql_parse_branch_t *parsed,
     }
 
     if (!entry) {
-        return SIGAR_PTQL_MALFORMED_QUERY;
+        return ptql_error(error, "Unsupported method: %s", parsed->name);
     }
 
     for (i=0; entry->members[i].name; i++) {
@@ -1111,12 +1147,13 @@ static int ptql_branch_add(ptql_parse_branch_t *parsed,
             lookup = &entry->members[0];
         }
         else {
-            return SIGAR_PTQL_MALFORMED_QUERY;
+            return ptql_error(error, "Unsupported %s attribute: %s",
+                              parsed->name, parsed->attr);
         }
     }
 
     if (lookup->init) {
-        int status = lookup->init(parsed, branch);
+        int status = lookup->init(parsed, branch, error);
         if (status != SIGAR_OK) {
             return status;
         }
@@ -1127,7 +1164,8 @@ static int ptql_branch_add(ptql_parse_branch_t *parsed,
     if ((lookup->type < PTQL_VALUE_TYPE_STR) &&
         (branch->op_name > PTQL_OP_MAX_NSTR))
     {
-        return SIGAR_PTQL_MALFORMED_QUERY;
+        return ptql_error(error, "Unsupported operator '%s' for %s.%s",
+                          parsed->op, parsed->name, parsed->attr);
     }
 
     if (*parsed->value == '$') {
@@ -1135,7 +1173,8 @@ static int ptql_branch_add(ptql_parse_branch_t *parsed,
 
         if (branch->op_name == PTQL_OP_RE) {
             /* not for use with .re */
-            return SIGAR_PTQL_MALFORMED_QUERY;
+            return ptql_error(error, "Unsupported operator '%s' with variable %s",
+                              parsed->op, parsed->value);
         }
 
         if (sigar_isdigit(*(parsed->value+1))) {
@@ -1145,11 +1184,13 @@ static int ptql_branch_add(ptql_parse_branch_t *parsed,
 
             if (branch->value.ui32 >= branches->number) {
                 /* out-of-range */
-                return SIGAR_PTQL_MALFORMED_QUERY;
+                return ptql_error(error, "Variable %s out of range (%d)",
+                                  parsed->value, branches->number);
             }
             else if (branch->value.ui32 == branches->number-1) {
                 /* self reference */
-                return SIGAR_PTQL_MALFORMED_QUERY;
+                return ptql_error(error, "Variable %s self reference",
+                                  parsed->value);
             }
         }
         else {
@@ -1169,7 +1210,8 @@ static int ptql_branch_add(ptql_parse_branch_t *parsed,
             pcre_compile(parsed->value, 0,
                          &error, &offset, NULL);
         if (!re) {
-            return SIGAR_PTQL_MALFORMED_QUERY;
+            /* XXX pcre_error ? */
+            return ptql_error(error, "Invalid regex");
         }
         is_set = 1;
         branch->value.ptr = re;
@@ -1183,7 +1225,7 @@ static int ptql_branch_add(ptql_parse_branch_t *parsed,
         if (!is_set) {
             branch->value.ui64 = strtoull(parsed->value, &ptr, 10);
             if (strtonum_failed(parsed->value, ptr)) {
-                return errno;
+                return PTQL_ERRNAN;
             }
         }
         break;
@@ -1192,7 +1234,7 @@ static int ptql_branch_add(ptql_parse_branch_t *parsed,
         if (!is_set) {
             branch->value.ui32 = strtoul(parsed->value, &ptr, 10);
             if (strtonum_failed(parsed->value, ptr)) {
-                return errno;
+                return PTQL_ERRNAN;
             }
         }
         break;
@@ -1201,7 +1243,7 @@ static int ptql_branch_add(ptql_parse_branch_t *parsed,
         if (!is_set) {
             branch->value.dbl = strtod(parsed->value, &ptr);
             if (strtonum_failed(parsed->value, ptr)) {
-                return errno;
+                return PTQL_ERRNAN;
             }
         }
         break;
@@ -1209,7 +1251,7 @@ static int ptql_branch_add(ptql_parse_branch_t *parsed,
         branch->match.chr = ptql_op_chr[branch->op_name];
         if (!is_set) {
             if (strlen(parsed->value) != 1) {
-                return SIGAR_PTQL_MALFORMED_QUERY;
+                return ptql_error(error, "%s is not a char", parsed->value);
             }
             branch->value.chr[0] = parsed->value[0];
         }
@@ -1237,13 +1279,16 @@ static int ptql_branch_compare(const void *b1, const void *b2)
 }
 
 SIGAR_DECLARE(int) sigar_ptql_query_create(sigar_ptql_query_t **queryp,
-                                           char *ptql)
+                                           char *ptql,
+                                           sigar_ptql_error_t *error)
 {
     char *ptr, *ptql_copy = sigar_strdup(ptql);
     int status = SIGAR_OK;
     int has_ref = 0;
     sigar_ptql_query_t *query =
         *queryp = malloc(sizeof(*query));
+
+    (void)ptql_error(error, "Malformed query");
 
 #ifdef PTQL_DEBUG
     query->ptql = sigar_strdup(ptql);
@@ -1260,10 +1305,10 @@ SIGAR_DECLARE(int) sigar_ptql_query_create(sigar_ptql_query_t **queryp,
             *ptr = '\0';
         }
 
-        status = ptql_branch_parse(ptql, &parsed);
+        status = ptql_branch_parse(ptql, &parsed, error);
         if (status == SIGAR_OK) {
             status =
-                ptql_branch_add(&parsed, &query->branches);
+                ptql_branch_add(&parsed, &query->branches, error);
 
             if (status != SIGAR_OK) {
                 break;
@@ -1297,6 +1342,9 @@ SIGAR_DECLARE(int) sigar_ptql_query_create(sigar_ptql_query_t **queryp,
               ptql_branch_compare);
     }
 
+    if (status == SIGAR_OK) {
+        (void)ptql_error(error, "OK");
+    }
     return status;
 }
 

@@ -23,13 +23,20 @@
 
 typedef struct sigar_ptql_query_t sigar_ptql_query_t;
 
+#define SIGAR_PTQL_ERRMSG_SIZE 1024
+
+typedef struct {
+    char message[SIGAR_PTQL_ERRMSG_SIZE];
+} sigar_ptql_error_t;
+
 typedef int (*sigar_ptql_re_impl_t)(void *, char *, char *);
 
 SIGAR_DECLARE(void) sigar_ptql_re_impl_set(sigar_t *sigar, void *data,
                                            sigar_ptql_re_impl_t impl);
 
 SIGAR_DECLARE(int) sigar_ptql_query_create(sigar_ptql_query_t **query,
-                                           char *ptql);
+                                           char *ptql,
+                                           sigar_ptql_error_t *error);
 
 SIGAR_DECLARE(int) sigar_ptql_query_match(sigar_t *sigar,
                                           sigar_ptql_query_t *query,
