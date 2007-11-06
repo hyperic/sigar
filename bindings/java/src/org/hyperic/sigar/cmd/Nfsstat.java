@@ -68,7 +68,7 @@ public class Nfsstat extends SigarCommandBase {
                  new String[] { "null", "getattr", "setattr", "root", "lookup", "readlink" });
 
         printnfs(nfs,
-                 new String[] { "read", "wrcache", "write", "create", "remove", "rename" });
+                 new String[] { "read", "writecache", "write", "create", "remove", "rename" });
 
         printnfs(nfs,
                  new String[] { "link", "symlink", "mkdir", "rmdir", "readdir", "fsstat" });
