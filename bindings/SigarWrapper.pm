@@ -102,6 +102,9 @@ sub hash {
 
 my $nfs_v2 = [
    {
+      name => 'null', type => 'Long',
+   },
+   {
       name => 'getattr', type => 'Long',
    },
    {
@@ -155,6 +158,9 @@ my $nfs_v2 = [
 ];
 
 my $nfs_v3 = [
+   {
+      name => 'null', type => 'Long',
+   },
    {
       name => 'getattr', type => 'Long',
    },
@@ -1820,6 +1826,12 @@ sub start {
     print $hfh "#define JSIGAR_FIELDS_MAX $i\n";
 }
 
+sub jname {
+    my $jname = shift;
+    #special case for nfs
+    return $jname eq 'null' ? "_$jname" : $jname;
+}
+
 #using mega-method pattern here
 sub generate_class {
     my($self, $func) = @_;
@@ -1965,6 +1977,8 @@ EOF
         my $member = $field->{member} || $name;
         my $desc = $field->{desc} || $name;
         (my $jname = $name) =~ s/_(\w)/\u$1/g;
+	my $getter = "get\u$jname";
+	$jname = jname($jname);
         my $sig = qq("$field_types{$type}");
         my $set = "JENV->Set${type}Field";
 
@@ -2005,7 +2019,7 @@ EOF
         print $jfh "     * \@return $desc\n";
         print $jfh "     */\n";
 
-        print $jfh "    public $jtype get\u$jname() { return $jname; }\n";
+        print $jfh "    public $jtype $getter() { return $jname; }\n";
     }
 
     print $jfh "\n    void copyTo($class copy) {\n", @copy, "    }\n";
