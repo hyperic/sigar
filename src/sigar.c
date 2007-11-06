@@ -39,6 +39,8 @@ SIGAR_DECLARE(int) sigar_open(sigar_t **sigar)
     int status = sigar_os_open(sigar);
 
     if (status == SIGAR_OK) {
+        /* XXX tmp hack */
+        (*sigar)->cpu_list_cores = getenv("SIGAR_CPU_CORES") ? 1 : 0;
         (*sigar)->pid = 0;
         (*sigar)->ifconf_buf = NULL;
         (*sigar)->ifconf_len = 0;

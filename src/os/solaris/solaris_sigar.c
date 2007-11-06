@@ -438,7 +438,7 @@ int sigar_cpu_list_get(sigar_t *sigar, sigar_cpu_list_t *cpulist)
         buf = ksp->ks_data;
         buf += sizeof(kmutex_t);
         memcpy(&cpuinfo[0], buf, sizeof(cpuinfo));
-        chip_id = get_chip_id(sigar, i);
+        chip_id = sigar->cpu_list_cores ? -1 : get_chip_id(sigar, i);
 
         if (chip_id == -1) {
             SIGAR_CPU_LIST_GROW(cpulist);

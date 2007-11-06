@@ -248,6 +248,12 @@ static int is_ht_enabled(sigar_t *sigar)
     sigar->ht_enabled = 0;
     sigar->lcpu = 0;
 
+    if (sigar->cpu_list_cores) {
+        sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
+                         "[cpu] skipping HT check");
+        return 0;
+    }
+
     sigar_cpuid(0, &eax, &ebx, &ecx, &edx);
 
     if ((ebx == INTEL_ID) || (ebx == AMD_ID)) {
