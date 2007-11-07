@@ -1562,24 +1562,24 @@ static int io_kstat_read(sigar_t *sigar,
     disk->read_bytes  = io->nread;
     disk->write_bytes = io->nwritten;
     disk->queue       = io->wcnt; /* XXX ? */
-    disk->rtime       = io->rlentime * 1000;
-    disk->wtime       = io->wlentime * 1000;
+    disk->rtime       = io->rlentime;
+    disk->wtime       = io->wlentime;
     disk->time        = disk->rtime + disk->wtime;
+    disk->snaptime    = ksp->ks_snaptime;
 
     return SIGAR_OK;
 }
 
 
 static int sigar_kstat_disk_usage_get(sigar_t *sigar, const char *name,
-                                      sigar_disk_usage_t *disk)
+                                      sigar_disk_usage_t *disk,
+                                      kstat_t **kio)
 {
     kstat_t *ksp;
 
     if (sigar_kstat_update(sigar) == -1) {
         return errno;
     }
-
-    SIGAR_DISK_STATS_INIT(disk);
 
     for (ksp = sigar->kc->kc_chain;
          ksp;
@@ -1589,7 +1589,9 @@ static int sigar_kstat_disk_usage_get(sigar_t *sigar, const char *name,
             continue;
         }
         if (strEQ(ksp->ks_name, name)) {
-            return io_kstat_read(sigar, disk, ksp);
+            int status = io_kstat_read(sigar, disk, ksp);
+            *kio = ksp;
+            return status;
         }
     }
 
@@ -1608,10 +1610,13 @@ static int simple_hash(const char *s)
 int sigar_disk_usage_get(sigar_t *sigar, const char *name,
                          sigar_disk_usage_t *disk)
 {
+    kstat_t *ksp;
     int status;
-    iodev_t *iodev;
+    iodev_t *iodev = NULL;
     sigar_cache_entry_t *ent;
     sigar_uint64_t id;
+
+    SIGAR_DISK_STATS_INIT(disk);
 
     if (!sigar->fsdev) {
         if (create_fsdev_cache(sigar) != SIGAR_OK) {
@@ -1632,10 +1637,11 @@ int sigar_disk_usage_get(sigar_t *sigar, const char *name,
             return ENXIO;
         }
         iodev = (iodev_t *)ent->value;
-        status = sigar_kstat_disk_usage_get(sigar, iodev->name, disk);
+
+        status = sigar_kstat_disk_usage_get(sigar, iodev->name, disk, &ksp);
     }
     else {
-        status = sigar_kstat_disk_usage_get(sigar, name, disk);
+        status = sigar_kstat_disk_usage_get(sigar, name, disk, &ksp);
         if (status != SIGAR_OK) {
             return status;
         }
@@ -1649,6 +1655,62 @@ int sigar_disk_usage_get(sigar_t *sigar, const char *name,
             SIGAR_SSTRCPY(iodev->name, name);
             SIGAR_DISK_STATS_INIT(&iodev->disk);
         }
+    }
+
+    /* service_time formula derived from opensolaris.org:iostat.c */
+    if ((status == SIGAR_OK) && iodev) {
+        sigar_uint64_t delta;
+        double avw, avr, tps, mtps; 
+        double etime, hr_etime;
+
+        if (iodev->disk.snaptime) {
+            delta = disk->snaptime - iodev->disk.snaptime;
+        }
+        else {
+            delta = ksp->ks_crtime - ksp->ks_snaptime;
+        }
+
+        hr_etime = (double)delta;
+        if (hr_etime == 0.0) {
+            hr_etime = (double)NANOSEC;
+        }
+        etime = hr_etime / (double)NANOSEC;
+
+        tps =
+            (((double)(disk->reads - iodev->disk.reads)) / etime) +
+            (((double)(disk->writes - iodev->disk.writes)) / etime);
+
+        delta = disk->wtime - iodev->disk.wtime;
+        if (delta) {
+            avw = (double)delta;
+            avw /= hr_etime;
+        }
+        else {
+            avw = 0.0;
+        }
+
+        delta = disk->rtime - iodev->disk.rtime;
+        if (delta) {
+            avr = (double)delta;
+            avr /= hr_etime;
+        }
+        else {
+            avr = 0.0;
+        }
+
+        disk->service_time = 0.0;
+
+        if (tps && (avw != 0.0 || avr != 0.0)) {
+            mtps = 1000.0 / tps;
+            if (avw != 0.0) {
+                disk->service_time += avw * mtps;
+            }
+            if (avr != 0.0) {
+                disk->service_time += avr * mtps;
+            }
+        }
+
+        memcpy(&iodev->disk, disk, sizeof(iodev->disk));
     }
 
     return status;
