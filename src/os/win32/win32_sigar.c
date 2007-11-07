@@ -1791,6 +1791,8 @@ SIGAR_DECLARE(int) sigar_disk_usage_get(sigar_t *sigar,
     PERF_COUNTER_DEFINITION *counter;
     DWORD perf_offsets[PERF_IX_DISK_MAX];
 
+    SIGAR_DISK_STATS_INIT(disk);
+
     if (!object) {
         return err;
     }
@@ -1873,10 +1875,6 @@ sigar_file_system_usage_get(sigar_t *sigar,
     fsusage->free_files = SIGAR_FIELD_NOTIMPL;
 
     status = sigar_disk_usage_get(sigar, dirname, &fsusage->disk);
-
-    if (status != SIGAR_OK) {
-        SIGAR_DISK_STATS_NOTIMPL(fsusage);
-    }
 
     return SIGAR_OK;
 }

@@ -204,7 +204,7 @@ int sigar_file_system_usage_get(sigar_t *sigar,
     fsusage->used  = -1;
     fsusage->files = -1;
     fsusage->free_files = -1;
-    SIGAR_DISK_STATS_NOTIMPL(fsusage);
+    SIGAR_DISK_STATS_INIT(&fsusage->disk)
 
     return SIGAR_OK;
 }

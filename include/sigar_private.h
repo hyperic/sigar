@@ -310,9 +310,6 @@ int sigar_group_name_get(sigar_t *sigar, int gid, char *buf, int buflen);
     (disk)->service_time = SIGAR_FIELD_NOTIMPL; \
     (disk)->snaptime = 0
 
-#define SIGAR_DISK_STATS_NOTIMPL(fsusage) \
-    SIGAR_DISK_STATS_INIT(&fsusage->disk)
-
 /* key used for filesystem (/) -> device (/dev/hda1) mapping */
 /* and disk_usage cache for service_time */
 #define SIGAR_FSDEV_ID(sb) \
