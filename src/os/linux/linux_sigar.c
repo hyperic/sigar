@@ -1591,7 +1591,7 @@ int sigar_disk_usage_get(sigar_t *sigar, const char *name,
             disk->service_time = tput ? util / tput : 0.0;
         }
 
-        memcpy(&iodev->disk, disk, sizeof(&iodev->disk));
+        memcpy(&iodev->disk, disk, sizeof(iodev->disk));
         if (partition_usage) {
             partition_usage->service_time = disk->service_time;
         }
