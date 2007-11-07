@@ -1679,7 +1679,7 @@ int sigar_file_system_usage_get(sigar_t *sigar,
     fsusage->disk_write_bytes = SIGAR_FIELD_NOTIMPL;
     fsusage->disk_queue       = SIGAR_FIELD_NOTIMPL;
 #else
-    SIGAR_DISK_STATS_INIT(&fsusage->disk)
+    SIGAR_DISK_STATS_INIT(&fsusage->disk);
 #endif
 
     return SIGAR_OK;
