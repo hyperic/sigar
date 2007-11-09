@@ -140,9 +140,14 @@ int sigar_os_open(sigar_t **sigar)
         (*sigar)->pagesize++;
     }
 
-    ptr = strstr(buffer, "\nbtime");
-    ptr = sigar_skip_token(ptr);
-    (*sigar)->boot_time = sigar_strtoul(ptr);
+    if ((ptr = strstr(buffer, "\nbtime"))) {
+        ptr = sigar_skip_token(ptr);
+        (*sigar)->boot_time = sigar_strtoul(ptr);
+    }
+    else {
+        /* should never happen */
+        (*sigar)->boot_time = time(NULL);
+    }
 
     (*sigar)->ticks = sysconf(_SC_CLK_TCK);
 
