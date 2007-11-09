@@ -141,6 +141,8 @@ static int sigar_boot_time_get(sigar_t *sigar)
         }
     }
 
+    fclose(fp);
+
     if (!found) {
         /* should never happen */
         sigar->boot_time = time(NULL);
