@@ -121,18 +121,40 @@ sigar_pid_t sigar_pid_get(sigar_t *sigar)
     return sigar->pid;
 }
 
+static int sigar_boot_time_get(sigar_t *sigar)
+{
+    FILE *fp;
+    char buffer[BUFSIZ], *ptr;
+    int found = 0;
+
+    if (!(fp = fopen(PROC_STAT, "r"))) {
+        return errno;
+    }
+
+    while ((ptr = fgets(buffer, sizeof(buffer), fp))) {
+        if (strnEQ(ptr, "btime", 5)) {
+            if ((ptr = sigar_skip_token(ptr))) {
+                sigar->boot_time = sigar_strtoul(ptr);
+                found = 1;
+            }
+            break;
+        }
+    }
+
+    if (!found) {
+        /* should never happen */
+        sigar->boot_time = time(NULL);
+    }
+
+    return SIGAR_OK;
+}
+
 int sigar_os_open(sigar_t **sigar)
 {
-    char buffer[BUFSIZ], *ptr;
-    int i;
-    int status = sigar_file2str(PROC_STAT, buffer, sizeof(buffer));
+    int i, status;
     struct stat sb;
 
     *sigar = malloc(sizeof(**sigar));
-
-    if (status != SIGAR_OK) {
-        return status;
-    }
 
     (*sigar)->pagesize = 0;
     i = getpagesize();
@@ -140,15 +162,11 @@ int sigar_os_open(sigar_t **sigar)
         (*sigar)->pagesize++;
     }
 
-    if ((ptr = strstr(buffer, "\nbtime"))) {
-        ptr = sigar_skip_token(ptr);
-        (*sigar)->boot_time = sigar_strtoul(ptr);
+    status = sigar_boot_time_get(*sigar);
+    if (status != SIGAR_OK) {
+        return status;
     }
-    else {
-        /* should never happen */
-        (*sigar)->boot_time = time(NULL);
-    }
-
+    
     (*sigar)->ticks = sysconf(_SC_CLK_TCK);
 
     (*sigar)->ram = -1;
