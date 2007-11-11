@@ -22,7 +22,7 @@ import java.util.Date;
 
 import org.hyperic.sigar.Sigar;
 import org.hyperic.sigar.SigarException;
-import org.hyperic.sigar.ProcTime;
+import org.hyperic.sigar.ProcCpu;
 
 public class TestProcTime extends SigarTestCase {
 
@@ -31,14 +31,14 @@ public class TestProcTime extends SigarTestCase {
     }
 
     public void testCreate() throws Exception {
-        Sigar sigar = new Sigar();
+        Sigar sigar = getSigar();
 
         try {
             sigar.getProcTime(getInvalidPid());
         } catch (SigarException e) {
         }
 
-        ProcTime procTime = sigar.getProcTime(sigar.getPid());
+        ProcCpu procTime = sigar.getProcCpu(sigar.getPid());
 
         assertGtEqZeroTrace("StartTime", procTime.getStartTime());
         traceln("StartDate=" + new Date(procTime.getStartTime()));
@@ -51,6 +51,9 @@ public class TestProcTime extends SigarTestCase {
 
         assertGtEqZeroTrace("Total", procTime.getTotal());
 
-        sigar.close();
+        double value = procTime.getPercent() * 100.0;
+        traceln("Percent=" + value);
+        assertTrue(value >= 0.0);
+        assertTrue(value <= 100.0);
     }
 }
