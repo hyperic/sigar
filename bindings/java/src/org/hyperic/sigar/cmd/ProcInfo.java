@@ -94,7 +94,7 @@ public class ProcInfo extends SigarCommandBase {
             println("mem=" + sigar.getProcMem(pid));
         } catch (SigarException e) {}
         try {
-            println("time=" + sigar.getProcTime(pid));
+            println("cpu=" + sigar.getProcCpu(pid));
         } catch (SigarException e) {}
         try {
             println("cred=" + sigar.getProcCred(pid));
