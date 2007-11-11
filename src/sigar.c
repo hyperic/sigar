@@ -144,6 +144,7 @@ SIGAR_DECLARE(int) sigar_proc_cpu_get(sigar_t *sigar, sigar_pid_t pid,
     memcpy(prev, proccpu, sizeof(*prev));
 
     if (otime == 0) {
+        proccpu->percent = 0.0;
         /* first time called */
         return SIGAR_OK;
     }
