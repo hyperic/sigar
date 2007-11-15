@@ -40,7 +40,7 @@ JNIEXPORT jstring SIGAR_JNI(win32_LocaleInfo_getAttribute)
     int retval =
         GetLocaleInfo(lcid,
                       attr,
-                      value, sizeof(value));
+                      value, sizeof(value) / sizeof(TCHAR));
 
     if (retval) {
         int len = lstrlen(value);

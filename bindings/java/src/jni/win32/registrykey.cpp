@@ -57,9 +57,10 @@ JNIEXPORT jstring SIGAR_JNI(win32_RegistryKey_RegEnumKey)
 {
     jstring strResult;
     TCHAR   szBuffer[MAX_PATH + 1];
+    DWORD len = sizeof(szBuffer) / sizeof(TCHAR);
 
     if(RegEnumKey((HKEY)hkey, index, szBuffer, 
-                  sizeof(szBuffer)) == ERROR_SUCCESS)
+                  len) == ERROR_SUCCESS)
         strResult = env->NewString((const jchar *)szBuffer, 
                                    lstrlen(szBuffer));
     else
@@ -73,7 +74,7 @@ JNIEXPORT jstring SIGAR_JNI(win32_RegistryKey_RegEnumValueName)
 {
     jstring strResult;
     TCHAR   szValueName[MAX_PATH + 1];
-    DWORD   cbValueName = sizeof(szValueName);
+    DWORD   cbValueName = sizeof(szValueName) / sizeof(TCHAR);
 
     if(RegEnumValue((HKEY)hkey, index, szValueName, 
                     &cbValueName, NULL, NULL, NULL, NULL) == ERROR_SUCCESS)

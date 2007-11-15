@@ -303,7 +303,7 @@ int sigar_cpu_info_get(sigar_t *sigar, sigar_cpu_info_t *info)
                "HARDWARE\\DESCRIPTION\\System\\CentralProcessor", &key);
 
     //just lookup the first id, then assume all cpus are the same.
-    rc = RegEnumKey(key, 0, id, sizeof(id));
+    rc = RegEnumKey(key, 0, id, sizeof(id)/sizeof(TCHAR));
     if (rc != ERROR_SUCCESS) {
         RegCloseKey(key);
         return rc;

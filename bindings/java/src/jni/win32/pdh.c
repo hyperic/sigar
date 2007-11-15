@@ -431,8 +431,8 @@ JNIEXPORT jobjectArray SIGAR_JNI(win32_Pdh_pdhGetObjects)
 JNIEXPORT jstring SIGAR_JNI(win32_Pdh_pdhLookupPerfName)
 (JNIEnv *env, jclass cur, jint index)
 {
-    TCHAR path[MAX_PATH];
-    DWORD len = MAX_PATH; /* len is number of TCHAR's, not sizeof(path) */
+    TCHAR path[MAX_PATH + 1];
+    DWORD len = sizeof(path) / sizeof(TCHAR); /* len is number of TCHAR's, not sizeof(path) */
     PDH_STATUS status =
         PdhLookupPerfNameByIndex(NULL, index, path, &len);
 
