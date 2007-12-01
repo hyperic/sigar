@@ -2243,6 +2243,7 @@ static int net_connection_get(sigar_net_connection_walker_t *walker, int proto)
             conn.remote_port = ntohs(inp->inp_fport);
             conn.receive_queue = so->so_rcv.sb_cc;
             conn.send_queue    = so->so_snd.sb_cc;
+            conn.uid           = so->so_pgid;
             conn.type = type;
 
             if (!istcp) {
