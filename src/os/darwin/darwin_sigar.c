@@ -45,6 +45,9 @@
 #include <IOKit/IOKitLib.h>
 #include <IOKit/IOTypes.h>
 #include <IOKit/storage/IOBlockStorageDriver.h>
+#ifdef DARWIN_HAS_LIBPROC_H
+#include <sys/libproc.h>
+#endif
 #else
 #include <sys/dkstat.h>
 #include <sys/types.h>
@@ -2468,7 +2471,7 @@ int sigar_nfs_server_v3_get(sigar_t *sigar,
     return SIGAR_OK;
 }
 
-#ifdef __FreeBSD__
+#if defined(__FreeBSD__)
 
 #define _KERNEL
 #include <sys/file.h>
@@ -2589,6 +2592,96 @@ int sigar_proc_port_get(sigar_t *sigar, int protocol,
     }
 
     return ENOENT;
+}
+
+#elif defined(DARWIN) && defined(DARWIN_HAS_LIBPROC_H)
+
+#define FDS_INCR (PROC_PIDLISTFD_SIZE * 32)
+
+static int proc_fdinfo_get(sigar_t *sigar, sigar_pid_t pid, int *num)
+{
+    int rsize;
+    if (sigar->ifconf_len == 0) {
+        sigar->ifconf_len = FDS_INCR;
+        sigar->ifconf_buf = malloc(sigar->ifconf_len);
+    }
+
+    while (1) {
+        rsize = proc_pidinfo(pid, PROC_PIDLISTFDS, 0,
+                             sigar->ifconf_buf, sigar->ifconf_len);
+        if (rsize <= 0) {
+            return errno;
+        }
+        if ((rsize + PROC_PIDLISTFD_SIZE) < sigar->ifconf_len) {
+            break;
+        }
+
+        sigar->ifconf_len += FDS_INCR;
+        sigar->ifconf_buf = realloc(sigar->ifconf_buf, sigar->ifconf_len);
+    }
+
+    *num = rsize / PROC_PIDLISTFD_SIZE;
+
+    return SIGAR_OK;
+}
+
+int sigar_proc_port_get(sigar_t *sigar, int protocol,
+                        unsigned long port, sigar_pid_t *pid)
+{
+    sigar_proc_list_t pids;
+    int i, status, found=0;
+
+    status = sigar_proc_list_get(sigar, &pids);
+    if (status != SIGAR_OK) {
+        return status;
+    }
+
+    for (i=0; i<pids.number; i++) {
+        int n, num;
+        struct proc_fdinfo *fdinfo;
+
+        status = proc_fdinfo_get(sigar, pids.data[i], &num);
+        if (status != SIGAR_OK) {
+            continue;
+        }
+        fdinfo = (struct proc_fdinfo *)sigar->ifconf_buf;
+
+        for (n=0; n<num; n++) {
+            struct proc_fdinfo *fdp = &fdinfo[n];
+            struct socket_fdinfo si;
+            int rsize, family;
+            unsigned long lport;
+
+            if (fdp->proc_fdtype != PROX_FDTYPE_SOCKET) {
+                continue;
+            }
+            rsize = proc_pidfdinfo(pids.data[i], fdp->proc_fd,
+                                   PROC_PIDFDSOCKETINFO, &si, sizeof(si));
+            if (rsize != sizeof(si)) {
+                continue;
+            }
+            if (si.psi.soi_kind != SOCKINFO_TCP) {
+                continue;
+            }
+            if (si.psi.soi_proto.pri_tcp.tcpsi_state != TSI_S_LISTEN) {
+                continue;
+            }
+            family = si.psi.soi_family;
+            if (!((family == AF_INET) || (family == AF_INET6))) {
+                continue;
+            }
+            lport = ntohs(si.psi.soi_proto.pri_tcp.tcpsi_ini.insi_lport);
+            if (lport == port) {
+                *pid = pids.data[i];
+                found = 1;
+                break;
+            }
+        }
+    }
+
+    sigar_proc_list_destroy(sigar, &pids);
+
+    return found ? SIGAR_OK : ENOENT;
 }
 
 #else
