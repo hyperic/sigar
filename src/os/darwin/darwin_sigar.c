@@ -686,6 +686,39 @@ int sigar_loadavg_get(sigar_t *sigar,
     return SIGAR_OK;
 }
 
+#if defined(DARWIN) && defined(DARWIN_HAS_LIBPROC_H)
+
+static int proc_fdinfo_get(sigar_t *sigar, sigar_pid_t pid, int *num)
+{
+    int rsize;
+    const int init_size = PROC_PIDLISTFD_SIZE * 32;
+
+    if (sigar->ifconf_len == 0) {
+        sigar->ifconf_len = init_size;
+        sigar->ifconf_buf = malloc(sigar->ifconf_len);
+    }
+
+    while (1) {
+        rsize = proc_pidinfo(pid, PROC_PIDLISTFDS, 0,
+                             sigar->ifconf_buf, sigar->ifconf_len);
+        if (rsize <= 0) {
+            return errno;
+        }
+        if ((rsize + PROC_PIDLISTFD_SIZE) < sigar->ifconf_len) {
+            break;
+        }
+
+        sigar->ifconf_len += init_size;
+        sigar->ifconf_buf = realloc(sigar->ifconf_buf, sigar->ifconf_len);
+    }
+
+    *num = rsize / PROC_PIDLISTFD_SIZE;
+
+    return SIGAR_OK;
+}
+
+#endif
+
 #ifndef KERN_PROC_PROC
 /* freebsd 4.x */
 #define KERN_PROC_PROC KERN_PROC_ALL
@@ -2595,35 +2628,6 @@ int sigar_proc_port_get(sigar_t *sigar, int protocol,
 }
 
 #elif defined(DARWIN) && defined(DARWIN_HAS_LIBPROC_H)
-
-#define FDS_INCR (PROC_PIDLISTFD_SIZE * 32)
-
-static int proc_fdinfo_get(sigar_t *sigar, sigar_pid_t pid, int *num)
-{
-    int rsize;
-    if (sigar->ifconf_len == 0) {
-        sigar->ifconf_len = FDS_INCR;
-        sigar->ifconf_buf = malloc(sigar->ifconf_len);
-    }
-
-    while (1) {
-        rsize = proc_pidinfo(pid, PROC_PIDLISTFDS, 0,
-                             sigar->ifconf_buf, sigar->ifconf_len);
-        if (rsize <= 0) {
-            return errno;
-        }
-        if ((rsize + PROC_PIDLISTFD_SIZE) < sigar->ifconf_len) {
-            break;
-        }
-
-        sigar->ifconf_len += FDS_INCR;
-        sigar->ifconf_buf = realloc(sigar->ifconf_buf, sigar->ifconf_len);
-    }
-
-    *num = rsize / PROC_PIDLISTFD_SIZE;
-
-    return SIGAR_OK;
-}
 
 int sigar_proc_port_get(sigar_t *sigar, int protocol,
                         unsigned long port, sigar_pid_t *pid)
