@@ -32,6 +32,7 @@
 #include <sys/systeminfo.h>
 #include <sys/utsname.h>
 #include <dlfcn.h>
+#include <dirent.h>
 
 #define PROC_ERRNO ((errno == ENOENT) ? ESRCH : errno)
 
@@ -568,9 +569,14 @@ static int sigar_init_libproc(sigar_t *sigar)
 
     sigar->pgrab    = (proc_grab_func_t)dlsym(sigar->plib, "Pgrab");
     sigar->pfree    = (proc_free_func_t)dlsym(sigar->plib, "Pfree");
+    sigar->pcreate_agent = (proc_create_agent_func_t)dlsym(sigar->plib, "Pcreate_agent");
+    sigar->pdestroy_agent = (proc_destroy_agent_func_t)dlsym(sigar->plib, "Pdestroy_agent");
     sigar->pobjname = (proc_objname_func_t)dlsym(sigar->plib, "Pobjname");
     sigar->pexename = (proc_exename_func_t)dlsym(sigar->plib, "Pexecname");
     sigar->pdirname = (proc_dirname_func_t)dlsym(sigar->plib, "proc_dirname");
+    sigar->pfstat64 = (proc_fstat64_func_t)dlsym(sigar->plib, "pr_fstat64");
+    sigar->pgetsockopt = (proc_getsockopt_func_t)dlsym(sigar->plib, "pr_getsockopt");
+    sigar->pgetsockname = (proc_getsockname_func_t)dlsym(sigar->plib, "pr_getsockname");
 
     CHECK_PSYM(pgrab);
     CHECK_PSYM(pfree);
@@ -2606,10 +2612,120 @@ int sigar_nfs_server_v3_get(sigar_t *sigar,
     return sigar_nfs_get(sigar, "rfsproccnt_v3", nfs_v3_names, (char *)nfs);
 }
 
+static int find_port(sigar_t *sigar, struct ps_prochandle *phandle,
+                     sigar_pid_t pid, unsigned long port)
+{
+    DIR *dirp;
+    struct dirent *ent;
+    char pname[PATH_MAX];
+    struct stat64 statb;
+    int found=0;
+
+    sprintf(pname, "/proc/%d/fd", (int)pid);
+
+    if (!(dirp = opendir(pname))) {
+        return 0;
+    }
+
+    while ((ent = readdir(dirp))) {
+        int fd;
+
+        if (!isdigit(ent->d_name[0])) {
+            continue;
+        }
+        fd = atoi(ent->d_name);
+
+        if (sigar->pfstat64(phandle, fd, &statb) == -1) {
+            continue;
+        }
+
+        if ((statb.st_mode & S_IFMT) == S_IFSOCK) {
+            struct sockaddr_in sin;
+            struct sockaddr *sa = (struct sockaddr *)&sin;
+            socklen_t len = sizeof(sin);
+            int opt, optsz, rc;
+
+            optsz = sizeof(opt);
+            rc = sigar->pgetsockopt(phandle, fd, SOL_SOCKET, SO_TYPE, &opt, &optsz);
+            if (rc != 0) {
+                continue;
+            }
+            if (opt != SOCK_STREAM) {
+                continue;
+            }
+            optsz = sizeof(opt);
+            rc = sigar->pgetsockopt(phandle, fd, SOL_SOCKET, SO_ACCEPTCONN, &opt, &optsz);
+            if (rc != 0) {
+                continue;
+            }
+            if (opt != SO_ACCEPTCONN) {
+                continue;
+            }
+
+            rc = sigar->pgetsockname(phandle, fd, sa, &len);
+            if (rc != 0) {
+                continue;
+            }
+
+            if ((sa->sa_family == AF_INET) ||
+                (sa->sa_family == AF_INET6))
+            {
+                if (ntohs(sin.sin_port) == port) {
+                    found = 1;
+                    break;
+                }
+            }
+        }
+    }
+
+    closedir(dirp);
+
+    return found;
+}
+
+/* derived from /usr/bin/pfiles.c */
 int sigar_proc_port_get(sigar_t *sigar, int protocol,
                         unsigned long port, sigar_pid_t *pid)
 {
-    return SIGAR_ENOTIMPL;
+    sigar_proc_list_t pids;
+    int i, status, found=0;
+
+    if ((status = sigar_init_libproc(sigar)) != SIGAR_OK) {
+        return SIGAR_ENOTIMPL;
+    }
+    status = sigar_proc_list_get(sigar, &pids);
+    if (status != SIGAR_OK) {
+        return status;
+    }
+
+    for (i=0; i<pids.number; i++) {
+        sigar_pid_t ps_id = pids.data[i];
+        struct ps_prochandle *phandle;
+
+        if (ps_id == sigar_pid_get(sigar)) {
+            continue; /* XXX */
+        }
+        status = sigar_pgrab(sigar, ps_id, SIGAR_FUNC, &phandle);
+
+        if (status != SIGAR_OK) {
+            continue;
+        }
+
+        if (sigar->pcreate_agent(phandle) == 0) {
+            found = find_port(sigar, phandle, ps_id, port);
+            sigar->pdestroy_agent(phandle);
+        }
+
+        sigar->pfree(phandle);
+        if (found) {
+            *pid = ps_id;
+            break;
+        }
+    }
+
+    sigar_proc_list_destroy(sigar, &pids);
+
+    return found ? SIGAR_OK : ENOENT;
 }
 
 int sigar_os_sys_info_get(sigar_t *sigar,

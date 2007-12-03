@@ -198,12 +198,24 @@ typedef struct ps_prochandle * (*proc_grab_func_t)(pid_t, int, int *);
 
 typedef void (*proc_free_func_t)(struct ps_prochandle *);
 
+typedef int (*proc_create_agent_func_t)(struct ps_prochandle *);
+
+typedef void (*proc_destroy_agent_func_t)(struct ps_prochandle *);
+
 typedef void (*proc_objname_func_t)(struct ps_prochandle *,
                                     uintptr_t, const char *, size_t);
 
 typedef char * (*proc_dirname_func_t)(const char *, char *, size_t);
 
 typedef char * (*proc_exename_func_t)(struct ps_prochandle *, char *, size_t);
+
+typedef int (*proc_fstat64_func_t)(struct ps_prochandle *, int, void *);
+
+typedef int (*proc_getsockopt_func_t)(struct ps_prochandle *,
+                                     int, int, int, void *, int *);
+
+typedef int (*proc_getsockname_func_t)(struct ps_prochandle *,
+                                      int, struct sockaddr *, socklen_t *);
 
 struct sigar_t {
     SIGAR_T_BASE;
@@ -251,9 +263,14 @@ struct sigar_t {
     void *plib;
     proc_grab_func_t pgrab;
     proc_free_func_t pfree;
+    proc_create_agent_func_t pcreate_agent;
+    proc_destroy_agent_func_t pdestroy_agent;
     proc_objname_func_t pobjname;
     proc_dirname_func_t pdirname;
     proc_exename_func_t pexename;
+    proc_fstat64_func_t pfstat64;
+    proc_getsockopt_func_t pgetsockopt;
+    proc_getsockname_func_t pgetsockname;
 
     sigar_cache_t *pargs;
 
