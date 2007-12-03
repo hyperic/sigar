@@ -2630,7 +2630,7 @@ static int find_port(sigar_t *sigar, struct ps_prochandle *phandle,
     while ((ent = readdir(dirp))) {
         int fd;
 
-        if (!isdigit(ent->d_name[0])) {
+        if (!sigar_isdigit(ent->d_name[0])) {
             continue;
         }
         fd = atoi(ent->d_name);
@@ -2689,6 +2689,10 @@ int sigar_proc_port_get(sigar_t *sigar, int protocol,
 {
     sigar_proc_list_t pids;
     int i, status, found=0;
+
+    if (sigar->solaris_version < 10) {
+        return SIGAR_ENOTIMPL;
+    }
 
     if ((status = sigar_init_libproc(sigar)) != SIGAR_OK) {
         return SIGAR_ENOTIMPL;
