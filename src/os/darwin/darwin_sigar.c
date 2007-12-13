@@ -1116,8 +1116,12 @@ int sigar_proc_state_get(sigar_t *sigar, sigar_pid_t pid,
     procstate->processor = SIGAR_FIELD_NOTIMPL;
 
 #ifdef DARWIN
-    sigar_proc_threads_get(sigar, pid, procstate);
-#else
+    status = sigar_proc_threads_get(sigar, pid, procstate);
+    if (status == SIGAR_OK) {
+        return status;
+    }
+#endif
+
     switch (pinfo->KI_STAT) {
       case SIDL:
         procstate->state = 'D';
@@ -1135,7 +1139,6 @@ int sigar_proc_state_get(sigar_t *sigar, sigar_pid_t pid,
         procstate->state = 'Z';
         break;
     }
-#endif
 
     return SIGAR_OK;
 }
