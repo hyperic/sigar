@@ -924,9 +924,22 @@ static int get_proc_times(sigar_pid_t pid, sigar_proc_time_t *time)
     time_value_t utime = {0, 0}, stime = {0, 0};
     task_basic_info_data_t ti;
     task_thread_times_info_data_t tti;
-    task_port_t task, self = mach_task_self();
+    task_port_t task, self;
     kern_return_t status;
-    
+#  ifdef DARWIN_HAS_LIBPROC_H
+    struct proc_taskinfo pti;
+    int sz =
+        proc_pidinfo(pid, PROC_PIDTASKINFO, 0, &pti, sizeof(pti));
+
+    if (sz == sizeof(pti)) {
+        time->user = SIGAR_NSEC2MSEC(pti.pti_total_user);
+        time->sys  = SIGAR_NSEC2MSEC(pti.pti_total_system);
+        time->total = time->user + time->sys;
+        return SIGAR_OK;
+    }
+#  endif
+
+    self = mach_task_self();
     status = task_for_pid(self, pid, &task);
     if (status != KERN_SUCCESS) {
         return errno;
