@@ -17,6 +17,7 @@
   <property name="jni.bin" location="${sigar-bin}"/>
   <property name="jni.source.dir" location="../.."/>
   <property name="jni.src.java" value="hyperic_jni/src"/>
+  <property name="jni.info.plist" location="build/src/Info.plist"/>
   <property name="jni.libprefix" value=""/> <!-- drop "java" prefix -->
   <property name="cpptasks.jar"
             location="hyperic_jni/lib/cpptasks.jar"/>
@@ -137,6 +138,15 @@
               value="src/os/netware/sigar.def"/>
        <param name="version.tofile"
               value="${build}/src/sigar.def"/>
+    </antcall>
+
+    <antcall target="version-file">
+       <param name="version.file.srcdir"
+              value="../.."/>
+       <param name="version.file"
+              value="src/os/darwin/Info.plist"/>
+       <param name="version.tofile"
+              value="${build}/src/Info.plist"/>
     </antcall>
   </target>
 
