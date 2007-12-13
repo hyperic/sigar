@@ -128,6 +128,10 @@
 #define SIGAR_TICK2NSEC(s) \
    ((sigar_uint64_t)(s) * ((sigar_uint64_t)SIGAR_NSEC / (double)sigar->ticks))
 
+/* nanoseconds to milliseconds */
+#define SIGAR_NSEC2MSEC(s) \
+   ((sigar_uint64_t)(s) / ((sigar_uint64_t)1000000L))
+
 #define IFTYPE_LO  2
 #define IFTYPE_ETH 3
 
