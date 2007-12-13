@@ -45,7 +45,7 @@ public class MultiProcCpu extends ProcCpu {
             ptable.put(query, cpu);
         }
 
-        long timeNow = System.currentTimeMillis() / 1000; //seconds
+        long timeNow = System.currentTimeMillis();
         double diff = timeNow - cpu.lastTime;
         if (diff == 0) {
             return cpu; //we were just called within < 1 second ago.
