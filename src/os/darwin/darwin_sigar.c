@@ -818,6 +818,21 @@ int sigar_proc_mem_get(sigar_t *sigar, sigar_pid_t pid,
     task_basic_info_data_t info;
     task_events_info_data_t events;
     mach_msg_type_number_t count;
+#  ifdef DARWIN_HAS_LIBPROC_H
+    struct proc_taskinfo pti;
+    int sz =
+        proc_pidinfo(pid, PROC_PIDTASKINFO, 0, &pti, sizeof(pti));
+
+    if (sz == sizeof(pti)) {
+        procmem->size         = pti.pti_virtual_size;
+        procmem->resident     = pti.pti_resident_size;
+        procmem->page_faults  = pti.pti_faults;
+        procmem->minor_faults = SIGAR_FIELD_NOTIMPL;
+        procmem->major_faults = SIGAR_FIELD_NOTIMPL;
+        procmem->share        = SIGAR_FIELD_NOTIMPL;
+        return SIGAR_OK;
+    }
+#  endif
 
     status = task_for_pid(self, pid, &task);
 
