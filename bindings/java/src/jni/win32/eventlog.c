@@ -91,7 +91,7 @@ static int get_formatted_message(EVENTLOGRECORD *pevlr, char *dllfile,
     HINSTANCE hlib;
     LPVOID msgbuf;
     char msgdll[MAX_MSG_LENGTH];
-    char *insert_strs[16], *ch;
+    char *insert_strs[56], *ch;
     int i, max = sizeof(insert_strs) / sizeof(char *);
     DWORD result;
 
