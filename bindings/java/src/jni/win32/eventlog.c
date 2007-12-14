@@ -88,55 +88,65 @@ static int get_messagefile_dll(const char *app, char *source, char *dllfile)
 static int get_formatted_message(EVENTLOGRECORD *pevlr, char *dllfile,
                                  char *msg)
 {
-    HINSTANCE hlib;
-    LPVOID msgbuf;
+    LPVOID msgbuf = NULL;
     char msgdll[MAX_MSG_LENGTH];
-    char *insert_strs[56], *ch;
+    char *insert_strs[56], *ptr;
     int i, max = sizeof(insert_strs) / sizeof(char *);
-    DWORD result;
+    const DWORD flags =
+        FORMAT_MESSAGE_FROM_HMODULE |
+        FORMAT_MESSAGE_FROM_SYSTEM |
+        FORMAT_MESSAGE_ALLOCATE_BUFFER |
+        FORMAT_MESSAGE_ARGUMENT_ARRAY |
+        FORMAT_MESSAGE_MAX_WIDTH_MASK;
 
-    if (!ExpandEnvironmentStrings(dllfile, msgdll, MAX_PATH))
+    if (!ExpandEnvironmentStrings(dllfile, msgdll, sizeof(msgdll))) {
         return GetLastError();
-
-    if (!(hlib = LoadLibraryEx(msgdll, NULL,
-                               LOAD_LIBRARY_AS_DATAFILE)))
-        return GetLastError();
+    }
 
     memset(insert_strs, '\0', sizeof(insert_strs));
-    ch = (char *)((LPBYTE)pevlr + pevlr->StringOffset);
+    ptr = (char *)((LPBYTE)pevlr + pevlr->StringOffset);
     for (i = 0; i < pevlr->NumStrings && i < max; i++) {
-        insert_strs[i] = ch;
-        if (ch == NULL) {
-            break;
-        }
-        ch += strlen(ch) + 1;
+        insert_strs[i] = ptr;
+        ptr += strlen(ptr) + 1;
     }
 
-    result =
-        FormatMessage(FORMAT_MESSAGE_FROM_HMODULE |
-                      FORMAT_MESSAGE_FROM_SYSTEM |
-                      FORMAT_MESSAGE_ALLOCATE_BUFFER |
-                      FORMAT_MESSAGE_ARGUMENT_ARRAY,
-                      hlib,
-                      pevlr->EventID,
-                      MAKELANGID(LANG_NEUTRAL, SUBLANG_ENGLISH_US),
-                      (LPTSTR) &msgbuf,
-                      MAX_MSG_LENGTH,
-                      insert_strs);
+    ptr = msgdll;
+    while (ptr) {
+        HINSTANCE hlib;
+        char *delim = strchr(ptr, ';');
 
-    if (result) {
+        if (delim) {
+            *delim++ = '\0';
+        }
+
+        hlib = LoadLibraryEx(ptr, NULL,
+                             LOAD_LIBRARY_AS_DATAFILE);
+        if (hlib) {
+            FormatMessage(flags,
+                          hlib,
+                          pevlr->EventID,
+                          MAKELANGID(LANG_NEUTRAL, SUBLANG_ENGLISH_US),
+                          (LPTSTR) &msgbuf,
+                          sizeof(msgbuf),
+                          insert_strs);
+            FreeLibrary(hlib);
+
+            if (msgbuf) {
+                break;
+            }
+        }
+        ptr = delim;
+    }
+
+    if (msgbuf) {
         strncpy(msg, msgbuf, MAX_MSG_LENGTH);
         msg[MAX_MSG_LENGTH-1] = '\0';
-        result = ERROR_SUCCESS;
         LocalFree(msgbuf);
+        return ERROR_SUCCESS;
     }
     else {
-        result = GetLastError();
+        return !ERROR_SUCCESS;
     }
-
-    FreeLibrary(hlib);
-
-    return result;
 }
 
 JNIEXPORT void SIGAR_JNI(win32_EventLog_openlog)
