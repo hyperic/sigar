@@ -6,6 +6,7 @@ int ptql_test(sigar_t *sigar, char *ptql) {
     int status, i;
     sigar_proc_list_t proclist;
     sigar_ptql_query_t *query;
+    sigar_ptql_error_t error;
 
     status =
         sigar_proc_list_get(sigar, &proclist);
@@ -15,7 +16,7 @@ int ptql_test(sigar_t *sigar, char *ptql) {
     }
 
     status =
-        sigar_ptql_query_create(&query, ptql);
+        sigar_ptql_query_create(&query, ptql, &error);
 
     if (status != SIGAR_OK) {
         return status;
