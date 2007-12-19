@@ -3218,14 +3218,25 @@ int sigar_who_list_get_win32(sigar_t *sigar,
     return SIGAR_OK;
 }
 
+/* see: http://msdn2.microsoft.com/en-us/library/ms724833.aspx */
+#ifndef VER_NT_WORKSTATION
+#define VER_NT_WORKSTATION 0x0000001
+#endif
+
+#if _MSC_VER <= 1200
+#define sigar_wProductType wReserved[1]
+#else
+#define sigar_wProductType wProductType
+#endif
+
 int sigar_os_sys_info_get(sigar_t *sigar,
                           sigar_sys_info_t *sysinfo)
 {
-    OSVERSIONINFO version;
+    OSVERSIONINFOEX version;
     char *vendor_name, *vendor_version, *code_name=NULL;
 
     version.dwOSVersionInfoSize = sizeof(version);
-    GetVersionEx(&version);
+    GetVersionEx((OSVERSIONINFO *)&version);
 
     if (version.dwMajorVersion == 4) {
         vendor_name = "Windows NT";
@@ -3253,11 +3264,14 @@ int sigar_os_sys_info_get(sigar_t *sigar,
         }
     }
     else if (version.dwMajorVersion == 6) {
-        switch (version.dwMinorVersion) {
-          default:
+        if (version.sigar_wProductType == VER_NT_WORKSTATION) {
             vendor_name = "Windows Vista";
             vendor_version = "Vista";
-            break;
+        }
+        else {
+            vendor_name = "Windows 2008";
+            vendor_version = "2008";
+            code_name = "Longhorn Server";
         }
     }
 
