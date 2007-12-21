@@ -51,6 +51,7 @@ SIGAR_DECLARE(int) sigar_open(sigar_t **sigar)
         (*sigar)->ptql_re_data = NULL;
         (*sigar)->self_path = NULL;
         (*sigar)->fsdev = NULL;
+        (*sigar)->pids = NULL;
         (*sigar)->proc_cpu = NULL;
         (*sigar)->net_listen = NULL;
         (*sigar)->net_services_tcp = NULL;
@@ -67,6 +68,10 @@ SIGAR_DECLARE(int) sigar_close(sigar_t *sigar)
     }
     if (sigar->self_path) {
         free(sigar->self_path);
+    }
+    if (sigar->pids) {
+        sigar_proc_list_destroy(sigar, sigar->pids);
+        free(sigar->pids);
     }
     if (sigar->fsdev) {
         sigar_cache_destroy(sigar->fsdev);
@@ -304,7 +309,21 @@ SIGAR_DECLARE(int) sigar_proc_list_destroy(sigar_t *sigar,
 SIGAR_DECLARE(int) sigar_proc_list_get(sigar_t *sigar,
                                        sigar_proc_list_t *proclist)
 {
-    sigar_proc_list_create(proclist);
+    if (proclist == NULL) {
+        /* internal re-use */
+        if (sigar->pids == NULL) {
+            sigar->pids = malloc(sizeof(*sigar->pids));
+            sigar_proc_list_create(sigar->pids);
+        }
+        else {
+            sigar->pids->number = 0;
+        }
+        proclist = sigar->pids;
+    }
+    else {
+        sigar_proc_list_create(proclist);
+    }
+
     return sigar_os_proc_list_get(sigar, proclist);
 }
 

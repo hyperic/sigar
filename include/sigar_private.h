@@ -63,6 +63,7 @@
    char *ifconf_buf; \
    int ifconf_len; \
    char *self_path; \
+   sigar_proc_list_t *pids; \
    sigar_cache_t *fsdev; \
    sigar_cache_t *proc_cpu; \
    sigar_cache_t *net_listen; \
