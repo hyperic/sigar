@@ -164,21 +164,22 @@ SIGAR_DECLARE(int) sigar_proc_stat_get(sigar_t *sigar,
                                        sigar_proc_stat_t *procstat)
 {
     int status, i;
-    sigar_proc_list_t proclist;
+    sigar_proc_list_t *pids;
 
     SIGAR_ZERO(procstat);
     procstat->threads = SIGAR_FIELD_NOTIMPL;
 
-    if ((status = sigar_proc_list_get(sigar, &proclist)) != SIGAR_OK) {
+    if ((status = sigar_proc_list_get(sigar, NULL)) != SIGAR_OK) {
         return status;
     }
 
-    procstat->total = proclist.number;
+    pids = sigar->pids;
+    procstat->total = pids->number;
 
-    for (i=0; i<proclist.number; i++) {
+    for (i=0; i<pids->number; i++) {
         sigar_proc_state_t state;
 
-        status = sigar_proc_state_get(sigar, proclist.data[i], &state);
+        status = sigar_proc_state_get(sigar, pids->data[i], &state);
         if (status != SIGAR_OK) {
             continue;
         }
@@ -207,8 +208,6 @@ SIGAR_DECLARE(int) sigar_proc_stat_get(sigar_t *sigar,
             break;
         }
     }
-
-    sigar_proc_list_destroy(sigar, &proclist);
 
     return SIGAR_OK;
 }
