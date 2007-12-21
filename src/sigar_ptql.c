@@ -1434,9 +1434,9 @@ SIGAR_DECLARE(int) sigar_ptql_query_find_process(sigar_t *sigar,
                                                  sigar_ptql_query_t *query,
                                                  sigar_pid_t *pid)
 {
-    sigar_proc_list_t pids;
     int status;
     int i, matches=0;
+    sigar_proc_list_t *pids;
 
     if ((query->branches.number == 1) &&
         (query->branches.data[0].op_flags & PTQL_OP_FLAG_PID))
@@ -1445,17 +1445,18 @@ SIGAR_DECLARE(int) sigar_ptql_query_find_process(sigar_t *sigar,
         return ptql_pid_get(sigar, &query->branches.data[0], pid);
     }
 
-    status = sigar_proc_list_get(sigar, &pids);
+    status = sigar_proc_list_get(sigar, NULL);
     if (status != SIGAR_OK) {
         return status;
     }
+    pids = sigar->pids;
 
-    for (i=0; i<pids.number; i++) {
+    for (i=0; i<pids->number; i++) {
         int query_status =
-            sigar_ptql_query_match(sigar, query, pids.data[i]);
+            sigar_ptql_query_match(sigar, query, pids->data[i]);
 
         if (query_status == SIGAR_OK) {
-            *pid = pids.data[i];
+            *pid = pids->data[i];
             matches++;
         }
         else if (query_status == SIGAR_ENOTIMPL) {
@@ -1464,8 +1465,6 @@ SIGAR_DECLARE(int) sigar_ptql_query_find_process(sigar_t *sigar,
             break;
         } /* else ok, e.g. permission denied */
     }
-
-    sigar_proc_list_destroy(sigar, &pids);
 
     if (status != SIGAR_OK) {
         return status;
@@ -1491,24 +1490,25 @@ SIGAR_DECLARE(int) sigar_ptql_query_find(sigar_t *sigar,
                                          sigar_ptql_query_t *query,
                                          sigar_proc_list_t *proclist)
 {
-    sigar_proc_list_t pids;
     int status;
     int i;
+    sigar_proc_list_t *pids;
 
-    status = sigar_proc_list_get(sigar, &pids);
+    status = sigar_proc_list_get(sigar, NULL);
     if (status != SIGAR_OK) {
         return status;
     }
+    pids = sigar->pids;
 
     sigar_proc_list_create(proclist);
 
-    for (i=0; i<pids.number; i++) {
+    for (i=0; i<pids->number; i++) {
         int query_status =
-            sigar_ptql_query_match(sigar, query, pids.data[i]);
+            sigar_ptql_query_match(sigar, query, pids->data[i]);
 
         if (query_status == SIGAR_OK) {
             SIGAR_PROC_LIST_GROW(proclist);
-            proclist->data[proclist->number++] = pids.data[i];
+            proclist->data[proclist->number++] = pids->data[i];
         }
         else if (query_status == SIGAR_ENOTIMPL) {
             /* let caller know query is invalid. */
@@ -1516,8 +1516,6 @@ SIGAR_DECLARE(int) sigar_ptql_query_find(sigar_t *sigar,
             break;
         }
     }
-
-    sigar_proc_list_destroy(sigar, &pids);
 
     if (status != SIGAR_OK) {
         sigar_proc_list_destroy(sigar, proclist);
