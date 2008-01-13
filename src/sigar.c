@@ -1011,12 +1011,77 @@ static char *getpass(const char *prompt)
 #  define ut_user ut_name
 #endif
 
+#ifdef DARWIN
+/* XXX from utmpx.h; sizeof changed in 10.5 */
+/* additionally, utmpx does not work on 10.4 */
+#define SIGAR_HAS_UTMPX
+#define _PATH_UTMPX     "/var/run/utmpx"
+#define _UTX_USERSIZE   256     /* matches MAXLOGNAME */
+#define _UTX_LINESIZE   32
+#define _UTX_IDSIZE     4
+#define _UTX_HOSTSIZE   256
+struct utmpx {
+    char ut_user[_UTX_USERSIZE];    /* login name */
+    char ut_id[_UTX_IDSIZE];        /* id */
+    char ut_line[_UTX_LINESIZE];    /* tty name */
+    pid_t ut_pid;                   /* process id creating the entry */
+    short ut_type;                  /* type of this entry */
+    struct timeval ut_tv;           /* time entry was created */
+    char ut_host[_UTX_HOSTSIZE];    /* host name */
+    __uint32_t ut_pad[16];          /* reserved for future use */
+};
+#define ut_xtime ut_tv.tv_sec
+#define UTMPX_USER_PROCESS      7
+/* end utmpx.h */
+#define SIGAR_UTMPX_FILE _PATH_UTMPX
+#endif
+
 #if !defined(NETWARE) && !defined(_AIX)
 
 #define WHOCPY(dest, src) \
     SIGAR_SSTRCPY(dest, src); \
     if (sizeof(src) < sizeof(dest)) \
         dest[sizeof(src)] = '\0'
+
+#ifdef SIGAR_HAS_UTMPX
+static int sigar_who_utmpx(sigar_t *sigar,
+                           sigar_who_list_t *wholist)
+{
+    FILE *fp;
+    struct utmpx ut;
+
+    if (!(fp = fopen(SIGAR_UTMPX_FILE, "r"))) {
+        return errno;
+    }
+
+    while (fread(&ut, sizeof(ut), 1, fp) == 1) {
+        sigar_who_t *who;
+
+        if (*ut.ut_user == '\0') {
+            continue;
+        }
+
+#ifdef UTMPX_USER_PROCESS
+        if (ut.ut_type != UTMPX_USER_PROCESS) {
+            continue;
+        }
+#endif
+
+        SIGAR_WHO_LIST_GROW(wholist);
+        who = &wholist->data[wholist->number++];
+
+        WHOCPY(who->user, ut.ut_user);
+        WHOCPY(who->device, ut.ut_line);
+        WHOCPY(who->host, ut.ut_host);
+
+        who->time = ut.ut_xtime;
+    }
+
+    fclose(fp);
+
+    return SIGAR_OK;
+}
+#endif
 
 static int sigar_who_utmp(sigar_t *sigar,
                           sigar_who_list_t *wholist)
@@ -1029,6 +1094,10 @@ static int sigar_who_utmp(sigar_t *sigar,
     struct utmp ut;
 #endif
     if (!(fp = fopen(SIGAR_UTMP_FILE, "r"))) {
+#ifdef SIGAR_HAS_UTMPX
+        /* Darwin 10.5 */
+        return sigar_who_utmpx(sigar, wholist);
+#endif
         return errno;
     }
 
