@@ -76,16 +76,28 @@ public class VMControlLibrary {
     }
 
     private static File getVMwareLib() {
-        String location = "/usr/lib/vmware";
-        File lib = new File(location);
-        if (lib.exists()) {
-            //running on a VMware host
-            return lib;
+        String[] locations = {
+            "/usr/lib/vmware",
+            "/usr/local/lib/vmware",
+        };
+
+        for (int i=0; i<locations.length; i++) {
+            File lib = new File(locations[i]);
+            if (lib.exists()) {
+                //running on a VMware host
+                return lib;
+            }
         }
-        else {
-            //remote w/ api installed
-            return new File(location + "-api");
+
+        for (int i=0; i<locations.length; i++) {
+            File lib = new File(locations[i] + "-api");
+            if (lib.exists()) {
+                //remote w/ api installed
+                return lib;
+            }
         }
+
+        return new File(locations[0]);
     }
 
     private static File getLib(String name) {
