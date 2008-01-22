@@ -29,6 +29,7 @@
 #define PERFBUF_SIZE 8192
 
 #define PERF_TITLE_PROC       230
+#define PERF_TITLE_MEM_KEY   "4"
 #define PERF_TITLE_PROC_KEY  "230"
 #define PERF_TITLE_CPU_KEY   "238"
 #define PERF_TITLE_DISK_KEY  "236"
@@ -139,6 +140,25 @@ static DWORD perfbuf_grow(sigar_t *sigar)
     return sigar->perfbuf_size;
 }
 
+static char *get_counter_name(char *key)
+{
+    if (strEQ(key, PERF_TITLE_MEM_KEY)) {
+        return "Memory";
+    }
+    else if (strEQ(key, PERF_TITLE_PROC_KEY)) {
+        return "Process";
+    }
+    else if (strEQ(key, PERF_TITLE_CPU_KEY)) {
+        return "Processor";
+    }
+    else if (strEQ(key, PERF_TITLE_DISK_KEY)) {
+        return "LogicalDisk";
+    }
+    else {
+        return key;
+    }
+}
+
 static PERF_OBJECT_TYPE *get_perf_object_inst(sigar_t *sigar,
                                               char *counter_key,
                                               DWORD inst, DWORD *err)
@@ -167,6 +187,13 @@ static PERF_OBJECT_TYPE *get_perf_object_inst(sigar_t *sigar,
     }
 
     block = (PERF_DATA_BLOCK *)sigar->perfbuf;
+    if (block->NumObjectTypes == 0) {
+        counter_key = get_counter_name(counter_key);
+        sigar_strerror_printf(sigar, "No %s counters defined (disabled?)",
+                              counter_key);
+        *err = -1;
+        return NULL;
+    }
     object = PdhFirstObject(block);
 
     /* 
@@ -197,7 +224,7 @@ static int get_swap_counters(sigar_t *sigar, sigar_swap_t *swap)
 {
     int status;
     PERF_OBJECT_TYPE *object =
-        get_perf_object_inst(sigar, "4" /* Memory */, 0, &status);
+        get_perf_object_inst(sigar, PERF_TITLE_MEM_KEY, 0, &status);
     PERF_INSTANCE_DEFINITION *inst;
     PERF_COUNTER_DEFINITION *counter;
     BYTE *data;
@@ -646,7 +673,7 @@ static PERF_INSTANCE_DEFINITION *get_cpu_instance(sigar_t *sigar,
                                                   DWORD *perf_offsets,
                                                   DWORD *num, DWORD *err)
 {
-    PERF_OBJECT_TYPE *object = get_perf_object(sigar, "238", err);
+    PERF_OBJECT_TYPE *object = get_perf_object(sigar, PERF_TITLE_CPU_KEY, err);
     PERF_INSTANCE_DEFINITION *inst;
     PERF_COUNTER_DEFINITION *counter;
     DWORD i;
