@@ -68,8 +68,7 @@ public class SigarLoader extends ArchLoader {
     }
 
     public static String getSigarJarName() {
-        return System.getProperty(PROP_SIGAR_JAR_NAME,
-                                  "sigar.jar");
+        return System.getProperty(PROP_SIGAR_JAR_NAME);
     }
 
     /**
