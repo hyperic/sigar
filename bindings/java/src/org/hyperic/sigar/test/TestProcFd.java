@@ -46,7 +46,9 @@ public class TestProcFd extends SigarTestCase {
 
             long total = sigar.getProcFd(pid).getTotal(); 
 
-            File file = new File(SigarLoader.getLocation(), "sigar.jar");
+            SigarLoader loader = new SigarLoader(Sigar.class);
+            String path = loader.findJarPath(null);
+            File file = new File(path, loader.getJarName());
 
             traceln("Opening " + file);
 
