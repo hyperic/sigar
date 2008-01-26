@@ -22,6 +22,18 @@
   <property name="cpptasks.jar"
             location="hyperic_jni/lib/cpptasks.jar"/>
 
+  <condition property="file.version" value="-${sigar.version}">
+    <isset property="file.versioned"/>
+  </condition>
+  <condition property="file.version" value="">
+   <not>
+    <isset property="versioned"/>
+   </not>
+  </condition>
+
+  <property name="jni.libversion" value="${file.version}"/>
+  <property name="sigar.jar" value="sigar${file.version}.jar"/>
+
   &jni-build;
 
   <property name="src" location="src"/>
@@ -41,7 +53,7 @@
 
   <path id="alljars">
      <path refid="libjars"/>
-     <fileset dir="${sigar-bin}/lib" includes="sigar.jar"/>
+     <fileset dir="${sigar-bin}/lib" includes="${sigar.jar}"/>
   </path>
 
   <target name="javadoc_check">
@@ -281,7 +293,7 @@
   </target>
 
   <target name="pack">
-    <jar jarfile="${sigar-bin}/lib/sigar.jar"
+    <jar jarfile="${sigar-bin}/lib/${sigar.jar}"
          basedir="${build}/classes">
 
       <manifest>
