@@ -757,9 +757,12 @@ static int proc_stat_read(sigar_t *sigar, sigar_pid_t pid)
         return status;
     }
 
-    ptr = strchr(ptr, '(')+1;
-
-    tmp = strrchr(ptr, ')');
+    if (!(ptr = strchr(ptr, '('))) {
+        return EINVAL;
+    }
+    if (!(tmp = strrchr(++ptr, ')'))) {
+        return EINVAL;
+    }
     len = tmp-ptr;
 
     if (len >= sizeof(pstat->name)) {
