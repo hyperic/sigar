@@ -1358,9 +1358,6 @@ int sigar_file_system_list_get(sigar_t *sigar,
 
 #include <sys/statvfs.h>
 
-#define SIGAR_FS_BLOCKS_TO_BYTES(buf, f) \
-    (((sigar_uint64_t)buf.f * (buf.f_frsize / 512)) >> 1)
-
 typedef struct {
     char device[PATH_MAX];
     char name[8];
@@ -1722,19 +1719,26 @@ int sigar_disk_usage_get(sigar_t *sigar, const char *name,
     return status;
 }
 
+#define SIGAR_FS_BLOCKS_TO_BYTES(val, bsize) ((val * bsize) >> 1)
+
 int sigar_file_system_usage_get(sigar_t *sigar,
                                 const char *dirname,
                                 sigar_file_system_usage_t *fsusage)
 {
     struct statvfs buf;
+    sigar_uint64_t val, bsize;
 
     if (statvfs(dirname, &buf) != 0) {
         return errno;
     }
 
-    fsusage->total = SIGAR_FS_BLOCKS_TO_BYTES(buf, f_blocks);
-    fsusage->free  = SIGAR_FS_BLOCKS_TO_BYTES(buf, f_bfree);
-    fsusage->avail = SIGAR_FS_BLOCKS_TO_BYTES(buf, f_bavail);
+    bsize = buf.f_frsize / 512;
+    val = buf.f_blocks;
+    fsusage->total = SIGAR_FS_BLOCKS_TO_BYTES(val, bsize);
+    val = buf.f_bfree;
+    fsusage->free  = SIGAR_FS_BLOCKS_TO_BYTES(val, bsize);
+    val = buf.f_bavail;
+    fsusage->avail = SIGAR_FS_BLOCKS_TO_BYTES(val, bsize);
     fsusage->used  = fsusage->total - fsusage->free;
     fsusage->files = buf.f_files;
     fsusage->free_files = buf.f_ffree;
