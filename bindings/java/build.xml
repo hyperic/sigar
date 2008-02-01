@@ -409,6 +409,7 @@
    <!-- bindings -->
    <copy toDir="${dist}">
      <fileset dir="../..">
+       <include name="bindings/SigarWrapper.pm"/>
        <include name="bindings/java/examples/*.java"/>
 
        <include name="bindings/perl/Makefile.PL"/>
@@ -417,8 +418,22 @@
        <include name="bindings/perl/**/*.pm"/>
        <include name="bindings/perl/examples/*.pl"/>
 
-       <include name="bindings/csharp/default.build"/>
-       <include name="bindings/csharp/**/*.cs"/>
+       <include name="bindings/dotnet/default.build"/>
+       <include name="bindings/dotnet/**/*.cs"/>
+
+       <include name="bindings/php/config.m4"/>
+       <include name="bindings/php/php_sigar.c"/>
+       <include name="bindings/php/php_sigar.h"/>
+       <include name="bindings/php/examples/*.php"/>
+
+       <include name="bindings/python/_sigar.c"/>
+       <include name="bindings/python/sigar.py"/>
+       <include name="bindings/python/setup.py"/>
+       <include name="bindings/python/examples/*.py"/>
+
+       <include name="bindings/ruby/rbsigar.c"/>
+       <include name="bindings/ruby/extconf.rb"/>
+       <include name="bindings/ruby/examples/*.rb"/>
      </fileset>
    </copy>
 
