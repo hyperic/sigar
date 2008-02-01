@@ -1,3 +1,17 @@
+2008-02-01  Doug MacEachern  <dougm@hyperic.com>
+
+        * 1.5 released, change summary:
+
+        * PTQL impl ported from Java to C
+
+        * Added api for TCP-MIB metrics
+
+        * Added api for NFS client+server metrics
+
+        * Started bindings for Ruby, Python and PHP
+
+        * Bug fixes: http://jira.hyperic.com/secure/IssueNavigator.jspa?requestId=10500
+        
 2007-04-14  Doug MacEachern  <dougm@hyperic.com>
 
         * 1.4 released
