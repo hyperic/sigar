@@ -133,8 +133,11 @@ public class Service extends Win32 {
             try {
                 service = new Service((String)names.get(i));
                 ServiceConfig config = service.getConfig();
-                String path = config.getExe().trim();
-                if (!filter.accept(new File(path))) {
+                String path = config.getExe();
+                if (path == null) {
+                    continue;
+                }
+                if (!filter.accept(new File(path.trim()))) {
                     continue;
                 }
                 services.add(config);
