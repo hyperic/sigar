@@ -24,6 +24,7 @@ Sigar::ProcCpu T_PTROBJ
 Sigar::ProcMem T_PTROBJ
 Sigar::FileSystem T_PTROBJ
 Sigar::FileSystemUsage T_PTROBJ
+Sigar::DiskUsage T_PTROBJ
 Sigar::ProcStat T_PTROBJ
 Sigar::NetRoute T_PTROBJ
 Sigar::NetInterfaceStat T_PTROBJ
