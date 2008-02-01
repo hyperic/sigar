@@ -72,7 +72,7 @@ public class ProcessQueryFactory {
 
     /**
      * @deprecated
-     * @see getQuery
+     * @see #getQuery(String)
      */
     public static ProcessQuery getInstance(String query)
         throws MalformedQueryException {
