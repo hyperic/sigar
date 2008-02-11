@@ -1450,7 +1450,8 @@ int sigar_file_system_list_get(sigar_t *sigar,
         }
 
         SIGAR_SSTRCPY(fsp->dir_name, vmt2dataptr(ent, VMT_STUB));
-
+        SIGAR_SSTRCPY(fsp->options, vmt2dataptr(ent, VMT_ARGS));
+        
         devname = vmt2dataptr(ent, VMT_OBJECT);
 
         if (fsp->type == SIGAR_FSTYPE_NETWORK) {
