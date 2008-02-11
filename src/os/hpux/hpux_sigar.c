@@ -541,6 +541,7 @@ int sigar_file_system_list_get(sigar_t *sigar,
         SIGAR_SSTRCPY(fsp->dir_name, ent->mnt_dir);
         SIGAR_SSTRCPY(fsp->dev_name, ent->mnt_fsname);
         SIGAR_SSTRCPY(fsp->sys_type_name, ent->mnt_type);
+        SIGAR_SSTRCPY(fsp->options, ent->mnt_opts);
         sigar_fs_type_init(fsp);
     }
 
