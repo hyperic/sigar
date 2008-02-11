@@ -309,6 +309,7 @@ int sigar_file_system_list_get(sigar_t *sigar,
         }
 
         SIGAR_SSTRCPY(fsp->sys_type_name, type);
+        fsp->options[0] = '\0'; /*XXX*/
     }
 
     return SIGAR_OK;

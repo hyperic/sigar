@@ -391,6 +391,7 @@ int sigar_file_system_list_get(sigar_t *sigar,
         SIGAR_SSTRCPY(fsp->dir_name, fs[i].f_mntonname);
         SIGAR_SSTRCPY(fsp->dev_name, fs[i].f_mntfromname);
         SIGAR_SSTRCPY(fsp->sys_type_name, mnt_names[fs[i].f_type]);
+        fsp->options[0] = '\0'; /*XXX*/
 
         switch (fs[i].f_type) {
           case MOUNT_UFS:
