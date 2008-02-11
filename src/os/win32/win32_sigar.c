@@ -1733,6 +1733,8 @@ SIGAR_DECLARE(int) sigar_file_system_list_get(sigar_t *sigar,
             SIGAR_SSTRCPY(fsp->sys_type_name, fsname); /* CDFS, NTFS, etc */
         }
 
+        fsp->options[0] = '\0'; /*XXX*/
+
         ptr += strlen(ptr)+1;
     }
 
