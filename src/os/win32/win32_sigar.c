@@ -1662,6 +1662,42 @@ int sigar_os_fs_type_get(sigar_file_system_t *fsp)
     return fsp->type;
 }
 
+#ifndef FILE_READ_ONLY_VOLUME 
+#define FILE_READ_ONLY_VOLUME 0x00080000
+#endif
+#ifndef FILE_NAMED_STREAMS
+#define FILE_NAMED_STREAMS 0x00040000
+#endif
+#ifndef FILE_SEQUENTIAL_WRITE_ONCE
+#define FILE_SEQUENTIAL_WRITE_ONCE 0x00100000
+#endif
+#ifndef FILE_SUPPORTS_TRANSACTIONS
+#define FILE_SUPPORTS_TRANSACTIONS 0x00200000
+#endif
+
+static void get_fs_options(char *opts, int osize, long flags)
+{
+    *opts = '\0';
+    if (flags & FILE_READ_ONLY_VOLUME)        strncat(opts, "ro", osize);
+    else                                      strncat(opts, "rw", osize);
+#if 0 /*XXX*/
+    if (flags & FILE_CASE_PRESERVED_NAMES)    strncat(opts, ",casepn", osize);
+    if (flags & FILE_CASE_SENSITIVE_SEARCH)   strncat(opts, ",casess", osize);
+    if (flags & FILE_FILE_COMPRESSION)        strncat(opts, ",fcomp", osize);
+    if (flags & FILE_NAMED_STREAMS)           strncat(opts, ",streams", osize);
+    if (flags & FILE_PERSISTENT_ACLS)         strncat(opts, ",acls", osize);
+    if (flags & FILE_SEQUENTIAL_WRITE_ONCE)   strncat(opts, ",wronce", osize);
+    if (flags & FILE_SUPPORTS_ENCRYPTION)     strncat(opts, ",efs", osize);
+    if (flags & FILE_SUPPORTS_OBJECT_IDS)     strncat(opts, ",oids", osize);
+    if (flags & FILE_SUPPORTS_REPARSE_POINTS) strncat(opts, ",reparse", osize);
+    if (flags & FILE_SUPPORTS_SPARSE_FILES)   strncat(opts, ",sparse", osize);
+    if (flags & FILE_SUPPORTS_TRANSACTIONS)   strncat(opts, ",trans", osize);
+    if (flags & FILE_UNICODE_ON_DISK)         strncat(opts, ",unicode", osize);
+    if (flags & FILE_VOLUME_IS_COMPRESSED)    strncat(opts, ",vcomp", osize);
+    if (flags & FILE_VOLUME_QUOTAS)           strncat(opts, ",quota", osize);
+#endif
+}
+
 SIGAR_DECLARE(int) sigar_file_system_list_get(sigar_t *sigar,
                                               sigar_file_system_list_t *fslist)
 {
@@ -1733,7 +1769,7 @@ SIGAR_DECLARE(int) sigar_file_system_list_get(sigar_t *sigar,
             SIGAR_SSTRCPY(fsp->sys_type_name, fsname); /* CDFS, NTFS, etc */
         }
 
-        fsp->options[0] = '\0'; /*XXX*/
+        get_fs_options(fsp->options, sizeof(fsp->options)-1, flags);
 
         ptr += strlen(ptr)+1;
     }
