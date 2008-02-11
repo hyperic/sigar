@@ -1595,6 +1595,47 @@ int sigar_os_fs_type_get(sigar_file_system_t *fsp)
     return fsp->type;
 }
 
+static void get_fs_options(char *opts, int osize, long flags)
+{
+    *opts = '\0';
+    if (flags & MNT_RDONLY)         strncat(opts, "ro", osize);
+    else                            strncat(opts, "rw", osize);
+    if (flags & MNT_SYNCHRONOUS)    strncat(opts, ",sync", osize);
+    if (flags & MNT_NOEXEC)         strncat(opts, ",noexec", osize);
+    if (flags & MNT_NOSUID)         strncat(opts, ",nosuid", osize);
+    if (flags & MNT_NODEV)          strncat(opts, ",nodev", osize);
+    if (flags & MNT_UNION)          strncat(opts, ",union", osize);
+    if (flags & MNT_ASYNC)          strncat(opts, ",async", osize);
+#ifdef MNT_NOATIME
+    if (flags & MNT_NOATIME)        strncat(opts, ",noatime", osize);
+#endif
+#ifdef MNT_NOCLUSTERR
+    if (flags & MNT_NOCLUSTERR)     strncat(opts, ",noclusterr", osize);
+#endif
+#ifdef MNT_NOCLUSTERW
+    if (flags & MNT_NOCLUSTERW)     strncat(opts, ",noclusterw", osize);
+#endif
+#ifdef MNT_NOSYMFOLLOW
+    if (flags & MNT_NOSYMFOLLOW)    strncat(opts, ",nosymfollow", osize);
+#endif
+#ifdef MNT_SUIDDIR
+    if (flags & MNT_SUIDDIR)        strncat(opts, ",suiddir", osize);
+#endif
+#ifdef MNT_SOFTDEP
+    if (flags & MNT_SOFTDEP)        strncat(opts, ",soft-updates", osize);
+#endif
+    if (flags & MNT_LOCAL)          strncat(opts, ",local", osize);
+    if (flags & MNT_QUOTA)          strncat(opts, ",quota", osize);
+    if (flags & MNT_ROOTFS)         strncat(opts, ",rootfs", osize);
+#ifdef MNT_USER
+    if (flags & MNT_USER)           strncat(opts, ",user", osize);
+#endif
+#ifdef MNT_IGNORE
+    if (flags & MNT_IGNORE)         strncat(opts, ",ignore", osize);
+#endif
+    if (flags & MNT_EXPORTED)       strncat(opts, ",nfs", osize);
+}
+
 int sigar_file_system_list_get(sigar_t *sigar,
                                sigar_file_system_list_t *fslist)
 {
@@ -1649,6 +1690,7 @@ int sigar_file_system_list_get(sigar_t *sigar,
         SIGAR_SSTRCPY(fsp->dir_name, fs[i].f_mntonname);
         SIGAR_SSTRCPY(fsp->dev_name, fs[i].f_mntfromname);
         SIGAR_SSTRCPY(fsp->sys_type_name, fs[i].f_fstypename);
+        get_fs_options(fsp->options, sizeof(fsp->options)-1, fs[i].f_flags);
         sigar_fs_type_init(fsp);
     }
 
