@@ -48,6 +48,7 @@ public class TestFileSystem extends SigarTestCase {
             assertLengthTrace("DirName", fs.getDirName());
             assertLengthTrace("TypeName", fs.getTypeName());
             assertLengthTrace("SysTypeName", fs.getSysTypeName());
+            traceln("Options=" + fs.getOptions());
 
             FileSystemUsage usage;
 

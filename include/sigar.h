@@ -430,6 +430,7 @@ typedef struct {
     char dev_name[SIGAR_FS_NAME_LEN];
     char type_name[SIGAR_FS_NAME_LEN];     /* e.g. "local" */
     char sys_type_name[SIGAR_FS_NAME_LEN]; /* e.g. "ext3" */
+    char options[SIGAR_FS_NAME_LEN];
     sigar_file_system_type_e type;
     unsigned long flags;
 } sigar_file_system_t;

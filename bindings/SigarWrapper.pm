@@ -701,6 +701,11 @@ our %classes = (
          plat => '*'
       },
       {
+         name => 'options', type => 'String',
+         desc => 'File system mount options',
+         plat => '*'
+      },
+      {
          name => 'type', type => 'Int',
          desc => 'File system type',
          plat => '*'

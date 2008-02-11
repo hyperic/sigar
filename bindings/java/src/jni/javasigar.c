@@ -353,6 +353,7 @@ enum {
     FS_FIELD_DIRNAME,
     FS_FIELD_DEVNAME,
     FS_FIELD_SYS_TYPENAME,
+    FS_FIELD_OPTIONS,
     FS_FIELD_TYPE,
     FS_FIELD_TYPENAME,
     FS_FIELD_MAX
@@ -387,6 +388,9 @@ JNIEXPORT jobjectArray SIGAR_JNIx(getFileSystemListNative)
 
     ids[FS_FIELD_SYS_TYPENAME] =
         JENV->GetFieldID(env, cls, "sysTypeName", STRING_SIG);
+
+    ids[FS_FIELD_OPTIONS] =
+        JENV->GetFieldID(env, cls, "options", STRING_SIG);
 
     ids[FS_FIELD_TYPE] =
         JENV->GetFieldID(env, cls, "type", "I");
@@ -428,6 +432,10 @@ JNIEXPORT jobjectArray SIGAR_JNIx(getFileSystemListNative)
         JENV->SetStringField(env, fsobj,
                              ids[FS_FIELD_SYS_TYPENAME],
                              fs->sys_type_name);
+
+        JENV->SetStringField(env, fsobj,
+                             ids[FS_FIELD_OPTIONS],
+                             fs->options);
 
         JENV->SetStringField(env, fsobj,
                              ids[FS_FIELD_TYPENAME],

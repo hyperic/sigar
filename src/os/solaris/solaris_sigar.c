@@ -1348,6 +1348,7 @@ int sigar_file_system_list_get(sigar_t *sigar,
         SIGAR_SSTRCPY(fsp->dir_name, ent.mnt_mountp);
         SIGAR_SSTRCPY(fsp->dev_name, ent.mnt_special);
         SIGAR_SSTRCPY(fsp->sys_type_name, ent.mnt_fstype);
+        SIGAR_SSTRCPY(fsp->options, ent.mnt_mntopts);
         sigar_fs_type_init(fsp);
     }
 
