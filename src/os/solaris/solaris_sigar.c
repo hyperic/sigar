@@ -2215,29 +2215,12 @@ static int sigar_net_ifstat_get_any(sigar_t *sigar, const char *name,
     kstat_ctl_t *kc = sigar->kc; 
     kstat_t *ksp;
     kstat_named_t *data;
-    char dev[64], *ptr=dev;
-    int num;
 
     if (sigar_kstat_update(sigar) == -1) {
         return errno;
     }
 
-    strncpy(dev, name, sizeof(dev)-1);
-    dev[sizeof(dev)-1] = '\0';
-
-    while (!sigar_isdigit(*ptr) && (*ptr != '\0')) {
-        ptr++;
-    }
-
-    if (*ptr == '\0') {
-        return ENXIO;
-    }
-
-    /* iprb0 -> dev="iprb", num=0 */
-    num = atoi(ptr);
-    *ptr = '\0';
-
-    if (!(ksp = kstat_lookup(kc, dev, num, (char *)name))) {
+    if (!(ksp = kstat_lookup(kc, NULL, -1, (char *)name))) {
         return ENXIO;
     }
 
