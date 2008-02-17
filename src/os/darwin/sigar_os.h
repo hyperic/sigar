@@ -31,6 +31,9 @@
 enum {
     KOFFSET_CPUINFO,
     KOFFSET_VMMETER,
+#if defined(__OpenBSD__)
+    KOFFSET_TCPSTAT,
+#endif
     KOFFSET_MAX
 };
 

@@ -81,6 +81,18 @@
 #include <dirent.h>
 #include <errno.h>
 
+#ifndef DARWIN
+#include <sys/socketvar.h>
+#include <netinet/in.h>
+#include <netinet/in_systm.h>
+#include <netinet/ip.h>
+#include <netinet/in_pcb.h>
+#include <netinet/tcp.h>
+#include <netinet/tcp_timer.h>
+#include <netinet/tcp_var.h>
+#include <netinet/tcp_fsm.h>
+#endif
+
 #define NMIB(mib) (sizeof(mib)/sizeof(mib[0]))
 
 #ifdef __FreeBSD__
@@ -147,6 +159,9 @@ static int get_koffsets(sigar_t *sigar)
     struct nlist klist[] = {
         { "_cp_time" },
         { "_cnt" },
+#if !defined(TCPCTL_STATS) && defined(__OpenBSD__)
+        { "_tcpstat" },
+#endif
         { NULL }
     };
 
@@ -2280,12 +2295,6 @@ int sigar_net_interface_stat_get(sigar_t *sigar, const char *name,
 }
 
 #ifndef __OpenBSD__
-#include <sys/socketvar.h>
-#include <netinet/tcp.h>
-#include <netinet/in_pcb.h>
-#include <netinet/tcp_var.h>
-#include <netinet/tcp_fsm.h>
-
 static int net_connection_get(sigar_net_connection_walker_t *walker, int proto)
 {
     int flags = walker->flags;
@@ -2470,12 +2479,21 @@ sigar_tcp_get(sigar_t *sigar,
               sigar_tcp_t *tcp)
 {
     struct tcpstat mib;
+#if !defined(TCPCTL_STATS) && defined(__OpenBSD__)
+    int status =
+        kread(sigar, &mib, sizeof(mib),
+              sigar->koffsets[KOFFSET_TCPSTAT]);
+    if (status != SIGAR_OK) {
+        return status;
+    }
+#else
     int var[4] = { CTL_NET, PF_INET, IPPROTO_TCP, TCPCTL_STATS };
     size_t len = sizeof(mib);
 
     if (sysctl(var, NMIB(var), &mib, &len, NULL, 0) < 0) {
         return errno;
     }
+#endif
 
     tcp->active_opens = mib.tcps_connattempt;
     tcp->passive_opens = mib.tcps_accepts;
