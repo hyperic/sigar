@@ -356,6 +356,18 @@ static int sigar_vmstat(sigar_t *sigar, struct vmmeter *vmstat)
 
     return SIGAR_OK;
 }
+#elif defined(__OpenBSD__)
+static int sigar_vmstat(sigar_t *sigar, struct uvmexp *vmstat)
+{
+    size_t size = sizeof(*vmstat);
+    int mib[] = { CTL_VM, VM_UVMEXP };
+    if (sysctl(mib, NMIB(mib), vmstat, &size, NULL, 0) < 0) {
+        return errno;
+    }
+    else {
+        return SIGAR_OK;
+    }
+}
 #endif
 
 int sigar_mem_get(sigar_t *sigar, sigar_mem_t *mem)
@@ -365,7 +377,11 @@ int sigar_mem_get(sigar_t *sigar, sigar_mem_t *mem)
     uint64_t mem_total;
 #else
     unsigned long mem_total;
+#endif
+#if defined(__FreeBSD__)
     struct vmmeter vmstat;
+#elif defined(__OpenBSD__)
+    struct uvmexp vmstat;
 #endif
     int mib[2];
     size_t len;
@@ -402,8 +418,11 @@ int sigar_mem_get(sigar_t *sigar, sigar_mem_t *mem)
         mem->free = vmstat.v_free_count;
         mem->free *= sigar->pagesize;
     }
-#else
-    mem->free = -1; /*XXX OpenBSD*/
+#elif defined(__OpenBSD__)
+    if ((status = sigar_vmstat(sigar, &vmstat)) != SIGAR_OK) {
+        return status;
+    }
+    mem->free = vmstat.free;
 #endif
 
     mem->used = mem->total - mem->free;
