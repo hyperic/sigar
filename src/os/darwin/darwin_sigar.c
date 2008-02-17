@@ -2528,7 +2528,13 @@ static int get_nfsstats(struct nfsstats *stats)
 }
 #endif
 
-static void map_nfs_stats(sigar_nfs_v3_t *nfs, int *rpc)
+#if defined(__OpenBSD__)
+typedef uint64_t rpc_cnt_t;
+#else
+typedef int rpc_cnt_t;
+#endif
+
+static void map_nfs_stats(sigar_nfs_v3_t *nfs, rpc_cnt_t *rpc)
 {
     nfs->null = rpc[NFSPROC_NULL];
     nfs->getattr = rpc[NFSPROC_GETATTR];
