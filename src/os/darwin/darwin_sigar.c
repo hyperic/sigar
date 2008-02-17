@@ -1623,7 +1623,9 @@ static void get_fs_options(char *opts, int osize, long flags)
     if (flags & MNT_NOEXEC)         strncat(opts, ",noexec", osize);
     if (flags & MNT_NOSUID)         strncat(opts, ",nosuid", osize);
     if (flags & MNT_NODEV)          strncat(opts, ",nodev", osize);
+#ifdef MNT_UNION
     if (flags & MNT_UNION)          strncat(opts, ",union", osize);
+#endif
     if (flags & MNT_ASYNC)          strncat(opts, ",async", osize);
 #ifdef MNT_NOATIME
     if (flags & MNT_NOATIME)        strncat(opts, ",noatime", osize);
