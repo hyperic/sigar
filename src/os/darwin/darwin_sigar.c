@@ -81,7 +81,6 @@
 #include <dirent.h>
 #include <errno.h>
 
-#ifndef DARWIN
 #include <sys/socketvar.h>
 #include <netinet/in.h>
 #include <netinet/in_systm.h>
@@ -91,7 +90,6 @@
 #include <netinet/tcp_timer.h>
 #include <netinet/tcp_var.h>
 #include <netinet/tcp_fsm.h>
-#endif
 
 #define NMIB(mib) (sizeof(mib)/sizeof(mib[0]))
 
