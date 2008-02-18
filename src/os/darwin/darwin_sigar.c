@@ -574,8 +574,17 @@ int sigar_swap_get(sigar_t *sigar, sigar_swap_t *swap)
     else {
         swap->page_in = swap->page_out = -1;
     }
-#else
-    /*XXX OpenBSD*/
+#elif defined(__OpenBSD__)
+    struct uvmexp vmstat;
+
+    if ((status = sigar_vmstat(sigar, &vmstat)) != SIGAR_OK) {
+        return status;
+    }
+    swap->total = vmstat.swpages * sigar->pagesize;
+    swap->used = vmstat.swpginuse * sigar->pagesize;
+    swap->free  = swap->total - swap->used;
+    swap->page_in = vmstat.pageins;
+    swap->page_out = vmstat.pdpageouts;
 #endif
 
     return SIGAR_OK;
