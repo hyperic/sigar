@@ -1313,6 +1313,9 @@ static int kern_proc_args_skip_argv(sigar_kern_proc_args_t *kargs)
 }
 #endif
 
+/* ARG_MAX in FreeBSD 6.0 == 262144, which blows up the stack */
+#define SIGAR_ARG_MAX 65536
+
 int sigar_os_proc_args_get(sigar_t *sigar, sigar_pid_t pid,
                            sigar_proc_args_t *procargs)
 {
@@ -1358,13 +1361,10 @@ int sigar_os_proc_args_get(sigar_t *sigar, sigar_pid_t pid,
     }
 
     return SIGAR_OK;
-#else
-    /* ARG_MAX in FreeBSD 6.0 == 262144, which blows up the stack */
-#define SIGAR_ARG_MAX 65536
+#elif defined(__FreeBSD__)
     char buffer[SIGAR_ARG_MAX+1], *ptr=buffer;
     size_t len = sizeof(buffer);
-    int mib[4] = { CTL_KERN, KERN_PROC, KERN_PROC_ARGS, 0 };
-
+    int mib[] = { CTL_KERN, KERN_PROC, KERN_PROC_ARGS, 0 };
     mib[3] = pid;
 
     if (sysctl(mib, NMIB(mib), buffer, &len, NULL, 0) < 0) {
@@ -1394,6 +1394,34 @@ int sigar_os_proc_args_get(sigar_t *sigar, sigar_pid_t pid,
     }
 
     return SIGAR_OK;
+#elif defined(__OpenBSD__)
+    char buffer[SIGAR_ARG_MAX+1], **ptr=(char **)buffer;
+    size_t len = sizeof(buffer);
+    int mib[] = { CTL_KERN, KERN_PROC_ARGS, 0, KERN_PROC_ARGV };
+    mib[2] = pid;
+
+    if (sysctl(mib, NMIB(mib), buffer, &len, NULL, 0) < 0) {
+        return errno;
+    }
+
+    if (len == 0) {
+        procargs->number = 0;
+        return SIGAR_OK;
+    }
+
+    for (; *ptr; ptr++) {
+        int alen = strlen(*ptr)+1;
+        char *arg = malloc(alen);
+
+        SIGAR_PROC_ARGS_GROW(procargs);
+        memcpy(arg, *ptr, alen);
+
+        procargs->data[procargs->number++] = arg;
+    }
+
+    return SIGAR_OK;
+#else
+    return SIGAR_ENOTIMPL;
 #endif
 }
 
