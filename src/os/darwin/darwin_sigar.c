@@ -611,16 +611,23 @@ int sigar_cpu_get(sigar_t *sigar, sigar_cpu_t *cpu)
     cpu->wait = 0; /*N/A*/
     cpu->total = cpu->user + cpu->nice + cpu->sys + cpu->idle;
 
-#elif defined(__FreeBSD__)
+#elif defined(__FreeBSD__) || (__OpenBSD__)
     int status;
     unsigned long cp_time[CPUSTATES];
     size_t size = sizeof(cp_time);
 
+#  ifdef __OpenBSD__
+    int mib[] = { CTL_KERN, KERN_CPTIME };
+    if (sysctl(mib, NMIB(mib), &cp_time, &size, NULL, 0) == -1) {
+        status = errno;
+    }
+#  else
     /* try sysctl first, does not require /dev/kmem perms */
     if (sysctlbyname("kern.cp_time", &cp_time, &size, NULL, 0) == -1) {
         status = kread(sigar, &cp_time, sizeof(cp_time),
                        sigar->koffsets[KOFFSET_CPUINFO]);
     }
+#  endif
     else {
         status = SIGAR_OK;
     }
@@ -635,8 +642,6 @@ int sigar_cpu_get(sigar_t *sigar, sigar_cpu_t *cpu)
     cpu->idle = SIGAR_TICK2MSEC(cp_time[CP_IDLE]);
     cpu->wait = 0; /*N/A*/
     cpu->total = cpu->user + cpu->nice + cpu->sys + cpu->idle;
-#else
-    /*XXX OpenBSD*/
 #endif
 
     return SIGAR_OK;
