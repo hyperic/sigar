@@ -101,7 +101,7 @@
 #  endif
 #endif
 
-#ifdef SIGAR_FREEBSD5
+#if defined(SIGAR_FREEBSD5)
 
 #define KI_FD   ki_fd
 #define KI_PID  ki_pid
@@ -122,7 +122,7 @@
 #define KI_FLAG ki_flag
 #define KI_START ki_start
 
-#else
+#elif defined(DARWIN) || defined(SIGAR_FREEBSD4) || defined(__OpenBSD__)
 
 #define KI_FD   kp_proc.p_fd
 #define KI_PID  kp_proc.p_pid
@@ -770,7 +770,7 @@ static int proc_fdinfo_get(sigar_t *sigar, sigar_pid_t pid, int *num)
 int sigar_os_proc_list_get(sigar_t *sigar,
                            sigar_proc_list_t *proclist)
 {
-#if defined(DARWIN) || defined(SIGAR_FREEBSD5)
+#if defined(DARWIN) || defined(SIGAR_FREEBSD5) || defined(__OpenBSD__)
     int mib[4] = { CTL_KERN, KERN_PROC, KERN_PROC_PROC, 0 };
     int i, num;
     size_t len;
@@ -827,7 +827,11 @@ int sigar_os_proc_list_get(sigar_t *sigar,
 
 static int sigar_get_pinfo(sigar_t *sigar, sigar_pid_t pid)
 {
-    int mib[4] = { CTL_KERN, KERN_PROC, KERN_PROC_PID, 0 };
+#ifdef __OpenBSD__
+    int mib[] = { CTL_KERN, KERN_PROC2, KERN_PROC_PID, 0, sizeof(*sigar->pinfo), 1 };
+#else
+    int mib[] = { CTL_KERN, KERN_PROC, KERN_PROC_PID, 0 };
+#endif
     size_t len = sizeof(*sigar->pinfo);
     time_t timenow = time(NULL);
     mib[3] = pid;
@@ -855,7 +859,7 @@ static int sigar_get_pinfo(sigar_t *sigar, sigar_pid_t pid)
 int sigar_proc_mem_get(sigar_t *sigar, sigar_pid_t pid,
                        sigar_proc_mem_t *procmem)
 {
-#ifdef DARWIN
+#if defined(DARWIN)
     mach_port_t task, self = mach_task_self();
     kern_return_t status;
     task_basic_info_data_t info;
@@ -910,9 +914,9 @@ int sigar_proc_mem_get(sigar_t *sigar, sigar_pid_t pid,
     procmem->share    = SIGAR_FIELD_NOTIMPL;
 
     return SIGAR_OK;
-#else
+#elif defined(__FreeBSD__)
     int status = sigar_get_pinfo(sigar, pid);
-    struct kinfo_proc *pinfo = sigar->pinfo;
+    bsd_pinfo_t *pinfo = sigar->pinfo;
 
     if (status != SIGAR_OK) {
         return status;
@@ -928,25 +932,49 @@ int sigar_proc_mem_get(sigar_t *sigar, sigar_pid_t pid,
     procmem->page_faults  = SIGAR_FIELD_NOTIMPL;
     procmem->minor_faults = SIGAR_FIELD_NOTIMPL;
     procmem->major_faults = SIGAR_FIELD_NOTIMPL;
+#elif defined(__OpenBSD__)
+    int status = sigar_get_pinfo(sigar, pid);
+    bsd_pinfo_t *pinfo = sigar->pinfo;
 
-    return SIGAR_OK;
+    if (status != SIGAR_OK) {
+        return status;
+    }
+
+    procmem->size =
+        (pinfo->p_vm_tsize + pinfo->p_vm_dsize + pinfo->p_vm_ssize) * sigar->pagesize;
+
+    procmem->resident = pinfo->p_vm_rssize * sigar->pagesize;
+
+    procmem->share = SIGAR_FIELD_NOTIMPL;
+
+    procmem->minor_faults = pinfo->p_uru_minflt;
+    procmem->major_faults = pinfo->p_uru_majflt;
+    procmem->page_faults  = procmem->minor_faults + procmem->major_faults;
 #endif
+    return SIGAR_OK;
 }
 
 int sigar_proc_cred_get(sigar_t *sigar, sigar_pid_t pid,
                         sigar_proc_cred_t *proccred)
 {
     int status = sigar_get_pinfo(sigar, pid);
-    struct kinfo_proc *pinfo = sigar->pinfo;
+    bsd_pinfo_t *pinfo = sigar->pinfo;
 
     if (status != SIGAR_OK) {
         return status;
     }
 
+#ifdef __OpenBSD__
+    proccred->uid  = pinfo->p_ruid;
+    proccred->gid  = pinfo->p_rgid;
+    proccred->euid = pinfo->p_uid;
+    proccred->egid = pinfo->p_gid;
+#else
     proccred->uid  = pinfo->KI_UID;
     proccred->gid  = pinfo->KI_GID;
     proccred->euid = pinfo->KI_EUID;
     proccred->egid = pinfo->KI_EGID;
+#endif
 
     return SIGAR_OK;
 }
@@ -1028,7 +1056,7 @@ int sigar_proc_time_get(sigar_t *sigar, sigar_pid_t pid,
     struct user user;
 #endif
     int status = sigar_get_pinfo(sigar, pid);
-    struct kinfo_proc *pinfo = sigar->pinfo;
+    bsd_pinfo_t *pinfo = sigar->pinfo;
 
     if (status != SIGAR_OK) {
         return status;
@@ -1059,8 +1087,12 @@ int sigar_proc_time_get(sigar_t *sigar, sigar_pid_t pid,
     proctime->sys   = tv2msec(user.u_stats.p_ru.ru_stime);
     proctime->total = proctime->user + proctime->sys;
     proctime->start_time = tv2msec(user.u_stats.p_start);
-#else
-    /*XXX OpenBSD*/
+#elif defined(__OpenBSD__)
+    /* XXX *_usec */
+    proctime->user  = pinfo->p_uutime_sec * SIGAR_MSEC;
+    proctime->sys   = pinfo->p_ustime_sec * SIGAR_MSEC;
+    proctime->total = proctime->user + proctime->sys;
+    proctime->start_time = pinfo->p_ustart_sec * SIGAR_MSEC;
 #endif
 
     return SIGAR_OK;
@@ -1144,12 +1176,26 @@ int sigar_proc_state_get(sigar_t *sigar, sigar_pid_t pid,
                          sigar_proc_state_t *procstate)
 {
     int status = sigar_get_pinfo(sigar, pid);
-    struct kinfo_proc *pinfo = sigar->pinfo;
-    
+    bsd_pinfo_t *pinfo = sigar->pinfo;
+#ifdef __OpenBSD__
+    int state = pinfo->p_stat;
+#else
+    int state = pinfo->KI_STAT;
+#endif
+
     if (status != SIGAR_OK) {
         return status;
     }
 
+#ifdef __OpenBSD__
+    SIGAR_SSTRCPY(procstate->name, pinfo->p_comm);
+    procstate->ppid     = pinfo->p_ppid;
+    procstate->priority = pinfo->p_priority;
+    procstate->nice     = pinfo->p_nice;
+    procstate->tty      = pinfo->p_tdev;
+    procstate->threads  = SIGAR_FIELD_NOTIMPL;
+    procstate->processor = pinfo->p_cpuid;
+#else
     SIGAR_SSTRCPY(procstate->name, pinfo->KI_COMM);
     procstate->ppid     = pinfo->KI_PPID;
     procstate->priority = pinfo->KI_PRI;
@@ -1157,6 +1203,7 @@ int sigar_proc_state_get(sigar_t *sigar, sigar_pid_t pid,
     procstate->tty      = SIGAR_FIELD_NOTIMPL; /*XXX*/
     procstate->threads  = SIGAR_FIELD_NOTIMPL;
     procstate->processor = SIGAR_FIELD_NOTIMPL;
+#endif
 
 #ifdef DARWIN
     status = sigar_proc_threads_get(sigar, pid, procstate);
@@ -1165,7 +1212,7 @@ int sigar_proc_state_get(sigar_t *sigar, sigar_pid_t pid,
     }
 #endif
 
-    switch (pinfo->KI_STAT) {
+    switch (state) {
       case SIDL:
         procstate->state = 'D';
         break;
@@ -1461,7 +1508,7 @@ int sigar_proc_fd_get(sigar_t *sigar, sigar_pid_t pid,
 {
 #ifdef __FreeBSD__
     int status;
-    struct kinfo_proc *pinfo;
+    bsd_pinfo_t *pinfo;
     struct filedesc filed;
 #if 0
     struct file **ofiles;

@@ -37,12 +37,18 @@ enum {
     KOFFSET_MAX
 };
 
+#ifdef __OpenBSD__
+typedef struct kinfo_proc2 bsd_pinfo_t;
+#else
+typedef struct kinfo_proc bsd_pinfo_t;
+#endif
+
 struct sigar_t {
     SIGAR_T_BASE;
     int pagesize;
     time_t last_getprocs;
     sigar_pid_t last_pid;
-    struct kinfo_proc *pinfo;
+    bsd_pinfo_t *pinfo;
 #ifdef DARWIN
     mach_port_t mach_port;
 #else
