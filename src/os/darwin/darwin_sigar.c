@@ -1218,6 +1218,9 @@ int sigar_proc_state_get(sigar_t *sigar, sigar_pid_t pid,
         procstate->state = 'D';
         break;
       case SRUN:
+#ifdef SONPROC
+      case SONPROC:
+#endif
         procstate->state = 'R';
         break;
       case SSLEEP:
@@ -1228,6 +1231,9 @@ int sigar_proc_state_get(sigar_t *sigar, sigar_pid_t pid,
         break;
       case SZOMB:
         procstate->state = 'Z';
+        break;
+      default:
+        procstate->state = '?';
         break;
     }
 
