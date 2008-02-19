@@ -33,6 +33,7 @@ enum {
     KOFFSET_VMMETER,
 #if defined(__OpenBSD__)
     KOFFSET_TCPSTAT,
+    KOFFSET_TCBTABLE,
 #endif
     KOFFSET_MAX
 };

@@ -157,8 +157,9 @@ static int get_koffsets(sigar_t *sigar)
     struct nlist klist[] = {
         { "_cp_time" },
         { "_cnt" },
-#if !defined(TCPCTL_STATS) && defined(__OpenBSD__)
+#if defined(__OpenBSD__)
         { "_tcpstat" },
+        { "_tcbtable" },
 #endif
         { NULL }
     };
@@ -2381,7 +2382,133 @@ int sigar_net_interface_stat_get(sigar_t *sigar, const char *name,
     return SIGAR_OK;
 }
 
-#ifndef __OpenBSD__
+static int net_connection_state_get(int state)
+{
+    switch (state) {
+      case TCPS_CLOSED:
+        return SIGAR_TCP_CLOSE;
+      case TCPS_LISTEN:
+        return SIGAR_TCP_LISTEN;
+      case TCPS_SYN_SENT:
+        return SIGAR_TCP_SYN_SENT;
+      case TCPS_SYN_RECEIVED:
+        return SIGAR_TCP_SYN_RECV;
+      case TCPS_ESTABLISHED:
+        return SIGAR_TCP_ESTABLISHED;
+      case TCPS_CLOSE_WAIT:
+        return SIGAR_TCP_CLOSE_WAIT;
+      case TCPS_FIN_WAIT_1:
+        return SIGAR_TCP_FIN_WAIT1;
+      case TCPS_CLOSING:
+        return SIGAR_TCP_CLOSING;
+      case TCPS_LAST_ACK:
+        return SIGAR_TCP_LAST_ACK;
+      case TCPS_FIN_WAIT_2:
+        return SIGAR_TCP_FIN_WAIT2;
+      case TCPS_TIME_WAIT:
+        return SIGAR_TCP_TIME_WAIT;
+      default:
+        return SIGAR_TCP_UNKNOWN;
+    }
+}
+
+#ifdef __OpenBSD__
+static int net_connection_get(sigar_net_connection_walker_t *walker, int proto)
+{
+    int status;
+    int istcp = 0, type;
+    int flags = walker->flags;
+    struct inpcbtable table;
+    struct inpcb *head, *next, *prev;
+    sigar_t *sigar = walker->sigar;
+    u_long offset;
+
+    switch (proto) {
+      case IPPROTO_TCP:
+        offset = sigar->koffsets[KOFFSET_TCBTABLE];
+        istcp = 1;
+        type = SIGAR_NETCONN_TCP;
+        break;
+      case IPPROTO_UDP:
+      default:
+        return SIGAR_ENOTIMPL;
+    }
+
+
+    status = kread(sigar, &table, sizeof(table), offset);
+
+    if (status != SIGAR_OK) {
+        return status;
+    }
+
+    prev = head =
+        (struct inpcb *)&CIRCLEQ_FIRST(&((struct inpcbtable *)offset)->inpt_queue);
+
+    next = CIRCLEQ_FIRST(&table.inpt_queue);
+
+    while (next != head) {
+        struct inpcb inpcb;
+        struct tcpcb tcpcb;
+        struct socket socket;
+
+        status = kread(sigar, &inpcb, sizeof(inpcb), (long)next);
+        prev = next;
+        next = CIRCLEQ_NEXT(&inpcb, inp_queue);
+
+        kread(sigar, &socket, sizeof(socket), (u_long)inpcb.inp_socket);
+
+        if ((((flags & SIGAR_NETCONN_SERVER) && socket.so_qlimit) ||
+            ((flags & SIGAR_NETCONN_CLIENT) && !socket.so_qlimit)))
+        {
+            sigar_net_connection_t conn;
+
+            SIGAR_ZERO(&conn);
+
+            if (istcp) {
+                kread(sigar, &tcpcb, sizeof(tcpcb), (u_long)inpcb.inp_ppcb);
+            }
+
+            if (inpcb.inp_flags & INP_IPV6) {
+                sigar_net_address6_set(conn.local_address,
+                                       &inpcb.inp_laddr6.s6_addr);
+
+                sigar_net_address6_set(conn.remote_address,
+                                       &inpcb.inp_faddr6.s6_addr);
+            }
+            else {
+                sigar_net_address_set(conn.local_address,
+                                      inpcb.inp_laddr.s_addr);
+
+                sigar_net_address_set(conn.remote_address,
+                                      inpcb.inp_faddr.s_addr);
+            }
+
+            conn.local_port  = ntohs(inpcb.inp_lport);
+            conn.remote_port = ntohs(inpcb.inp_fport);
+            conn.receive_queue = socket.so_rcv.sb_cc;
+            conn.send_queue    = socket.so_snd.sb_cc;
+            conn.uid           = socket.so_pgid;
+            conn.type = type;
+
+            if (!istcp) {
+                conn.state = SIGAR_TCP_UNKNOWN;
+                if (walker->add_connection(walker, &conn) != SIGAR_OK) {
+                    break;
+                }
+                continue;
+            }
+
+            conn.state = net_connection_state_get(tcpcb.t_state);
+
+            if (walker->add_connection(walker, &conn) != SIGAR_OK) {
+                break;
+            }
+        }
+    }
+
+    return SIGAR_OK;
+}
+#else
 static int net_connection_get(sigar_net_connection_walker_t *walker, int proto)
 {
     int flags = walker->flags;
@@ -2484,44 +2611,7 @@ static int net_connection_get(sigar_net_connection_walker_t *walker, int proto)
                 continue;
             }
 
-            switch (tp->t_state) {
-              case TCPS_CLOSED:
-                conn.state = SIGAR_TCP_CLOSE;
-                break;
-              case TCPS_LISTEN:
-                conn.state = SIGAR_TCP_LISTEN;
-                break;
-              case TCPS_SYN_SENT:
-                conn.state = SIGAR_TCP_SYN_SENT;
-                break;
-              case TCPS_SYN_RECEIVED:
-                conn.state = SIGAR_TCP_SYN_RECV;
-                break;
-              case TCPS_ESTABLISHED:
-                conn.state = SIGAR_TCP_ESTABLISHED;
-                break;
-              case TCPS_CLOSE_WAIT:
-                conn.state = SIGAR_TCP_CLOSE_WAIT;
-                break;
-              case TCPS_FIN_WAIT_1:
-                conn.state = SIGAR_TCP_FIN_WAIT1;
-                break;
-              case TCPS_CLOSING:
-                conn.state = SIGAR_TCP_CLOSING;
-                break;
-              case TCPS_LAST_ACK:
-                conn.state = SIGAR_TCP_LAST_ACK;
-                break;
-              case TCPS_FIN_WAIT_2:
-                conn.state = SIGAR_TCP_FIN_WAIT2;
-                break;
-              case TCPS_TIME_WAIT:
-                conn.state = SIGAR_TCP_TIME_WAIT;
-                break;
-              default:
-                conn.state = SIGAR_TCP_UNKNOWN;
-                break;
-            }
+            conn.state = net_connection_state_get(tp->t_state);
 
             if (walker->add_connection(walker, &conn) != SIGAR_OK) {
                 break;
@@ -2533,6 +2623,7 @@ static int net_connection_get(sigar_net_connection_walker_t *walker, int proto)
 
     return SIGAR_OK;
 }
+#endif
 
 int sigar_net_connection_walk(sigar_net_connection_walker_t *walker)
 {
@@ -2554,12 +2645,6 @@ int sigar_net_connection_walk(sigar_net_connection_walker_t *walker)
 
     return SIGAR_OK;
 }
-#else
-int sigar_net_connection_walk(sigar_net_connection_walker_t *walker)
-{
-    return SIGAR_ENOTIMPL;
-}
-#endif
 
 SIGAR_DECLARE(int)
 sigar_tcp_get(sigar_t *sigar,
