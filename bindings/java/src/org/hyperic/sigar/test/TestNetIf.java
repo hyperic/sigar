@@ -61,8 +61,10 @@ public class TestNetIf extends SigarTestCase {
             } catch (SigarNotImplementedException e) {
                 //ok
             } catch (SigarException e) {
-                fail("getNetInterfaceStat(" + name + "): " +
-                     e.getMessage());
+                if (name.indexOf(':') == -1) {
+                    fail("getNetInterfaceStat(" + name + "): " +
+                         e.getMessage());
+                } //else alias may not have metrics
             }
         }
     }
