@@ -18,7 +18,8 @@
 
 package org.hyperic.sigar.test;
 
-import org.hyperic.sigar.OperatingSystem;
+import java.util.Date;
+
 import org.hyperic.sigar.SigarException;
 import org.hyperic.sigar.Who;
 
@@ -29,10 +30,18 @@ public class TestWho extends SigarTestCase {
     }
 
     public void testWho() throws SigarException {
-        if (OperatingSystem.IS_WIN32) {
-            return;
-        }
+        traceln("");
         Who[] who = getSigar().getWhoList();
-        assertTrue(who.length > 0);
+        for (int i=0; i<who.length; i++) {
+            String host = who[i].getHost();
+            if (host.length() != 0) {
+                host = "(" + host + ")";
+            }
+            traceln(who[i].getUser() + "\t" +
+                    who[i].getDevice() + "\t" +
+                    new Date(who[i].getTime() * 1000) + "\t" +
+                    host);
+            assertLengthTrace("user", who[i].getUser());
+        }
     }
 }
