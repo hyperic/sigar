@@ -27,6 +27,7 @@
 #include <nfs/nfsproto.h>
 
 #ifdef DARWIN
+#include <dlfcn.h>
 #include <mach/mach_init.h>
 #include <mach/message.h>
 #include <mach/kern_return.h>
@@ -38,6 +39,7 @@
 #include <mach/thread_info.h>
 #include <mach/vm_map.h>
 #include <mach/shared_memory_server.h>
+#define __OPENTRANSPORTPROVIDERS__
 #include <Gestalt.h>
 #include <CFString.h>
 #include <CoreFoundation/CoreFoundation.h>
@@ -45,9 +47,6 @@
 #include <IOKit/IOKitLib.h>
 #include <IOKit/IOTypes.h>
 #include <IOKit/storage/IOBlockStorageDriver.h>
-#ifdef DARWIN_HAS_LIBPROC_H
-#include <sys/libproc.h>
-#endif
 #else
 #include <sys/dkstat.h>
 #include <sys/types.h>
@@ -222,6 +221,12 @@ int sigar_os_open(sigar_t **sigar)
 
 #ifdef DARWIN
     (*sigar)->mach_port = mach_host_self();
+#  ifdef DARWIN_HAS_LIBPROC_H
+    if (((*sigar)->libproc = dlopen("/usr/lib/libproc.dylib", 0))) {
+        (*sigar)->proc_pidinfo = dlsym((*sigar)->libproc, "proc_pidinfo");
+        (*sigar)->proc_pidfdinfo = dlsym((*sigar)->libproc, "proc_pidfdinfo");
+    }
+#  endif
 #else
     (*sigar)->kmem = kvm_open(NULL, NULL, NULL, O_RDONLY, NULL);
     if (stat("/proc/curproc", &sb) < 0) {
@@ -737,14 +742,18 @@ static int proc_fdinfo_get(sigar_t *sigar, sigar_pid_t pid, int *num)
     int rsize;
     const int init_size = PROC_PIDLISTFD_SIZE * 32;
 
+    if (!sigar->libproc) {
+        return SIGAR_ENOTIMPL;
+    }
+
     if (sigar->ifconf_len == 0) {
         sigar->ifconf_len = init_size;
         sigar->ifconf_buf = malloc(sigar->ifconf_len);
     }
 
     while (1) {
-        rsize = proc_pidinfo(pid, PROC_PIDLISTFDS, 0,
-                             sigar->ifconf_buf, sigar->ifconf_len);
+        rsize = sigar->proc_pidinfo(pid, PROC_PIDLISTFDS, 0,
+                                    sigar->ifconf_buf, sigar->ifconf_len);
         if (rsize <= 0) {
             return errno;
         }
@@ -868,17 +877,19 @@ int sigar_proc_mem_get(sigar_t *sigar, sigar_pid_t pid,
     mach_msg_type_number_t count;
 #  ifdef DARWIN_HAS_LIBPROC_H
     struct proc_taskinfo pti;
-    int sz =
-        proc_pidinfo(pid, PROC_PIDTASKINFO, 0, &pti, sizeof(pti));
+    if (sigar->libproc) {
+        int sz =
+            sigar->proc_pidinfo(pid, PROC_PIDTASKINFO, 0, &pti, sizeof(pti));
 
-    if (sz == sizeof(pti)) {
-        procmem->size         = pti.pti_virtual_size;
-        procmem->resident     = pti.pti_resident_size;
-        procmem->page_faults  = pti.pti_faults;
-        procmem->minor_faults = SIGAR_FIELD_NOTIMPL;
-        procmem->major_faults = SIGAR_FIELD_NOTIMPL;
-        procmem->share        = SIGAR_FIELD_NOTIMPL;
-        return SIGAR_OK;
+        if (sz == sizeof(pti)) {
+            procmem->size         = pti.pti_virtual_size;
+            procmem->resident     = pti.pti_resident_size;
+            procmem->page_faults  = pti.pti_faults;
+            procmem->minor_faults = SIGAR_FIELD_NOTIMPL;
+            procmem->major_faults = SIGAR_FIELD_NOTIMPL;
+            procmem->share        = SIGAR_FIELD_NOTIMPL;
+            return SIGAR_OK;
+        }
     }
 #  endif
 
@@ -990,7 +1001,7 @@ int sigar_proc_cred_get(sigar_t *sigar, sigar_pid_t pid,
 #define tval2nsec(tval) \
     (SIGAR_SEC2NANO((tval).seconds) + SIGAR_MICROSEC2NANO((tval).microseconds))
 
-static int get_proc_times(sigar_pid_t pid, sigar_proc_time_t *time)
+static int get_proc_times(sigar_t *sigar, sigar_pid_t pid, sigar_proc_time_t *time)
 {
     unsigned int count;
     time_value_t utime = {0, 0}, stime = {0, 0};
@@ -999,15 +1010,17 @@ static int get_proc_times(sigar_pid_t pid, sigar_proc_time_t *time)
     task_port_t task, self;
     kern_return_t status;
 #  ifdef DARWIN_HAS_LIBPROC_H
-    struct proc_taskinfo pti;
-    int sz =
-        proc_pidinfo(pid, PROC_PIDTASKINFO, 0, &pti, sizeof(pti));
+    if (sigar->libproc) {
+        struct proc_taskinfo pti;
+        int sz =
+            sigar->proc_pidinfo(pid, PROC_PIDTASKINFO, 0, &pti, sizeof(pti));
 
-    if (sz == sizeof(pti)) {
-        time->user = SIGAR_NSEC2MSEC(pti.pti_total_user);
-        time->sys  = SIGAR_NSEC2MSEC(pti.pti_total_system);
-        time->total = time->user + time->sys;
-        return SIGAR_OK;
+        if (sz == sizeof(pti)) {
+            time->user = SIGAR_NSEC2MSEC(pti.pti_total_user);
+            time->sys  = SIGAR_NSEC2MSEC(pti.pti_total_system);
+            time->total = time->user + time->sys;
+            return SIGAR_OK;
+        }
     }
 #  endif
 
@@ -1064,7 +1077,7 @@ int sigar_proc_time_get(sigar_t *sigar, sigar_pid_t pid,
     }
 
 #if defined(DARWIN)
-    if ((status = get_proc_times(pid, proctime)) != SIGAR_OK) {
+    if ((status = get_proc_times(sigar, pid, proctime)) != SIGAR_OK) {
         return status;
     }
     proctime->start_time = tv2msec(pinfo->KI_START);
@@ -2935,13 +2948,17 @@ int sigar_proc_port_get(sigar_t *sigar, int protocol,
     sigar_proc_list_t pids;
     int i, status, found=0;
 
+    if (!sigar->libproc) {
+        return SIGAR_ENOTIMPL;
+    }
+
     status = sigar_proc_list_get(sigar, &pids);
     if (status != SIGAR_OK) {
         return status;
     }
 
     for (i=0; i<pids.number; i++) {
-        int n, num;
+        int n, num=0;
         struct proc_fdinfo *fdinfo;
 
         status = proc_fdinfo_get(sigar, pids.data[i], &num);
@@ -2959,8 +2976,8 @@ int sigar_proc_port_get(sigar_t *sigar, int protocol,
             if (fdp->proc_fdtype != PROX_FDTYPE_SOCKET) {
                 continue;
             }
-            rsize = proc_pidfdinfo(pids.data[i], fdp->proc_fd,
-                                   PROC_PIDFDSOCKETINFO, &si, sizeof(si));
+            rsize = sigar->proc_pidfdinfo(pids.data[i], fdp->proc_fd,
+                                          PROC_PIDFDSOCKETINFO, &si, sizeof(si));
             if (rsize != sizeof(si)) {
                 continue;
             }

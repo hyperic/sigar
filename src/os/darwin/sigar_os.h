@@ -22,6 +22,12 @@
 #ifdef DARWIN
 #include <mach/port.h>
 #include <mach/host_info.h>
+#ifdef DARWIN_HAS_LIBPROC_H
+#include <mach-o/dyld.h>
+#include <sys/libproc.h>
+typedef int (*proc_pidinfo_func_t)(int, int, uint64_t,  void *, int);
+typedef int (*proc_pidfdinfo_func_t)(int, int, int, void *, int); 
+#endif
 #else
 #include <kvm.h>
 #endif
@@ -52,6 +58,9 @@ struct sigar_t {
     bsd_pinfo_t *pinfo;
 #ifdef DARWIN
     mach_port_t mach_port;
+    void *libproc;
+    proc_pidinfo_func_t proc_pidinfo;
+    proc_pidfdinfo_func_t proc_pidfdinfo;
 #else
     kvm_t *kmem;
     /* offsets for seeking on kmem */
