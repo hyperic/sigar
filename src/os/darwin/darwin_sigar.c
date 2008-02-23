@@ -2712,7 +2712,7 @@ static int get_nfsstats(struct nfsstats *stats)
     size_t len = sizeof(*stats);
     int mib[] = { CTL_VFS, 2, NFS_NFSSTATS };
 
-    if (sysctl(mib, NMIB(mib), &stats, &len, NULL, 0) < 0) {
+    if (sysctl(mib, NMIB(mib), stats, &len, NULL, 0) < 0) {
         return errno;
     }
     else {
