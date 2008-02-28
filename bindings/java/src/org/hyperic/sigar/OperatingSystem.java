@@ -34,7 +34,7 @@ public class OperatingSystem extends SysInfo {
     public static final String NAME_WIN32   = "Win32";
     public static final String NAME_NETWARE = "NetWare";
     
-    public static String[] UNIX_NAMES = {
+    public static final String[] UNIX_NAMES = {
         OperatingSystem.NAME_LINUX,
         OperatingSystem.NAME_SOLARIS,
         OperatingSystem.NAME_HPUX,
@@ -43,7 +43,7 @@ public class OperatingSystem extends SysInfo {
         OperatingSystem.NAME_FREEBSD,
     };
         
-    public static String[] WIN32_NAMES = {
+    public static final String[] WIN32_NAMES = {
         OperatingSystem.NAME_WIN32,
     };
 
@@ -52,7 +52,7 @@ public class OperatingSystem extends SysInfo {
     public static final boolean IS_WIN32 =
         System.getProperty("os.name").indexOf("Windows") != -1;
     
-    private static Map supportedPlatforms = new HashMap();
+    private static final Map supportedPlatforms = new HashMap();
     
     static {
         int len = UNIX_NAMES.length + WIN32_NAMES.length;
