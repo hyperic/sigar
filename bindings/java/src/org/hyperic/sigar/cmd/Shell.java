@@ -92,6 +92,7 @@ public class Shell extends ShellBase {
         registerCommandHandler("ifconfig", new Ifconfig(this));
         registerCommandHandler("uptime", new Uptime(this));
         registerCommandHandler("ps", new Ps(this));
+        registerCommandHandler("pidof", new Pidof(this));
         registerCommandHandler("kill", new Kill(this));
         registerCommandHandler("netstat", new Netstat(this));
         registerCommandHandler("netinfo", new NetInfo(this));
