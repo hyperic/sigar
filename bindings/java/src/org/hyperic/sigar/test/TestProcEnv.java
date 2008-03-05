@@ -68,5 +68,15 @@ public class TestProcEnv extends SigarTestCase {
         } catch (SigarPermissionDeniedException e) {
             //ok
         }
+
+	long[] pids = sigar.getProcList();
+
+	for (int i=0; i<pids.length; i++) {
+            //traceln("pid=" + pids[i]);
+            try {
+                sigar.getProcEnv(pids[i]);
+            } catch (SigarException e) {
+            }
+        }
     }
 }
