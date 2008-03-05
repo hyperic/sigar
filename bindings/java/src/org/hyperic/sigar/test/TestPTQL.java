@@ -69,7 +69,8 @@ public class TestPTQL extends SigarTestCase {
         THIS_PROCESS,
         "Pid.Service.eq=Eventlog",
         "Pid.Service.eq=NOSUCHSERVICE",
-        "Pid.Service.eq=Hyperic HQ Agent",
+        "Pid.Service.ct=Oracle",
+        "Pid.ServiceDisplay.re=DHCP|DNS",
         OTHER_JAVA_PROCESS, //all java procs cept this one
         "Cpu.Percent.ge=0.2",
         "State.Name.sw=java,Args.*.eq=org.jboss.Main", //jboss
@@ -146,6 +147,9 @@ public class TestPTQL extends SigarTestCase {
             return pids.length;
         } catch (SigarNotImplementedException e) {
             return 0;
+        } catch (SigarException e) {
+            traceln("Failed query: " + qs);
+            throw e;
         }
     }
 

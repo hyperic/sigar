@@ -645,7 +645,8 @@ static int ptql_branch_match_ref(ptql_branch_t *branch, ptql_branch_t *ref)
 enum {
     PTQL_PID_PID,
     PTQL_PID_FILE,
-    PTQL_PID_SERVICE
+    PTQL_PID_SERVICE,
+    PTQL_PID_SERVICE_DISPLAY
 };
 
 #ifdef SIGAR_64BIT
@@ -663,6 +664,9 @@ enum {
     ptql_op_ui32[branch->op_name](branch, pid, match_pid)
 
 #endif
+
+#define PID_SERVICE_ATTR "Service"
+#define PID_SERVICE_ATTR_LEN (sizeof(PID_SERVICE_ATTR)-1)
 
 static int ptql_branch_init_pid(ptql_parse_branch_t *parsed,
                                 ptql_branch_t *branch,
@@ -690,19 +694,83 @@ static int ptql_branch_init_pid(ptql_parse_branch_t *parsed,
         branch->data_size = strlen(parsed->value);
         return SIGAR_OK;
     }
-    else if (strEQ(parsed->attr, "Service")) {
-        branch->flags = PTQL_PID_SERVICE;
+    else if (strnEQ(parsed->attr,
+                    PID_SERVICE_ATTR, PID_SERVICE_ATTR_LEN))
+    {
+        char *attr = parsed->attr + PID_SERVICE_ATTR_LEN;
+        branch->flags = 0;
+        if (*attr) {
+            if (strEQ(attr, "Display")) {
+                branch->flags = PTQL_PID_SERVICE_DISPLAY;
+            }
+        }
+        else {
+            branch->flags = PTQL_PID_SERVICE;
+        }
+        if (branch->flags) {
 #ifdef WIN32
-        branch->data.str = sigar_strdup(parsed->value);
-        branch->data_size = strlen(parsed->value);
+            branch->data.str = sigar_strdup(parsed->value);
+            branch->data_size = strlen(parsed->value);
 #endif
-        return SIGAR_OK;
+            return SIGAR_OK;
+        }
     }
-    else {
-        return ptql_error(error, "Unsupported %s attribute: %s",
-                          parsed->name, parsed->attr);
-    }
+
+    return ptql_error(error, "Unsupported %s attribute: %s",
+                      parsed->name, parsed->attr);
 }
+
+#ifdef WIN32
+static int ptql_pid_service_list_get(sigar_t *sigar,
+                                     ptql_branch_t *branch,
+                                     sigar_proc_list_t *proclist)
+{
+    SC_HANDLE handle =
+        OpenSCManager(NULL, NULL, SC_MANAGER_ENUMERATE_SERVICE);
+    ENUM_SERVICE_STATUS services[4096];
+    BOOL retval;
+    DWORD bytes, count, resume=0, i;
+
+    if (handle == NULL) {
+        return GetLastError();
+    }
+
+    retval = EnumServicesStatus(handle,
+                                SERVICE_WIN32,
+                                SERVICE_ACTIVE,
+                                &services[0], sizeof(services),
+                                &bytes, &count, &resume);
+
+    for (i=0; i<count; i++) {
+        char *value;
+
+        switch (branch->flags) {
+          case PTQL_PID_SERVICE_DISPLAY:
+            value = services[i].lpDisplayName;
+            break;
+          case PTQL_PID_SERVICE:
+          default:
+            value = services[i].lpServiceName;
+            break;
+        }
+
+        if (ptql_str_match(sigar, branch, value)) {
+            sigar_pid_t service_pid;
+            int status =
+                sigar_service_pid_get(sigar,
+                                      services[i].lpServiceName,
+                                      &service_pid);
+
+            if (status == SIGAR_OK) {
+                SIGAR_PROC_LIST_GROW(proclist);
+                proclist->data[proclist->number++] = service_pid;
+            }
+        }
+    }
+
+    return SIGAR_OK;
+}
+#endif
 
 static int ptql_pid_get(sigar_t *sigar,
                         ptql_branch_t *branch,
@@ -742,24 +810,51 @@ static int ptql_pid_get(sigar_t *sigar,
     return SIGAR_OK;
 }
 
+static int ptql_pid_list_get(sigar_t *sigar,
+                             ptql_branch_t *branch,
+                             sigar_proc_list_t *proclist)
+{
+    int status, i;
+    sigar_pid_t match_pid;
+
+#ifdef WIN32
+    if (branch->flags >= PTQL_PID_SERVICE) {
+        if ((branch->flags > PTQL_PID_SERVICE) ||
+            (branch->op_name != PTQL_OP_EQ))
+        {
+            return ptql_pid_service_list_get(sigar, branch, proclist);
+        }
+    }
+#endif
+
+    status = ptql_pid_get(sigar, branch, &match_pid);
+
+    if (status != SIGAR_OK) {
+        /* XXX treated as non-match but would be nice to propagate */
+        return SIGAR_OK;
+    }
+
+    status = sigar_proc_list_get(sigar, NULL);
+    if (status != SIGAR_OK) {
+        return status;
+    }
+    for (i=0; i<sigar->pids->number; i++) {
+        sigar_pid_t pid = sigar->pids->data[i];
+        if (pid_branch_match(branch, pid, match_pid)) {
+            SIGAR_PROC_LIST_GROW(proclist);
+            proclist->data[proclist->number++] = pid;
+        }
+    }
+
+    return SIGAR_OK;
+}
+
 static int SIGAPI ptql_pid_match(sigar_t *sigar,
                                  sigar_pid_t pid,
                                  void *data)
 {
-    ptql_branch_t *branch =
-        (ptql_branch_t *)data;
-    sigar_pid_t match_pid;
-    int matched;
-    int status =
-        ptql_pid_get(sigar, branch, &match_pid);
-
-    if (status != SIGAR_OK) {
-        return status;
-    }
-
-    matched = pid_branch_match(branch, pid, match_pid);
-
-    return matched ? SIGAR_OK : 1;
+    /* query already used to filter proc_list */
+    return SIGAR_OK;
 }
 
 static int ptql_args_branch_init(ptql_parse_branch_t *parsed,
@@ -1430,6 +1525,58 @@ SIGAR_DECLARE(int) sigar_ptql_query_match(sigar_t *sigar,
     return SIGAR_OK;
 }
 
+static int ptql_proc_list_get(sigar_t *sigar,
+                              sigar_ptql_query_t *query,
+                              sigar_proc_list_t **proclist)
+{
+    int status;
+    int i;
+
+    *proclist = NULL;
+
+    for (i=0; i<query->branches.number; i++) {
+        ptql_branch_t *branch = &query->branches.data[i];
+
+        if (branch->op_flags & PTQL_OP_FLAG_PID) {
+            /* pre-filter pid list for Pid.* queries */
+            /* XXX multiple Pid.* may result in dups */
+            if (*proclist == NULL) {
+                *proclist = malloc(sizeof(**proclist));
+                SIGAR_ZERO(*proclist);
+                sigar_proc_list_create(*proclist);
+            }
+            status = ptql_pid_list_get(sigar, branch, *proclist);
+            if (status != SIGAR_OK) {
+                sigar_proc_list_destroy(sigar, *proclist);
+                free(*proclist);
+                return status;
+            }
+        }
+    }
+
+    if (*proclist) {
+        return SIGAR_OK;
+    }
+
+    status = sigar_proc_list_get(sigar, NULL);
+    if (status != SIGAR_OK) {
+        return status;
+    }
+    *proclist = sigar->pids;
+    return SIGAR_OK;
+}
+
+static int ptql_proc_list_destroy(sigar_t *sigar,
+                                  sigar_proc_list_t *proclist)
+{
+    if (proclist != sigar->pids) {
+        sigar_proc_list_destroy(sigar, proclist);
+        free(proclist);
+    }
+
+    return SIGAR_OK;
+}
+
 SIGAR_DECLARE(int) sigar_ptql_query_find_process(sigar_t *sigar,
                                                  sigar_ptql_query_t *query,
                                                  sigar_pid_t *pid)
@@ -1438,18 +1585,10 @@ SIGAR_DECLARE(int) sigar_ptql_query_find_process(sigar_t *sigar,
     int i, matches=0;
     sigar_proc_list_t *pids;
 
-    if ((query->branches.number == 1) &&
-        (query->branches.data[0].op_flags & PTQL_OP_FLAG_PID))
-    {
-        /* avoid scanning the process list for single Pid.* queries */
-        return ptql_pid_get(sigar, &query->branches.data[0], pid);
-    }
-
-    status = sigar_proc_list_get(sigar, NULL);
+    status = ptql_proc_list_get(sigar, query, &pids);
     if (status != SIGAR_OK) {
         return status;
     }
-    pids = sigar->pids;
 
     for (i=0; i<pids->number; i++) {
         int query_status =
@@ -1465,6 +1604,8 @@ SIGAR_DECLARE(int) sigar_ptql_query_find_process(sigar_t *sigar,
             break;
         } /* else ok, e.g. permission denied */
     }
+
+    ptql_proc_list_destroy(sigar, pids);
 
     if (status != SIGAR_OK) {
         return status;
@@ -1494,11 +1635,10 @@ SIGAR_DECLARE(int) sigar_ptql_query_find(sigar_t *sigar,
     int i;
     sigar_proc_list_t *pids;
 
-    status = sigar_proc_list_get(sigar, NULL);
+    status = ptql_proc_list_get(sigar, query, &pids);
     if (status != SIGAR_OK) {
         return status;
     }
-    pids = sigar->pids;
 
     sigar_proc_list_create(proclist);
 
@@ -1516,6 +1656,8 @@ SIGAR_DECLARE(int) sigar_ptql_query_find(sigar_t *sigar,
             break;
         }
     }
+
+    ptql_proc_list_destroy(sigar, pids);
 
     if (status != SIGAR_OK) {
         sigar_proc_list_destroy(sigar, proclist);
