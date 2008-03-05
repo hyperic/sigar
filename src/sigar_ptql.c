@@ -665,8 +665,29 @@ enum {
 
 #endif
 
-#define PID_SERVICE_ATTR "Service"
-#define PID_SERVICE_ATTR_LEN (sizeof(PID_SERVICE_ATTR)-1)
+static int ptql_branch_init_service(ptql_parse_branch_t *parsed,
+                                    ptql_branch_t *branch,
+                                    sigar_ptql_error_t *error)
+{
+    branch->op_flags |= PTQL_OP_FLAG_PID;
+
+    if (strEQ(parsed->attr, "Name")) {
+        branch->flags = PTQL_PID_SERVICE;
+    }
+    else if (strEQ(parsed->attr, "DisplayName")) {
+        branch->flags = PTQL_PID_SERVICE_DISPLAY;
+    }
+    else {
+        return ptql_error(error, "Unsupported %s attribute: %s",
+                          parsed->name, parsed->attr);
+    }
+
+#ifdef WIN32
+    branch->data.str = sigar_strdup(parsed->value);
+    branch->data_size = strlen(parsed->value);
+#endif
+    return SIGAR_OK;
+}
 
 static int ptql_branch_init_pid(ptql_parse_branch_t *parsed,
                                 ptql_branch_t *branch,
@@ -693,27 +714,6 @@ static int ptql_branch_init_pid(ptql_parse_branch_t *parsed,
         branch->data.str = sigar_strdup(parsed->value);
         branch->data_size = strlen(parsed->value);
         return SIGAR_OK;
-    }
-    else if (strnEQ(parsed->attr,
-                    PID_SERVICE_ATTR, PID_SERVICE_ATTR_LEN))
-    {
-        char *attr = parsed->attr + PID_SERVICE_ATTR_LEN;
-        branch->flags = 0;
-        if (*attr) {
-            if (strEQ(attr, "Display")) {
-                branch->flags = PTQL_PID_SERVICE_DISPLAY;
-            }
-        }
-        else {
-            branch->flags = PTQL_PID_SERVICE;
-        }
-        if (branch->flags) {
-#ifdef WIN32
-            branch->data.str = sigar_strdup(parsed->value);
-            branch->data_size = strlen(parsed->value);
-#endif
-            return SIGAR_OK;
-        }
     }
 
     return ptql_error(error, "Unsupported %s attribute: %s",
@@ -1124,6 +1124,10 @@ static ptql_lookup_t PTQL_Pid[] = {
     { NULL, ptql_pid_match, 0, 0, PTQL_VALUE_TYPE_ANY, ptql_branch_init_pid }
 };
 
+static ptql_lookup_t PTQL_Service[] = {
+    { NULL, ptql_pid_match, 0, 0, PTQL_VALUE_TYPE_ANY, ptql_branch_init_service }
+};
+
 static ptql_entry_t ptql_map[] = {
     { "Time",     PTQL_Time },
     { "Cpu",      PTQL_Cpu },
@@ -1137,6 +1141,7 @@ static ptql_entry_t ptql_map[] = {
     { "Env",      PTQL_Env },
     { "Port",     PTQL_Port },
     { "Pid",      PTQL_Pid },
+    { "Service",  PTQL_Service },
     { NULL }
 };
 
@@ -1190,6 +1195,12 @@ static int ptql_branch_parse(char *query, ptql_parse_branch_t *branch,
     }
     else {
         return ptql_error(error, "Missing query");
+    }
+
+    /* Pid.Service -> Service.Name */
+    if (strEQ(branch->attr, "Service")) {
+        branch->name = branch->attr;
+        branch->attr = "Name";
     }
 
     return SIGAR_OK;

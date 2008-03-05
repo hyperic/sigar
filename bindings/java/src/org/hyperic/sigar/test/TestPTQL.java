@@ -67,10 +67,10 @@ public class TestPTQL extends SigarTestCase {
         "Pid.PidFile.eq=pid.file",
         "Pid.Pid.eq=1",
         THIS_PROCESS,
-        "Pid.Service.eq=Eventlog",
-        "Pid.Service.eq=NOSUCHSERVICE",
-        "Pid.Service.ct=Oracle",
-        "Pid.ServiceDisplay.re=DHCP|DNS",
+        "Pid.Service.eq=Eventlog", //compat -> Service.Name
+        "Service.Name.eq=NOSUCHSERVICE",
+        "Service.Name.ct=Oracle",
+        "Service.DisplayName.re=DHCP|DNS",
         OTHER_JAVA_PROCESS, //all java procs cept this one
         "Cpu.Percent.ge=0.2",
         "State.Name.sw=java,Args.*.eq=org.jboss.Main", //jboss
