@@ -71,6 +71,7 @@ public class TestPTQL extends SigarTestCase {
         "Service.Name.eq=NOSUCHSERVICE",
         "Service.Name.ct=Oracle",
         "Service.DisplayName.re=DHCP|DNS",
+        "Service.Path.ct=svchost",
         OTHER_JAVA_PROCESS, //all java procs cept this one
         "Cpu.Percent.ge=0.2",
         "State.Name.sw=java,Args.*.eq=org.jboss.Main", //jboss

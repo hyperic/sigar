@@ -646,7 +646,8 @@ enum {
     PTQL_PID_PID,
     PTQL_PID_FILE,
     PTQL_PID_SERVICE,
-    PTQL_PID_SERVICE_DISPLAY
+    PTQL_PID_SERVICE_DISPLAY,
+    PTQL_PID_SERVICE_PATH
 };
 
 #ifdef SIGAR_64BIT
@@ -676,6 +677,9 @@ static int ptql_branch_init_service(ptql_parse_branch_t *parsed,
     }
     else if (strEQ(parsed->attr, "DisplayName")) {
         branch->flags = PTQL_PID_SERVICE_DISPLAY;
+    }
+    else if (strEQ(parsed->attr, "Path")) {
+        branch->flags = PTQL_PID_SERVICE_PATH;
     }
     else {
         return ptql_error(error, "Unsupported %s attribute: %s",
@@ -721,6 +725,32 @@ static int ptql_branch_init_pid(ptql_parse_branch_t *parsed,
 }
 
 #ifdef WIN32
+#define QUERY_SC_SIZE 8192
+
+static int ptql_service_query_config(SC_HANDLE scm_handle,
+                                     char *name,
+                                     LPQUERY_SERVICE_CONFIG config)
+{
+    int status;
+    DWORD bytes;
+    SC_HANDLE handle =
+        OpenService(scm_handle, name, SERVICE_QUERY_CONFIG);
+
+    if (!handle) {
+        return GetLastError();
+    }
+
+    if (QueryServiceConfig(handle, config, QUERY_SC_SIZE, &bytes)) {
+        status = SIGAR_OK;
+    }
+    else {
+        status = GetLastError();
+    }
+
+    CloseServiceHandle(handle);
+    return status;
+}
+
 static int ptql_pid_service_list_get(sigar_t *sigar,
                                      ptql_branch_t *branch,
                                      sigar_proc_list_t *proclist)
@@ -728,6 +758,8 @@ static int ptql_pid_service_list_get(sigar_t *sigar,
     SC_HANDLE handle =
         OpenSCManager(NULL, NULL, SC_MANAGER_ENUMERATE_SERVICE);
     ENUM_SERVICE_STATUS services[4096];
+    char buffer[QUERY_SC_SIZE];
+    LPQUERY_SERVICE_CONFIG config = (LPQUERY_SERVICE_CONFIG)buffer;
     BOOL retval;
     DWORD bytes, count, resume=0, i;
 
@@ -742,15 +774,26 @@ static int ptql_pid_service_list_get(sigar_t *sigar,
                                 &bytes, &count, &resume);
 
     for (i=0; i<count; i++) {
+        int status;
         char *value;
+        char *name = services[i].lpServiceName;
 
         switch (branch->flags) {
           case PTQL_PID_SERVICE_DISPLAY:
             value = services[i].lpDisplayName;
             break;
+          case PTQL_PID_SERVICE_PATH:
+            status = ptql_service_query_config(handle, name, config);
+            if (status == SIGAR_OK) {
+                value = config->lpBinaryPathName;
+            }
+            else {
+                continue;
+            }
+            break;
           case PTQL_PID_SERVICE:
           default:
-            value = services[i].lpServiceName;
+            value = name;
             break;
         }
 
@@ -758,7 +801,7 @@ static int ptql_pid_service_list_get(sigar_t *sigar,
             sigar_pid_t service_pid;
             int status =
                 sigar_service_pid_get(sigar,
-                                      services[i].lpServiceName,
+                                      name,
                                       &service_pid);
 
             if (status == SIGAR_OK) {
