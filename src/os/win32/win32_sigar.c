@@ -3408,7 +3408,7 @@ int sigar_service_pid_get(sigar_t *sigar, char *name, sigar_pid_t *pid)
     return rc;
 }
 
-int sigar_services_status(sigar_services_status_t *ss, DWORD state)
+int sigar_services_status_get(sigar_services_status_t *ss, DWORD state)
 {
     DWORD bytes, resume=0;
     BOOL retval;

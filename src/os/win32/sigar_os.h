@@ -556,6 +556,10 @@ struct sigar_t {
     int winnt;
 };
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 int sigar_wsa_init(sigar_t *sigar);
 
 int sigar_proc_exe_peb_get(sigar_t *sigar, HANDLE proc,
@@ -583,9 +587,13 @@ typedef struct {
     SC_HANDLE handle;
 } sigar_services_status_t;
 
-int sigar_services_status_get(sigar_services_status_t *ess, DWORD state);
+int sigar_services_status_get(sigar_services_status_t *ss, DWORD state);
 
-void sigar_services_status_close(sigar_services_status_t *ess);
+void sigar_services_status_close(sigar_services_status_t *ss);
+
+#ifdef __cplusplus
+}
+#endif
 
 #define SIGAR_NO_SUCH_PROCESS (SIGAR_OS_START_ERROR+1)
 

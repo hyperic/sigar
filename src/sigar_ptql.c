@@ -761,7 +761,7 @@ static int ptql_pid_service_list_get(sigar_t *sigar,
     DWORD i, status;
 
     SIGAR_ZERO(&ss);
-    status = sigar_services_status(&ss, SERVICE_ACTIVE);
+    status = sigar_services_status_get(&ss, SERVICE_ACTIVE);
     if (status != SIGAR_OK) {
         return status;
     }
