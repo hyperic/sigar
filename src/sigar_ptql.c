@@ -755,35 +755,27 @@ static int ptql_pid_service_list_get(sigar_t *sigar,
                                      ptql_branch_t *branch,
                                      sigar_proc_list_t *proclist)
 {
-    SC_HANDLE handle =
-        OpenSCManager(NULL, NULL, SC_MANAGER_ENUMERATE_SERVICE);
-    ENUM_SERVICE_STATUS services[4096];
+    sigar_services_status_t ss;
     char buffer[QUERY_SC_SIZE];
     LPQUERY_SERVICE_CONFIG config = (LPQUERY_SERVICE_CONFIG)buffer;
-    BOOL retval;
-    DWORD bytes, count, resume=0, i;
+    DWORD i, status;
 
-    if (handle == NULL) {
-        return GetLastError();
+    SIGAR_ZERO(&ss);
+    status = sigar_services_status(&ss, SERVICE_ACTIVE);
+    if (status != SIGAR_OK) {
+        return status;
     }
-
-    retval = EnumServicesStatus(handle,
-                                SERVICE_WIN32,
-                                SERVICE_ACTIVE,
-                                &services[0], sizeof(services),
-                                &bytes, &count, &resume);
-
-    for (i=0; i<count; i++) {
+    for (i=0; i<ss.count; i++) {
         int status;
         char *value;
-        char *name = services[i].lpServiceName;
+        char *name = ss.services[i].lpServiceName;
 
         switch (branch->flags) {
           case PTQL_PID_SERVICE_DISPLAY:
-            value = services[i].lpDisplayName;
+            value = ss.services[i].lpDisplayName;
             break;
           case PTQL_PID_SERVICE_PATH:
-            status = ptql_service_query_config(handle, name, config);
+            status = ptql_service_query_config(ss.handle, name, config);
             if (status == SIGAR_OK) {
                 value = config->lpBinaryPathName;
             }
@@ -810,6 +802,8 @@ static int ptql_pid_service_list_get(sigar_t *sigar,
             }
         }
     }
+
+    sigar_services_status_close(&ss);
 
     return SIGAR_OK;
 }
