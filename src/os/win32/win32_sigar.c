@@ -3407,3 +3407,53 @@ int sigar_service_pid_get(sigar_t *sigar, char *name, sigar_pid_t *pid)
 
     return rc;
 }
+
+int sigar_services_status(sigar_services_status_t *ss, DWORD state)
+{
+    DWORD bytes, resume=0;
+    BOOL retval;
+
+    if (!ss->handle) {
+        ss->handle =
+            OpenSCManager(NULL, NULL, SC_MANAGER_ENUMERATE_SERVICE);
+        if (!ss->handle) {
+            return GetLastError();
+        }
+    }
+
+    retval = EnumServicesStatus(ss->handle,
+                                SERVICE_WIN32, state,
+                                ss->services, ss->size,
+                                &bytes, &ss->count, &resume);
+    if (retval == FALSE) {
+        DWORD err = GetLastError();
+        if (err != ERROR_MORE_DATA) {
+            return err;
+        }
+
+        ss->services = realloc(ss->services, bytes);
+        ss->size = bytes;
+
+        retval = EnumServicesStatus(ss->handle,
+                                    SERVICE_WIN32, state,
+                                    ss->services, ss->size,
+                                    &bytes, &ss->count, &resume);
+
+        if (retval == FALSE) {
+            return GetLastError();
+        }
+    }
+
+    return SIGAR_OK;
+}
+
+void sigar_services_status_close(sigar_services_status_t *ss)
+{
+    if (ss->handle) {
+        CloseServiceHandle(ss->handle);
+    }
+    if (ss->size) {
+        free(ss->services);
+    }
+    SIGAR_ZERO(ss);
+}

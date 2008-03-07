@@ -576,6 +576,17 @@ int sigar_cpu_info_get(sigar_t *sigar, sigar_cpu_info_t *info);
 
 int sigar_service_pid_get(sigar_t *sigar, char *name, sigar_pid_t *pid);
 
+typedef struct {
+    DWORD size;
+    DWORD count;
+    ENUM_SERVICE_STATUS *services;
+    SC_HANDLE handle;
+} sigar_services_status_t;
+
+int sigar_services_status_get(sigar_services_status_t *ess, DWORD state);
+
+void sigar_services_status_close(sigar_services_status_t *ess);
+
 #define SIGAR_NO_SUCH_PROCESS (SIGAR_OS_START_ERROR+1)
 
 #endif /* SIGAR_OS_H */
