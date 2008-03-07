@@ -4,6 +4,9 @@
 
 #include "win32bindings.h"
 #include "javasigar.h"
+#include "sigar.h"
+#include "sigar_private.h"
+#include "sigar_os.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -218,12 +221,8 @@ SIGAR_JNI(win32_Service_QueryServiceStatus)
 JNIEXPORT jobject SIGAR_JNI(win32_Service_getServiceNames)
 (JNIEnv *env, jclass)
 {
-    SC_HANDLE handle =
-        OpenSCManager(NULL, NULL, SC_MANAGER_ENUMERATE_SERVICE);
-    ENUM_SERVICE_STATUS status, *services;
-    BOOL retval;
-    DWORD bytes, count, resume=0;
-    DWORD type = SERVICE_WIN32, state = SERVICE_STATE_ALL;
+    DWORD i, status;
+    sigar_services_status_t ss;
     jobject listobj;
     jclass listclass =
         env->FindClass("java/util/ArrayList");
@@ -233,34 +232,22 @@ JNIEXPORT jobject SIGAR_JNI(win32_Service_getServiceNames)
         env->GetMethodID(listclass, "add",
                          "(Ljava/lang/Object;)"
                          "Z");
-
-    if (handle == NULL) {
+    SIGAR_ZERO(&ss);
+    status = sigar_services_status_get(&ss, SERVICE_STATE_ALL);
+    if (status != SIGAR_OK) {
+        win32_throw_error(env, status);
         return NULL;
     }
 
-    retval = EnumServicesStatus(handle, type, state,
-                                &status, sizeof(status),
-                                &bytes, &count, &resume);
-
-    DWORD err = GetLastError();
-
-    if ((retval == FALSE) || (err == ERROR_MORE_DATA)) {
-        DWORD size = bytes + sizeof(ENUM_SERVICE_STATUS);
-        services = new ENUM_SERVICE_STATUS[size];
-        EnumServicesStatus(handle, type, state, services,
-                           size, &bytes, &count, &resume);
-    }
-
     listobj = env->NewObject(listclass, listid);
-    for (int i=0; i<count; i++) {
-        jstring name = 
-            env->NewString((const jchar *)services[i].lpServiceName,
-                           lstrlen(services[i].lpServiceName));
+    for (i=0; i<ss.count; i++) {
+        jstring name =
+            env->NewStringUTF((char *)ss.services[i].lpServiceName);
+
         env->CallBooleanMethod(listobj, addid, name);
     }
 
-    CloseServiceHandle(handle);
-    delete services;
+    sigar_services_status_close(&ss);
 
     return listobj;
 }
