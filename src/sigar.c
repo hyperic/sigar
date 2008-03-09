@@ -1007,7 +1007,7 @@ static char *getpass(const char *prompt)
 #  endif
 #endif
 
-#if defined(__FreeBSD__) || defined(__OpenBSD__) || defined(DARWIN)
+#if defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__NetBSD__) || defined(DARWIN)
 #  define ut_user ut_name
 #endif
 
@@ -1382,8 +1382,8 @@ int sigar_resource_limit_get(sigar_t *sigar,
 }
 #endif
 
-#if !defined(WIN32) && !defined(NETWARE) && \
-    !defined(DARWIN) && !defined(__FreeBSD__) && !defined(__OpenBSD__)
+#if !defined(WIN32) && !defined(NETWARE) && !defined(DARWIN) && \
+    !defined(__FreeBSD__) && !defined(__OpenBSD__) && !defined(__NetBSD__)
 
 /* XXX: prolly will be moving these stuffs into os_net.c */
 #include <sys/ioctl.h>

@@ -87,6 +87,17 @@
 #include <netinet/in_pcb.h>
 #include <netinet/tcp.h>
 #include <netinet/tcp_timer.h>
+#ifdef __NetBSD__
+#include <netinet/ip_var.h>
+#include <sys/lwp.h>
+#include <sys/mount.h>
+#define SRUN LSRUN
+#define SSLEEP LSSLEEP
+#define SDEAD LSDEAD
+#define SONPROC LSONPROC
+#define SSUSPENDED LSSUSPENDED
+#include <sys/sched.h>
+#endif
 #include <netinet/tcp_var.h>
 #include <netinet/tcp_fsm.h>
 
@@ -121,7 +132,7 @@
 #define KI_FLAG ki_flag
 #define KI_START ki_start
 
-#elif defined(DARWIN) || defined(SIGAR_FREEBSD4) || defined(__OpenBSD__)
+#elif defined(DARWIN) || defined(SIGAR_FREEBSD4) || defined(__OpenBSD__) || defined(__NetBSD__)
 
 #define KI_FD   kp_proc.p_fd
 #define KI_PID  kp_proc.p_pid
@@ -156,7 +167,7 @@ static int get_koffsets(sigar_t *sigar)
     struct nlist klist[] = {
         { "_cp_time" },
         { "_cnt" },
-#if defined(__OpenBSD__)
+#if defined(__OpenBSD__) || defined(__NetBSD__)
         { "_tcpstat" },
         { "_tcbtable" },
 #endif
@@ -375,7 +386,7 @@ static int sigar_vmstat(sigar_t *sigar, struct vmmeter *vmstat)
 
     return SIGAR_OK;
 }
-#elif defined(__OpenBSD__)
+#elif defined(__OpenBSD__) || defined(__NetBSD__)
 static int sigar_vmstat(sigar_t *sigar, struct uvmexp *vmstat)
 {
     size_t size = sizeof(*vmstat);
@@ -399,7 +410,7 @@ int sigar_mem_get(sigar_t *sigar, sigar_mem_t *mem)
 #endif
 #if defined(__FreeBSD__)
     struct vmmeter vmstat;
-#elif defined(__OpenBSD__)
+#elif defined(__OpenBSD__) || defined(__NetBSD__)
     struct uvmexp vmstat;
 #endif
     int mib[2];
@@ -437,7 +448,7 @@ int sigar_mem_get(sigar_t *sigar, sigar_mem_t *mem)
         mem->free = vmstat.v_free_count;
         mem->free *= sigar->pagesize;
     }
-#elif defined(__OpenBSD__)
+#elif defined(__OpenBSD__) || defined(__NetBSD__)
     if ((status = sigar_vmstat(sigar, &vmstat)) != SIGAR_OK) {
         return status;
     }
@@ -580,7 +591,7 @@ int sigar_swap_get(sigar_t *sigar, sigar_swap_t *swap)
     else {
         swap->page_in = swap->page_out = -1;
     }
-#elif defined(__OpenBSD__)
+#elif defined(__OpenBSD__) || defined(__NetBSD__)
     struct uvmexp vmstat;
 
     if ((status = sigar_vmstat(sigar, &vmstat)) != SIGAR_OK) {
@@ -595,6 +606,10 @@ int sigar_swap_get(sigar_t *sigar, sigar_swap_t *swap)
 
     return SIGAR_OK;
 }
+
+#ifdef __NetBSD__
+#define KERN_CPTIME KERN_CP_TIME
+#endif
 
 int sigar_cpu_get(sigar_t *sigar, sigar_cpu_t *cpu)
 {
@@ -617,12 +632,12 @@ int sigar_cpu_get(sigar_t *sigar, sigar_cpu_t *cpu)
     cpu->wait = 0; /*N/A*/
     cpu->total = cpu->user + cpu->nice + cpu->sys + cpu->idle;
 
-#elif defined(__FreeBSD__) || (__OpenBSD__)
+#elif defined(__FreeBSD__) || (__OpenBSD__) || defined(__NetBSD__)
     int status;
     unsigned long cp_time[CPUSTATES];
     size_t size = sizeof(cp_time);
 
-#  ifdef __OpenBSD__
+#  if defined(__OpenBSD__) || defined(__NetBSD__)
     int mib[] = { CTL_KERN, KERN_CPTIME };
     if (sysctl(mib, NMIB(mib), &cp_time, &size, NULL, 0) == -1) {
         status = errno;
@@ -1107,6 +1122,8 @@ int sigar_proc_time_get(sigar_t *sigar, sigar_pid_t pid,
     proctime->sys   = pinfo->p_ustime_sec * SIGAR_MSEC;
     proctime->total = proctime->user + proctime->sys;
     proctime->start_time = pinfo->p_ustart_sec * SIGAR_MSEC;
+#elif defined(__NetBSD__)
+    /*XXX*/
 #endif
 
     return SIGAR_OK;
@@ -1189,9 +1206,12 @@ static int sigar_proc_threads_get(sigar_t *sigar, sigar_pid_t pid,
 int sigar_proc_state_get(sigar_t *sigar, sigar_pid_t pid,
                          sigar_proc_state_t *procstate)
 {
+#if defined(__NetBSD__)
+    return SIGAR_ENOTIMPL;
+#else
     int status = sigar_get_pinfo(sigar, pid);
     bsd_pinfo_t *pinfo = sigar->pinfo;
-#ifdef __OpenBSD__
+#if defined(__OpenBSD__)
     int state = pinfo->p_stat;
 #else
     int state = pinfo->KI_STAT;
@@ -1201,7 +1221,7 @@ int sigar_proc_state_get(sigar_t *sigar, sigar_pid_t pid,
         return status;
     }
 
-#ifdef __OpenBSD__
+#if defined(__OpenBSD__)
     SIGAR_SSTRCPY(procstate->name, pinfo->p_comm);
     procstate->ppid     = pinfo->p_ppid;
     procstate->priority = pinfo->p_priority;
@@ -1251,6 +1271,7 @@ int sigar_proc_state_get(sigar_t *sigar, sigar_pid_t pid,
     }
 
     return SIGAR_OK;
+#endif
 }
 
 #if defined(DARWIN)
@@ -1721,6 +1742,11 @@ int sigar_os_fs_type_get(sigar_file_system_t *fsp)
 
     /* see sys/disklabel.h */
     switch (*type) {
+      case 'f':
+        if (strEQ(type, "ffs")) {
+            fsp->type = SIGAR_FSTYPE_LOCAL_DISK;
+        }
+        break;
       case 'h':
         if (strEQ(type, "hfs")) {
             fsp->type = SIGAR_FSTYPE_LOCAL_DISK;
@@ -1779,22 +1805,32 @@ static void get_fs_options(char *opts, int osize, long flags)
     if (flags & MNT_EXPORTED)       strncat(opts, ",nfs", osize);
 }
 
+#ifdef __NetBSD__
+#define sigar_statfs statvfs
+#define sigar_getfsstat getvfsstat
+#define sigar_f_flags f_flag
+#else
+#define sigar_statfs statfs
+#define sigar_getfsstat getfsstat
+#define sigar_f_flags f_flags
+#endif
+
 int sigar_file_system_list_get(sigar_t *sigar,
                                sigar_file_system_list_t *fslist)
 {
-    struct statfs *fs;
+    struct sigar_statfs *fs;
     int num, i;
-    long len;
     int is_debug = SIGAR_LOG_IS_DEBUG(sigar);
+    long len;
 
-    if ((num = getfsstat(NULL, 0, MNT_NOWAIT)) < 0) {
+    if ((num = sigar_getfsstat(NULL, 0, MNT_NOWAIT)) < 0) {
         return errno;
     }
 
     len = sizeof(*fs) * num;
     fs = malloc(len);
 
-    if ((num = getfsstat(fs, len, MNT_NOWAIT)) < 0) {
+    if ((num = sigar_getfsstat(fs, len, MNT_NOWAIT)) < 0) {
         return errno;
     }
 
@@ -1804,7 +1840,7 @@ int sigar_file_system_list_get(sigar_t *sigar,
         sigar_file_system_t *fsp;
 
 #ifdef MNT_AUTOMOUNTED
-        if (fs[i].f_flags & MNT_AUTOMOUNTED) {
+        if (fs[i].sigar_f_flags & MNT_AUTOMOUNTED) {
             if (is_debug) {
                 sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
                                  "[file_system_list] skipping automounted %s: %s",
@@ -1815,7 +1851,7 @@ int sigar_file_system_list_get(sigar_t *sigar,
 #endif
 
 #ifdef MNT_RDONLY
-        if (fs[i].f_flags & MNT_RDONLY) {
+        if (fs[i].sigar_f_flags & MNT_RDONLY) {
             /* e.g. ftp mount or .dmg image */
             if (is_debug) {
                 sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
@@ -1833,7 +1869,8 @@ int sigar_file_system_list_get(sigar_t *sigar,
         SIGAR_SSTRCPY(fsp->dir_name, fs[i].f_mntonname);
         SIGAR_SSTRCPY(fsp->dev_name, fs[i].f_mntfromname);
         SIGAR_SSTRCPY(fsp->sys_type_name, fs[i].f_fstypename);
-        get_fs_options(fsp->options, sizeof(fsp->options)-1, fs[i].f_flags);
+        get_fs_options(fsp->options, sizeof(fsp->options)-1, fs[i].sigar_f_flags);
+
         sigar_fs_type_init(fsp);
     }
 
@@ -1909,10 +1946,10 @@ int sigar_file_system_usage_get(sigar_t *sigar,
                                 const char *dirname,
                                 sigar_file_system_usage_t *fsusage)
 {
-    struct statfs buf;
+    struct sigar_statfs buf;
     sigar_uint64_t val, bsize;
 
-    if (statfs(dirname, &buf) < 0) {
+    if (sigar_statfs(dirname, &buf) < 0) {
         return errno;
     }
 
@@ -2431,7 +2468,7 @@ static int net_connection_state_get(int state)
     }
 }
 
-#ifdef __OpenBSD__
+#if defined(__OpenBSD__) || defined(__NetBSD__)
 static int net_connection_get(sigar_net_connection_walker_t *walker, int proto)
 {
     int status;
@@ -2487,6 +2524,7 @@ static int net_connection_get(sigar_net_connection_walker_t *walker, int proto)
                 kread(sigar, &tcpcb, sizeof(tcpcb), (u_long)inpcb.inp_ppcb);
             }
 
+#ifndef __NetBSD__
             if (inpcb.inp_flags & INP_IPV6) {
                 sigar_net_address6_set(conn.local_address,
                                        &inpcb.inp_laddr6.s6_addr);
@@ -2495,13 +2533,15 @@ static int net_connection_get(sigar_net_connection_walker_t *walker, int proto)
                                        &inpcb.inp_faddr6.s6_addr);
             }
             else {
+#endif
                 sigar_net_address_set(conn.local_address,
                                       inpcb.inp_laddr.s_addr);
 
                 sigar_net_address_set(conn.remote_address,
                                       inpcb.inp_faddr.s_addr);
+#ifndef __NetBSD__
             }
-
+#endif
             conn.local_port  = ntohs(inpcb.inp_lport);
             conn.remote_port = ntohs(inpcb.inp_fport);
             conn.receive_queue = socket.so_rcv.sb_cc;
@@ -2670,7 +2710,7 @@ sigar_tcp_get(sigar_t *sigar,
               sigar_tcp_t *tcp)
 {
     struct tcpstat mib;
-#if !defined(TCPCTL_STATS) && defined(__OpenBSD__)
+#if !defined(TCPCTL_STATS) && (defined(__OpenBSD__) || defined(__NetBSD__))
     int status =
         kread(sigar, &mib, sizeof(mib),
               sigar->koffsets[KOFFSET_TCPSTAT]);
@@ -3090,6 +3130,8 @@ int sigar_os_sys_info_get(sigar_t *sigar,
     SIGAR_SSTRCPY(sysinfo->name, "FreeBSD");
 #elif defined(__OpenBSD__)
     SIGAR_SSTRCPY(sysinfo->name, "OpenBSD");
+#elif defined(__NetBSD__)
+    SIGAR_SSTRCPY(sysinfo->name, "NetBSD");
 #else
     SIGAR_SSTRCPY(sysinfo->name, "Unknown");
 #endif

@@ -32,12 +32,15 @@ typedef int (*proc_pidfdinfo_func_t)(int, int, int, void *, int);
 #include <kvm.h>
 #endif
 
+#ifdef __NetBSD__
+#include <sys/param.h>
+#endif
 #include <sys/sysctl.h>
 
 enum {
     KOFFSET_CPUINFO,
     KOFFSET_VMMETER,
-#if defined(__OpenBSD__)
+#if defined(__OpenBSD__) || defined(__NetBSD__)
     KOFFSET_TCPSTAT,
     KOFFSET_TCBTABLE,
 #endif
