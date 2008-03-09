@@ -852,7 +852,7 @@ int sigar_os_proc_list_get(sigar_t *sigar,
 
 static int sigar_get_pinfo(sigar_t *sigar, sigar_pid_t pid)
 {
-#ifdef __OpenBSD__
+#if defined(__OpenBSD__) || defined(__NetBSD__)
     int mib[] = { CTL_KERN, KERN_PROC2, KERN_PROC_PID, 0, sizeof(*sigar->pinfo), 1 };
 #else
     int mib[] = { CTL_KERN, KERN_PROC, KERN_PROC_PID, 0 };
@@ -991,7 +991,7 @@ int sigar_proc_cred_get(sigar_t *sigar, sigar_pid_t pid,
         return status;
     }
 
-#ifdef __OpenBSD__
+#if defined(__OpenBSD__) || defined(__NetBSD__)
     proccred->uid  = pinfo->p_ruid;
     proccred->gid  = pinfo->p_rgid;
     proccred->euid = pinfo->p_uid;
@@ -1116,14 +1116,12 @@ int sigar_proc_time_get(sigar_t *sigar, sigar_pid_t pid,
     proctime->sys   = tv2msec(user.u_stats.p_ru.ru_stime);
     proctime->total = proctime->user + proctime->sys;
     proctime->start_time = tv2msec(user.u_stats.p_start);
-#elif defined(__OpenBSD__)
+#elif defined(__OpenBSD__) || defined(__NetBSD__)
     /* XXX *_usec */
     proctime->user  = pinfo->p_uutime_sec * SIGAR_MSEC;
     proctime->sys   = pinfo->p_ustime_sec * SIGAR_MSEC;
     proctime->total = proctime->user + proctime->sys;
     proctime->start_time = pinfo->p_ustart_sec * SIGAR_MSEC;
-#elif defined(__NetBSD__)
-    /*XXX*/
 #endif
 
     return SIGAR_OK;
@@ -1206,12 +1204,9 @@ static int sigar_proc_threads_get(sigar_t *sigar, sigar_pid_t pid,
 int sigar_proc_state_get(sigar_t *sigar, sigar_pid_t pid,
                          sigar_proc_state_t *procstate)
 {
-#if defined(__NetBSD__)
-    return SIGAR_ENOTIMPL;
-#else
     int status = sigar_get_pinfo(sigar, pid);
     bsd_pinfo_t *pinfo = sigar->pinfo;
-#if defined(__OpenBSD__)
+#if defined(__OpenBSD__) || defined(__NetBSD__)
     int state = pinfo->p_stat;
 #else
     int state = pinfo->KI_STAT;
@@ -1221,7 +1216,7 @@ int sigar_proc_state_get(sigar_t *sigar, sigar_pid_t pid,
         return status;
     }
 
-#if defined(__OpenBSD__)
+#if defined(__OpenBSD__) || defined(__NetBSD__)
     SIGAR_SSTRCPY(procstate->name, pinfo->p_comm);
     procstate->ppid     = pinfo->p_ppid;
     procstate->priority = pinfo->p_priority;
@@ -1271,7 +1266,6 @@ int sigar_proc_state_get(sigar_t *sigar, sigar_pid_t pid,
     }
 
     return SIGAR_OK;
-#endif
 }
 
 #if defined(DARWIN)
