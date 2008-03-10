@@ -1396,11 +1396,16 @@ int sigar_os_proc_args_get(sigar_t *sigar, sigar_pid_t pid,
     }
 
     return SIGAR_OK;
-#elif defined(__FreeBSD__)
+#elif defined(__FreeBSD__) || defined(__NetBSD__)
     char buffer[SIGAR_ARG_MAX+1], *ptr=buffer;
     size_t len = sizeof(buffer);
+#  ifdef __NetBSD__
+    int mib[] = { CTL_KERN, KERN_PROC_ARGS, 0, KERN_PROC_ARGV };
+    mib[2] = pid;
+#  else
     int mib[] = { CTL_KERN, KERN_PROC, KERN_PROC_ARGS, 0 };
     mib[3] = pid;
+#  endif
 
     if (sysctl(mib, NMIB(mib), buffer, &len, NULL, 0) < 0) {
         return errno;
