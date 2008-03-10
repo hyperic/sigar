@@ -959,7 +959,7 @@ int sigar_proc_mem_get(sigar_t *sigar, sigar_pid_t pid,
     procmem->page_faults  = SIGAR_FIELD_NOTIMPL;
     procmem->minor_faults = SIGAR_FIELD_NOTIMPL;
     procmem->major_faults = SIGAR_FIELD_NOTIMPL;
-#elif defined(__OpenBSD__)
+#elif defined(__OpenBSD__) || defined(__NetBSD__)
     int status = sigar_get_pinfo(sigar, pid);
     bsd_pinfo_t *pinfo = sigar->pinfo;
 
