@@ -795,7 +795,7 @@ static int proc_fdinfo_get(sigar_t *sigar, sigar_pid_t pid, int *num)
 int sigar_os_proc_list_get(sigar_t *sigar,
                            sigar_proc_list_t *proclist)
 {
-#if defined(DARWIN) || defined(SIGAR_FREEBSD5) || defined(__OpenBSD__)
+#if defined(DARWIN) || defined(SIGAR_FREEBSD5) || defined(__OpenBSD__) || defined(__NetBSD__)
     int mib[4] = { CTL_KERN, KERN_PROC, KERN_PROC_PROC, 0 };
     int i, num;
     size_t len;
