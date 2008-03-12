@@ -1958,8 +1958,10 @@ public class $class implements java.io.Serializable {
 EOF
 
     my(@copy, @tostring);
-    my $define = "JAVA_SIGAR_SET_FIELDS_\U$class";
-    my @macro = ("\#define $define(cls, obj, s)");
+    my $setter = "JAVA_SIGAR_SET_FIELDS_\U$class";
+    my $getter = "JAVA_SIGAR_GET_FIELDS_\U$class";
+    my @setter = ("\#define $setter(cls, obj, s)");
+    my @getter = ("\#define $getter(obj, s)");
     my $init_define = "JAVA_SIGAR_INIT_FIELDS_\U$class";
     my $field_class_ix = "JSIGAR_FIELDS_\U$class";
     my $field_class_ix = "JSIGAR_FIELDS_\U$class";
@@ -1986,6 +1988,7 @@ EOF
 	$jname = jname($jname);
         my $sig = qq("$field_types{$type}");
         my $set = "JENV->Set${type}Field";
+        my $get = "JENV->Get${type}Field";
 
         my $field_ix = $field_class_ix . "_\U$name";
         my $get_id = qq|JENV->GetFieldID(env, cls, "$jname", $sig)|;
@@ -1998,8 +2001,10 @@ EOF
           "        $id_cache = ",
           "            $get_id;";
 
-        push @macro,
+        push @setter,
           qq|    $set(env, obj, $id_lookup, s.$member);|;
+        push @getter,
+          qq|    s.$member = $get(env, obj, $id_lookup);|;
 
         my $init = $init{$type} || '0';
         my $jtype = $type{$type} || lcfirst($type);
@@ -2064,8 +2069,9 @@ EOF
         print $hfh "#define $init_define(cls)\n";
     }
 
-    print $hfh join(' \\' . "\n", @macro), "\n\n";
-    print $cfh "\n\n    $define(cls, obj, s);" if $func->{has_get};
+    print $hfh join(' \\' . "\n", @setter), "\n\n";
+    print $hfh join(' \\' . "\n", @getter), "\n\n";
+    print $cfh "\n\n    $setter(cls, obj, s);" if $func->{has_get};
 
     print $cfh "\n}\n" if $func->{has_get};
     print $jfh "\n}\n";
