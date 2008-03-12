@@ -30,35 +30,28 @@ public class CpuPerc implements java.io.Serializable {
     private double nice;
     private double idle;
     private double wait;
+    private double combined;
 
     CpuPerc() {}
 
-    public static CpuPerc calculate(Cpu oldCpu, Cpu curCpu) {
-        double diffUser, diffSys, diffNice, diffIdle, diffWait, diffTotal;
+    native void gather(Sigar sigar, Cpu oldCpu, Cpu curCpu);
 
-        diffUser = curCpu.getUser() - oldCpu.getUser();
-        diffSys  = curCpu.getSys()  - oldCpu.getSys();
-        diffNice = curCpu.getNice() - oldCpu.getNice();
-        diffIdle = curCpu.getIdle() - oldCpu.getIdle();
-        diffWait = curCpu.getWait() - oldCpu.getWait();
-
-        // Sanity check -- sometimes these values waiver in between
-        // whole numbers when Cpu is checked very rapidly
-        diffUser = diffUser < 0 ? 0 : diffUser;
-        diffSys  = diffSys  < 0 ? 0 : diffSys;
-        diffNice = diffNice < 0 ? 0 : diffNice;
-        diffIdle = diffIdle < 0 ? 0 : diffIdle;
-        diffWait = diffWait < 0 ? 0 : diffWait;
-
-        diffTotal = diffUser + diffSys + diffNice + diffIdle + diffWait;
-
+    static CpuPerc fetch(Sigar sigar, Cpu oldCpu, Cpu curCpu) {
         CpuPerc perc = new CpuPerc();
-        perc.user = diffUser / diffTotal;
-        perc.sys  = diffSys / diffTotal;
-        perc.nice = diffNice / diffTotal;
-        perc.idle = diffIdle / diffTotal;
-        perc.wait = diffWait / diffTotal;
+        perc.gather(sigar, oldCpu, curCpu);
         return perc;
+    }
+
+    /**
+     * @deprecated
+     */
+    public static CpuPerc calculate(Cpu oldCpu, Cpu curCpu) {
+        Sigar sigar = new Sigar();
+        try {
+            return fetch(sigar, oldCpu, curCpu);
+        } finally {
+            sigar.close();
+        }
     }
 
     public double getUser() {
@@ -85,7 +78,7 @@ public class CpuPerc implements java.io.Serializable {
      * @return Sum of User + Sys + Nice + Wait
      */ 
     public double getCombined() {
-        return this.user + this.sys + this.nice + this.wait;
+        return this.combined;
     }
 
     public static String format(double val) {

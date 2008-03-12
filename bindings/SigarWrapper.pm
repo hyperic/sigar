@@ -78,7 +78,7 @@ my %has_name_arg = map { $_, 1 } qw(FileSystemUsage DiskUsage
 
 my %proc_no_arg = map { $_, 1 } qw(stat);
 
-my %get_not_impl = map { $_, 1 } qw(net_address net_route net_connection net_stat
+my %get_not_impl = map { $_, 1 } qw(net_address net_route net_connection net_stat cpu_perc
                                     who cpu_info file_system); #list funcs only
 
 sub supported_platforms {
@@ -414,6 +414,38 @@ our %classes = (
       {
          name => 'total', type => 'Long',
          desc => 'Total system cpu time',
+         plat => '*'
+      },
+    ],
+    CpuPerc => [
+      {
+         name => 'user', type => 'Double',
+         desc => 'Percent system cpu user time',
+         plat => '*'
+      },
+      {
+         name => 'sys', type => 'Double',
+         desc => 'Percent system cpu kernel time',
+         plat => '*'
+      },
+      {
+         name => 'nice', type => 'Double',
+         desc => 'Percent system cpu nice time',
+         plat => 'DFHL'
+      },
+      {
+         name => 'idle', type => 'Double',
+         desc => 'Percent system cpu idle time',
+         plat => '*'
+      },
+      {
+         name => 'wait', type => 'Double',
+         desc => 'Percent system cpu io wait time',
+         plat => 'ALHS'
+      },
+      {
+         name => 'combined', type => 'Double',
+         desc => 'Sum of User + Sys + Nice + Wait',
          plat => '*'
       },
     ],

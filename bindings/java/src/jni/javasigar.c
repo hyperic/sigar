@@ -554,6 +554,20 @@ JNIEXPORT jobjectArray SIGAR_JNIx(getCpuListNative)
     return cpuarray;
 }
 
+JNIEXPORT void SIGAR_JNI(CpuPerc_gather)
+(JNIEnv *env, jobject jperc, jobject sigar_obj, jobject jprev, jobject jcurr)
+{
+    sigar_cpu_t prev, curr;
+    sigar_cpu_perc_t perc;
+    dSIGAR_VOID;
+
+    JAVA_SIGAR_GET_FIELDS_CPU(jprev, prev);
+    JAVA_SIGAR_GET_FIELDS_CPU(jcurr, curr);
+    sigar_cpu_perc_calculate(&prev, &curr, &perc);
+    JAVA_SIGAR_INIT_FIELDS_CPUPERC(JENV->GetObjectClass(env, jperc));
+    JAVA_SIGAR_SET_FIELDS_CPUPERC(NULL, jperc, perc);
+}
+
 JNIEXPORT jlongArray SIGAR_JNIx(getProcList)
 (JNIEnv *env, jobject sigar_obj)
 {
