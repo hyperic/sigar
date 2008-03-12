@@ -854,15 +854,17 @@ static int ptql_pid_list_get(sigar_t *sigar,
     int status, i;
     sigar_pid_t match_pid;
 
-#ifdef WIN32
     if (branch->flags >= PTQL_PID_SERVICE) {
         if ((branch->flags > PTQL_PID_SERVICE) ||
             (branch->op_name != PTQL_OP_EQ))
         {
+#ifdef WIN32
             return ptql_pid_service_list_get(sigar, branch, proclist);
+#else
+            return SIGAR_OK; /* no matches */
+#endif
         }
     }
-#endif
 
     status = ptql_pid_get(sigar, branch, &match_pid);
 
