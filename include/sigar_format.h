@@ -19,6 +19,19 @@
 #ifndef SIGAR_FORMAT_H
 #define SIGAR_FORMAT_H
 
+typedef struct {
+    double user;
+    double sys;
+    double nice;
+    double idle;
+    double wait;
+    double combined;
+} sigar_cpu_perc_t;
+
+SIGAR_DECLARE(int) sigar_cpu_perc_calculate(sigar_cpu_t *prev,
+                                            sigar_cpu_t *curr,
+                                            sigar_cpu_perc_t *perc);
+
 SIGAR_DECLARE(int) sigar_uptime_string(sigar_t *sigar, 
                                        sigar_uptime_t *uptime,
                                        char *buffer,

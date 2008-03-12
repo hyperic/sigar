@@ -22,6 +22,7 @@
 #include "sigar_private.h"
 #include "sigar_util.h"
 #include "sigar_os.h"
+#include "sigar_format.h"
 
 #include <errno.h>
 #include <stdio.h>
@@ -603,4 +604,36 @@ SIGAR_DECLARE(char *)sigar_net_services_name_get(sigar_t *sigar,
     else {
         return NULL;
     }
+}
+
+SIGAR_DECLARE(int) sigar_cpu_perc_calculate(sigar_cpu_t *prev,
+                                            sigar_cpu_t *curr,
+                                            sigar_cpu_perc_t *perc)
+{
+    double diff_user, diff_sys, diff_nice, diff_idle, diff_wait, diff_total;
+
+    diff_user = curr->user - prev->user;
+    diff_sys  = curr->sys  - prev->sys;
+    diff_nice = curr->nice - prev->nice;
+    diff_idle = curr->idle - prev->idle;
+    diff_wait = curr->wait - prev->wait;
+
+    diff_user = diff_user < 0 ? 0 : diff_user;
+    diff_sys  = diff_sys  < 0 ? 0 : diff_sys;
+    diff_nice = diff_nice < 0 ? 0 : diff_nice;
+    diff_idle = diff_idle < 0 ? 0 : diff_idle;
+    diff_wait = diff_wait < 0 ? 0 : diff_wait;
+
+    diff_total =
+        diff_user + diff_sys + diff_nice + diff_idle + diff_wait;
+
+    perc->user = diff_user / diff_total;
+    perc->sys  = diff_sys / diff_total;
+    perc->nice = diff_nice / diff_total;
+    perc->idle = diff_idle / diff_total;
+    perc->wait = diff_wait / diff_total;
+    perc->combined =
+        perc->user + perc->sys + perc->nice + perc->wait;
+
+    return SIGAR_OK;
 }
