@@ -304,6 +304,123 @@ int sigar_mem_calc_ram(sigar_t *sigar, sigar_mem_t *mem)
     return ram;
 }
 
+#ifndef WIN32
+
+#define FSNAME_IS_DEV(dev) strnEQ(dev, SIGAR_DEV_PREFIX, 5)
+
+sigar_iodev_t *sigar_iodev_get(sigar_t *sigar,
+                               const char *dirname)
+{
+    sigar_cache_entry_t *entry;
+    struct stat sb;
+    sigar_uint64_t id;
+    sigar_file_system_list_t fslist;
+    int i, status, is_dev=0;
+    int debug = SIGAR_LOG_IS_DEBUG(sigar);
+    char dev_name[SIGAR_FS_NAME_LEN];
+
+    if (!sigar->fsdev) {
+        sigar->fsdev = sigar_cache_new(15);
+    }
+
+    if (*dirname != '/') {
+        snprintf(dev_name, sizeof(dev_name),
+                 SIGAR_DEV_PREFIX "%s", dirname);
+        dirname = dev_name;
+        is_dev = 1;
+    }
+    else if (FSNAME_IS_DEV(dirname)) {
+        is_dev = 1;
+    }
+
+    if (stat(dirname, &sb) < 0) {
+        if (debug) {
+            sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
+                             "[iodev] stat(%s) failed",
+                             dirname);
+        }
+        return NULL;
+    }
+
+    id = SIGAR_FSDEV_ID(sb);
+
+    entry = sigar_cache_get(sigar->fsdev, id);
+
+    if (entry->value != NULL) {
+        return (sigar_iodev_t *)entry->value;
+    }
+
+    if (is_dev) {
+        sigar_iodev_t *iodev;
+        entry->value = iodev = malloc(sizeof(*iodev));
+        SIGAR_ZERO(iodev);
+        SIGAR_SSTRCPY(iodev->name, dirname);
+        if (debug) {
+            sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
+                             "[iodev] %s is_dev=true", dirname);
+        }
+        return iodev;
+    }
+
+    status = sigar_file_system_list_get(sigar, &fslist);
+
+    if (status != SIGAR_OK) {
+        sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
+                         "[iodev] file_system_list failed: %s",
+                         sigar_strerror(sigar, status));
+        return NULL;
+    }
+
+    for (i=0; i<fslist.number; i++) {
+        sigar_file_system_t *fsp = &fslist.data[i];
+
+        if (fsp->type == SIGAR_FSTYPE_LOCAL_DISK) {
+            int retval = stat(fsp->dir_name, &sb);
+            sigar_cache_entry_t *ent;
+
+            if (retval < 0) {
+                if (debug) {
+                    sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
+                                     "[iodev] inode stat(%s) failed",
+                                     fsp->dir_name);
+                }
+                return NULL; /* cant cache w/o inode */
+            }
+
+            ent = sigar_cache_get(sigar->fsdev, SIGAR_FSDEV_ID(sb));
+            if (ent->value) {
+                continue; /* already cached */
+            }
+
+            if (FSNAME_IS_DEV(fsp->dev_name)) {
+                sigar_iodev_t *iodev;
+                ent->value = iodev = malloc(sizeof(*iodev));
+                SIGAR_ZERO(iodev);
+                iodev->is_partition = 1;
+                SIGAR_SSTRCPY(iodev->name, fsp->dev_name);
+
+                if (debug) {
+                    sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
+                                     "[iodev] map %s -> %s",
+                                     fsp->dir_name, iodev->name);
+                }
+            }
+        }
+    }
+
+    sigar_file_system_list_destroy(sigar, &fslist);
+
+    if (entry->value &&
+        (((sigar_iodev_t *)entry->value)->name[0] != '\0'))
+    {
+        return (sigar_iodev_t *)entry->value;
+    }
+    else {
+        return NULL;
+    }
+}
+#endif
+
 double sigar_file_system_usage_calc_used(sigar_t *sigar,
                                          sigar_file_system_usage_t *fsusage)
 {

@@ -116,6 +116,17 @@ int sigar_mem_calc_ram(sigar_t *sigar, sigar_mem_t *mem);
 double sigar_file_system_usage_calc_used(sigar_t *sigar,
                                          sigar_file_system_usage_t *fs);
 
+#define SIGAR_DEV_PREFIX "/dev/"
+
+typedef struct {
+    char name[256];
+    int is_partition;
+    sigar_disk_usage_t disk;
+} sigar_iodev_t;
+
+sigar_iodev_t *sigar_iodev_get(sigar_t *sigar,
+                               const char *dirname);
+
 void sigar_cpu_model_adjust(sigar_t *sigar, sigar_cpu_info_t *info);
 
 int sigar_cpu_mhz_from_model(char *model);
