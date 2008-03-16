@@ -1212,6 +1212,15 @@ SIGAR_DECLARE(int) sigar_proc_cred_get(sigar_t *sigar, sigar_pid_t pid,
 #define FILETIME2MSEC(ft) \
     NS100_2MSEC(((ft.dwHighDateTime << 32) | ft.dwLowDateTime))
 
+sigar_int64_t sigar_time_now_millis(void)
+{
+    FILETIME time;
+
+    GetSystemTimeAsFileTime(&time);
+
+    return FILETIME2MSEC(time);
+}
+
 SIGAR_DECLARE(int) sigar_proc_time_get(sigar_t *sigar, sigar_pid_t pid,
                                        sigar_proc_time_t *proctime)
 {
