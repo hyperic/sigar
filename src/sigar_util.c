@@ -307,8 +307,6 @@ int sigar_mem_calc_ram(sigar_t *sigar, sigar_mem_t *mem)
 
 #ifndef WIN32
 
-#define FSNAME_IS_DEV(dev) strnEQ(dev, SIGAR_DEV_PREFIX, 5)
-
 sigar_iodev_t *sigar_iodev_get(sigar_t *sigar,
                                const char *dirname)
 {
@@ -330,7 +328,7 @@ sigar_iodev_t *sigar_iodev_get(sigar_t *sigar,
         dirname = dev_name;
         is_dev = 1;
     }
-    else if (FSNAME_IS_DEV(dirname)) {
+    else if (SIGAR_NAME_IS_DEV(dirname)) {
         is_dev = 1;
     }
 
@@ -393,7 +391,7 @@ sigar_iodev_t *sigar_iodev_get(sigar_t *sigar,
                 continue; /* already cached */
             }
 
-            if (FSNAME_IS_DEV(fsp->dev_name)) {
+            if (SIGAR_NAME_IS_DEV(fsp->dev_name)) {
                 sigar_iodev_t *iodev;
                 ent->value = iodev = malloc(sizeof(*iodev));
                 SIGAR_ZERO(iodev);

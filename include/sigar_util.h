@@ -118,6 +118,9 @@ double sigar_file_system_usage_calc_used(sigar_t *sigar,
 
 #define SIGAR_DEV_PREFIX "/dev/"
 
+#define SIGAR_NAME_IS_DEV(dev) \
+    strnEQ(dev, SIGAR_DEV_PREFIX, SSTRLEN(SIGAR_DEV_PREFIX))
+
 typedef struct {
     char name[256];
     int is_partition;
