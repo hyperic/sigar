@@ -31,6 +31,8 @@ public class OperatingSystem extends SysInfo {
     public static final String NAME_AIX     = "AIX";
     public static final String NAME_MACOSX  = "MacOSX";
     public static final String NAME_FREEBSD = "FreeBSD";
+    public static final String NAME_OPENBSD = "OpenBSD";
+    public static final String NAME_NETBSD  = "NetBSD";
     public static final String NAME_WIN32   = "Win32";
     public static final String NAME_NETWARE = "NetWare";
     
@@ -41,6 +43,8 @@ public class OperatingSystem extends SysInfo {
         OperatingSystem.NAME_AIX,
         OperatingSystem.NAME_MACOSX,
         OperatingSystem.NAME_FREEBSD,
+        OperatingSystem.NAME_OPENBSD,
+        OperatingSystem.NAME_NETBSD,
     };
         
     public static final String[] WIN32_NAMES = {
