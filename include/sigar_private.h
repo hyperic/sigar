@@ -117,6 +117,7 @@
 #endif
 
 #define SIGAR_MSEC 1000L
+#define SIGAR_USEC 1000000L
 #define SIGAR_NSEC 1000000000L
 
 #define SIGAR_SEC2NANO(s) \

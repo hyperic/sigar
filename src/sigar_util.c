@@ -812,3 +812,13 @@ SIGAR_DECLARE(void) sigar_log_impl_file(sigar_t *sigar, void *data,
     FILE *fp = (FILE*)data;
     fprintf(fp, "[%s] %s\n", log_levels[level], message);
 }
+
+sigar_int64_t sigar_time_now_millis(void)
+{
+#ifdef WIN32
+#else
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    return ((tv.tv_sec * SIGAR_USEC) + tv.tv_usec) / SIGAR_MSEC;
+#endif
+}

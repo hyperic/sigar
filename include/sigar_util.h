@@ -62,6 +62,8 @@
 #define PROCP_FS_ROOT "/proc/"
 #endif
 
+sigar_int64_t sigar_time_now_millis(void);
+
 char *sigar_uitoa(char *buf, unsigned int n, int *len);
 
 int sigar_inet_ntoa(sigar_t *sigar,
