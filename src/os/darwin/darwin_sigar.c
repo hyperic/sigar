@@ -1891,12 +1891,35 @@ int sigar_disk_usage_get(sigar_t *sigar, const char *name,
     io_service_t service;
     CFDictionaryRef props;
     CFNumberRef number;
+    sigar_iodev_t *iodev = sigar_iodev_get(sigar, name);
+    char dname[256], *ptr;
 
     SIGAR_DISK_STATS_INIT(disk);
 
+    if (!iodev) {
+        return ESRCH;
+    }
+
+    /* "/dev/disk0s1" -> "disk0" */ /* XXX better way? */
+    ptr = &iodev->name[SSTRLEN(SIGAR_DEV_PREFIX)];
+    SIGAR_SSTRCPY(dname, ptr);
+    ptr = dname;
+    if (strnEQ(ptr, "disk", 4)) {
+        ptr += 4;
+        if ((ptr = strchr(ptr, 's')) && isdigit(*(ptr+1))) {
+            *ptr = '\0';
+        }
+    }
+
+    if (SIGAR_LOG_IS_DEBUG(sigar)) {
+        sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
+                         "[disk_usage] map %s -> %s",
+                         iodev->name, dname);
+    }
+
     /* e.g. name == "disk0" */
     service = IOServiceGetMatchingService(kIOMasterPortDefault,
-                                          IOBSDNameMatching(kIOMasterPortDefault, 0, name));
+                                          IOBSDNameMatching(kIOMasterPortDefault, 0, dname));
 
     if (!service) {
         return errno;
@@ -1964,12 +1987,14 @@ int sigar_file_system_usage_get(sigar_t *sigar,
     fsusage->free_files = buf.f_ffree;
     fsusage->use_percent = sigar_file_system_usage_calc_used(sigar, fsusage);
 
-#ifdef __FreeBSD__
+#if defined(__FreeBSD__)
     fsusage->disk_reads  = buf.f_syncreads + buf.f_asyncreads;
     fsusage->disk_writes = buf.f_syncwrites + buf.f_asyncwrites;
     fsusage->disk_read_bytes  = SIGAR_FIELD_NOTIMPL;
     fsusage->disk_write_bytes = SIGAR_FIELD_NOTIMPL;
     fsusage->disk_queue       = SIGAR_FIELD_NOTIMPL;
+#elif defined(DARWIN)
+    sigar_disk_usage_get(sigar, dirname, &fsusage->disk);
 #else
     SIGAR_DISK_STATS_INIT(&fsusage->disk);
 #endif
