@@ -2524,7 +2524,7 @@ static int net_connection_get(sigar_net_connection_walker_t *walker, int proto)
     prev = head =
         (struct inpcb *)&CIRCLEQ_FIRST(&((struct inpcbtable *)offset)->inpt_queue);
 
-    next = CIRCLEQ_FIRST(&table.inpt_queue);
+    next = (struct inpcb *)CIRCLEQ_FIRST(&table.inpt_queue);
 
     while (next != head) {
         struct inpcb inpcb;
@@ -2533,7 +2533,7 @@ static int net_connection_get(sigar_net_connection_walker_t *walker, int proto)
 
         status = kread(sigar, &inpcb, sizeof(inpcb), (long)next);
         prev = next;
-        next = CIRCLEQ_NEXT(&inpcb, inp_queue);
+        next = (struct inpcb *)CIRCLEQ_NEXT(&inpcb, inp_queue);
 
         kread(sigar, &socket, sizeof(socket), (u_long)inpcb.inp_socket);
 
