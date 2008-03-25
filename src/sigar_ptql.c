@@ -751,9 +751,8 @@ static int ptql_service_query_config(SC_HANDLE scm_handle,
     return status;
 }
 
-static int ptql_pid_service_list_get(sigar_t *sigar,
-                                     ptql_branch_t *branch,
-                                     sigar_proc_list_t *proclist)
+static int sigar_services_walk(sigar_services_walker_t *walker,
+                               ptql_branch_t *branch)
 {
     sigar_services_status_t ss;
     char buffer[QUERY_SC_SIZE];
@@ -761,7 +760,7 @@ static int ptql_pid_service_list_get(sigar_t *sigar,
     DWORD i, status;
 
     SIGAR_ZERO(&ss);
-    status = sigar_services_status_get(&ss, SERVICE_ACTIVE);
+    status = sigar_services_status_get(&ss, walker->flags);
     if (status != SIGAR_OK) {
         return status;
     }
@@ -789,16 +788,9 @@ static int ptql_pid_service_list_get(sigar_t *sigar,
             break;
         }
 
-        if (ptql_str_match(sigar, branch, value)) {
-            sigar_pid_t service_pid;
-            int status =
-                sigar_service_pid_get(sigar,
-                                      name,
-                                      &service_pid);
-
-            if (status == SIGAR_OK) {
-                SIGAR_PROC_LIST_GROW(proclist);
-                proclist->data[proclist->number++] = service_pid;
+        if (ptql_str_match(walker->sigar, branch, value)) {
+            if (walker->add_service(walker, name) != SIGAR_OK) {
+                break;
             }
         }
     }
@@ -806,6 +798,38 @@ static int ptql_pid_service_list_get(sigar_t *sigar,
     sigar_services_status_close(&ss);
 
     return SIGAR_OK;
+}
+
+static int ptql_pid_service_add(sigar_services_walker_t *walker,
+                                char *name)
+{
+    sigar_pid_t service_pid;
+    sigar_proc_list_t *proclist =
+        (sigar_proc_list_t *)walker->data;
+    int status =
+        sigar_service_pid_get(walker->sigar,
+                              name,
+                              &service_pid);
+
+    if (status == SIGAR_OK) {
+        SIGAR_PROC_LIST_GROW(proclist);
+        proclist->data[proclist->number++] = service_pid;
+    }
+
+    return SIGAR_OK;
+}
+
+static int ptql_pid_service_list_get(sigar_t *sigar,
+                                     ptql_branch_t *branch,
+                                     sigar_proc_list_t *proclist)
+{
+    sigar_services_walker_t walker;
+    walker.sigar = sigar;
+    walker.flags = SERVICE_ACTIVE;
+    walker.data = proclist;
+    walker.add_service = ptql_pid_service_add;
+
+    return sigar_services_walk(&walker, branch);
 }
 #endif
 

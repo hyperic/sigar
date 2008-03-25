@@ -591,6 +591,15 @@ int sigar_services_status_get(sigar_services_status_t *ss, DWORD state);
 
 void sigar_services_status_close(sigar_services_status_t *ss);
 
+typedef struct sigar_services_walker_t sigar_services_walker_t;
+
+struct sigar_services_walker_t {
+    sigar_t *sigar;
+    int flags;
+    void *data; /* user data */
+    int (*add_service)(sigar_services_walker_t *walker, char *name);
+};
+
 #ifdef __cplusplus
 }
 #endif
