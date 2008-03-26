@@ -664,7 +664,7 @@ static int ptql_branch_match_ref(ptql_branch_t *branch, ptql_branch_t *ref)
 enum {
     PTQL_PID_PID,
     PTQL_PID_FILE,
-    PTQL_PID_SERVICE,
+    PTQL_PID_SERVICE_NAME,
     PTQL_PID_SERVICE_DISPLAY,
     PTQL_PID_SERVICE_PATH
 };
@@ -692,7 +692,7 @@ static int ptql_branch_init_service(ptql_parse_branch_t *parsed,
     branch->op_flags |= PTQL_OP_FLAG_PID;
 
     if (strEQ(parsed->attr, "Name")) {
-        branch->flags = PTQL_PID_SERVICE;
+        branch->flags = PTQL_PID_SERVICE_NAME;
     }
     else if (strEQ(parsed->attr, "DisplayName")) {
         branch->flags = PTQL_PID_SERVICE_DISPLAY;
@@ -809,7 +809,7 @@ static int sigar_services_walk(sigar_services_walker_t *walker,
                 continue;
             }
             break;
-          case PTQL_PID_SERVICE:
+          case PTQL_PID_SERVICE_NAME:
           default:
             value = name;
             break;
@@ -910,7 +910,7 @@ static int ptql_pid_get(sigar_t *sigar,
             return errno;
         }
     }
-    else if (branch->flags == PTQL_PID_SERVICE) {
+    else if (branch->flags == PTQL_PID_SERVICE_NAME) {
 #ifdef WIN32
         int status =
             sigar_service_pid_get(sigar,
@@ -936,8 +936,8 @@ static int ptql_pid_list_get(sigar_t *sigar,
     int status, i;
     sigar_pid_t match_pid;
 
-    if (branch->flags >= PTQL_PID_SERVICE) {
-        if ((branch->flags > PTQL_PID_SERVICE) ||
+    if (branch->flags >= PTQL_PID_SERVICE_NAME) {
+        if ((branch->flags > PTQL_PID_SERVICE_NAME) ||
             (branch->op_name != PTQL_OP_EQ))
         {
 #ifdef WIN32
