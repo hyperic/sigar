@@ -25,6 +25,8 @@ import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hyperic.sigar.Sigar;
+
 public class Service extends Win32 {
     // Service State
     public static final int SERVICE_STOPPED          = 0x00000001;
@@ -103,7 +105,12 @@ public class Service extends Win32 {
         this.manager = OpenSCManager("", SC_MANAGER_ALL_ACCESS);
     }
 
-    public static native List getServiceNames() throws Win32Exception;
+    public static native List getServiceNames(Sigar sigar, String ptql)
+        throws Win32Exception;
+
+    public static List getServiceNames() throws Win32Exception {
+        return getServiceNames(null, null);
+    }
 
     private static class ExeFilter implements FileFilter {
         private String name;
@@ -421,6 +428,14 @@ public class Service extends Win32 {
                 System.out.println("");
             }
             return;
+        }
+        else if ((args.length == 1) && (args[0].startsWith("Service."))) {
+            Sigar sigar = new Sigar();
+            try {
+                services = Service.getServiceNames(sigar, args[0]);
+            } finally {
+                sigar.close();
+            }
         }
         else {
             services = Arrays.asList(args);

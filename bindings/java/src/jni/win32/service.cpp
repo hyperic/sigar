@@ -224,20 +224,37 @@ static int jsigar_add_service(sigar_services_walker_t *walker, char *name)
 }
 
 JNIEXPORT jobject SIGAR_JNI(win32_Service_getServiceNames)
-(JNIEnv *env, jclass)
+(JNIEnv *env, jclass, jobject sigar_obj, jstring jptql)
 {
     DWORD status;
     jsigar_list_t obj;
+    sigar_t *sigar = NULL;
+    char *ptql = NULL;
     sigar_services_walker_t walker;
+    jboolean is_copy;
 
-    walker.sigar = NULL;
+    if (sigar_obj) {
+        if (!(sigar = jsigar_get_sigar(env, sigar_obj))) {
+            return NULL;
+        }
+    }
+    if (jptql) {
+        ptql = (char *)env->GetStringUTFChars(jptql, &is_copy);
+    }
+
+    walker.sigar = sigar;
     walker.flags = SERVICE_STATE_ALL;
     walker.data = &obj;
     walker.add_service = jsigar_add_service;
 
     jsigar_list_init(env, &obj);
 
-    status = sigar_services_query(NULL, NULL, &walker);
+    status = sigar_services_query(ptql, NULL, &walker);
+
+    if (ptql && is_copy) {
+        env->ReleaseStringUTFChars(jptql, ptql);
+    }
+
     if (status != SIGAR_OK) {
         env->DeleteLocalRef(obj.obj);
         win32_throw_error(env, status);
