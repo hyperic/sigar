@@ -21,6 +21,8 @@
 #include <pdh.h>
 #include <pdhmsg.h>
 
+#include "sigar.h"
+#include "sigar_private.h"
 #include "win32bindings.h"
 #include "javasigar.h"
 
@@ -47,16 +49,8 @@ void win32_throw_error(JNIEnv *env, LONG err)
 {
     char msg[8192];
 
-    FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM |
-                  FORMAT_MESSAGE_IGNORE_INSERTS,
-                  NULL,
-                  err,
-                  0, /* default language */
-                  (LPTSTR)msg,
-                  (DWORD)sizeof(msg),
-                  NULL);
-
-    win32_throw_exception(env, msg);
+    win32_throw_exception(env,
+                          sigar_strerror_get(err, msg, sizeof(msg)));
 }
 
 #ifdef __cplusplus
