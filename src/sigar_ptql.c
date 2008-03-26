@@ -139,6 +139,9 @@ typedef struct {
 #define branch_strnEQ(branch, s1, s2, n) \
     (branch_strncmp(branch, s1, s2, n) == 0)
 
+#define branch_strstr(branch, s1, s2) \
+    (IS_ICASE(branch) ? sigar_strcasestr(s1, s2) : strstr(s1, s2))
+
 static void data_free(void *data)
 {
     free(data);
@@ -435,7 +438,7 @@ static int ptql_op_str_re(ptql_branch_t *branch,
 static int ptql_op_str_ct(ptql_branch_t *branch,
                           char *haystack, char *needle)
 {
-    return strstr(haystack, needle) != NULL;
+    return branch_strstr(branch, haystack, needle) != NULL;
 }
 
 static ptql_op_str_t ptql_op_str[] = {
