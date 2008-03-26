@@ -420,6 +420,14 @@ public class Service extends Win32 {
             System.out.println(service.getStatusString());
             return;
         }
+        else if ((args.length == 1) && (args[0].startsWith("Service."))) {
+            Sigar sigar = new Sigar();
+            try {
+                services = Service.getServiceNames(sigar, args[0]);
+            } finally {
+                sigar.close();
+            }
+        }
         else if ((args.length == 1) && (args[0].endsWith(EXE_EXT))) {
             services = getServiceConfigs(args[0]);
             for (int i=0; i<services.size(); i++) {
@@ -428,14 +436,6 @@ public class Service extends Win32 {
                 System.out.println("");
             }
             return;
-        }
-        else if ((args.length == 1) && (args[0].startsWith("Service."))) {
-            Sigar sigar = new Sigar();
-            try {
-                services = Service.getServiceNames(sigar, args[0]);
-            } finally {
-                sigar.close();
-            }
         }
         else {
             services = Arrays.asList(args);
