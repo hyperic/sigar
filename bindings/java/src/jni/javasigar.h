@@ -16,6 +16,8 @@
  * USA.
  */
 
+#include <jni.h>
+
 #define JENV (*env)
 
 #define SIGAR_PACKAGE "org/hyperic/sigar/"
@@ -30,3 +32,20 @@
 #define SIGAR_CLASS_SIG(name) \
     "L" SIGAR_PACKAGE name ";"
 
+typedef struct {
+    JNIEnv *env;
+    jobject obj;
+    jmethodID id;
+} jsigar_list_t;
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+int jsigar_init_list(JNIEnv *env, jsigar_list_t *obj);
+
+int jsigar_list_add(void *data, char *value, int len);
+
+#ifdef __cplusplus
+}
+#endif

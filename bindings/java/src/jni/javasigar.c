@@ -218,6 +218,35 @@ static void sigar_set_pointer(JNIEnv *env, jobject obj, const void *ptr) {
 #endif
 }
 
+int jsigar_init_list(JNIEnv *env, jsigar_list_t *obj)
+{
+    jclass listclass =
+        JENV->FindClass(env, "java/util/ArrayList");
+    jmethodID listid =
+        JENV->GetMethodID(env, listclass, "<init>", "()V");
+    jmethodID addid =
+        JENV->GetMethodID(env, listclass, "add",
+                          "(Ljava/lang/Object;)"
+                          "Z");
+
+    obj->env = env;
+    obj->obj = JENV->NewObject(env, listclass, listid);
+    obj->id = addid;
+
+    return SIGAR_OK;
+}
+
+int jsigar_list_add(void *data, char *value, int len)
+{
+    jsigar_list_t *obj = (jsigar_list_t *)data;
+    JNIEnv *env = obj->env;
+
+    JENV->CallBooleanMethod(env, obj->obj, obj->id,  
+                            JENV->NewStringUTF(env, value));
+
+    return SIGAR_OK;
+}
+
 JNIEXPORT jstring SIGAR_JNIx(formatSize)
 (JNIEnv *env, jclass cls, jlong size)
 {
