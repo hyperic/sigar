@@ -290,6 +290,38 @@ int sigar_procfs_args_get(sigar_t *sigar, sigar_pid_t pid,
 
 #endif /* WIN32 */
 
+/* from httpd/server/util.c */
+char *sigar_strcasestr(const char *s1, const char *s2)
+{
+    char *p1, *p2;
+    if (*s2 == '\0') {
+        /* an empty s2 */
+        return((char *)s1);
+    }
+    while(1) {
+        for ( ; (*s1 != '\0') && (sigar_tolower(*s1) != sigar_tolower(*s2)); s1++);
+        if (*s1 == '\0') {
+            return(NULL);
+        }
+        /* found first character of s2, see if the rest matches */
+        p1 = (char *)s1;
+        p2 = (char *)s2;
+        for (++p1, ++p2; sigar_tolower(*p1) == sigar_tolower(*p2); ++p1, ++p2) {
+            if (*p1 == '\0') {
+                /* both strings ended together */
+                return((char *)s1);
+            }
+        }
+        if (*p2 == '\0') {
+            /* second string ended, a match */
+            break;
+        }
+        /* didn't find a match here, try starting at next character in s1 */
+        s1++;
+    }
+    return((char *)s1);
+}
+
 int sigar_mem_calc_ram(sigar_t *sigar, sigar_mem_t *mem)
 {
     sigar_uint64_t lram = (mem->total / (1024 * 1024));
