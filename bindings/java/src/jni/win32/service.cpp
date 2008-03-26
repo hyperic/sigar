@@ -218,27 +218,31 @@ SIGAR_JNI(win32_Service_QueryServiceStatus)
     return result;
 }
 
+static int jsigar_add_service(sigar_services_walker_t *walker, char *name)
+{
+    return jsigar_list_add(walker->data, name, -1);
+}
+
 JNIEXPORT jobject SIGAR_JNI(win32_Service_getServiceNames)
 (JNIEnv *env, jclass)
 {
-    DWORD i, status;
-    sigar_services_status_t ss;
+    DWORD status;
     jsigar_list_t obj;
+    sigar_services_walker_t walker;
 
-    SIGAR_ZERO(&ss);
-    status = sigar_services_status_get(&ss, SERVICE_STATE_ALL);
-    if (status != SIGAR_OK) {
-        win32_throw_error(env, status);
-        return NULL;
-    }
+    walker.sigar = NULL;
+    walker.flags = SERVICE_STATE_ALL;
+    walker.data = &obj;
+    walker.add_service = jsigar_add_service;
 
     jsigar_list_init(env, &obj);
 
-    for (i=0; i<ss.count; i++) {
-        jsigar_list_add(&obj, (char *)ss.services[i].lpServiceName, -1);
+    status = sigar_services_query(NULL, NULL, &walker);
+    if (status != SIGAR_OK) {
+        env->DeleteLocalRef(obj.obj);
+        win32_throw_error(env, status);
+        return NULL;
     }
-
-    sigar_services_status_close(&ss);
 
     return obj.obj;
 }
