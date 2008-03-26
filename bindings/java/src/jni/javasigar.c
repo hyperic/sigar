@@ -218,7 +218,7 @@ static void sigar_set_pointer(JNIEnv *env, jobject obj, const void *ptr) {
 #endif
 }
 
-int jsigar_init_list(JNIEnv *env, jsigar_list_t *obj)
+int jsigar_list_init(JNIEnv *env, jsigar_list_t *obj)
 {
     jclass listclass =
         JENV->FindClass(env, "java/util/ArrayList");

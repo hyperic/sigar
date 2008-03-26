@@ -42,7 +42,7 @@ typedef struct {
 extern "C" {
 #endif
 
-int jsigar_init_list(JNIEnv *env, jsigar_list_t *obj);
+int jsigar_list_init(JNIEnv *env, jsigar_list_t *obj);
 
 int jsigar_list_add(void *data, char *value, int len);
 
