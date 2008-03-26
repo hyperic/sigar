@@ -218,6 +218,13 @@ static void sigar_set_pointer(JNIEnv *env, jobject obj, const void *ptr) {
 #endif
 }
 
+/* for jni/win32 */
+sigar_t *jsigar_get_sigar(JNIEnv *env, jobject sigar_obj)
+{
+    dSIGAR(NULL);
+    return jsigar->sigar;
+}
+
 int jsigar_list_init(JNIEnv *env, jsigar_list_t *obj)
 {
     jclass listclass =

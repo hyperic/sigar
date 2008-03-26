@@ -17,6 +17,7 @@
  */
 
 #include <jni.h>
+#include "sigar.h"
 
 #define JENV (*env)
 
@@ -45,6 +46,8 @@ extern "C" {
 int jsigar_list_init(JNIEnv *env, jsigar_list_t *obj);
 
 int jsigar_list_add(void *data, char *value, int len);
+
+sigar_t *jsigar_get_sigar(JNIEnv *env, jobject sigar_obj);
 
 #ifdef __cplusplus
 }
