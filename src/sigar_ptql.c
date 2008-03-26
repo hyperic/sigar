@@ -666,7 +666,8 @@ enum {
     PTQL_PID_FILE,
     PTQL_PID_SERVICE_NAME,
     PTQL_PID_SERVICE_DISPLAY,
-    PTQL_PID_SERVICE_PATH
+    PTQL_PID_SERVICE_PATH,
+    PTQL_PID_SERVICE_EXE
 };
 
 #ifdef SIGAR_64BIT
@@ -699,6 +700,10 @@ static int ptql_branch_init_service(ptql_parse_branch_t *parsed,
     }
     else if (strEQ(parsed->attr, "Path")) {
         branch->flags = PTQL_PID_SERVICE_PATH;
+    }
+    else if (strEQ(parsed->attr, "Exe")) {
+        /* basename of Path */
+        branch->flags = PTQL_PID_SERVICE_EXE;
     }
     else {
         return ptql_error(error, "Unsupported %s attribute: %s",
@@ -785,7 +790,7 @@ static int sigar_services_walk(sigar_services_walker_t *walker,
     }
     for (i=0; i<ss.count; i++) {
         int status;
-        char *value;
+        char *value = NULL;
         char *name = ss.services[i].lpServiceName;
 
         if (branch == NULL) {
@@ -801,9 +806,16 @@ static int sigar_services_walk(sigar_services_walker_t *walker,
             value = ss.services[i].lpDisplayName;
             break;
           case PTQL_PID_SERVICE_PATH:
+          case PTQL_PID_SERVICE_EXE:
             status = ptql_service_query_config(ss.handle, name, config);
             if (status == SIGAR_OK) {
-                value = config->lpBinaryPathName;
+                if (branch->flags == PTQL_PID_SERVICE_EXE) {
+                    value = strrchr(config->lpBinaryPathName, '\\');
+                    if (value) ++value;
+                }
+                if (value == NULL) {
+                    value = config->lpBinaryPathName;
+                }
             }
             else {
                 continue;
