@@ -223,15 +223,8 @@ JNIEXPORT jobject SIGAR_JNI(win32_Service_getServiceNames)
 {
     DWORD i, status;
     sigar_services_status_t ss;
-    jobject listobj;
-    jclass listclass =
-        env->FindClass("java/util/ArrayList");
-    jmethodID listid =
-        env->GetMethodID(listclass, "<init>", "()V");
-    jmethodID addid =
-        env->GetMethodID(listclass, "add",
-                         "(Ljava/lang/Object;)"
-                         "Z");
+    jsigar_list_t obj;
+
     SIGAR_ZERO(&ss);
     status = sigar_services_status_get(&ss, SERVICE_STATE_ALL);
     if (status != SIGAR_OK) {
@@ -239,17 +232,15 @@ JNIEXPORT jobject SIGAR_JNI(win32_Service_getServiceNames)
         return NULL;
     }
 
-    listobj = env->NewObject(listclass, listid);
-    for (i=0; i<ss.count; i++) {
-        jstring name =
-            env->NewStringUTF((char *)ss.services[i].lpServiceName);
+    jsigar_list_init(env, &obj);
 
-        env->CallBooleanMethod(listobj, addid, name);
+    for (i=0; i<ss.count; i++) {
+        jsigar_list_add(&obj, (char *)ss.services[i].lpServiceName, -1);
     }
 
     sigar_services_status_close(&ss);
 
-    return listobj;
+    return obj.obj;
 }
 
 /*
