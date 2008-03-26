@@ -102,6 +102,7 @@ typedef enum {
 #define PTQL_OP_FLAG_REF    2
 #define PTQL_OP_FLAG_GLOB   4
 #define PTQL_OP_FLAG_PID    8
+#define PTQL_OP_FLAG_ICASE  16
 
 struct ptql_parse_branch_t {
     char *name;
@@ -122,6 +123,21 @@ typedef struct {
 
 #define DATA_PTR(branch) \
     ((char *)branch->data.ptr + branch->lookup->offset)
+
+#define IS_ICASE(branch) \
+    (branch->op_flags & PTQL_OP_FLAG_ICASE)
+
+#define branch_strcmp(branch, s1, s2) \
+    (IS_ICASE(branch) ? strcasecmp(s1, s2) : strcmp(s1, s2))
+
+#define branch_strncmp(branch, s1, s2, n) \
+    (IS_ICASE(branch) ? strncasecmp(s1, s2, n) : strncmp(s1, s2, n))
+
+#define branch_strEQ(branch, s1, s2) \
+    (branch_strcmp(branch, s1, s2) == 0)
+
+#define branch_strnEQ(branch, s1, s2, n) \
+    (branch_strncmp(branch, s1, s2, n) == 0)
 
 static void data_free(void *data)
 {
@@ -351,37 +367,37 @@ static ptql_op_dbl_t ptql_op_dbl[] = {
 static int ptql_op_str_eq(ptql_branch_t *branch,
                           char *haystack, char *needle)
 {
-    return strEQ(haystack, needle);
+    return branch_strEQ(branch, haystack, needle);
 }
 
 static int ptql_op_str_ne(ptql_branch_t *branch,
                           char *haystack, char *needle)
 {
-    return !strEQ(haystack, needle);
+    return !branch_strEQ(branch, haystack, needle);
 }
 
 static int ptql_op_str_gt(ptql_branch_t *branch,
                           char *haystack, char *needle)
 {
-    return strcmp(haystack, needle) > 0;
+    return branch_strcmp(branch, haystack, needle) > 0;
 }
 
 static int ptql_op_str_ge(ptql_branch_t *branch,
                           char *haystack, char *needle)
 {
-    return strcmp(haystack, needle) >= 0;
+    return branch_strcmp(branch, haystack, needle) >= 0;
 }
 
 static int ptql_op_str_lt(ptql_branch_t *branch,
                           char *haystack, char *needle)
 {
-    return strcmp(haystack, needle) < 0;
+    return branch_strcmp(branch, haystack, needle) < 0;
 }
 
 static int ptql_op_str_le(ptql_branch_t *branch,
                           char *haystack, char *needle)
 {
-    return strcmp(haystack, needle) <= 0;
+    return branch_strcmp(branch, haystack, needle) <= 0;
 }
 
 static int ptql_op_str_ew(ptql_branch_t *branch,
@@ -393,13 +409,13 @@ static int ptql_op_str_ew(ptql_branch_t *branch,
     if (diff < 0) {
         return 0;
     }
-    return strnEQ(haystack + diff, needle, nlen);
+    return branch_strnEQ(branch, haystack + diff, needle, nlen);
 }
 
 static int ptql_op_str_sw(ptql_branch_t *branch,
                           char *haystack, char *needle)
 {
-    return strnEQ(haystack, needle, strlen(needle));
+    return branch_strnEQ(branch, haystack, needle, strlen(needle));
 }
 
 static int ptql_op_str_re(ptql_branch_t *branch,
@@ -1285,6 +1301,9 @@ static int ptql_branch_parse(char *query, ptql_parse_branch_t *branch,
             switch (flag) {
               case 'P':
                 branch->op_flags |= PTQL_OP_FLAG_PARENT;
+                break;
+              case 'I':
+                branch->op_flags |= PTQL_OP_FLAG_ICASE;
                 break;
               default:
                 return ptql_error(error, "Unsupported modifier: %c", flag);
