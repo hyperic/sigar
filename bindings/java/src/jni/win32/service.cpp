@@ -230,6 +230,7 @@ JNIEXPORT jobject SIGAR_JNI(win32_Service_getServiceNames)
     jsigar_list_t obj;
     sigar_t *sigar = NULL;
     char *ptql = NULL;
+    sigar_ptql_error_t error;
     sigar_services_walker_t walker;
     jboolean is_copy;
 
@@ -249,7 +250,7 @@ JNIEXPORT jobject SIGAR_JNI(win32_Service_getServiceNames)
 
     jsigar_list_init(env, &obj);
 
-    status = sigar_services_query(ptql, NULL, &walker);
+    status = sigar_services_query(ptql, &error, &walker);
 
     if (ptql && is_copy) {
         env->ReleaseStringUTFChars(jptql, ptql);
@@ -257,7 +258,12 @@ JNIEXPORT jobject SIGAR_JNI(win32_Service_getServiceNames)
 
     if (status != SIGAR_OK) {
         env->DeleteLocalRef(obj.obj);
-        win32_throw_error(env, status);
+        if (status == SIGAR_PTQL_MALFORMED_QUERY) {
+            win32_throw_exception(env, error.message);
+        }
+        else {
+            win32_throw_error(env, status);
+        }
         return NULL;
     }
 
