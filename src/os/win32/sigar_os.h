@@ -600,6 +600,10 @@ struct sigar_services_walker_t {
     int (*add_service)(sigar_services_walker_t *walker, char *name);
 };
 
+int sigar_services_query(char *ptql,
+                         sigar_ptql_error_t *error,
+                         sigar_services_walker_t *walker);
+
 #ifdef __cplusplus
 }
 #endif

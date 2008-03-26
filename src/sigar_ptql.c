@@ -769,6 +769,14 @@ static int sigar_services_walk(sigar_services_walker_t *walker,
         char *value;
         char *name = ss.services[i].lpServiceName;
 
+        if (branch == NULL) {
+            /* no query, return all */
+            if (walker->add_service(walker, name) != SIGAR_OK) {
+                break;
+            }
+            continue;
+        }
+
         switch (branch->flags) {
           case PTQL_PID_SERVICE_DISPLAY:
             value = ss.services[i].lpDisplayName;
@@ -830,6 +838,37 @@ static int ptql_pid_service_list_get(sigar_t *sigar,
     walker.add_service = ptql_pid_service_add;
 
     return sigar_services_walk(&walker, branch);
+}
+
+int sigar_services_query(char *ptql,
+                         sigar_ptql_error_t *error,
+                         sigar_services_walker_t *walker)
+{
+    int status;
+    sigar_ptql_query_t *query;
+
+    if (ptql == NULL) {
+        return sigar_services_walk(walker, NULL);
+    }
+
+    status = sigar_ptql_query_create(&query, (char *)ptql, error);
+    if (status != SIGAR_OK) {
+        return status;
+    }
+
+    if (query->branches.number == 1) {
+        status =
+            sigar_services_walk(walker, &query->branches.data[0]);
+    }
+    else {
+        ptql_error(error, "Too many queries (%d), must be (1)",
+                   query->branches.number);
+        status = SIGAR_PTQL_MALFORMED_QUERY;
+    }
+
+    sigar_ptql_query_destroy(query);
+
+    return status;
 }
 #endif
 
