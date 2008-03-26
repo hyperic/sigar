@@ -110,6 +110,19 @@
 #define strnEQ(s1, s2, n) (strncmp(s1, s2, n) == 0)
 #endif
 
+#ifdef WIN32
+#define strcasecmp stricmp
+#define strncasecmp strnicmp
+#endif
+
+#ifndef strcaseEQ
+#define strcaseEQ(s1, s2) (strcasecmp(s1, s2) == 0)
+#endif
+
+#ifndef strncaseEQ
+#define strncaseEQ(s1, s2, n) (strncasecmp(s1, s2, n) == 0)
+#endif
+
 #ifdef offsetof
 #define sigar_offsetof offsetof
 #else
