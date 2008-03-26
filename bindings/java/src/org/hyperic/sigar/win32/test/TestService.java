@@ -18,6 +18,10 @@
 
 package org.hyperic.sigar.win32.test;
 
+import java.util.List;
+
+import org.hyperic.sigar.Sigar;
+
 import org.hyperic.sigar.test.SigarTestCase;
 
 import org.hyperic.sigar.win32.Service;
@@ -52,6 +56,25 @@ public class TestService extends SigarTestCase {
         } catch (Win32Exception e) {
             traceln(dummyName + ": " + e.getMessage());
             assertTrue(true);
+        }
+    }
+
+    public void testServiceNames() throws Exception {
+        List services = Service.getServiceNames();
+        assertGtZeroTrace("getServiceNames", services.size());
+
+        final String[] ptql = {
+            "Service.Name.ct=Ev",
+            "Service.Path.ew=.exe",
+        };
+        Sigar sigar = new Sigar();
+        try {
+            for (int i=0; i<ptql.length; i++) {
+                services = Service.getServiceNames(sigar, ptql[i]);
+                assertGtZeroTrace(ptql[i], services.size());
+            }
+        } finally {
+            sigar.close();
         }
     }
 
