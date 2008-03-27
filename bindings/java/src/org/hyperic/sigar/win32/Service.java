@@ -18,8 +18,6 @@
 
 package org.hyperic.sigar.win32;
 
-import java.io.File;
-import java.io.FileFilter;
 import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.ArrayList;
@@ -112,41 +110,18 @@ public class Service extends Win32 {
         return getServiceNames(null, null);
     }
 
-    private static class ExeFilter implements FileFilter {
-        private String name;
-        private ExeFilter(String name) {
-            this.name = name.toLowerCase();
-        }
-
-        public boolean accept(File file) {
-            return this.name.equals(file.getName().toLowerCase());
-        }
-    }
-
-    public static List getServiceConfigs(String exe)
-        throws Win32Exception {
-
-        return getServiceConfigs(new ExeFilter(exe));
-    }
-
-    public static List getServiceConfigs(FileFilter filter)
+    public static List getServiceConfigs(Sigar sigar, String exe)
         throws Win32Exception {
 
         List services = new ArrayList();
-        List names = Service.getServiceNames();
+        List names = Service.getServiceNames(sigar,
+                                             "Service.Exe.Ieq=" + exe);
 
         for (int i=0; i<names.size(); i++) {
             Service service = null;
             try {
                 service = new Service((String)names.get(i));
                 ServiceConfig config = service.getConfig();
-                String path = config.getExe();
-                if (path == null) {
-                    continue;
-                }
-                if (!filter.accept(new File(path.trim()))) {
-                    continue;
-                }
                 services.add(config);
             } catch (Win32Exception e){
                 continue;
@@ -158,6 +133,20 @@ public class Service extends Win32 {
         }
 
         return services;
+    }
+
+    /**
+     * @deprecated
+     */
+    public static List getServiceConfigs(String exe)
+        throws Win32Exception {
+
+        Sigar sigar = new Sigar();
+        try {
+            return getServiceConfigs(sigar, exe);
+        } finally {
+            sigar.close();
+        }
     }
 
     public Service(String serviceName) throws Win32Exception
@@ -429,7 +418,12 @@ public class Service extends Win32 {
             }
         }
         else if ((args.length == 1) && (args[0].endsWith(EXE_EXT))) {
-            services = getServiceConfigs(args[0]);
+            Sigar sigar = new Sigar();
+            try {
+                services = getServiceConfigs(args[0]);
+            } finally {
+                sigar.close();
+            }
             for (int i=0; i<services.size(); i++) {
                 ServiceConfig config = (ServiceConfig)services.get(i);
                 config.list(System.out);
