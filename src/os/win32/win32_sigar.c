@@ -3474,7 +3474,9 @@ char *sigar_service_exe_get(char *path, char *buffer, int basename)
 {
     char *ptr;
 
-    strncpy(buffer, path, SIGAR_CMDLINE_MAX);
+    if (path) {
+        strncpy(buffer, path, SIGAR_CMDLINE_MAX);
+    }
     path = buffer;
 
     if (*path == '"') {
