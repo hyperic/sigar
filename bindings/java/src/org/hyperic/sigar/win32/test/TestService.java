@@ -67,15 +67,17 @@ public class TestService extends SigarTestCase {
             "Service.Name.ct=Ev",
             "Service.Path.ew=.exe",
         };
-        Sigar sigar = new Sigar();
-        try {
-            for (int i=0; i<ptql.length; i++) {
-                services = Service.getServiceNames(sigar, ptql[i]);
-                assertGtZeroTrace(ptql[i], services.size());
-            }
-        } finally {
-            sigar.close();
+
+        for (int i=0; i<ptql.length; i++) {
+            services = Service.getServiceNames(getSigar(), ptql[i]);
+            assertGtZeroTrace(ptql[i], services.size());
         }
+    }
+
+    public void testServiceConfig() throws Exception {
+        List configs =
+            Service.getServiceConfigs(getSigar(), "svchost.exe");
+        assertGtZeroTrace("getServiceConfigs", configs.size());
     }
 
     public void testServiceCreateDelete() throws Exception {
