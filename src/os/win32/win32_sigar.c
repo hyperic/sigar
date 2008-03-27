@@ -3466,3 +3466,39 @@ void sigar_services_status_close(sigar_services_status_t *ss)
     }
     SIGAR_ZERO(ss);
 }
+
+/* extract exe from QUERY_SERVICE_CONFIG.lpBinaryPathName
+ * leaves behind command-line arguments and quotes (if any)
+ */
+char *sigar_service_exe_get(char *path, char *buffer, int basename)
+{
+    char *ptr;
+
+    strncpy(buffer, path, SIGAR_CMDLINE_MAX);
+    path = buffer;
+
+    if (*path == '"') {
+        ++path;
+        if ((ptr = strchr(path, '"'))) {
+            *ptr = '\0';
+        }
+    }
+    else {
+        ptr = sigar_strcasestr(path, ".exe");
+
+        if (ptr) {
+            *(ptr+4) = '\0';
+        }
+        else {
+            if ((ptr = strchr(path, ' '))) {
+                *ptr = '\0';
+            }
+        }
+    }
+
+    if (basename && (ptr = strrchr(path, '\\'))) {
+        path = ++ptr;
+    }
+
+    return path;
+}

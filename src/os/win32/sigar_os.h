@@ -604,6 +604,8 @@ int sigar_services_query(char *ptql,
                          sigar_ptql_error_t *error,
                          sigar_services_walker_t *walker);
 
+char *sigar_service_exe_get(char *path, char *buffer, int basename);
+
 #ifdef __cplusplus
 }
 #endif
