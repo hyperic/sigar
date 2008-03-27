@@ -300,6 +300,7 @@ JNIEXPORT jboolean SIGAR_JNI(win32_Service_QueryServiceConfig)
 (JNIEnv *env, jclass, jlong handle, jobject obj)
 {
     char buffer[8192]; /* 8k is max size from mdsn docs */
+    char exe[SIGAR_CMDLINE_MAX], *ptr;
     LPQUERY_SERVICE_CONFIG config = (LPQUERY_SERVICE_CONFIG)buffer;
     DWORD bytes;
     jfieldID id;
@@ -321,6 +322,13 @@ JNIEXPORT jboolean SIGAR_JNI(win32_Service_QueryServiceConfig)
     SERVICE_SetIntField("errorControl", config->dwErrorControl);
 
     SERVICE_SetStringField("path", config->lpBinaryPathName);
+
+    SIGAR_W2A(config->lpBinaryPathName, exe, sizeof(exe));
+    ptr = sigar_service_exe_get(NULL, exe, 0);
+
+    env->SetObjectField(obj,
+                        env->GetFieldID(cls, "exe", STRING_SIG),
+                        env->NewStringUTF(ptr));
 
     SERVICE_SetStringField("loadOrderGroup", config->lpLoadOrderGroup);
 

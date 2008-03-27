@@ -107,6 +107,7 @@ public class ServiceConfig {
     int startType;
     int errorControl;
     String path;
+    String exe;
     String loadOrderGroup;
     int tagId;
     String[] dependencies;
@@ -151,13 +152,7 @@ public class ServiceConfig {
     }
 
     public String getExe() {
-        String[] args = getArgv();
-        if (args.length == 0) {
-            return null;
-        }
-        else {
-            return args[0];
-        }
+        return this.exe;
     }
 
     /**
