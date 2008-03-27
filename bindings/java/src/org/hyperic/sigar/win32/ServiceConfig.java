@@ -108,6 +108,7 @@ public class ServiceConfig {
     int errorControl;
     String path;
     String exe;
+    String[] argv;
     String loadOrderGroup;
     int tagId;
     String[] dependencies;
@@ -143,7 +144,17 @@ public class ServiceConfig {
         this.path = path;
     }
 
+    public String[] getArgv() {
+        return this.argv;
+    }
+
     public String getExe() {
+        if (this.exe == null) {
+            String[] argv = getArgv();
+            if ((argv != null) && (argv.length != 0)) {
+                this.exe = argv[0];
+            }
+        }
         return this.exe;
     }
 

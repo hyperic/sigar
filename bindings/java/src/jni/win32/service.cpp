@@ -7,12 +7,14 @@
 #include "sigar.h"
 #include "sigar_private.h"
 #include "sigar_os.h"
+#include <shellapi.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 #define STRING_SIG "Ljava/lang/String;"
+#define ASTRING_SIG "[" STRING_SIG
 
 #define SERVICE_SetStringField(field, str) \
     id = env->GetFieldID(cls, field, STRING_SIG); \
@@ -307,6 +309,10 @@ JNIEXPORT jboolean SIGAR_JNI(win32_Service_QueryServiceConfig)
     jclass cls = env->GetObjectClass(obj);
     jstring value;
     HINSTANCE lib;
+    LPWSTR *argv;
+    int argc;
+    jclass stringclass =
+        env->FindClass("java/lang/String");
 
     if (!QueryServiceConfig((SC_HANDLE)handle, config,
                             sizeof(buffer), &bytes))
@@ -323,12 +329,22 @@ JNIEXPORT jboolean SIGAR_JNI(win32_Service_QueryServiceConfig)
 
     SERVICE_SetStringField("path", config->lpBinaryPathName);
 
-    SIGAR_W2A(config->lpBinaryPathName, exe, sizeof(exe));
-    ptr = sigar_service_exe_get(NULL, exe, 0);
+    if ((argv = CommandLineToArgvW(config->lpBinaryPathName, &argc))) {
+        int i;
+        jobjectArray jargv =
+            env->NewObjectArray(argc, stringclass, 0);
 
-    env->SetObjectField(obj,
-                        env->GetFieldID(cls, "exe", STRING_SIG),
-                        env->NewStringUTF(ptr));
+        for (i=0; i<argc; i++) {
+            jstring jstr =
+                env->NewString((const jchar *)argv[i], lstrlen(argv[i]));
+            env->SetObjectArrayElement(jargv, i, jstr);
+        }
+
+        id = env->GetFieldID(cls, "argv", ASTRING_SIG);
+
+        env->SetObjectField(obj, id, jargv);
+        LocalFree(argv);
+    }
 
     SERVICE_SetStringField("loadOrderGroup", config->lpLoadOrderGroup);
 
@@ -337,15 +353,12 @@ JNIEXPORT jboolean SIGAR_JNI(win32_Service_QueryServiceConfig)
     if (config->lpDependencies) {
         /* first pass just get num for NewObjectArray */
         int num = to_array(env, config->lpDependencies, NULL);
-        jclass stringclass =
-            env->FindClass("java/lang/String");
         jobjectArray dependencies =
             env->NewObjectArray(num, stringclass, 0);
 
         to_array(env, config->lpDependencies, dependencies);
 
-        id = env->GetFieldID(cls, "dependencies",
-                             "[" STRING_SIG);
+        id = env->GetFieldID(cls, "dependencies", ASTRING_SIG);
 
         env->SetObjectField(obj, id, dependencies);
     }
