@@ -19,15 +19,12 @@
 package org.hyperic.sigar.win32;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.StringTokenizer;
 import org.hyperic.sigar.Sigar;
 import org.hyperic.sigar.SigarException;
 
 public abstract class Win32 {
 
     public static final String EXE_EXT = ".exe";
-    private static final String EXE_EXT_U = EXE_EXT.toUpperCase();
 
     static {
         try {
@@ -80,54 +77,6 @@ public abstract class Win32 {
         }
 
         return exe;
-    }
-
-    public static String[] parseCommandLine(String args) {
-        ArrayList res = new ArrayList();
-        StringTokenizer quoteTok;
-        boolean inQuote = false;
-
-        if ((args == null) ||
-            ((args = args.trim()).length() == 0))
-        {
-            return new String[0];
-        }
-            
-        if (!args.startsWith("\"") &&
-            (args.endsWith(EXE_EXT) ||
-             args.endsWith(EXE_EXT_U)) &&
-            new File(args).exists())
-        {
-            return new String[] { args };
-        }
-
-        quoteTok = new StringTokenizer(args, "\"", true);
-
-        while (quoteTok.hasMoreTokens()) {
-            String elem = (String)quoteTok.nextElement();
-
-            if (elem.equals("\"")) {
-                inQuote = !inQuote;
-                continue;
-            }
-
-            if (inQuote) {
-                res.add(elem);
-            }
-            else {
-                StringTokenizer spaceTok = new StringTokenizer(elem.trim());
-
-                while (spaceTok.hasMoreTokens()) {
-                    res.add(spaceTok.nextToken());
-                }
-            }
-        }
-        
-        if (inQuote) {
-            throw new IllegalArgumentException("Unbalanced quotation marks");
-        }
-
-        return (String[])res.toArray(new String[0]);
     }
 
     public static void main(String[] args) throws Exception {
