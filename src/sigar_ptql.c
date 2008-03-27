@@ -780,6 +780,7 @@ static int sigar_services_walk(sigar_services_walker_t *walker,
 {
     sigar_services_status_t ss;
     char buffer[QUERY_SC_SIZE];
+    char exe[SIGAR_CMDLINE_MAX];
     LPQUERY_SERVICE_CONFIG config = (LPQUERY_SERVICE_CONFIG)buffer;
     DWORD i, status;
 
@@ -810,10 +811,11 @@ static int sigar_services_walk(sigar_services_walker_t *walker,
             status = ptql_service_query_config(ss.handle, name, config);
             if (status == SIGAR_OK) {
                 if (branch->flags == PTQL_PID_SERVICE_EXE) {
-                    value = strrchr(config->lpBinaryPathName, '\\');
-                    if (value) ++value;
+                    value =
+                        sigar_service_exe_get(config->lpBinaryPathName,
+                                              exe, 1);
                 }
-                if (value == NULL) {
+                else {
                     value = config->lpBinaryPathName;
                 }
             }
