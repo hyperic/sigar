@@ -116,7 +116,6 @@ public class ServiceConfig {
     String description;
     String password;
     String name;
-    String[] argv = null;
     ServiceConfig() {}
 
     public ServiceConfig(String name) {
@@ -142,13 +141,6 @@ public class ServiceConfig {
      */
     public void setPath(String path) {
         this.path = path;
-    }
-
-    public String[] getArgv() {
-        if (this.argv == null) {
-            this.argv = Win32.parseCommandLine(getPath());
-        }
-        return this.argv;
     }
 
     public String getExe() {
