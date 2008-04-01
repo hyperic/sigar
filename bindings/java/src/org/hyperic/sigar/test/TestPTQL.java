@@ -108,6 +108,7 @@ public class TestPTQL extends SigarTestCase {
         "Port.tcp.gt=8080",
         "Port.tcp.eq=http",
         "Cpu.Sys.ew=lots",
+        "Service.Invalid.ew=.exe",
         "",
         null,
     };

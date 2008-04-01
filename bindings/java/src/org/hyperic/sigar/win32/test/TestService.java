@@ -70,6 +70,21 @@ public class TestService extends SigarTestCase {
             services = Service.getServiceNames(getSigar(), ptql[i]);
             assertGtZeroTrace(ptql[i], services.size());
         }
+
+        final String[] invalid = {
+            "State.Name.ct=Ev",
+            "Service.Invalid.ew=.exe",
+            "-"
+        };
+
+        for (int i=0; i<invalid.length; i++) {
+            try {
+                services = Service.getServiceNames(getSigar(), invalid[i]);
+                fail("'" + invalid[i] + "' did not throw Exception");
+            } catch (Exception e) {
+                //expected
+            }
+        }
     }
 
     public void testServiceConfig() throws Exception {
