@@ -142,6 +142,9 @@ typedef struct {
 #define branch_strstr(branch, s1, s2) \
     (IS_ICASE(branch) ? sigar_strcasestr(s1, s2) : strstr(s1, s2))
 
+#define IS_PID_SERVICE_QUERY(branch) \
+    (branch->flags >= PTQL_PID_SERVICE_NAME)
+
 static void data_free(void *data)
 {
     free(data);
@@ -890,8 +893,15 @@ int sigar_services_query(char *ptql,
     }
 
     if (query->branches.number == 1) {
-        status =
-            sigar_services_walk(walker, &query->branches.data[0]);
+        ptql_branch_t *branch = &query->branches.data[0];
+
+        if (IS_PID_SERVICE_QUERY(branch)) {
+            status = sigar_services_walk(walker, branch);
+        }
+        else {
+            ptql_error(error, "Invalid Service query: %s", ptql);
+            status = SIGAR_PTQL_MALFORMED_QUERY;
+        }
     }
     else {
         ptql_error(error, "Too many queries (%d), must be (1)",
@@ -950,7 +960,7 @@ static int ptql_pid_list_get(sigar_t *sigar,
     int status, i;
     sigar_pid_t match_pid;
 
-    if (branch->flags >= PTQL_PID_SERVICE_NAME) {
+    if (IS_PID_SERVICE_QUERY(branch)) {
         if ((branch->flags > PTQL_PID_SERVICE_NAME) ||
             (branch->op_name != PTQL_OP_EQ))
         {
