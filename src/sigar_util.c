@@ -324,6 +324,7 @@ char *sigar_strcasestr(const char *s1, const char *s2)
 
 int sigar_mem_calc_ram(sigar_t *sigar, sigar_mem_t *mem)
 {
+    sigar_int64_t total = mem->total / 1024, diff;
     sigar_uint64_t lram = (mem->total / (1024 * 1024));
     int ram = (int)lram; /* must cast after division */
     int remainder = ram % 8;
@@ -334,11 +335,13 @@ int sigar_mem_calc_ram(sigar_t *sigar, sigar_mem_t *mem)
 
     mem->ram = ram;
 
+    diff = total - (mem->actual_free / 1024);
     mem->used_percent =
-        ((double)(mem->total - mem->actual_free) * 100) / mem->total;
+        (double)(diff * 100) / total;
 
+    diff = total - (mem->actual_used / 1024);
     mem->free_percent =
-        ((double)(mem->total - mem->actual_used) * 100) / mem->total;
+        (double)(diff * 100) / total;
 
     return ram;
 }
