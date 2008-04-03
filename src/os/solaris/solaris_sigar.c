@@ -172,8 +172,6 @@ int sigar_mem_get(sigar_t *sigar, sigar_mem_t *mem)
     mem->total = sysconf(_SC_PHYS_PAGES);
     mem->total <<= sigar->pagesize;
 
-    sigar_mem_calc_ram(sigar, mem);
-
     if (sigar_kstat_update(sigar) == -1) {
         return errno;
     }
@@ -193,6 +191,8 @@ int sigar_mem_get(sigar_t *sigar, sigar_mem_t *mem)
 
     mem->actual_free = mem->free;
     mem->actual_used = mem->used;
+
+    sigar_mem_calc_ram(sigar, mem);
 
     return SIGAR_OK;
 }

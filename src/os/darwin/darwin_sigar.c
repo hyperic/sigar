@@ -457,10 +457,10 @@ int sigar_mem_get(sigar_t *sigar, sigar_mem_t *mem)
 
     mem->used = mem->total - mem->free;
 
-    sigar_mem_calc_ram(sigar, mem);
-
     mem->actual_free = mem->free;
     mem->actual_used = mem->used;
+
+    sigar_mem_calc_ram(sigar, mem);
 
     return SIGAR_OK;
 }

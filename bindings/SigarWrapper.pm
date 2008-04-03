@@ -312,6 +312,34 @@ our %classes = (
              Win32   => 'taskman',
          },
       },
+      {
+         name => 'used_percent', type => 'Double',
+         desc => 'Percent total used system memory',
+         plat => '*',
+         cmd  => {
+             AIX     => '',
+             Darwin  => '',
+             FreeBSD => '',
+             HPUX    => '',
+             Linux   => 'free',
+             Solaris => '',
+             Win32   => 'taskman',
+         },
+      },
+      {
+         name => 'free_percent', type => 'Double',
+         desc => 'Percent total free system memory',
+         plat => '*',
+         cmd  => {
+             AIX     => '',
+             Darwin  => '',
+             FreeBSD => '',
+             HPUX    => '',
+             Linux   => 'free',
+             Solaris => '',
+             Win32   => 'taskman',
+         },
+      },
     ],
     Swap => [
       {

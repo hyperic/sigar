@@ -334,6 +334,12 @@ int sigar_mem_calc_ram(sigar_t *sigar, sigar_mem_t *mem)
 
     mem->ram = ram;
 
+    mem->used_percent =
+        ((double)(mem->total - mem->actual_free) * 100) / mem->total;
+
+    mem->free_percent =
+        ((double)(mem->total - mem->actual_used) * 100) / mem->total;
+
     return ram;
 }
 

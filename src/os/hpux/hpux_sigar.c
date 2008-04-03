@@ -79,8 +79,6 @@ int sigar_mem_get(sigar_t *sigar, sigar_mem_t *mem)
 
     mem->total = sigar->pstatic.physical_memory * pagesize;
 
-    sigar_mem_calc_ram(sigar, mem);
-
     pstat_getdynamic(&stats, sizeof(stats), 1, 0);
 
     mem->free = stats.psd_free * pagesize;
@@ -88,7 +86,9 @@ int sigar_mem_get(sigar_t *sigar, sigar_mem_t *mem)
 
     mem->actual_free = mem->free;
     mem->actual_used = mem->used;
-    
+
+    sigar_mem_calc_ram(sigar, mem);
+
     return SIGAR_OK;
 }
 
