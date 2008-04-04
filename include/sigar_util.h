@@ -143,6 +143,15 @@ int sigar_cpu_mhz_from_model(char *model);
 
 char *sigar_get_self_path(sigar_t *sigar);
 
+#if defined(__sun) || defined(__FreeBSD__)
+
+#define SIGAR_HAS_DLINFO_MODULES
+#include <dlfcn.h>
+#include <link.h>
+
+int sigar_dlinfo_modules(sigar_t *sigar, sigar_proc_modules_t *procmods);
+#endif
+
 typedef struct sigar_cache_entry_t sigar_cache_entry_t;
 
 struct sigar_cache_entry_t {

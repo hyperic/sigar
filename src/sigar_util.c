@@ -782,6 +782,68 @@ char *sigar_get_self_path(sigar_t *sigar)
     return sigar->self_path;
 }
 
+#ifdef SIGAR_HAS_DLINFO_MODULES
+
+static int sigar_dlinfo_get(sigar_t *sigar, const char *func,
+                            void **handle, Link_map **map)
+{
+    Dl_info dli;
+
+    if (!dladdr((void *)((uintptr_t)sigar_dlinfo_get), &dli)) {
+        sigar_log_printf(sigar, SIGAR_LOG_ERROR,
+                         "[%s] dladdr(%s) = %s",
+                         func, SIGAR_FUNC, dlerror());
+        return ESRCH;
+    }
+
+    if (!(*handle = dlopen(dli.dli_fname, RTLD_LAZY))) {
+        sigar_log_printf(sigar, SIGAR_LOG_ERROR,
+                         "[%s] dlopen(%s) = %s",
+                         func, dli.dli_fname, dlerror());
+        return ESRCH;
+    }
+
+    dlinfo(*handle, RTLD_DI_LINKMAP, map);
+
+    if (!map) {
+        sigar_log_printf(sigar, SIGAR_LOG_ERROR,
+                         "[%s] dlinfo = %s",
+                         func, dlerror());
+        return ESRCH;
+    }
+
+    return SIGAR_OK;
+}
+
+int sigar_dlinfo_modules(sigar_t *sigar, sigar_proc_modules_t *procmods)
+{
+    int status;
+    void *handle;
+    Link_map *map;
+
+    status = sigar_dlinfo_get(sigar, SIGAR_FUNC, &handle, &map);
+    if (status != SIGAR_OK) {
+        return status;
+    }
+
+    do {
+        int status = 
+            procmods->module_getter(procmods->data,
+                                    (char *)map->l_name,
+                                    strlen(map->l_name));
+
+        if (status != SIGAR_OK) {
+            /* not an error; just stop iterating */
+            return status;
+        }
+    } while ((map = map->l_next));
+
+    dlclose(handle);
+
+    return SIGAR_OK;
+}
+#endif
+
 SIGAR_DECLARE(void) sigar_log_printf(sigar_t *sigar, int level,
                                      const char *format, ...)
 {

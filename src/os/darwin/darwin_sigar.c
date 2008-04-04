@@ -1690,6 +1690,11 @@ int sigar_proc_exe_get(sigar_t *sigar, sigar_pid_t pid,
 int sigar_proc_modules_get(sigar_t *sigar, sigar_pid_t pid,
                            sigar_proc_modules_t *procmods)
 {
+#ifdef SIGAR_HAS_DLINFO_MODULES
+    if (pid == sigar_pid_get(sigar)) {
+        return sigar_dlinfo_modules(sigar, procmods);
+    }
+#endif
     return SIGAR_ENOTIMPL;
 }
 
