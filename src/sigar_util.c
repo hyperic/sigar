@@ -826,6 +826,10 @@ int sigar_dlinfo_modules(sigar_t *sigar, sigar_proc_modules_t *procmods)
         return status;
     }
 
+    while (map->l_prev != NULL) {
+        map = map->l_prev;
+    }
+
     do {
         int status = 
             procmods->module_getter(procmods->data,
