@@ -1987,6 +1987,9 @@ int sigar_cpu_info_list_get(sigar_t *sigar,
 
         info = &cpu_infos->data[cpu_infos->number++];        
 
+        info->total_sockets = ncpu;
+        info->total_cores = ncpu;
+
         info->cache_size = SIGAR_CPU_CACHE_SIZE;
 
         info->mhz = sigar_get_cpu_mhz(sigar);
