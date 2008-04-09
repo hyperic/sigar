@@ -483,6 +483,112 @@ double sigar_file_system_usage_calc_used(sigar_t *sigar,
     return 0;
 }
 
+#if defined(__linux__) || defined(DARWIN)
+
+#define INTEL_ID 0x756e6547
+#define AMD_ID   0x68747541
+
+#if defined(__i386__)
+#define SIGAR_HAS_CPUID
+static void sigar_cpuid(sigar_uint32_t request,
+                        sigar_uint32_t *eax,
+                        sigar_uint32_t *ebx,
+                        sigar_uint32_t *ecx,
+                        sigar_uint32_t *edx)
+{
+#if 0
+    /* does not compile w/ -fPIC */
+    /* can't find a register in class `BREG' while reloading `asm' */
+    asm volatile ("cpuid" :
+                  "=a" (*eax),
+                  "=b" (*ebx),
+                  "=c" (*ecx),
+                  "=d" (*edx)
+                  : "a" (request));
+#else
+    /* derived from: */
+    /* http://svn.red-bean.com/repos/minor/trunk/gc/barriers-ia-32.c */
+    asm volatile ("mov %%ebx, %%esi\n\t"
+                  "cpuid\n\t"
+                  "xchgl %%ebx, %%esi"
+                  : "=a" (*eax),
+                  "=S" (*ebx),
+                  "=c" (*ecx),
+                  "=d" (*edx)
+                  : "0" (request)
+                  : "memory");
+#endif
+}
+#elif defined(__amd64__)
+#define SIGAR_HAS_CPUID
+static void sigar_cpuid(unsigned int request,
+                        unsigned int *eax,
+                        unsigned int *ebx,
+                        unsigned int *ecx,
+                        unsigned int *edx)
+{
+    /* http://svn.red-bean.com/repos/minor/trunk/gc/barriers-amd64.c */
+    asm volatile ("cpuid\n\t"
+                  : "=a" (*eax), "=b" (*ebx), "=c" (*ecx), "=d" (*edx)
+                  : "0" (request)
+                  : "memory");
+}
+#endif
+
+int sigar_cpu_core_count(sigar_t *sigar)
+{
+#ifdef SIGAR_HAS_CPUID
+    sigar_uint32_t eax, ebx, ecx, edx;
+
+    if (sigar->lcpu == -1) {
+        sigar->lcpu = 1;
+
+        sigar_cpuid(0, &eax, &ebx, &ecx, &edx);
+
+        if ((ebx == INTEL_ID) || (ebx == AMD_ID)) {
+            sigar_cpuid(1, &eax, &ebx, &ecx, &edx);
+
+            if (edx & (1<<28)) {
+                sigar->lcpu = (ebx & 0x00FF0000) >> 16;
+            }
+        }
+
+        sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
+                         "[cpu] %d cores per socket", sigar->lcpu);
+
+    }
+
+    return sigar->lcpu;
+#else
+    sigar->lcpu = 1;
+    return sigar->lcpu;
+#endif
+}
+
+int sigar_cpu_core_rollup(sigar_t *sigar)
+{
+#ifdef SIGAR_HAS_CPUID
+    (void)sigar_cpu_core_count(sigar);
+
+    if (sigar->cpu_list_cores) {
+        if (sigar->lcpu > 1) {
+            sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
+                             "[cpu] treating cores as-is");
+        }
+    }
+    else {
+        if (sigar->lcpu > 1) {
+            sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
+                             "[cpu] rolling up cores to sockets");
+            return 1;
+        }
+        
+    }
+#endif
+    return 0;
+}
+#endif /* cpuid stuff */
+
 #define IS_CPU_R(p) \
    ((*p == '(') && (*(p+1) == 'R') && (*(p+2) == ')'))
 

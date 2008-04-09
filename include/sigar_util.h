@@ -137,6 +137,10 @@ typedef struct {
 sigar_iodev_t *sigar_iodev_get(sigar_t *sigar,
                                const char *dirname);
 
+int sigar_cpu_core_count(sigar_t *sigar);
+
+int sigar_cpu_core_rollup(sigar_t *sigar);
+
 void sigar_cpu_model_adjust(sigar_t *sigar, sigar_cpu_info_t *info);
 
 int sigar_cpu_mhz_from_model(char *model);

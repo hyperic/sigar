@@ -253,6 +253,7 @@ int sigar_os_open(sigar_t **sigar)
 #endif
 
     (*sigar)->ncpu = ncpu;
+    (*sigar)->lcpu = -1;
 
     (*sigar)->boot_time = boottime.tv_sec; /* XXX seems off a bit */
 
@@ -2017,13 +2018,17 @@ int sigar_file_system_usage_get(sigar_t *sigar,
 int sigar_cpu_info_list_get(sigar_t *sigar,
                             sigar_cpu_info_list_t *cpu_infos)
 {
-    int i;
+    int i, lcpu=1;
     unsigned int mhz;
     int cache_size=SIGAR_FIELD_NOTIMPL;
     size_t size;
     char model[128], vendor[128], *ptr;
 
     size = sizeof(mhz);
+
+#if defined(DARWIN)
+    lcpu = sigar_cpu_core_count(sigar);
+#endif
 
 #if defined(DARWIN)
     {
@@ -2124,7 +2129,7 @@ int sigar_cpu_info_list_get(sigar_t *sigar,
         info->mhz = mhz;
         info->cache_size = cache_size;
         info->total_cores = sigar->ncpu;
-        info->total_sockets = sigar->ncpu;
+        info->total_sockets = sigar->ncpu / lcpu;
     }
 
     return SIGAR_OK;

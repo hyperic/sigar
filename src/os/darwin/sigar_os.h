@@ -59,6 +59,7 @@ struct sigar_t {
     time_t last_getprocs;
     sigar_pid_t last_pid;
     bsd_pinfo_t *pinfo;
+    int lcpu;
 #ifdef DARWIN
     mach_port_t mach_port;
     void *libproc;
