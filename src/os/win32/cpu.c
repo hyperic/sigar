@@ -350,8 +350,8 @@ int sigar_cpu_info_get(sigar_t *sigar, sigar_cpu_info_t *info)
         info->mhz = -1;
     }
 
-    info->total_cores = sigar->ncpu;
-    info->total_sockets = sigar->ncpu / sigar->lcpu;
+    info->total_cores = sigar->ncpu * sigar->lcpu;
+    info->total_sockets = sigar->ncpu;
 
     info->cache_size = -1; //XXX
     RegCloseKey(key);
