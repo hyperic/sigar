@@ -312,6 +312,11 @@ static int sigar_cpu_core_rollup(sigar_t *sigar)
 #define sigar_cpu_core_count(sigar) 1
 #endif
 
+static int sigar_cpu_total_count(sigar_t *sigar)
+{
+    return (int)sysconf(_SC_NPROCESSORS_CONF);
+}
+
 static int get_ram(sigar_t *sigar, sigar_mem_t *mem)
 {
     char buffer[BUFSIZ], *ptr;
@@ -1666,6 +1671,7 @@ int sigar_cpu_info_list_get(sigar_t *sigar,
 {
     FILE *fp;
     int core_rollup = sigar_cpu_core_rollup(sigar), i=0;
+    int ncpu = sigar_cpu_total_count(sigar);
 
     if (!(fp = fopen(PROC_FS_ROOT "cpuinfo", "r"))) {
         return errno;
@@ -1674,15 +1680,20 @@ int sigar_cpu_info_list_get(sigar_t *sigar,
     sigar_cpu_info_list_create(cpu_infos);
 
     while (get_cpu_info(sigar, &cpu_infos->data[cpu_infos->number], fp)) {
+        sigar_cpu_info_t *cpu_info;
+
+        SIGAR_CPU_INFO_LIST_GROW(cpu_infos);
+
         if (core_rollup && (i++ % sigar->lcpu)) {
             continue; /* fold logical processors */
         }
 
-        get_cpuinfo_max_freq(&cpu_infos->data[cpu_infos->number],
-                             cpu_infos->number);
+        cpu_info = &cpu_infos->data[cpu_infos->number];
+        get_cpuinfo_max_freq(cpu_info, cpu_infos->number);
+        cpu_info->total_sockets = ncpu / sigar->lcpu;
+        cpu_info->total_cores   = ncpu;
 
         ++cpu_infos->number;
-        SIGAR_CPU_INFO_LIST_GROW(cpu_infos);
     }
 
     fclose(fp);

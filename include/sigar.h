@@ -186,6 +186,8 @@ typedef struct {
     char model[128];
     int mhz;
     sigar_uint64_t cache_size;
+    int total_sockets;
+    int total_cores;
 } sigar_cpu_info_t;
 
 typedef struct {

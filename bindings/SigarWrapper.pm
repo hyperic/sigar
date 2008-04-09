@@ -501,6 +501,14 @@ use vars qw(%classes %cmds);
          desc => 'CPU cache size',
          plat => 'AL'
       },
+      {
+	  name => 'total_cores', type => 'Int',
+	  desc => 'Total CPU cores (logical)',
+      },
+      {
+	  name => 'total_sockets', type => 'Int',
+	  desc => 'Total CPU sockets (physical)',
+      },
     ],
     Uptime => [
       {

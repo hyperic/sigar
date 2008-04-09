@@ -58,12 +58,16 @@ public class CpuInfo extends SigarCommandBase {
         CpuPerc[] cpus =
             this.sigar.getCpuPercList();
 
-        println(cpus.length + " total CPUs..");
         org.hyperic.sigar.CpuInfo info = infos[0];
         long cacheSize = info.getCacheSize();
-        println("Vendor........" + info.getVendor());
-        println("Model........." + info.getModel());
-        println("Mhz..........." + info.getMhz());
+        println("Vendor........." + info.getVendor());
+        println("Model.........." + info.getModel());
+        println("Mhz............" + info.getMhz());
+        println("Total CPUs....." + info.getTotalCores());
+        if (info.getTotalCores() != info.getTotalSockets()) {
+            println("Physical CPUs.." + info.getTotalSockets());
+        }
+
         if (cacheSize != Sigar.FIELD_NOTIMPL) {
             println("Cache size...." + cacheSize);
         }
