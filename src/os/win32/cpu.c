@@ -283,7 +283,7 @@ unsigned int sigar_cpu_count(sigar_t *sigar)
     }
     else {
         sigar->ht_enabled = 0;
-        sigar->lcpu = 0;
+        sigar->lcpu = 1;
     }
 
     return sigar->ncpu;
@@ -349,6 +349,9 @@ int sigar_cpu_info_get(sigar_t *sigar, sigar_cpu_info_t *info)
     {
         info->mhz = -1;
     }
+
+    info->total_cores = sigar->ncpu;
+    info->total_sockets = sigar->ncpu / sigar->lcpu;
 
     info->cache_size = -1; //XXX
     RegCloseKey(key);
