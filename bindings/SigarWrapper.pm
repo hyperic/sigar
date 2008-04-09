@@ -8,8 +8,9 @@ use Exporter;
 use File::Path;
 use IO::File ();
 
-our @ISA = qw(Exporter);
-our @EXPORT = qw(generate);
+use vars qw(@ISA @EXPORT);
+@ISA = qw(Exporter);
+@EXPORT = qw(generate);
 
 sub archname {
     my $os = lc $^O;
@@ -226,7 +227,9 @@ my $nfs_v3 = [
    },
 ];
 
-our %classes = (
+use vars qw(%classes %cmds);
+
+%classes = (
     Mem => [
       {
          name => 'total', type => 'Long',
@@ -1410,7 +1413,7 @@ while (my($subclass, $superclass) = each %extends) {
     push @{ $classes{$subclass} }, @{ $classes{$superclass} };
 }
 
-our %cmds = (
+%cmds = (
     Mem => {
        AIX     => 'top',
        Darwin  => 'top',
@@ -1599,7 +1602,7 @@ sub generate {
     my $package = __PACKAGE__ . "::$lang";
     eval "require $package";
 
-    unless (defined %{$package ."::"}) {
+    unless ($package->can('new')) {
         die "unsupported language: $lang";
     }
     $@ = '';
@@ -1732,7 +1735,8 @@ sub get_mappings {
 
 package SigarWrapper::File;
 
-our @ISA = qw(IO::File);
+use vars qw(@ISA);
+@ISA = qw(IO::File);
 
 my $DEVNULL = '/dev/null';
 my $has_dev_null = -e $DEVNULL;
@@ -1760,7 +1764,8 @@ sub devnull {
 
 package SigarWrapper::Java;
 
-our @ISA = qw(SigarWrapper);
+use vars qw(@ISA);
+@ISA = qw(SigarWrapper);
 
 my %field_types = (
     Long   => "J",
@@ -2158,7 +2163,8 @@ sub create_jfile {
 
 package SigarWrapper::Perl;
 
-our @ISA = qw(SigarWrapper);
+use vars qw(@ISA);
+@ISA = qw(SigarWrapper);
 
 my %field_types = (
     Long   => "sigar_uint64_t",
@@ -2260,9 +2266,10 @@ sub finish {
 
 package SigarWrapper::Ruby;
 
-our @ISA = qw(SigarWrapper);
+use vars qw(@ISA);
+@ISA = qw(SigarWrapper);
 
-our %field_types = (
+my %field_types = (
     Long   => "rb_ll2inum",
     Double => "rb_float_new",
     Int    => "rb_int2inum",
@@ -2377,9 +2384,10 @@ sub finish {
 
 package SigarWrapper::PHP;
 
-our @ISA = qw(SigarWrapper);
+use vars qw(@ISA);
+@ISA = qw(SigarWrapper);
 
-our %field_types = (
+my %field_types = (
     Long   => "RETURN_LONG",
     Double => "RETURN_DOUBLE",
     Int    => "RETURN_LONG",
@@ -2542,9 +2550,10 @@ sub finish {
 
 package SigarWrapper::Python;
 
-our @ISA = qw(SigarWrapper);
+use vars qw(@ISA);
+@ISA = qw(SigarWrapper);
 
-our %field_types = (
+my %field_types = (
     Long   => "PyLong_FromUnsignedLongLong",
     Double => "PyFloat_FromDouble",
     Int    => "PyInt_FromLong",
@@ -2729,7 +2738,8 @@ sub finish {
 #XXX not currently supporting netware
 package SigarWrapper::Netware;
 
-our @ISA = qw(SigarWrapper);
+use vars qw(@ISA);
+@ISA = qw(SigarWrapper);
 
 sub start {
     my $self = shift;
