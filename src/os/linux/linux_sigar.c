@@ -177,7 +177,7 @@ int sigar_os_open(sigar_t **sigar)
 
     (*sigar)->last_proc_stat.pid = -1;
 
-    (*sigar)->ht_enabled = -1;
+    (*sigar)->lcpu = -1;
 
     if (stat(PROC_DISKSTATS, &sb) == 0) {
         (*sigar)->iostat = IOSTAT_DISKSTATS;
@@ -261,73 +261,55 @@ static void sigar_cpuid(unsigned int request,
 #endif
 
 #ifdef SIGAR_HAS_CPUID
-static int is_ht_enabled(sigar_t *sigar)
+static int sigar_cpu_core_count(sigar_t *sigar)
 {
     sigar_uint32_t eax, ebx, ecx, edx;
 
-    if (sigar->ht_enabled != -1) {
-        /* only check once */
-        return sigar->ht_enabled;
-    }
+    if (sigar->lcpu == -1) {
+        sigar->lcpu = 1;
 
-    sigar->ht_enabled = 0;
-    sigar->lcpu = 0;
+        sigar_cpuid(0, &eax, &ebx, &ecx, &edx);
 
-    if (sigar->cpu_list_cores) {
-        sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
-                         "[cpu] skipping HT check");
-        return 0;
-    }
+        if ((ebx == INTEL_ID) || (ebx == AMD_ID)) {
+            sigar_cpuid(1, &eax, &ebx, &ecx, &edx);
 
-    sigar_cpuid(0, &eax, &ebx, &ecx, &edx);
-
-    if ((ebx == INTEL_ID) || (ebx == AMD_ID)) {
-        sigar_cpuid(1, &eax, &ebx, &ecx, &edx);
-
-        if (edx & (1<<28)) {
-#ifdef DETECT_HT_ENABLED
-            sigar_uint32_t apic_id =
-                (ebx & 0xFF000000) >> 24;
-            sigar_uint32_t log_id, phy_id_mask=0xFF, i=1;
-#endif
-            sigar->lcpu = (ebx & 0x00FF0000) >> 16;
-#ifdef DETECT_HT_ENABLED
-            /* XXX disabled. process affinity mask can throw this off? */
-            while (i < sigar->lcpu) {
-                i *= 2;
-                phy_id_mask <<= 1;
-            }
-
-            log_id = apic_id & ~phy_id_mask;
-
-            if (log_id == 0) {
-                sigar->lcpu = 1;
-            }
-#endif
-            if (sigar->lcpu > 1) {
-                sigar->ht_enabled = 1;
-                sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
-                                 "[cpu] HT enabled, siblings: %d",
-                                 sigar->lcpu);
-            }
-            else {
-                sigar_log(sigar, SIGAR_LOG_DEBUG,
-                          "[cpu] HT supported, not enabled.");
+            if (edx & (1<<28)) {
+                sigar->lcpu = (ebx & 0x00FF0000) >> 16;
             }
         }
-        else {
-            sigar_log(sigar, SIGAR_LOG_DEBUG,
-                      "[cpu] HT not supported.");
+
+        sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
+                         "[cpu] %d cores per socket", sigar->lcpu);
+
+    }
+
+    return sigar->lcpu;
+}
+
+static int sigar_cpu_core_rollup(sigar_t *sigar)
+{
+    (void)sigar_cpu_core_count(sigar);
+
+    if (sigar->cpu_list_cores) {
+        if (sigar->lcpu > 1) {
+            sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
+                             "[cpu] treating cores as-is");
         }
     }
     else {
-        sigar->lcpu = 1;
+        if (sigar->lcpu > 1) {
+            sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
+                             "[cpu] rolling up cores to sockets");
+            return 1;
+        }
+        
     }
 
-    return sigar->ht_enabled;
+    return 0;
 }
 #else
-#define is_ht_enabled(sigar) 0
+#define sigar_cpu_core_rollup(sigar) 0
+#define sigar_cpu_core_count(sigar) 1
 #endif
 
 static int get_ram(sigar_t *sigar, sigar_mem_t *mem)
@@ -532,7 +514,7 @@ int sigar_cpu_list_get(sigar_t *sigar, sigar_cpu_list_t *cpulist)
 {
     FILE *fp;
     char buffer[BUFSIZ], cpu_total[BUFSIZ], *ptr;
-    int hthread = is_ht_enabled(sigar), i=0;
+    int core_rollup = sigar_cpu_core_rollup(sigar), i=0;
     sigar_cpu_t *cpu;
 
     if (!(fp = fopen(PROC_STAT, "r"))) {
@@ -550,7 +532,7 @@ int sigar_cpu_list_get(sigar_t *sigar, sigar_cpu_list_t *cpulist)
             break;
         }
 
-        if (hthread && (i % sigar->lcpu)) {
+        if (core_rollup && (i % sigar->lcpu)) {
             /* merge times of logical processors */
             cpu = &cpulist->data[cpulist->number-1];
         }
@@ -955,7 +937,7 @@ int sigar_proc_state_get(sigar_t *sigar, sigar_pid_t pid,
     procstate->nice     = pstat->nice;
     procstate->processor = pstat->processor;
 
-    if (is_ht_enabled(sigar)) {
+    if (sigar_cpu_core_rollup(sigar)) {
         procstate->processor /= sigar->lcpu;
     }
 
@@ -1683,7 +1665,7 @@ int sigar_cpu_info_list_get(sigar_t *sigar,
                             sigar_cpu_info_list_t *cpu_infos)
 {
     FILE *fp;
-    int hthread = is_ht_enabled(sigar), i=0;
+    int core_rollup = sigar_cpu_core_rollup(sigar), i=0;
 
     if (!(fp = fopen(PROC_FS_ROOT "cpuinfo", "r"))) {
         return errno;
@@ -1692,8 +1674,8 @@ int sigar_cpu_info_list_get(sigar_t *sigar,
     sigar_cpu_info_list_create(cpu_infos);
 
     while (get_cpu_info(sigar, &cpu_infos->data[cpu_infos->number], fp)) {
-        if (hthread && (i++ % sigar->lcpu)) {
-            continue; /* fold logical processors if HT */
+        if (core_rollup && (i++ % sigar->lcpu)) {
+            continue; /* fold logical processors */
         }
 
         get_cpuinfo_max_freq(&cpu_infos->data[cpu_infos->number],
