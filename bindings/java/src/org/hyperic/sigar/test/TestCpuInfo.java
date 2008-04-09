@@ -40,6 +40,7 @@ public class TestCpuInfo extends SigarTestCase {
             traceln("model=" + info.getModel());
             traceln("mhz=" + info.getMhz());
             traceln("cache size=" + info.getCacheSize());
+            assertTrue(info.getTotalSockets() <= info.getTotalCores());
         }
 
         int mhz = infos[0].getMhz();

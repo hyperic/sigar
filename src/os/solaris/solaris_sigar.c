@@ -1700,6 +1700,7 @@ int sigar_cpu_info_list_get(sigar_t *sigar,
     int brand = -1;
     sigar_cache_t *chips;
     int is_debug = SIGAR_LOG_IS_DEBUG(sigar);
+    int nsockets = 0;
 
     if (sigar_kstat_update(sigar) == -1) { /* for sigar->ncpu */
         return errno;
@@ -1739,9 +1740,12 @@ int sigar_cpu_info_list_get(sigar_t *sigar,
                 sigar_cache_get(chips, chip_id);
 
             if (ent->value) {
-                continue;
+                if (!sigar->cpu_list_cores) {
+                    continue;
+                }
             }
             else {
+                ++nsockets;
                 ent->value = chips; /*anything non-NULL*/
                 if (is_debug) {
                     sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
@@ -1750,6 +1754,9 @@ int sigar_cpu_info_list_get(sigar_t *sigar,
                                      chip_id);
                 }
             }
+        }
+        else {
+            ++nsockets;
         }
 
         SIGAR_CPU_INFO_LIST_GROW(cpu_infos);
@@ -1787,6 +1794,12 @@ int sigar_cpu_info_list_get(sigar_t *sigar,
     }
 
     sigar_cache_destroy(chips);
+
+    for (i=0; i<cpu_infos->number; i++) {
+        sigar_cpu_info_t *info = &cpu_infos->data[i];
+        info->total_sockets = nsockets;
+        info->total_cores = sigar->ncpu;
+    }
 
     return SIGAR_OK;
 }
