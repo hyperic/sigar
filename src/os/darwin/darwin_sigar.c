@@ -2123,6 +2123,8 @@ int sigar_cpu_info_list_get(sigar_t *sigar,
 
         info->mhz = mhz;
         info->cache_size = cache_size;
+        info->total_cores = sigar->ncpu;
+        info->total_sockets = sigar->ncpu;
     }
 
     return SIGAR_OK;
