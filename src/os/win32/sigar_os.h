@@ -19,6 +19,10 @@
 #ifndef SIGAR_OS_H
 #define SIGAR_OS_H
 
+#if _MSC_VER <= 1200
+#define SIGAR_USING_MSC6 /* Visual Studio version 6 */
+#endif
+
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <winreg.h>
@@ -144,7 +148,7 @@ typedef struct _WINSTATION_INFO {
 
 /* end wtsapi32.h */
 
-#if _MSC_VER <= 1200
+#ifdef SIGAR_USING_MSC6
 
 /* from winbase.h not in vs6.0 */
 typedef struct {

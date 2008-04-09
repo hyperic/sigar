@@ -2225,7 +2225,7 @@ static int sigar_get_netif_ipaddr(sigar_t *sigar,
             MIB_IPADDRROW *row = &mib->table[i];
             short type;
 
-#if _MSC_VER <= 1200
+#ifdef SIGAR_USING_MSC6
             type = row->unused2;
 #else
             type = row->wType;
@@ -3297,7 +3297,7 @@ int sigar_who_list_get_win32(sigar_t *sigar,
 #define VER_NT_WORKSTATION 0x0000001
 #endif
 
-#if _MSC_VER <= 1200
+#if SIGAR_USING_MSC6
 #define sigar_wProductType wReserved[1]
 #else
 #define sigar_wProductType wProductType
