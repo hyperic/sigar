@@ -24,7 +24,6 @@
 #include <inet/ip.h>
 #include <inet/tcp.h>
 #include <net/route.h>
-#include <sys/link.h>
 #include <sys/lwp.h>
 #include <sys/proc.h>
 #include <sys/swap.h>
