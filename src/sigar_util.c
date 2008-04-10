@@ -483,8 +483,6 @@ double sigar_file_system_usage_calc_used(sigar_t *sigar,
     return 0;
 }
 
-#if defined(__linux__) || defined(DARWIN)
-
 typedef struct {
     sigar_uint32_t eax;
     sigar_uint32_t ebx;
@@ -492,8 +490,10 @@ typedef struct {
     sigar_uint32_t edx;
 } sigar_cpuid_t;
 
-#if defined(__i386__)
-#define SIGAR_HAS_CPUID
+#if defined(__linux__) || defined(DARWIN)
+
+#  if defined(__i386__)
+#  define SIGAR_HAS_CPUID
 static void sigar_cpuid(sigar_uint32_t request, sigar_cpuid_t *id)
 {
     /* derived from: */
@@ -508,8 +508,8 @@ static void sigar_cpuid(sigar_uint32_t request, sigar_cpuid_t *id)
                   : "0" (request)
                   : "memory");
 }
-#elif defined(__amd64__)
-#define SIGAR_HAS_CPUID
+#  elif defined(__amd64__)
+#  define SIGAR_HAS_CPUID
 static void sigar_cpuid(sigar_uint32_t request,
                         sigar_cpuid_t *id)
 {
@@ -522,6 +522,27 @@ static void sigar_cpuid(sigar_uint32_t request,
                   : "0" (request)
                   : "memory");
 }
+#  endif
+#elif defined(WIN32)
+#  ifdef _M_X64
+/*XXX*/
+#  else
+#  define SIGAR_HAS_CPUID
+static void sigar_cpuid(sigar_uint32_t request,
+                        sigar_cpuid_t *id)
+{
+    __asm {
+        mov edi, id
+        mov eax, [edi].eax
+        mov ecx, [edi].ecx
+        cpuid
+        mov [edi].eax, eax
+        mov [edi].ebx, ebx
+        mov [edi].ecx, ecx
+        mov [edi].edx, edx
+    }
+}
+#  endif
 #endif
 
 #define INTEL_ID 0x756e6547
@@ -547,7 +568,6 @@ int sigar_cpu_core_count(sigar_t *sigar)
 
         sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
                          "[cpu] %d cores per socket", sigar->lcpu);
-
     }
 
     return sigar->lcpu;
@@ -574,12 +594,10 @@ int sigar_cpu_core_rollup(sigar_t *sigar)
                              "[cpu] rolling up cores to sockets");
             return 1;
         }
-        
     }
 #endif
     return 0;
 }
-#endif /* cpuid stuff */
 
 #define IS_CPU_R(p) \
    ((*p == '(') && (*(p+1) == 'R') && (*(p+2) == ')'))
