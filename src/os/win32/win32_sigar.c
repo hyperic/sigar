@@ -857,7 +857,7 @@ static int sigar_cpu_list_perflib_get(sigar_t *sigar,
     sigar_cpu_list_create(cpulist);
 
     /* verify there's a counter for each logical cpu */
-    if (core_rollup && ((sigar->ncpu * sigar->lcpu) != num)) {
+    if (core_rollup && (sigar->ncpu != num)) {
         core_rollup = 0;
     }
 
@@ -912,7 +912,7 @@ static int sigar_cpu_list_ntsys_get(sigar_t *sigar,
     sigar_cpu_list_create(cpulist);
 
     /* verify there's a counter for each logical cpu */
-    if (core_rollup && ((sigar->ncpu * sigar->lcpu) != num)) {
+    if (core_rollup && (sigar->ncpu != num)) {
         core_rollup = 0;
     }
 
@@ -2015,28 +2015,26 @@ SIGAR_DECLARE(int) sigar_cpu_info_list_get(sigar_t *sigar,
                                            sigar_cpu_info_list_t *cpu_infos)
 {
     int i, status;
-    sigar_cpu_info_t *info;
+    sigar_cpu_info_t info;
     int core_rollup = sigar_cpu_core_rollup(sigar);
 
     sigar_cpu_info_list_create(cpu_infos);
 
-    info = &cpu_infos->data[cpu_infos->number++];
-
-    status = sigar_cpu_info_get(sigar, info);
+    status = sigar_cpu_info_get(sigar, &info);
 
     if (status != SIGAR_OK) {
         return status;
     }
 
-    for (i=1; i<sigar->ncpu; i++) {
+    for (i=0; i<sigar->ncpu; i++) {
         SIGAR_CPU_INFO_LIST_GROW(cpu_infos);
 
-        if (core_rollup && (i++ % sigar->lcpu)) {
+        if (core_rollup && (i % sigar->lcpu)) {
             continue; /* fold logical processors */
         }
 
         memcpy(&cpu_infos->data[cpu_infos->number++],
-               info, sizeof(*info));
+               &info, sizeof(info));
     }
 
     return SIGAR_OK;
