@@ -3297,7 +3297,7 @@ int sigar_who_list_get_win32(sigar_t *sigar,
 #define VER_NT_WORKSTATION 0x0000001
 #endif
 
-#if SIGAR_USING_MSC6
+#ifdef SIGAR_USING_MSC6
 #define sigar_wProductType wReserved[1]
 #else
 #define sigar_wProductType wProductType
