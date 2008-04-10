@@ -1,4 +1,4 @@
-#ifdef WIN32
+#if defined(WIN32) && !defined(SIGAR_NO_ATL)
 #define UNICODE
 #define _UNICODE
 #define _WIN32_DCOM
