@@ -485,71 +485,63 @@ double sigar_file_system_usage_calc_used(sigar_t *sigar,
 
 #if defined(__linux__) || defined(DARWIN)
 
-#define INTEL_ID 0x756e6547
-#define AMD_ID   0x68747541
+typedef struct {
+    sigar_uint32_t eax;
+    sigar_uint32_t ebx;
+    sigar_uint32_t ecx;
+    sigar_uint32_t edx;
+} sigar_cpuid_t;
 
 #if defined(__i386__)
 #define SIGAR_HAS_CPUID
-static void sigar_cpuid(sigar_uint32_t request,
-                        sigar_uint32_t *eax,
-                        sigar_uint32_t *ebx,
-                        sigar_uint32_t *ecx,
-                        sigar_uint32_t *edx)
+static void sigar_cpuid(sigar_uint32_t request, sigar_cpuid_t *id)
 {
-#if 0
-    /* does not compile w/ -fPIC */
-    /* can't find a register in class `BREG' while reloading `asm' */
-    asm volatile ("cpuid" :
-                  "=a" (*eax),
-                  "=b" (*ebx),
-                  "=c" (*ecx),
-                  "=d" (*edx)
-                  : "a" (request));
-#else
     /* derived from: */
     /* http://svn.red-bean.com/repos/minor/trunk/gc/barriers-ia-32.c */
     asm volatile ("mov %%ebx, %%esi\n\t"
                   "cpuid\n\t"
                   "xchgl %%ebx, %%esi"
-                  : "=a" (*eax),
-                  "=S" (*ebx),
-                  "=c" (*ecx),
-                  "=d" (*edx)
+                  : "=a" (id->eax),
+                    "=S" (id->ebx),
+                    "=c" (id->ecx),
+                    "=d" (id->edx)
                   : "0" (request)
                   : "memory");
-#endif
 }
 #elif defined(__amd64__)
 #define SIGAR_HAS_CPUID
-static void sigar_cpuid(unsigned int request,
-                        unsigned int *eax,
-                        unsigned int *ebx,
-                        unsigned int *ecx,
-                        unsigned int *edx)
+static void sigar_cpuid(sigar_uint32_t request,
+                        sigar_cpuid_t *id)
 {
     /* http://svn.red-bean.com/repos/minor/trunk/gc/barriers-amd64.c */
     asm volatile ("cpuid\n\t"
-                  : "=a" (*eax), "=b" (*ebx), "=c" (*ecx), "=d" (*edx)
+                  : "=a" (id->eax),
+                    "=b" (id->ebx),
+                    "=c" (id->ecx),
+                    "=d" (id->edx)
                   : "0" (request)
                   : "memory");
 }
 #endif
+
+#define INTEL_ID 0x756e6547
+#define AMD_ID   0x68747541
 
 int sigar_cpu_core_count(sigar_t *sigar)
 {
 #ifdef SIGAR_HAS_CPUID
-    sigar_uint32_t eax, ebx, ecx, edx;
+    sigar_cpuid_t id;
 
     if (sigar->lcpu == -1) {
         sigar->lcpu = 1;
 
-        sigar_cpuid(0, &eax, &ebx, &ecx, &edx);
+        sigar_cpuid(0, &id);
 
-        if ((ebx == INTEL_ID) || (ebx == AMD_ID)) {
-            sigar_cpuid(1, &eax, &ebx, &ecx, &edx);
+        if ((id.ebx == INTEL_ID) || (id.ebx == AMD_ID)) {
+            sigar_cpuid(1, &id);
 
-            if (edx & (1<<28)) {
-                sigar->lcpu = (ebx & 0x00FF0000) >> 16;
+            if (id.edx & (1<<28)) {
+                sigar->lcpu = (id.ebx & 0x00FF0000) >> 16;
             }
         }
 
