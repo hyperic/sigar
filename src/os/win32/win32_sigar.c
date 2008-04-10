@@ -537,7 +537,7 @@ int sigar_os_open(sigar_t **sigar_ptr)
     sigar->netif_adapters = NULL;
     sigar->pinfo.pid = -1;
     sigar->ws_version = 0;
-    sigar->ncpu = 0;
+    sigar->lcpu = -1;
 
     /* increase process visibility */
     sigar_enable_privilege(SE_DEBUG_NAME);
@@ -723,7 +723,6 @@ static int get_idle_cpu(sigar_t *sigar, sigar_cpu_t *cpu,
     }
     else {
         /* windows NT and 2000 do not have an Idle counter */
-        sigar_cpu_count(sigar);
         DLLMOD_INIT(ntdll, FALSE);
         if (sigar_NtQuerySystemInformation) {
             DWORD retval, num;
@@ -835,9 +834,10 @@ SIGAR_DECLARE(int) sigar_cpu_get(sigar_t *sigar, sigar_cpu_t *cpu)
 static int sigar_cpu_list_perflib_get(sigar_t *sigar,
                                       sigar_cpu_list_t *cpulist)
 {
-    int status, i, j, hthread=0;
+    int status, i, j;
     PERF_INSTANCE_DEFINITION *inst;
     DWORD perf_offsets[PERF_IX_CPU_MAX], num, err;
+    int core_rollup = sigar_cpu_core_rollup(sigar);
 
     memset(&perf_offsets, 0, sizeof(perf_offsets));
 
@@ -854,24 +854,18 @@ static int sigar_cpu_list_perflib_get(sigar_t *sigar,
         inst = PdhNextInstance(inst);
     }
 
-    sigar_cpu_count(sigar);
     sigar_cpu_list_create(cpulist);
 
-    /*
-     * if hyper-threading was detected and ncpu is less than
-     * the number of counter instances, assume there is a counter
-     * for each logical processor.
-     * XXX assuming this is correct until have something to test on.
-     */
-    if (sigar->ht_enabled && ((sigar->ncpu * sigar->lcpu) == num)) {
-        hthread = 1;
+    /* verify there's a counter for each logical cpu */
+    if (core_rollup && ((sigar->ncpu * sigar->lcpu) != num)) {
+        core_rollup = 0;
     }
 
     for (i=0; i<num; i++) {
         PERF_COUNTER_BLOCK *counter_block;
         sigar_cpu_t *cpu;
 
-        if (hthread && (i % sigar->lcpu)) {
+        if (core_rollup && (i % sigar->lcpu)) {
             /* merge times of logical processors */
             cpu = &cpulist->data[cpulist->number-1];
         }
@@ -901,7 +895,9 @@ static int sigar_cpu_list_ntsys_get(sigar_t *sigar,
                                     sigar_cpu_list_t *cpulist)
 {
     DWORD retval, num;
-    int status, i, j, hthread=0;
+    int status, i, j;
+    int core_rollup = sigar_cpu_core_rollup(sigar);
+
     /* XXX unhardcode 16 */
     SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION info[16];
     /* into the lungs of hell */
@@ -913,24 +909,18 @@ static int sigar_cpu_list_ntsys_get(sigar_t *sigar,
     }
     num = retval/sizeof(info[0]);
 
-    sigar_cpu_count(sigar);
     sigar_cpu_list_create(cpulist);
 
-    /*
-     * if hyper-threading was detected and ncpu is less than
-     * the number of counter instances, assume there is a counter
-     * for each logical processor.
-     * XXX assuming this is correct until have something to test on.
-     */
-    if (sigar->ht_enabled && ((sigar->ncpu * sigar->lcpu) == num)) {
-        hthread = 1;
+    /* verify there's a counter for each logical cpu */
+    if (core_rollup && ((sigar->ncpu * sigar->lcpu) != num)) {
+        core_rollup = 0;
     }
 
     for (i=0; i<num; i++) {
         sigar_cpu_t *cpu;
         sigar_uint64_t idle, user, sys;
 
-        if (hthread && (i % sigar->lcpu)) {
+        if (core_rollup && (i % sigar->lcpu)) {
             /* merge times of logical processors */
             cpu = &cpulist->data[cpulist->number-1];
         }
@@ -1953,13 +1943,80 @@ sigar_file_system_usage_get(sigar_t *sigar,
     return SIGAR_OK;
 }
 
+static int sigar_cpu_info_get(sigar_t *sigar, sigar_cpu_info_t *info)
+{
+    HKEY key, cpu;
+    int i = 0;
+    char id[MAX_PATH + 1];
+    DWORD size = 0, rc;
+
+    RegOpenKey(HKEY_LOCAL_MACHINE,
+               "HARDWARE\\DESCRIPTION\\System\\CentralProcessor", &key);
+
+    //just lookup the first id, then assume all cpus are the same.
+    rc = RegEnumKey(key, 0, id, sizeof(id));
+    if (rc != ERROR_SUCCESS) {
+        RegCloseKey(key);
+        return rc;
+    }
+       
+    rc = RegOpenKey(key, id, &cpu);
+    if (rc != ERROR_SUCCESS) {
+        RegCloseKey(key);
+        return rc;
+    }
+
+    size = sizeof(info->vendor);
+    if (RegQueryValueEx(cpu, "VendorIdentifier", NULL, NULL,
+                        (LPVOID)&info->vendor, &size) ||
+        strEQ(info->vendor, "GenuineIntel"))
+    {
+        SIGAR_SSTRCPY(info->vendor, "Intel");
+    }
+    else {
+        if (strEQ(info->vendor, "AuthenticAMD")) {
+            SIGAR_SSTRCPY(info->vendor, "AMD");
+        }
+    }
+
+    size = sizeof(info->model);
+    if (RegQueryValueEx(cpu, "ProcessorNameString", NULL, NULL,
+                        (LPVOID)&info->model, &size))
+    {
+        size = sizeof(info->model);
+        if (RegQueryValueEx(cpu, "Identifier", NULL, NULL,
+                            (LPVOID)&info->model, &size))
+        {
+            SIGAR_SSTRCPY(info->model, "x86");
+        }
+    }
+    else {
+        sigar_cpu_model_adjust(sigar, info);
+    }
+
+    size = sizeof(info->mhz); // == sizeof(DWORD)
+    if (RegQueryValueEx(cpu, "~MHz", NULL, NULL,
+                        (LPVOID)&info->mhz, &size))
+    {
+        info->mhz = -1;
+    }
+
+    info->cache_size = -1; //XXX
+    RegCloseKey(key);
+    RegCloseKey(cpu);
+
+    info->total_sockets = sigar->ncpu / sigar->lcpu;
+    info->total_cores   = sigar->ncpu;
+
+    return SIGAR_OK;
+}
+
 SIGAR_DECLARE(int) sigar_cpu_info_list_get(sigar_t *sigar,
                                            sigar_cpu_info_list_t *cpu_infos)
 {
     int i, status;
     sigar_cpu_info_t *info;
-
-    sigar_cpu_count(sigar);
+    int core_rollup = sigar_cpu_core_rollup(sigar);
 
     sigar_cpu_info_list_create(cpu_infos);
 
@@ -1971,13 +2028,15 @@ SIGAR_DECLARE(int) sigar_cpu_info_list_get(sigar_t *sigar,
         return status;
     }
 
-    if (sigar->ncpu > 1) {
-        for (i=1; i<sigar->ncpu; i++) {
-            SIGAR_CPU_INFO_LIST_GROW(cpu_infos);
+    for (i=1; i<sigar->ncpu; i++) {
+        SIGAR_CPU_INFO_LIST_GROW(cpu_infos);
 
-            memcpy(&cpu_infos->data[cpu_infos->number++],
-                   info, sizeof(*info));
+        if (core_rollup && (i++ % sigar->lcpu)) {
+            continue; /* fold logical processors */
         }
+
+        memcpy(&cpu_infos->data[cpu_infos->number++],
+               info, sizeof(*info));
     }
 
     return SIGAR_OK;

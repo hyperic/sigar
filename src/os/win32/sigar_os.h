@@ -582,10 +582,6 @@ int sigar_proc_env_peb_get(sigar_t *sigar, HANDLE proc,
 int sigar_parse_proc_args(sigar_t *sigar, WCHAR *buf,
                           sigar_proc_args_t *procargs);
 
-unsigned int sigar_cpu_count(sigar_t *sigar);
-
-int sigar_cpu_info_get(sigar_t *sigar, sigar_cpu_info_t *info);
-
 int sigar_service_pid_get(sigar_t *sigar, char *name, sigar_pid_t *pid);
 
 typedef struct {
