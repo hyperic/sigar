@@ -3359,6 +3359,11 @@ int sigar_who_list_get_win32(sigar_t *sigar,
 #else
 #define sigar_wProductType wProductType
 #endif
+#ifdef _M_X64
+#define SIGAR_ARCH "x64"
+#else
+#define SIGAR_ARCH "x86"
+#endif
 
 int sigar_os_sys_info_get(sigar_t *sigar,
                           sigar_sys_info_t *sysinfo)
@@ -3413,8 +3418,8 @@ int sigar_os_sys_info_get(sigar_t *sigar,
     if (code_name) {
         SIGAR_SSTRCPY(sysinfo->vendor_code_name, code_name);
     }
-    /* XXX only arch we currently support */
-    SIGAR_SSTRCPY(sysinfo->arch, "x86");
+
+    SIGAR_SSTRCPY(sysinfo->arch, SIGAR_ARCH);
 
     sprintf(sysinfo->version, "%d.%d",
             version.dwMajorVersion,
