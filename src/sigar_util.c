@@ -525,7 +525,15 @@ static void sigar_cpuid(sigar_uint32_t request,
 #  endif
 #elif defined(WIN32)
 #  ifdef _M_X64
-/*XXX*/
+#  include <intrin.h>
+#  define SIGAR_HAS_CPUID
+static void sigar_cpuid(sigar_uint32_t request,
+                        sigar_cpuid_t *id)
+{
+    sigar_uint32_t info[4];
+    __cpuid(info, request); /* as of MSVC 7 */
+    memcpy(id, &info[0], sizeof(info));
+}
 #  else
 #  define SIGAR_HAS_CPUID
 static void sigar_cpuid(sigar_uint32_t request,
