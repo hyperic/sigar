@@ -213,6 +213,8 @@ char *sigar_os_error_string(sigar_t *sigar, int err)
 static int sigar_cpu_total_count(sigar_t *sigar)
 {
     sigar->ncpu = (int)sysconf(_SC_NPROCESSORS_CONF);
+    sigar_log_printf(sigar, SIGAR_LOG_DEBUG, "[cpu] ncpu=%d\n",
+                     sigar->ncpu);
     return sigar->ncpu;
 }
 
@@ -1581,8 +1583,6 @@ int sigar_cpu_info_list_get(sigar_t *sigar,
     while (get_cpu_info(sigar, &cpu_infos->data[cpu_infos->number], fp)) {
         sigar_cpu_info_t *cpu_info;
 
-        SIGAR_CPU_INFO_LIST_GROW(cpu_infos);
-
         if (core_rollup && (i++ % sigar->lcpu)) {
             continue; /* fold logical processors */
         }
@@ -1593,6 +1593,7 @@ int sigar_cpu_info_list_get(sigar_t *sigar,
         cpu_info->total_cores   = sigar->ncpu;
 
         ++cpu_infos->number;
+        SIGAR_CPU_INFO_LIST_GROW(cpu_infos);
     }
 
     fclose(fp);
