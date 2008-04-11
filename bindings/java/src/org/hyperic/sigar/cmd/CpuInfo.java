@@ -64,7 +64,9 @@ public class CpuInfo extends SigarCommandBase {
         println("Model.........." + info.getModel());
         println("Mhz............" + info.getMhz());
         println("Total CPUs....." + info.getTotalCores());
-        if (info.getTotalCores() != info.getTotalSockets()) {
+        if ((info.getTotalCores() != info.getTotalSockets()) ||
+            (info.getCoresPerSocket() > info.getTotalCores()))
+        {
             println("Physical CPUs.." + info.getTotalSockets());
             println("Cores per CPU.." + info.getCoresPerSocket());
         }
