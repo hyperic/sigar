@@ -490,7 +490,7 @@ typedef struct {
     sigar_uint32_t edx;
 } sigar_cpuid_t;
 
-#if defined(__GNUC__)
+#if defined(__GNUC__) && !defined(__sun)
 
 #  if defined(__i386__)
 #  define SIGAR_HAS_CPUID
@@ -558,7 +558,7 @@ static void sigar_cpuid(sigar_uint32_t request,
 
 int sigar_cpu_core_count(sigar_t *sigar)
 {
-#ifdef SIGAR_HAS_CPUID
+#if defined(SIGAR_HAS_CPUID)
     sigar_cpuid_t id;
 
     if (sigar->lcpu == -1) {
@@ -579,6 +579,8 @@ int sigar_cpu_core_count(sigar_t *sigar)
     }
 
     return sigar->lcpu;
+#elif defined(__sun)
+    return 1;
 #else
     sigar->lcpu = 1;
     return sigar->lcpu;
