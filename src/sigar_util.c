@@ -490,7 +490,7 @@ typedef struct {
     sigar_uint32_t edx;
 } sigar_cpuid_t;
 
-#if defined(__linux__) || defined(DARWIN)
+#if defined(__GNUC__)
 
 #  if defined(__i386__)
 #  define SIGAR_HAS_CPUID
