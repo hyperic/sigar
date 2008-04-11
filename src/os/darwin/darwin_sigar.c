@@ -608,8 +608,14 @@ int sigar_swap_get(sigar_t *sigar, sigar_swap_t *swap)
     return SIGAR_OK;
 }
 
-#ifdef __NetBSD__
+#ifndef KERN_CPTIME
 #define KERN_CPTIME KERN_CP_TIME
+#endif
+
+#if defined(__NetBSD__)
+typedef uint64_t cp_time_t;
+#else
+typedef unsigned long cp_time_t;
 #endif
 
 int sigar_cpu_get(sigar_t *sigar, sigar_cpu_t *cpu)
@@ -635,7 +641,7 @@ int sigar_cpu_get(sigar_t *sigar, sigar_cpu_t *cpu)
 
 #elif defined(__FreeBSD__) || (__OpenBSD__) || defined(__NetBSD__)
     int status;
-    unsigned long cp_time[CPUSTATES];
+    cp_time_t cp_time[CPUSTATES];
     size_t size = sizeof(cp_time);
 
 #  if defined(__OpenBSD__) || defined(__NetBSD__)
