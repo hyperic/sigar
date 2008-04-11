@@ -188,6 +188,7 @@ typedef struct {
     sigar_uint64_t cache_size;
     int total_sockets;
     int total_cores;
+    int cores_per_socket;
 } sigar_cpu_info_t;
 
 typedef struct {

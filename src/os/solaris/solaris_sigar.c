@@ -1799,6 +1799,7 @@ int sigar_cpu_info_list_get(sigar_t *sigar,
         sigar_cpu_info_t *info = &cpu_infos->data[i];
         info->total_sockets = nsockets;
         info->total_cores = sigar->ncpu;
+        info->cores_per_socket = sigar->ncpu / nsockets;
     }
 
     return SIGAR_OK;

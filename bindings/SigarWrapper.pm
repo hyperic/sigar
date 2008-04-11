@@ -509,6 +509,10 @@ use vars qw(%classes %cmds);
 	  name => 'total_sockets', type => 'Int',
 	  desc => 'Total CPU sockets (physical)',
       },
+      {
+	  name => 'cores_per_socket', type => 'Int',
+	  desc => 'Number of CPU cores per CPU socket',
+      },
     ],
     Uptime => [
       {

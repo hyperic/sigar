@@ -679,8 +679,9 @@ int sigar_cpu_info_list_get(sigar_t *sigar,
 
         info = &cpu_infos->data[cpu_infos->number++];
 
-        info->total_sockets = sigar->ncpu;
         info->total_cores = sigar->ncpu;
+        info->cores_per_socket = 1; /*XXX*/
+        info->total_sockets = sigar->ncpu; /*XXX*/
 
 #ifdef __ia64__
         SIGAR_SSTRCPY(info->vendor, "Intel"); /*XXX*/
