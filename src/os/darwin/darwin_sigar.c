@@ -2055,11 +2055,12 @@ int sigar_cpu_info_list_get(sigar_t *sigar,
         mhz /= 1000000;
     }
 
-#ifdef __OpenBSD__
-    strcpy(model, "Unknown");
-#else
     size = sizeof(model);
+#ifdef __OpenBSD__
+    if (1) {
+#else
     if (sysctlbyname("hw.model", &model, &size, NULL, 0) < 0) {
+#endif
         int mib[] = { CTL_HW, HW_MODEL };
         size = sizeof(model);
         if (sysctl(mib, NMIB(mib), &model[0], &size, NULL, 0) < 0) {
@@ -2070,7 +2071,6 @@ int sigar_cpu_info_list_get(sigar_t *sigar,
 #endif
         }
     }
-#endif
 
     if (mhz == SIGAR_FIELD_NOTIMPL) {
         /* freebsd4 */
@@ -2091,7 +2091,6 @@ int sigar_cpu_info_list_get(sigar_t *sigar,
 #endif
 
     if ((ptr = strchr(model, ' '))) {
-        *ptr = '\0';
         if (strstr(model, "Intel")) {
             SIGAR_SSTRCPY(vendor, "Intel");
         }
