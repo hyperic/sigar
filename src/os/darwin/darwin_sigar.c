@@ -2024,7 +2024,7 @@ int sigar_file_system_usage_get(sigar_t *sigar,
 int sigar_cpu_info_list_get(sigar_t *sigar,
                             sigar_cpu_info_list_t *cpu_infos)
 {
-    int i, lcpu=1;
+    int i;
     unsigned int mhz;
     int cache_size=SIGAR_FIELD_NOTIMPL;
     size_t size;
@@ -2032,7 +2032,7 @@ int sigar_cpu_info_list_get(sigar_t *sigar,
 
     size = sizeof(mhz);
 
-    lcpu = sigar_cpu_core_count(sigar);
+    (void)sigar_cpu_core_count(sigar);
 
 #if defined(DARWIN)
     {
