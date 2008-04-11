@@ -212,7 +212,8 @@ char *sigar_os_error_string(sigar_t *sigar, int err)
 
 static int sigar_cpu_total_count(sigar_t *sigar)
 {
-    return (int)sysconf(_SC_NPROCESSORS_CONF);
+    sigar->ncpu = (int)sysconf(_SC_NPROCESSORS_CONF);
+    return sigar->ncpu;
 }
 
 static int get_ram(sigar_t *sigar, sigar_mem_t *mem)
@@ -1569,12 +1570,12 @@ int sigar_cpu_info_list_get(sigar_t *sigar,
 {
     FILE *fp;
     int core_rollup = sigar_cpu_core_rollup(sigar), i=0;
-    int ncpu = sigar_cpu_total_count(sigar);
 
     if (!(fp = fopen(PROC_FS_ROOT "cpuinfo", "r"))) {
         return errno;
     }
 
+    (void)sigar_cpu_total_count(sigar);
     sigar_cpu_info_list_create(cpu_infos);
 
     while (get_cpu_info(sigar, &cpu_infos->data[cpu_infos->number], fp)) {
@@ -1588,8 +1589,8 @@ int sigar_cpu_info_list_get(sigar_t *sigar,
 
         cpu_info = &cpu_infos->data[cpu_infos->number];
         get_cpuinfo_max_freq(cpu_info, cpu_infos->number);
-        cpu_info->total_sockets = ncpu / sigar->lcpu;
-        cpu_info->total_cores   = ncpu;
+        cpu_info->total_sockets = sigar_cpu_socket_count(sigar);
+        cpu_info->total_cores   = sigar->ncpu;
 
         ++cpu_infos->number;
     }

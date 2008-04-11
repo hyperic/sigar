@@ -2005,7 +2005,7 @@ static int sigar_cpu_info_get(sigar_t *sigar, sigar_cpu_info_t *info)
     RegCloseKey(key);
     RegCloseKey(cpu);
 
-    info->total_sockets = sigar->ncpu / sigar->lcpu;
+    info->total_sockets = sigar_cpu_socket_count(sigar);
     info->total_cores   = sigar->ncpu;
 
     return SIGAR_OK;
