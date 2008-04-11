@@ -2032,9 +2032,7 @@ int sigar_cpu_info_list_get(sigar_t *sigar,
 
     size = sizeof(mhz);
 
-#if defined(DARWIN)
     lcpu = sigar_cpu_core_count(sigar);
-#endif
 
 #if defined(DARWIN)
     {
