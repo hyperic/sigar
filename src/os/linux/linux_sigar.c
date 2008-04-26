@@ -1223,13 +1223,13 @@ static int get_iostat_proc_dstat(sigar_t *sigar,
                 disk->rtime = ruse;
                 disk->wtime = wuse;
                 disk->time = use;
-                disk->queue  = aveq / 1000;
+                disk->qtime = aveq;
             }
             else if (num == 4) {
                 wio = rsect;
                 rsect = rmerge;
                 wsect = ruse;
-                disk->time = disk->queue = SIGAR_FIELD_NOTIMPL;
+                disk->time = disk->qtime = SIGAR_FIELD_NOTIMPL;
             }
             else {
                 status = ENOENT;
@@ -1308,8 +1308,7 @@ static int get_iostat_procp(sigar_t *sigar,
             disk->wtime = sigar_strtoull(ptr); /* wuse */
             ptr = sigar_skip_token(ptr); /* running */
             disk->time = sigar_strtoull(ptr); /* use */
-            disk->queue  = sigar_strtoull(ptr); /* aveq */
-            disk->queue /= 1000;
+            disk->qtime  = sigar_strtoull(ptr); /* aveq */
 
             /* convert sectors to bytes (512 is fixed size in 2.6 kernels) */
             disk->read_bytes  *= 512;
@@ -1397,10 +1396,18 @@ int sigar_disk_usage_get(sigar_t *sigar, const char *name,
             util = ((double)(disk->time - iodev->disk.time)) / interval * HZ;
             disk->service_time = tput ? util / tput : 0.0;
         }
+        if (disk->qtime == SIGAR_FIELD_NOTIMPL) {
+            disk->queue = SIGAR_FIELD_NOTIMPL;
+        }
+        else {
+            util = ((double)(disk->qtime - iodev->disk.qtime)) / interval;
+            disk->queue = util / 1000.0;
+        }
 
         memcpy(&iodev->disk, disk, sizeof(iodev->disk));
         if (partition_usage) {
             partition_usage->service_time = disk->service_time;
+            partition_usage->queue = disk->queue;
         }
     }
 
