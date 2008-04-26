@@ -146,7 +146,7 @@ public class Iostat extends SigarCommandBase {
             items.add("-");
         }
         else {
-            items.add(String.valueOf(disk.getQueue()));
+            items.add(svctm(disk.getQueue()));
         }
 
         if (disk.getServiceTime() == Sigar.FIELD_NOTIMPL) {
