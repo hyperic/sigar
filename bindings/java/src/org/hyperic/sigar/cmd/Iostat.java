@@ -128,8 +128,8 @@ public class Iostat extends SigarCommandBase {
 
         ArrayList items = new ArrayList();
         printHeader();
-        items.add("XXX");
-        items.add("XXX");
+        items.add(name);
+        items.add("-");
         items.add(String.valueOf(disk.getReads()));
         items.add(String.valueOf(disk.getWrites()));
 
