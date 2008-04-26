@@ -843,7 +843,7 @@ use vars qw(%classes %cmds);
          plat => ''
       },
       {
-         name => 'disk_queue', type => 'Long',
+         name => 'disk_queue', type => 'Double',
          desc => '',
          plat => ''
       },
@@ -880,7 +880,7 @@ use vars qw(%classes %cmds);
          plat => ''
       },
       {
-         name => 'queue', type => 'Long',
+         name => 'queue', type => 'Double',
          desc => '',
          plat => ''
       },

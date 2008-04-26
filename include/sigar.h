@@ -459,12 +459,13 @@ typedef struct {
     sigar_uint64_t writes;
     sigar_uint64_t write_bytes;
     sigar_uint64_t read_bytes;
-    sigar_uint64_t queue;
     sigar_uint64_t rtime;
     sigar_uint64_t wtime;
+    sigar_uint64_t qtime;
     sigar_uint64_t time;
     sigar_uint64_t snaptime;
     double service_time;
+    double queue;
 } sigar_disk_usage_t;
 
 /* XXX for sigar_file_system_usage_t compat */
