@@ -1506,7 +1506,7 @@ static int io_kstat_read(sigar_t *sigar,
     disk->writes      = io->writes;
     disk->read_bytes  = io->nread;
     disk->write_bytes = io->nwritten;
-    disk->queue       = io->wcnt; /* XXX ? */
+    disk->qtime       = io->wlentime;
     disk->rtime       = io->rlentime;
     disk->wtime       = io->wlentime;
     disk->time        = disk->rtime + disk->wtime;
@@ -1643,6 +1643,7 @@ int sigar_disk_usage_get(sigar_t *sigar, const char *name,
             avr = 0.0;
         }
 
+        disk->queue = avw;
         disk->service_time = 0.0;
 
         if (tps && (avw != 0.0 || avr != 0.0)) {
