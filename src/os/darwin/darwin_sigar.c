@@ -179,9 +179,6 @@ static int get_koffsets(sigar_t *sigar)
     }
 
     kvm_nlist(sigar->kmem, klist);
-    if (klist[0].n_type == 0) {
-        return errno;
-    }
 
     for (i=0; i<KOFFSET_MAX; i++) {
         sigar->koffsets[i] = klist[i].n_value;
