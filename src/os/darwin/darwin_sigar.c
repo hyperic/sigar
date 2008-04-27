@@ -2561,7 +2561,12 @@ static int net_connection_get(sigar_net_connection_walker_t *walker, int proto)
                 kread(sigar, &tcpcb, sizeof(tcpcb), (u_long)inpcb.inp_ppcb);
             }
 
-#ifndef __NetBSD__
+#ifdef __NetBSD__
+            if (inpcb.inp_af == AF_INET6) {
+                /*XXX*/
+                continue;
+            }
+#else
             if (inpcb.inp_flags & INP_IPV6) {
                 sigar_net_address6_set(conn.local_address,
                                        &inpcb.inp_laddr6.s6_addr);
@@ -2569,16 +2574,15 @@ static int net_connection_get(sigar_net_connection_walker_t *walker, int proto)
                 sigar_net_address6_set(conn.remote_address,
                                        &inpcb.inp_faddr6.s6_addr);
             }
-            else {
 #endif
+            else {
                 sigar_net_address_set(conn.local_address,
                                       inpcb.inp_laddr.s_addr);
 
                 sigar_net_address_set(conn.remote_address,
                                       inpcb.inp_faddr.s_addr);
-#ifndef __NetBSD__
             }
-#endif
+
             conn.local_port  = ntohs(inpcb.inp_lport);
             conn.remote_port = ntohs(inpcb.inp_fport);
             conn.receive_queue = socket.so_rcv.sb_cc;
