@@ -579,7 +579,7 @@ int sigar_cpu_core_count(sigar_t *sigar)
     }
 
     return sigar->lcpu;
-#elif defined(__sun)
+#elif defined(__sun) || defined(__hpux) || defined(_AIX)
     return 1;
 #else
     sigar->lcpu = 1;
