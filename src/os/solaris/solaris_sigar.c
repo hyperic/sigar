@@ -34,6 +34,7 @@
 #include <dirent.h>
 
 #define PROC_ERRNO ((errno == ENOENT) ? ESRCH : errno)
+#define SIGAR_USR_UCB_PS "/usr/ucb/ps"
 
 int sigar_os_open(sigar_t **sig)
 {
@@ -64,7 +65,13 @@ int sigar_os_open(sigar_t **sig)
         sigar->use_ucb_ps = strEQ(ptr, "true");
     }
     else {
-        sigar->use_ucb_ps = 1;
+        struct stat sb;
+        if (stat(SIGAR_USR_UCB_PS, &sb) < 0) {
+            sigar->use_ucb_ps = 0;
+        }
+        else {
+            sigar->use_ucb_ps = 1;
+        }
     }
 
     sigar->pagesize = 0;
@@ -809,7 +816,7 @@ static int ucb_ps_args_get(sigar_t *sigar, sigar_pid_t pid,
     }
     else {
         snprintf(buffer, sizeof(buffer),
-                 "/usr/ucb/ps -ww %ld", (long)pid);
+                 SIGAR_USR_UCB_PS " -ww %ld", (long)pid);
 
         if (!(fp = popen(buffer, "r"))) {
             return errno;
