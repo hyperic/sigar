@@ -187,15 +187,24 @@ int sigar_proc_env_peb_get(sigar_t *sigar, HANDLE proc,
 {
     int status;
     RTL_USER_PROCESS_PARAMETERS rtl;
+    MEMORY_BASIC_INFORMATION info;
 
     if ((status = sigar_rtl_get(sigar, proc, &rtl)) != SIGAR_OK) {
         return status;
     }
 
     memset(buf, '\0', size);
-
     /* -2 to ensure \0\0 terminator */
-    if (ReadProcessMemory(proc, rtl.Environment, buf, size-2, NULL)) {
+    size -= 2;
+
+    if (VirtualQueryEx(proc, rtl.Environment, &info, sizeof(info))) {
+        if (size > info.RegionSize) {
+            /* ReadProcessMemory beyond region would fail */
+            size = info.RegionSize;
+        }
+    }
+
+    if (ReadProcessMemory(proc, rtl.Environment, buf, size, NULL)) {
         return SIGAR_OK;
     }
     else {
