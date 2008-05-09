@@ -4,7 +4,7 @@ use strict;
 
 my $match = $ARGV[0];
 
-my $proc = "/proc";
+my $proc = $ENV{PROC_FS} || "/proc";
 opendir DH, $proc or die;
 chdir $proc;
 local $/;
