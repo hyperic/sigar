@@ -45,6 +45,9 @@
 #define PROC_PARTITIONS PROC_FS_ROOT "partitions"
 #define PROC_DISKSTATS  PROC_FS_ROOT "diskstats"
 
+/* Native POSIX Thread Library 2.6+ kernel */
+#define SIGAR_HAS_NPTL (sigar->iostat == IOSTAT_DISKSTATS)
+
 /*
  * /proc/self/stat fields:
  * 1 - pid
@@ -209,9 +212,6 @@ char *sigar_os_error_string(sigar_t *sigar, int err)
 {
     return NULL;
 }
-
-/* Native POSIX Thread Library 2.6+ kernel */
-#define SIGAR_HAS_NPTL (sigar->iostat == IOSTAT_DISKSTATS)
 
 static int sigar_cpu_total_count(sigar_t *sigar)
 {
