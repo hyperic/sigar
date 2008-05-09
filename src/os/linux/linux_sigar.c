@@ -95,7 +95,7 @@ static int get_proc_signal_offset(void)
 {
     char buffer[BUFSIZ], *ptr=buffer;
     int fields = 0;
-    int status = sigar_file2str("/proc/self/stat",
+    int status = sigar_file2str(PROCP_FS_ROOT "self/stat",
                                 buffer, sizeof(buffer));
 
     if (status != SIGAR_OK) {
@@ -209,6 +209,9 @@ char *sigar_os_error_string(sigar_t *sigar, int err)
 {
     return NULL;
 }
+
+/* Native POSIX Thread Library 2.6+ kernel */
+#define SIGAR_HAS_NPTL (sigar->iostat == IOSTAT_DISKSTATS)
 
 static int sigar_cpu_total_count(sigar_t *sigar)
 {
@@ -582,12 +585,13 @@ int sigar_os_proc_list_get(sigar_t *sigar,
 {
     DIR *dirp = opendir(PROCP_FS_ROOT);
     struct dirent *ent, dbuf;
+    register const int threadbadhack = !SIGAR_HAS_NPTL;
 
     if (!dirp) {
         return errno;
     }
 
-    if (sigar->proc_signal_offset == -1) {
+    if (threadbadhack && (sigar->proc_signal_offset == -1)) {
         sigar->proc_signal_offset = get_proc_signal_offset();
     }
 
@@ -600,7 +604,8 @@ int sigar_os_proc_list_get(sigar_t *sigar,
             continue;
         }
 
-        if (proc_isthread(sigar, ent->d_name, strlen(ent->d_name)))
+        if (threadbadhack &&
+            proc_isthread(sigar, ent->d_name, strlen(ent->d_name)))
         {
             continue;
         }
