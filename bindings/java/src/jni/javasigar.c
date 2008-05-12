@@ -691,6 +691,10 @@ static int jni_env_getall(void *data,
     return SIGAR_OK;
 }
 
+#define MAP_PUT_SIG \
+    "(Ljava/lang/Object;Ljava/lang/Object;)" \
+    "Ljava/lang/Object;"
+
 JNIEXPORT jobject SIGAR_JNI(ProcEnv_getAll)
 (JNIEnv *env, jobject cls, jobject sigar_obj, jlong pid)
 {
@@ -703,9 +707,8 @@ JNIEXPORT jobject SIGAR_JNI(ProcEnv_getAll)
     jmethodID mapid =
         JENV->GetMethodID(env, mapclass, "<init>", "()V");
     jmethodID putid =
-        JENV->GetMethodID(env, mapclass, "put",
-                          "(Ljava/lang/Object;Ljava/lang/Object;)"
-                          "Ljava/lang/Object;");
+        JENV->GetMethodID(env, mapclass, "put", MAP_PUT_SIG);
+
     dSIGAR(NULL);
 
     hashmap = JENV->NewObject(env, mapclass, mapid);
@@ -1634,5 +1637,63 @@ JNIEXPORT jstring SIGAR_JNI(win32_Win32_findExecutable)
 #else
     sigar_throw_notimpl(env, "win32 only");
     return NULL;
+#endif
+}
+
+JNIEXPORT jboolean SIGAR_JNI(win32_FileVersion_gather)
+(JNIEnv *env, jobject obj, jstring jname)
+{
+#ifdef WIN32
+    int status;
+    sigar_file_version_t version;
+    jboolean is_copy;
+    jfieldID id;
+    jclass cls = JENV->GetObjectClass(env, obj);
+    const char *name = JENV->GetStringUTFChars(env, jname, &is_copy);
+    sigar_proc_env_t infocb;
+    jobject hashmap;
+    jni_env_put_t put;
+
+    id = JENV->GetFieldID(env, cls, "string_file_info",
+                          "Ljava/util/Map;");
+    hashmap = JENV->GetObjectField(env, obj, id);
+    put.env = env;
+    put.id = 
+        JENV->GetMethodID(env,
+                          JENV->GetObjectClass(env, hashmap),
+                          "put", MAP_PUT_SIG);
+    put.map = hashmap;
+
+    infocb.type = SIGAR_PROC_ENV_ALL;
+    infocb.env_getter = jni_env_getall;
+    infocb.data = &put;
+
+    status = sigar_file_version_get(&version, (char *)name, &infocb);
+
+    if (is_copy) {
+        JENV->ReleaseStringUTFChars(env, jname, name);
+    }
+
+    if (status != SIGAR_OK) {
+        return JNI_FALSE;
+    }
+
+#define set_vfield(name) \
+    id = JENV->GetFieldID(env, cls, #name, "I"); \
+    JENV->SetIntField(env, obj, id, version.name)
+
+    set_vfield(product_major);
+    set_vfield(product_minor);
+    set_vfield(product_build);
+    set_vfield(product_revision);
+    set_vfield(file_major);
+    set_vfield(file_minor);
+    set_vfield(file_build);
+    set_vfield(file_revision);
+#undef set_vfield
+
+    return JNI_TRUE;
+#else
+    return JNI_FALSE;
 #endif
 }

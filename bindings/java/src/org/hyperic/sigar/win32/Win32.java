@@ -79,6 +79,16 @@ public abstract class Win32 {
         return exe;
     }
 
+    public static FileVersion getFileVersion(String name) {
+        FileVersion version = new FileVersion();
+        if (version.gather(name)) {
+            return version;
+        }
+        else {
+            return null;
+        }
+    }
+
     public static void main(String[] args) throws Exception {
         for (int i=0; i<args.length; i++) {
             String file =

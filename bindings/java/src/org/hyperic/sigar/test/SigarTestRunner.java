@@ -87,6 +87,7 @@ public class SigarTestRunner extends SigarCommandBase {
         TestMetaBase.class,
         TestRegistryKey.class,
         TestService.class,
+        TestFileVersion.class
     };
     
     static {
