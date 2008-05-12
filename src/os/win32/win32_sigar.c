@@ -3567,3 +3567,91 @@ char *sigar_service_exe_get(char *path, char *buffer, int basename)
 
     return path;
 }
+
+static char *string_file_info_keys[] = {
+    "Comments",
+    "CompanyName",
+    "FileDescription",
+    "FileVersion",
+    "InternalName",
+    "LegalCopyright",
+    "LegalTrademarks",
+    "OriginalFilename",
+    "ProductName",
+    "ProductVersion",
+    "PrivateBuild",
+    "SpecialBuild",
+    NULL
+};
+
+int sigar_file_version_get(sigar_file_version_t *version,
+                           char *name,
+                           sigar_proc_env_t *infocb)
+{
+    DWORD handle, len;
+    LPTSTR data;
+    VS_FIXEDFILEINFO *info;
+    int status;
+
+    if (!(len = GetFileVersionInfoSize(name, &handle))) {
+        return GetLastError();
+    }
+
+    if (len == 0) {
+        return !SIGAR_OK;
+    }
+    data = malloc(len);
+ 
+    if (GetFileVersionInfo(name, handle, len, data)) {
+        if (VerQueryValue(data, "\\", &info, 0)) {
+            version->product_major = HIWORD(info->dwProductVersionMS);
+            version->product_minor = LOWORD(info->dwProductVersionMS);
+            version->product_build = HIWORD(info->dwProductVersionLS);
+            version->product_revision = LOWORD(info->dwProductVersionLS);
+            version->file_major = HIWORD(info->dwFileVersionMS);
+            version->file_minor = LOWORD(info->dwFileVersionMS);
+            version->file_build = HIWORD(info->dwFileVersionLS);
+            version->file_revision = LOWORD(info->dwFileVersionLS);
+            status = SIGAR_OK;
+        }
+        else {
+            status = GetLastError();
+        }
+    }
+    else {
+        status = GetLastError();
+    }
+
+    if (infocb && (status == SIGAR_OK)) {
+        struct {
+            WORD lang;
+            WORD code_page;
+        } *trans;
+
+        if (VerQueryValue(data, "\\VarFileInfo\\Translation",
+                          &trans, &len))
+        {
+            int i;
+            char buf[1024];
+            void *ptr;
+
+            for (i=0; string_file_info_keys[i]; i++) {
+                char *key = string_file_info_keys[i];
+                sprintf(buf, "\\StringFileInfo\\%04x%04x\\%s",
+                        trans[0].lang, trans[0].code_page,
+                        key);
+                if (VerQueryValue(data, buf, &ptr, &len)) {
+                    if (len == 0) {
+                        continue;
+                    }
+                    infocb->env_getter(infocb->data,
+                                       key, strlen(key),
+                                       (char *)ptr, len);
+                }
+            }
+        }
+    }
+
+    free(data);
+    return status;
+}

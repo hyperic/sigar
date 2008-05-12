@@ -610,6 +610,21 @@ int sigar_services_query(char *ptql,
 
 char *sigar_service_exe_get(char *path, char *buffer, int basename);
 
+typedef struct {
+    WORD product_major;
+    WORD product_minor;
+    WORD product_build;
+    WORD product_revision;
+    WORD file_major;
+    WORD file_minor;
+    WORD file_build;
+    WORD file_revision;
+} sigar_file_version_t;
+
+int sigar_file_version_get(sigar_file_version_t *version,
+                           char *name,
+                           sigar_proc_env_t *infocb);
+
 #ifdef __cplusplus
 }
 #endif
