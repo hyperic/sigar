@@ -50,16 +50,19 @@ public class FileVersionInfo extends SigarCommandBase {
     public void output(String[] args) throws SigarException {
         for (int i=0; i<args.length; i++) {
             String exe = args[i];
-            if (!new File(exe).exists()) {
-                try {
-                    exe = sigar.getProcExe(exe).getName();
-                } catch (SigarException e) {
-                    println(exe + ": " + e.getMessage());
-                    continue;
+            if (new File(exe).exists()) {
+                output(exe);
+            }
+            else {
+                long[] pids = this.shell.findPids(exe);
+                for (int j=0; j<pids.length; j++) {
+                    try {
+                        output(sigar.getProcExe(pids[j]).getName());
+                    } catch (SigarException e) {
+                        println(exe + ": " + e.getMessage());
+                    }
                 }
             }
-            output(exe);
-            println("\n------------------------\n");
         }
     }
 
