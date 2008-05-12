@@ -18,6 +18,7 @@
   <property name="jni.source.dir" location="../.."/>
   <property name="jni.src.java" value="hyperic_jni/src"/>
   <property name="jni.info.plist" location="build/src/Info.plist"/>
+  <property name="jni.info.res" location="build/src/sigar.res"/>
   <property name="jni.libprefix" value=""/> <!-- drop "java" prefix -->
   <property name="cpptasks.jar"
             location="hyperic_jni/lib/cpptasks.jar"/>
@@ -160,9 +161,25 @@
        <param name="version.tofile"
               value="${build}/src/Info.plist"/>
     </antcall>
+
+    <antcall target="version-file">
+       <param name="version.file.srcdir"
+              value="../.."/>
+       <param name="version.file"
+              value="src/os/win32/sigar.rc"/>
+       <param name="version.tofile"
+              value="${build}/src/sigar.rc"/>
+    </antcall>
   </target>
 
-  <target name="prepare-src" depends="sigar-version">
+  <target name="sigar.rc" if="win32">
+    <exec executable="rc" dir="${build}/src">
+      <arg value="/r"/>
+      <arg value="sigar.rc"/>
+    </exec>
+  </target>
+
+  <target name="prepare-src" depends="sigar-version,sigar.rc">
     <mkdir dir="${build}/src"/>
 
     <exec executable="${perl}" dir=".">
