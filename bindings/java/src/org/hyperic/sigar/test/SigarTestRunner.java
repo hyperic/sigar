@@ -29,6 +29,7 @@ import org.hyperic.sigar.cmd.Shell;
 
 import org.hyperic.sigar.win32.test.TestEventLog;
 import org.hyperic.sigar.win32.test.TestLocaleInfo;
+import org.hyperic.sigar.win32.test.TestFileVersion;
 import org.hyperic.sigar.win32.test.TestMetaBase;
 import org.hyperic.sigar.win32.test.TestPdh;
 import org.hyperic.sigar.win32.test.TestRegistryKey;
