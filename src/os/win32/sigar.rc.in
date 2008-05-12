@@ -24,7 +24,7 @@ BEGIN
     BEGIN
       VALUE "Comments", "http://sigar.hyperic.com/\0"
       VALUE "CompanyName", "Hyperic, Inc.\0"
-      VALUE "FileDescription", "SIGAR\0"
+      VALUE "FileDescription", "System Information Gatherer And Reporter DLL\0"
       VALUE "FileVersion", SIGAR_VERSION_STR "\0"
       VALUE "InternalName", "sigar.dll\0"
       VALUE "LegalCopyright", "Copyright [@@COPYRIGHT_YEAR@@], Hyperic, Inc.\0"
