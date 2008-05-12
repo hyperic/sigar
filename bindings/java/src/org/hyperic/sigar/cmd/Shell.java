@@ -171,6 +171,10 @@ public class Shell extends ShellBase {
         return this.foundPids;
     }
 
+    public long[] findPids(String query) throws SigarException {
+        return findPids(new String[] { query });
+    }
+
     public void readCommandFile(String dir) {
         try {
             File rc = new File(dir, RCFILE_NAME);
