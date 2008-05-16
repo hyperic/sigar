@@ -432,7 +432,10 @@ static int sigar_common_fs_type_get(sigar_file_system_t *fsp)
         }
         break;
       case 'v':
-        if (strEQ(type, "vfat")) {
+        if (strEQ(type, "vxfs")) {
+            fsp->type = SIGAR_FSTYPE_LOCAL_DISK;
+        }
+        else if (strEQ(type, "vfat")) {
             fsp->type = SIGAR_FSTYPE_LOCAL_DISK;
         }
         break;
