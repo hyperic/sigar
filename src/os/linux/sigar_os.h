@@ -67,6 +67,8 @@ struct sigar_t {
     int lcpu;
     linux_iostat_e iostat;
     char *proc_net;
+    /* Native POSIX Thread Library 2.6+ kernel */
+    int has_nptl;
 };
 
 #define HAVE_STRERROR_R

@@ -23,6 +23,7 @@
 #include <sys/param.h>
 #include <sys/stat.h>
 #include <sys/times.h>
+#include <sys/utsname.h>
 
 #include "sigar.h"
 #include "sigar_private.h"
@@ -44,9 +45,6 @@
 #define SYS_BLOCK "/sys/block"
 #define PROC_PARTITIONS PROC_FS_ROOT "partitions"
 #define PROC_DISKSTATS  PROC_FS_ROOT "diskstats"
-
-/* Native POSIX Thread Library 2.6+ kernel */
-#define SIGAR_HAS_NPTL (sigar->iostat == IOSTAT_DISKSTATS)
 
 /*
  * /proc/self/stat fields:
@@ -157,7 +155,9 @@ static int sigar_boot_time_get(sigar_t *sigar)
 int sigar_os_open(sigar_t **sigar)
 {
     int i, status;
+    int kernel_rev, has_nptl;
     struct stat sb;
+    struct utsname name;
 
     *sigar = malloc(sizeof(**sigar));
 
@@ -198,6 +198,17 @@ int sigar_os_open(sigar_t **sigar)
 
     /* hook for using mirrored /proc/net/tcp file */
     (*sigar)->proc_net = getenv("SIGAR_PROC_NET");
+
+    uname(&name);
+    /* 2.X.y.z -> just need X (unless there is ever a kernel version 3!) */
+    kernel_rev = atoi(&name.release[2]);
+    if (kernel_rev >= 6) {
+        has_nptl = 1;
+    }
+    else {
+        has_nptl = getenv("SIGAR_HAS_NPTL") ? 1 : 0;
+    }
+    (*sigar)->has_nptl = has_nptl;
 
     return SIGAR_OK;
 }
@@ -585,7 +596,7 @@ int sigar_os_proc_list_get(sigar_t *sigar,
 {
     DIR *dirp = opendir(PROCP_FS_ROOT);
     struct dirent *ent, dbuf;
-    register const int threadbadhack = !SIGAR_HAS_NPTL;
+    register const int threadbadhack = !sigar->has_nptl;
 
     if (!dirp) {
         return errno;
