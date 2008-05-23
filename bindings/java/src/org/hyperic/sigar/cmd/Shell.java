@@ -193,7 +193,10 @@ public class Shell extends ShellBase {
 
     public void shutdown() {
         this.sigar.close();
-        SigarTestCase.closeSigar(); //shutup dmalloc
+        //avoid possible Class Not Found: junit/framework/TestCase
+        if (System.getProperty("jni.dmalloc") != null) {
+            SigarTestCase.closeSigar(); //shutup dmalloc
+        }
         super.shutdown();
     }
 
