@@ -1095,6 +1095,11 @@ int sigar_os_fs_type_get(sigar_file_system_t *fsp)
             fsp->type = SIGAR_FSTYPE_LOCAL_DISK;
         }
         break;
+      case 'v':
+        if (strEQ(type, "vzfs")) {
+            fsp->type = SIGAR_FSTYPE_LOCAL_DISK;
+        }
+        break;
       case 'x':
         if (strEQ(type, "xfs") || strEQ(type, "xiafs")) {
             fsp->type = SIGAR_FSTYPE_LOCAL_DISK;
