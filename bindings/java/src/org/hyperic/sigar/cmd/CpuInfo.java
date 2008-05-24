@@ -20,6 +20,7 @@ package org.hyperic.sigar.cmd;
 
 import org.hyperic.sigar.CpuPerc;
 import org.hyperic.sigar.Sigar;
+import org.hyperic.sigar.SigarLoader;
 import org.hyperic.sigar.SigarException;
 
 /**
@@ -48,6 +49,11 @@ public class CpuInfo extends SigarCommandBase {
         println("Wait Time....." + CpuPerc.format(cpu.getWait()));
         println("Nice Time....." + CpuPerc.format(cpu.getNice()));
         println("Combined......" + CpuPerc.format(cpu.getCombined()));
+        if (SigarLoader.IS_LINUX) {
+            println("Irq Time......" + CpuPerc.format(cpu.getIrq()));
+            println("SoftIrq Time.." + CpuPerc.format(cpu.getSoftIrq()));
+            println("Steal Time...." + CpuPerc.format(cpu.getSteal()));
+        }
         println("");
     }
 

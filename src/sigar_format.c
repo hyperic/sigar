@@ -610,28 +610,42 @@ SIGAR_DECLARE(int) sigar_cpu_perc_calculate(sigar_cpu_t *prev,
                                             sigar_cpu_t *curr,
                                             sigar_cpu_perc_t *perc)
 {
-    double diff_user, diff_sys, diff_nice, diff_idle, diff_wait, diff_total;
+    double diff_user, diff_sys, diff_nice, diff_idle;
+    double diff_wait, diff_irq, diff_soft_irq, diff_steal;
+    double diff_total;
 
     diff_user = (sigar_int64_t)(curr->user - prev->user);
     diff_sys  = (sigar_int64_t)(curr->sys  - prev->sys);
     diff_nice = (sigar_int64_t)(curr->nice - prev->nice);
     diff_idle = (sigar_int64_t)(curr->idle - prev->idle);
     diff_wait = (sigar_int64_t)(curr->wait - prev->wait);
+    diff_irq = (sigar_int64_t)(curr->irq - prev->irq);
+    diff_soft_irq = (sigar_int64_t)(curr->soft_irq - prev->soft_irq);
+    diff_steal = (sigar_int64_t)(curr->steal - prev->steal);
 
     diff_user = diff_user < 0 ? 0 : diff_user;
     diff_sys  = diff_sys  < 0 ? 0 : diff_sys;
     diff_nice = diff_nice < 0 ? 0 : diff_nice;
     diff_idle = diff_idle < 0 ? 0 : diff_idle;
     diff_wait = diff_wait < 0 ? 0 : diff_wait;
+    diff_irq = diff_irq < 0 ? 0 : diff_irq;
+    diff_soft_irq = diff_soft_irq < 0 ? 0 : diff_soft_irq;
+    diff_steal = diff_steal < 0 ? 0 : diff_steal;
 
     diff_total =
-        diff_user + diff_sys + diff_nice + diff_idle + diff_wait;
+        diff_user + diff_sys + diff_nice + diff_idle +
+        diff_wait + diff_irq + diff_soft_irq +
+        diff_steal;
 
     perc->user = diff_user / diff_total;
     perc->sys  = diff_sys / diff_total;
     perc->nice = diff_nice / diff_total;
     perc->idle = diff_idle / diff_total;
     perc->wait = diff_wait / diff_total;
+    perc->irq = diff_irq / diff_total;
+    perc->soft_irq = diff_soft_irq / diff_total;
+    perc->steal = diff_steal / diff_total;
+
     perc->combined =
         perc->user + perc->sys + perc->nice + perc->wait;
 

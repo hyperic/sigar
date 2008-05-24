@@ -23,13 +23,16 @@ package org.hyperic.sigar;
  */
 public class CpuPerc implements java.io.Serializable {
 
-    private static final long serialVersionUID = 02242007L;
+    private static final long serialVersionUID = 05242007L;
 
     private double user;
     private double sys;
     private double nice;
     private double idle;
     private double wait;
+    private double irq;
+    private double softIrq;
+    private double steal;
     private double combined;
 
     CpuPerc() {}
@@ -72,6 +75,18 @@ public class CpuPerc implements java.io.Serializable {
 
     public double getWait() {
         return this.wait;
+    }
+
+    public double getIrq() {
+        return this.irq;
+    }
+
+    public double getSoftIrq() {
+        return this.softIrq;
+    }
+
+    public double getSteal() {
+        return this.steal;
     }
 
     /**

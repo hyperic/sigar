@@ -43,6 +43,15 @@ public class TestCpu extends SigarTestCase {
         traceln("Wait..." + cpu.getWait());
         assertTrue(cpu.getWait() >= 0);
 
+        traceln("Irq..." + cpu.getIrq());
+        assertTrue(cpu.getIrq() >= 0);
+
+        traceln("SIrq.." + cpu.getSoftIrq());
+        assertTrue(cpu.getSoftIrq() >= 0);
+
+        traceln("Stl..." + cpu.getSteal());
+        assertTrue(cpu.getSteal() >= 0);
+
         traceln("Total.." + cpu.getTotal());
         assertTrue(cpu.getTotal() > 0);
 

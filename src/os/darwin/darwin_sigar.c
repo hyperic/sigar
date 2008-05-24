@@ -634,6 +634,9 @@ int sigar_cpu_get(sigar_t *sigar, sigar_cpu_t *cpu)
     cpu->idle = SIGAR_TICK2MSEC(cpuload.cpu_ticks[CPU_STATE_IDLE]);
     cpu->nice = SIGAR_TICK2MSEC(cpuload.cpu_ticks[CPU_STATE_NICE]);
     cpu->wait = 0; /*N/A*/
+    cpu->irq = 0; /*N/A*/
+    cpu->soft_irq = 0; /*N/A*/
+    cpu->steal = 0; /*N/A*/
     cpu->total = cpu->user + cpu->nice + cpu->sys + cpu->idle;
 
 #elif defined(__FreeBSD__) || (__OpenBSD__) || defined(__NetBSD__)
@@ -663,10 +666,13 @@ int sigar_cpu_get(sigar_t *sigar, sigar_cpu_t *cpu)
 
     cpu->user = SIGAR_TICK2MSEC(cp_time[CP_USER]);
     cpu->nice = SIGAR_TICK2MSEC(cp_time[CP_NICE]);
-    cpu->sys  = SIGAR_TICK2MSEC(cp_time[CP_SYS] + cp_time[CP_INTR]);
+    cpu->sys  = SIGAR_TICK2MSEC(cp_time[CP_SYS]);
     cpu->idle = SIGAR_TICK2MSEC(cp_time[CP_IDLE]);
     cpu->wait = 0; /*N/A*/
-    cpu->total = cpu->user + cpu->nice + cpu->sys + cpu->idle;
+    cpu->irq = SIGAR_TICK2MSEC(cp_time[CP_INTR]);
+    cpu->soft_irq = 0; /*N/A*/
+    cpu->steal = 0; /*N/A*/
+    cpu->total = cpu->user + cpu->nice + cpu->sys + cpu->idle + cpu->irq;
 #endif
 
     return SIGAR_OK;
@@ -704,6 +710,9 @@ int sigar_cpu_list_get(sigar_t *sigar, sigar_cpu_list_t *cpulist)
         cpu->idle = SIGAR_TICK2MSEC(cpuload[i].cpu_ticks[CPU_STATE_IDLE]);
         cpu->nice = SIGAR_TICK2MSEC(cpuload[i].cpu_ticks[CPU_STATE_NICE]);
         cpu->wait = 0; /*N/A*/
+        cpu->irq = 0; /*N/A*/
+        cpu->soft_irq = 0; /*N/A*/
+        cpu->steal = 0; /*N/A*/
         cpu->total = cpu->user + cpu->nice + cpu->sys + cpu->idle;
     }
 

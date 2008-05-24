@@ -443,6 +443,21 @@ use vars qw(%classes %cmds);
          plat => 'ALHS'
       },
       {
+         name => 'irq', type => 'Long',
+         desc => 'Total system cpu time servicing interrupts',
+         plat => 'FLH'
+      },
+      {
+         name => 'soft_irq', type => 'Long',
+         desc => 'Total system cpu time servicing softirqs',
+         plat => 'L'
+      },
+      {
+         name => 'steal', type => 'Long',
+         desc => 'Total system cpu involuntary wait time',
+         plat => 'L'
+      },
+      {
          name => 'total', type => 'Long',
          desc => 'Total system cpu time',
          plat => '*'
@@ -473,6 +488,21 @@ use vars qw(%classes %cmds);
          name => 'wait', type => 'Double',
          desc => 'Percent system cpu io wait time',
          plat => 'ALHS'
+      },
+      {
+         name => 'irq', type => 'Double',
+         desc => 'Percent system cpu time servicing interrupts',
+         plat => 'FLH'
+      },
+      {
+         name => 'soft_irq', type => 'Double',
+         desc => 'Percent system cpu time servicing softirqs',
+         plat => 'L'
+      },
+      {
+         name => 'steal', type => 'Double',
+         desc => 'Percent system cpu involuntary wait time',
+         plat => 'L'
       },
       {
          name => 'combined', type => 'Double',

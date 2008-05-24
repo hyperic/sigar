@@ -128,8 +128,7 @@ static void get_cpu_metrics(sigar_t *sigar,
     cpu->user = SIGAR_TICK2MSEC(cpu_time[CP_USER]);
 
     cpu->sys  = SIGAR_TICK2MSEC(cpu_time[CP_SYS] +
-                                cpu_time[CP_SSYS] +
-                                cpu_time[CP_INTR]);
+                                cpu_time[CP_SSYS]);
 
     cpu->nice = SIGAR_TICK2MSEC(cpu_time[CP_NICE]);
 
@@ -139,8 +138,12 @@ static void get_cpu_metrics(sigar_t *sigar,
                                 cpu_time[CP_SWAIT] +
                                 cpu_time[CP_BLOCK]);
     
+    cpu->irq = SIGAR_TICK2MSEC(cpu_time[CP_INTR]);
+    cpu->soft_irq = 0; /*N/A*/
+    cpu->steal = 0; /*N/A*/
+
     cpu->total =
-        cpu->user + cpu->sys + cpu->nice + cpu->idle + cpu->wait;
+        cpu->user + cpu->sys + cpu->nice + cpu->idle + cpu->wait + cpu->irq;
 }
 
 int sigar_cpu_get(sigar_t *sigar, sigar_cpu_t *cpu)

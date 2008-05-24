@@ -25,6 +25,9 @@ typedef struct {
     double nice;
     double idle;
     double wait;
+    double irq;
+    double soft_irq;
+    double steal;
     double combined;
 } sigar_cpu_perc_t;
 
