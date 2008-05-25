@@ -221,8 +221,9 @@ typedef struct {
     LARGE_INTEGER IdleTime;
     LARGE_INTEGER KernelTime;
     LARGE_INTEGER UserTime;
-    LARGE_INTEGER Reserved1[2];
-    ULONG Reserved2;
+    LARGE_INTEGER DpcTime;
+    LARGE_INTEGER InterruptTime;
+    ULONG InterruptCount;
 } SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION;
 
 #define SystemProcessorPerformanceInformation 8

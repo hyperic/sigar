@@ -445,7 +445,7 @@ use vars qw(%classes %cmds);
       {
          name => 'irq', type => 'Long',
          desc => 'Total system cpu time servicing interrupts',
-         plat => 'FLH'
+         plat => 'FLHW'
       },
       {
          name => 'soft_irq', type => 'Long',
@@ -492,7 +492,7 @@ use vars qw(%classes %cmds);
       {
          name => 'irq', type => 'Double',
          desc => 'Percent system cpu time servicing interrupts',
-         plat => 'FLH'
+         plat => 'FLHW'
       },
       {
          name => 'soft_irq', type => 'Double',

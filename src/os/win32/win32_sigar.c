@@ -37,11 +37,13 @@
 #define PERF_TITLE_CPU_USER    142
 #define PERF_TITLE_CPU_IDLE    1746
 #define PERF_TITLE_CPU_SYS     144
+#define PERF_TITLE_CPU_IRQ     698
 
 typedef enum {
     PERF_IX_CPU_USER,
     PERF_IX_CPU_IDLE,
     PERF_IX_CPU_SYS,
+    PERF_IX_CPU_IRQ,
     PERF_IX_CPU_MAX
 } perf_cpu_offsets_t;
 
@@ -698,6 +700,9 @@ static PERF_INSTANCE_DEFINITION *get_cpu_instance(sigar_t *sigar,
           case PERF_TITLE_CPU_IDLE:
             perf_offsets[PERF_IX_CPU_IDLE] = offset;
             break;
+          case PERF_TITLE_CPU_IRQ:
+            perf_offsets[PERF_IX_CPU_IRQ] = offset;
+            break;
         }
     }
 
@@ -780,9 +785,10 @@ static int sigar_cpu_perflib_get(sigar_t *sigar, sigar_cpu_t *cpu)
     cpu->sys  = PERF_VAL_CPU(PERF_IX_CPU_SYS);
     cpu->user = PERF_VAL_CPU(PERF_IX_CPU_USER);
     status = get_idle_cpu(sigar, cpu, -1, counter_block, perf_offsets);
+    cpu->irq = PERF_VAL_CPU(PERF_IX_CPU_IRQ);
     cpu->nice = 0; /* no nice here */
     cpu->wait = 0; /*N/A?*/
-    cpu->total = cpu->sys + cpu->user + cpu->idle + cpu->wait;
+    cpu->total = cpu->sys + cpu->user + cpu->idle + cpu->wait + cpu->irq;
 
     if (status != SIGAR_OK) {
         sigar_log_printf(sigar, SIGAR_LOG_WARN,
@@ -814,6 +820,7 @@ static int sigar_cpu_ntsys_get(sigar_t *sigar, sigar_cpu_t *cpu)
         cpu->user += NS100_2MSEC(info[i].UserTime.QuadPart);
         cpu->sys  += NS100_2MSEC(info[i].KernelTime.QuadPart -
                                  info[i].IdleTime.QuadPart);
+        cpu->irq  += NS100_2MSEC(info[i].InterruptTime.QuadPart);
         cpu->total += cpu->idle + cpu->user + cpu->sys;
     }
 
@@ -879,11 +886,12 @@ static int sigar_cpu_list_perflib_get(sigar_t *sigar,
 
         cpu->sys  += PERF_VAL_CPU(PERF_IX_CPU_SYS);
         cpu->user += PERF_VAL_CPU(PERF_IX_CPU_USER);
+        cpu->irq  += PERF_VAL_CPU(PERF_IX_CPU_IRQ);
         get_idle_cpu(sigar, cpu, i, counter_block, perf_offsets);
         cpu->nice = cpu->wait = 0; /*N/A*/
 
         /*XXX adding up too much here if xeon, but not using this atm*/
-        cpu->total += cpu->sys + cpu->user + cpu->idle;
+        cpu->total += cpu->sys + cpu->user + cpu->idle + cpu->irq;
 
         inst = PdhNextInstance(inst);
     }
