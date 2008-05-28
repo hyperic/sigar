@@ -32,7 +32,7 @@ public class CpuPerc implements java.io.Serializable {
     private double wait;
     private double irq;
     private double softIrq;
-    private double steal;
+    private double stolen;
     private double combined;
 
     CpuPerc() {}
@@ -85,8 +85,8 @@ public class CpuPerc implements java.io.Serializable {
         return this.softIrq;
     }
 
-    public double getSteal() {
-        return this.steal;
+    public double getStolen() {
+        return this.stolen;
     }
 
     /**

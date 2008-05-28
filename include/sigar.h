@@ -167,7 +167,7 @@ typedef struct {
         wait,
         irq,
         soft_irq,
-        steal,
+        stolen,
         total;
 } sigar_cpu_t;
 

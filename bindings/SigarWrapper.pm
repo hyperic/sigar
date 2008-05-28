@@ -453,7 +453,7 @@ use vars qw(%classes %cmds);
          plat => 'L'
       },
       {
-         name => 'steal', type => 'Long',
+         name => 'stolen', type => 'Long',
          desc => 'Total system cpu involuntary wait time',
          plat => 'L'
       },
@@ -500,7 +500,7 @@ use vars qw(%classes %cmds);
          plat => 'L'
       },
       {
-         name => 'steal', type => 'Double',
+         name => 'stolen', type => 'Double',
          desc => 'Percent system cpu involuntary wait time',
          plat => 'L'
       },

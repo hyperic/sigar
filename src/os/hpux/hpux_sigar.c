@@ -140,7 +140,7 @@ static void get_cpu_metrics(sigar_t *sigar,
     
     cpu->irq = SIGAR_TICK2MSEC(cpu_time[CP_INTR]);
     cpu->soft_irq = 0; /*N/A*/
-    cpu->steal = 0; /*N/A*/
+    cpu->stolen = 0; /*N/A*/
 
     cpu->total =
         cpu->user + cpu->sys + cpu->nice + cpu->idle + cpu->wait + cpu->irq;

@@ -636,7 +636,7 @@ int sigar_cpu_get(sigar_t *sigar, sigar_cpu_t *cpu)
     cpu->wait = 0; /*N/A*/
     cpu->irq = 0; /*N/A*/
     cpu->soft_irq = 0; /*N/A*/
-    cpu->steal = 0; /*N/A*/
+    cpu->stolen = 0; /*N/A*/
     cpu->total = cpu->user + cpu->nice + cpu->sys + cpu->idle;
 
 #elif defined(__FreeBSD__) || (__OpenBSD__) || defined(__NetBSD__)
@@ -671,7 +671,7 @@ int sigar_cpu_get(sigar_t *sigar, sigar_cpu_t *cpu)
     cpu->wait = 0; /*N/A*/
     cpu->irq = SIGAR_TICK2MSEC(cp_time[CP_INTR]);
     cpu->soft_irq = 0; /*N/A*/
-    cpu->steal = 0; /*N/A*/
+    cpu->stolen = 0; /*N/A*/
     cpu->total = cpu->user + cpu->nice + cpu->sys + cpu->idle + cpu->irq;
 #endif
 
@@ -712,7 +712,7 @@ int sigar_cpu_list_get(sigar_t *sigar, sigar_cpu_list_t *cpulist)
         cpu->wait = 0; /*N/A*/
         cpu->irq = 0; /*N/A*/
         cpu->soft_irq = 0; /*N/A*/
-        cpu->steal = 0; /*N/A*/
+        cpu->stolen = 0; /*N/A*/
         cpu->total = cpu->user + cpu->nice + cpu->sys + cpu->idle;
     }
 

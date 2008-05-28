@@ -416,11 +416,11 @@ static void get_cpu_metrics(sigar_t *sigar, sigar_cpu_t *cpu, char *line)
     }
     if (*ptr == ' ') {
         /* 2.6.11+ kernels only */
-        cpu->steal += SIGAR_TICK2MSEC(sigar_strtoull(ptr));
+        cpu->stolen += SIGAR_TICK2MSEC(sigar_strtoull(ptr));
     }
     cpu->total =
         cpu->user + cpu->nice + cpu->sys + cpu->idle +
-        cpu->wait + cpu->irq + cpu->soft_irq + cpu->steal;
+        cpu->wait + cpu->irq + cpu->soft_irq + cpu->stolen;
 }
 
 int sigar_cpu_get(sigar_t *sigar, sigar_cpu_t *cpu)

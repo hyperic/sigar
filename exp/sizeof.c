@@ -2,7 +2,7 @@
 #!perl -l
 use Config;
 my $prg = "$0.out";
-my $cmd = "$Config{cc} -Wall -D$^O -o $prg $0; ./$prg; rm $prg";
+my $cmd = "gcc -Wall -D$^O -o $prg $0; ./$prg; rm $prg";
 print $cmd; system $cmd;
 __END__
 */
@@ -32,6 +32,7 @@ static sizeof_info_t sizeof_info[] = {
     SIZEOF_INFO(vminfo_t),
     SIZEOF_INFO(cpu_stat_t),
     SIZEOF_INFO(cpu_vminfo_t),
+    SIZEOF_INFO(cpu_sys_stats_t),
     SIZEOF_INFO(kstat_io_t),
     /* procfs */
     SIZEOF_INFO(psinfo_t),

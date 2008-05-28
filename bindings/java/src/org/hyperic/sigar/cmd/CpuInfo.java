@@ -52,7 +52,7 @@ public class CpuInfo extends SigarCommandBase {
         println("Irq Time......" + CpuPerc.format(cpu.getIrq()));
         if (SigarLoader.IS_LINUX) {
             println("SoftIrq Time.." + CpuPerc.format(cpu.getSoftIrq()));
-            println("Steal Time...." + CpuPerc.format(cpu.getSteal()));
+            println("Stolen Time...." + CpuPerc.format(cpu.getStolen()));
         }
         println("");
     }

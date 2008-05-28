@@ -719,7 +719,7 @@ int sigar_cpu_get(sigar_t *sigar, sigar_cpu_t *cpu)
             cpu->wait  = SIGAR_TICK2MSEC(cpu_data.wait);
             cpu->irq = 0; /*N/A*/
             cpu->soft_irq = 0; /*N/A*/
-            cpu->steal = 0; /*N/A*/
+            cpu->stolen = 0; /*N/A*/
             cpu->total = cpu->user + cpu->sys + cpu->idle + cpu->wait;
             return SIGAR_OK;
         }
@@ -741,7 +741,7 @@ int sigar_cpu_get(sigar_t *sigar, sigar_cpu_t *cpu)
     cpu->wait = SIGAR_TICK2MSEC(data.cpu[CPU_WAIT]);
     cpu->irq = 0; /*N/A*/
     cpu->soft_irq = 0; /*N/A*/
-    cpu->steal = 0; /*N/A*/
+    cpu->stolen = 0; /*N/A*/
     cpu->total = cpu->user + cpu->sys + cpu->idle + cpu->wait;
 
     return SIGAR_OK;
