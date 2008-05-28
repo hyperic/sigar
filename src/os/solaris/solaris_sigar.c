@@ -36,6 +36,26 @@
 #define PROC_ERRNO ((errno == ENOENT) ? ESRCH : errno)
 #define SIGAR_USR_UCB_PS "/usr/ucb/ps"
 
+
+/* like kstat_lookup but start w/ ksp->ks_next instead of kc->kc_chain */
+static kstat_t *
+kstat_next(kstat_t *ksp, char *ks_module, int ks_instance, char *ks_name)
+{
+    if (ksp) {
+        ksp = ksp->ks_next;
+    }
+    for (; ksp; ksp = ksp->ks_next) {
+        if ((ks_module == NULL ||
+             strcmp(ksp->ks_module, ks_module) == 0) &&
+            (ks_instance == -1 || ksp->ks_instance == ks_instance) &&
+            (ks_name == NULL || strcmp(ksp->ks_name, ks_name) == 0))
+            return ksp;
+    }
+
+    errno = ENOENT;
+    return NULL;
+}
+
 int sigar_os_open(sigar_t **sig)
 {
     kstat_ctl_t *kc;
@@ -205,7 +225,6 @@ int sigar_mem_get(sigar_t *sigar, sigar_mem_t *mem)
 
 int sigar_swap_get(sigar_t *sigar, sigar_swap_t *swap)
 {
-    unsigned int i, id;
     kstat_t *ksp;
     kstat_named_t *kn;
     struct anoninfo anon;
@@ -228,30 +247,23 @@ int sigar_swap_get(sigar_t *sigar, sigar_swap_t *swap)
     swap->free  <<= sigar->pagesize;
     swap->used  <<= sigar->pagesize;
 
-    swap->page_in = swap->page_out = SIGAR_FIELD_NOTIMPL;
-    
     if (sigar_kstat_update(sigar) == -1) {
         return errno;
     }
-    if (!kstat_lookup(sigar->kc, "cpu", -1, "vm")) {
+    if (!(ksp = kstat_lookup(sigar->kc, "cpu", -1, "vm"))) {
+        swap->page_in = swap->page_out = SIGAR_FIELD_NOTIMPL;
         return SIGAR_OK;
     }
 
     swap->page_in = swap->page_out = 0;
 
-    /* XXX: optimize out kstat_lookup */
-    /* XXX: these stats do not exist in this form on solaris 8
+    /* XXX: these stats do not exist in this form on solaris 8 or 9.
      * they are in the raw cpu_stat struct, but thats not
      * binary compatible
      */
-    /* XXX: not tested on 9. */
-    for (i=0, id=0; i<sigar->ncpu; id++) {
-        if (!(ksp = kstat_lookup(sigar->kc, "cpu", id, "vm"))) {
-            continue;
-        }
-        i++;
+    do {
         if (kstat_read(sigar->kc, ksp, NULL) < 0) {
-            continue;
+            break;
         }
 
         if ((kn = (kstat_named_t *)kstat_data_lookup(ksp, "pgin"))) {
@@ -260,7 +272,7 @@ int sigar_swap_get(sigar_t *sigar, sigar_swap_t *swap)
         if ((kn = (kstat_named_t *)kstat_data_lookup(ksp, "pgout"))) {
             swap->page_out += kn->value.i64; /* vmstat -s | grep "page outs" */
         }
-    }
+    } while ((ksp = kstat_next(ksp, "cpu", -1, "vm")));
 
     return SIGAR_OK;
 }
