@@ -81,6 +81,7 @@ public class Shell extends ShellBase {
     public void registerCommands() throws ShellCommandInitException {
         registerCommandHandler("df", new Df(this));
         registerCommandHandler("du", new Du(this));
+        registerCommandHandler("ls", new Ls(this));
         registerCommandHandler("iostat", new Iostat(this));
         registerCommandHandler("free", new Free(this));
         registerCommandHandler("pargs", new ShowArgs(this));
