@@ -52,14 +52,24 @@
  * <http://www.apache.org/>.
  */
 
+#define _FILE_OFFSET_BITS 64
+#define _LARGEFILE64_SOURCE
+
 /*
  * whittled down version of apr/file_info/{unix,win32}/filestat.c
  * to fillin sigar_fileattrs_t
  */
 #include "sigar_fileinfo.h"
-#include "sigar_private.h"
-#include "sigar_util.h"
-#include "sigar_os.h"
+#include "sigar_log.h"
+
+#ifndef SIGAR_ZERO
+#define SIGAR_ZERO(s) \
+    memset(s, '\0', sizeof(*(s)))
+#endif
+
+#ifndef WIN32
+#include <string.h>
+#endif
 
 static const char* types[] = {
     "none",
@@ -374,7 +384,6 @@ static int dir_stat_get(sigar_t *sigar,
                         int recurse)
 {
     int status;
-    int do_log = SIGAR_LOG_IS_WARN(sigar);
     char name[SIGAR_PATH_MAX+1];
     int len = strlen(dir);
     int max = sizeof(name)-len-1;
@@ -437,7 +446,7 @@ static int dir_stat_get(sigar_t *sigar,
                 status = 
                     dir_stat_get(sigar, name,
                                  dirstats, recurse);
-                if ((status != SIGAR_OK) && do_log) {
+                if (status != SIGAR_OK)) {
                     DIR_STAT_WARN();
                 }
             }
@@ -556,8 +565,8 @@ static sigar_uint64_t sigar_unix_mode2perms(mode_t mode)
     return perms;
 }
 
-static SIGAR_INLINE void copy_stat_info(sigar_file_attrs_t *fileattrs,
-                                        struct stat *info)
+static void copy_stat_info(sigar_file_attrs_t *fileattrs,
+                           struct stat *info)
 {
     fileattrs->permissions = sigar_unix_mode2perms(info->st_mode);
     fileattrs->type        = filetype_from_mode(info->st_mode);
@@ -611,7 +620,6 @@ static int dir_stat_get(sigar_t *sigar,
                         int recurse)
 {
     int status;
-    int do_log = SIGAR_LOG_IS_WARN(sigar);
     char name[SIGAR_PATH_MAX+1];
     int len = strlen(dir);
     int max = sizeof(name)-len-1;
@@ -667,7 +675,7 @@ static int dir_stat_get(sigar_t *sigar,
                 status = 
                     dir_stat_get(sigar, name,
                                  dirstats, recurse);
-                if ((status != SIGAR_OK) && do_log) {
+                if (status != SIGAR_OK) {
                     DIR_STAT_WARN();
                 }
             }
