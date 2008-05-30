@@ -53,8 +53,12 @@
  */
 
 #ifndef WIN32
-#define _FILE_OFFSET_BITS 64
-#define _LARGEFILE64_SOURCE
+#  ifdef _AIX
+#    define _LARGE_FILES
+#  else
+#    define _FILE_OFFSET_BITS 64
+#    define _LARGEFILE64_SOURCE
+#  endif
 #endif
 
 /*
