@@ -52,8 +52,10 @@
  * <http://www.apache.org/>.
  */
 
+#ifndef WIN32
 #define _FILE_OFFSET_BITS 64
 #define _LARGEFILE64_SOURCE
+#endif
 
 /*
  * whittled down version of apr/file_info/{unix,win32}/filestat.c
@@ -199,10 +201,8 @@ static void fillin_fileattrs(sigar_file_attrs_t *finfo,
     finfo->ctime = sigar_FileTimeToTime(&wininfo->ftCreationTime) / 1000;
     finfo->mtime = sigar_FileTimeToTime(&wininfo->ftLastWriteTime) / 1000;
 
-    finfo->size = (sigar_uint64_t)sizes[1];
-    if (finfo->size < 0 || sizes[0]) {
-        finfo->size = 0x7fffffff;
-    }
+    finfo->size =
+        (sigar_uint64_t)sizes[1] | ((sigar_uint64_t)sizes[0] << 32);
 
     if (linkinfo &&
         (wininfo->dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT)) {
