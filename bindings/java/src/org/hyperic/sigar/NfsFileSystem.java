@@ -50,7 +50,10 @@ public class NfsFileSystem extends FileSystem implements java.io.Serializable {
     }
 
     public boolean ping() {
-        return RPC.ping(getHostname(), NFS_PROGRAM) == 0;
+        String hostname = getHostname();
+        return
+            (RPC.ping(hostname, RPC.TCP, NFS_PROGRAM, 2) == 0) ||
+            (RPC.ping(hostname, RPC.UDP, NFS_PROGRAM, 2) == 0);
     }
 
     public String getUnreachableMessage() {
