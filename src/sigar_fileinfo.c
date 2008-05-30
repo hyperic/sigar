@@ -446,7 +446,7 @@ static int dir_stat_get(sigar_t *sigar,
                 status = 
                     dir_stat_get(sigar, name,
                                  dirstats, recurse);
-                if (status != SIGAR_OK)) {
+                if (status != SIGAR_OK) {
                     DIR_STAT_WARN();
                 }
             }
