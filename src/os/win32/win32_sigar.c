@@ -122,6 +122,17 @@ typedef enum {
 #define MS_LOOPBACK_ADAPTER "Microsoft Loopback Adapter"
 #define NETIF_LA "la"
 
+sigar_uint64_t sigar_FileTimeToTime(FILETIME *ft)
+{
+    sigar_uint64_t time;
+    time = ft->dwHighDateTime;
+    time = time << 32;
+    time |= ft->dwLowDateTime;
+    time /= 10;
+    time -= EPOCH_DELTA;
+    return time;
+}
+
 static DWORD perfbuf_init(sigar_t *sigar)
 {
     if (!sigar->perfbuf) {
@@ -1244,7 +1255,8 @@ SIGAR_DECLARE(int) sigar_proc_time_get(sigar_t *sigar, sigar_pid_t pid,
     }
 
     if (start_time.dwHighDateTime) {
-        proctime->start_time = FileTimeToTime(&start_time) / 1000;
+        proctime->start_time =
+            sigar_FileTimeToTime(&start_time) / 1000;
     }
     else {
         proctime->start_time = 0;
@@ -3126,7 +3138,7 @@ static int get_logon_info(HKEY users,
     
     if (status == ERROR_SUCCESS) {
         FileTimeToLocalFileTime(&wtime, &wtime);
-        who->time = FileTimeToTime(&wtime) / 1000000;
+        who->time = sigar_FileTimeToTime(&wtime) / 1000000;
     }
 
     size = sizeof(value);
@@ -3334,7 +3346,7 @@ static int sigar_who_wts(sigar_t *sigar,
                                              &bytes))
         {
             who->time =
-                FileTimeToTime(&station_info.ConnectTime) / 1000000;
+                sigar_FileTimeToTime(&station_info.ConnectTime) / 1000000;
         }
         else {
             who->time = 0;

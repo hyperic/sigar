@@ -45,17 +45,6 @@
 
 #define SIGAR_CMDLINE_MAX 4096
 
-static __inline sigar_uint64_t FileTimeToTime(FILETIME *ft)
-{
-    sigar_uint64_t time;
-    time = ft->dwHighDateTime;
-    time = time << 32;
-    time |= ft->dwLowDateTime;
-    time /= 10;
-    time -= EPOCH_DELTA;
-    return time;
-}
-
 /* XXX: support CP_UTF8 ? */
 
 #define SIGAR_A2W(lpa, lpw, bytes) \
@@ -568,6 +557,8 @@ struct sigar_t {
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+sigar_uint64_t sigar_FileTimeToTime(FILETIME *ft);
 
 int sigar_wsa_init(sigar_t *sigar);
 
