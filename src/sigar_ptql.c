@@ -691,6 +691,7 @@ enum {
 #endif
 
 #ifndef WIN32
+#include <sys/stat.h>
 int sigar_sudo_file2str(const char *fname, char *buffer, int buflen)
 {
     FILE *fp;
