@@ -667,6 +667,7 @@ static int ptql_branch_match_ref(ptql_branch_t *branch, ptql_branch_t *ref)
 enum {
     PTQL_PID_PID,
     PTQL_PID_FILE,
+    PTQL_PID_SUDO_FILE,
     PTQL_PID_SERVICE_NAME,
     PTQL_PID_SERVICE_DISPLAY,
     PTQL_PID_SERVICE_PATH,
@@ -687,6 +688,29 @@ enum {
 #define pid_branch_match(branch, pid, match_pid) \
     ptql_op_ui32[branch->op_name](branch, pid, match_pid)
 
+#endif
+
+#ifndef WIN32
+int sigar_sudo_file2str(const char *fname, char *buffer, int buflen)
+{
+    FILE *fp;
+    struct stat sb;
+
+    if (stat(fname, &sb) < 0) {
+        return errno;
+    }
+    if (sb.st_size > buflen) {
+        return ENOMEM;
+    }
+    snprintf(buffer, buflen, "sudo cat %s", fname);
+    if (!(fp = popen(buffer, "r"))) {
+        return errno;
+    }
+    (void)fgets(buffer, buflen, fp);
+    pclose(fp);
+
+    return SIGAR_OK;
+}
 #endif
 
 static int ptql_branch_init_service(ptql_parse_branch_t *parsed,
@@ -724,6 +748,7 @@ static int ptql_branch_init_pid(ptql_parse_branch_t *parsed,
                                 ptql_branch_t *branch,
                                 sigar_ptql_error_t *error)
 {
+    int use_sudo = 0;
     branch->op_flags |= PTQL_OP_FLAG_PID;
 
     if (strEQ(parsed->attr, "Pid")) {
@@ -740,8 +765,10 @@ static int ptql_branch_init_pid(ptql_parse_branch_t *parsed,
         }
         return SIGAR_OK;
     }
-    else if (strEQ(parsed->attr, "PidFile")) {
-        branch->flags = PTQL_PID_FILE;
+    else if (strEQ(parsed->attr, "PidFile") ||
+             (use_sudo = strEQ(parsed->attr, "SudoPidFile")))
+    {
+        branch->flags = use_sudo ? PTQL_PID_SUDO_FILE : PTQL_PID_FILE;
         branch->data.str = sigar_strdup(parsed->value);
         branch->data_size = strlen(parsed->value);
         return SIGAR_OK;
@@ -919,13 +946,23 @@ static int ptql_pid_get(sigar_t *sigar,
                         ptql_branch_t *branch,
                         sigar_pid_t *pid)
 {
-    char *ptr;
+    if ((branch->flags == PTQL_PID_FILE) ||
+        (branch->flags == PTQL_PID_SUDO_FILE))
+    {
+        char *ptr, buffer[SIGAR_PATH_MAX+1];
+        const char *fname = (const char *)branch->data.str;
+        int status, len = sizeof(buffer)-1;
 
-    if (branch->flags == PTQL_PID_FILE) {
-        char buffer[SIGAR_PATH_MAX+1];
-        int status =
-            sigar_file2str((const char *)branch->data.str,
-                           buffer, sizeof(buffer)-1);
+        if (branch->flags == PTQL_PID_FILE) {
+            status = sigar_file2str(fname, buffer, len);
+        }
+        else {
+#ifdef WIN32
+            return SIGAR_ENOTIMPL;
+#else
+            status = sigar_sudo_file2str(fname, buffer, len);
+#endif
+        }
         if (status != SIGAR_OK) {
             return status;
         }
