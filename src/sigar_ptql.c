@@ -668,6 +668,8 @@ enum {
     PTQL_PID_PID,
     PTQL_PID_FILE,
     PTQL_PID_SUDO_FILE,
+    PTQL_PID_TCP_PORT,
+    PTQL_PID_UDP_PORT,
     PTQL_PID_SERVICE_NAME,
     PTQL_PID_SERVICE_DISPLAY,
     PTQL_PID_SERVICE_PATH,
@@ -943,6 +945,23 @@ int sigar_services_query(char *ptql,
 }
 #endif
 
+static int ptql_pid_port_get(sigar_t *sigar,
+                             ptql_branch_t *branch,
+                             sigar_pid_t *pid)
+{
+    unsigned long port =
+        branch->data.ui32;
+    int status;
+    int proto =
+        branch->flags == PTQL_PID_UDP_PORT ?
+        SIGAR_NETCONN_UDP : SIGAR_NETCONN_TCP;
+
+    status =
+        sigar_proc_port_get(sigar, proto, port, pid);
+
+    return status;
+}
+
 static int ptql_pid_get(sigar_t *sigar,
                         ptql_branch_t *branch,
                         sigar_pid_t *pid)
@@ -983,6 +1002,14 @@ static int ptql_pid_get(sigar_t *sigar,
 #else
         return SIGAR_ENOTIMPL;
 #endif
+    }
+    else if ((branch->flags == PTQL_PID_UDP_PORT) ||
+             (branch->flags == PTQL_PID_TCP_PORT))
+    {
+        int status = ptql_pid_port_get(sigar, branch, pid);
+        if (status != SIGAR_OK) {
+            return status;
+        }
     }
     else {
         *pid = branch->data.pid;
@@ -1177,43 +1204,23 @@ static int ptql_branch_init_port(ptql_parse_branch_t *parsed,
     }
 
     if (strEQ(parsed->attr, "tcp")) {
-        branch->flags = SIGAR_NETCONN_TCP;
+        branch->flags = PTQL_PID_TCP_PORT;
     }
     else if (strEQ(parsed->attr, "udp")) {
-        branch->flags = SIGAR_NETCONN_UDP;
+        branch->flags = PTQL_PID_TCP_PORT;
     }
     else {
         return ptql_error(error, "Unsupported %s protocol: %s",
-                             parsed->name, parsed->attr);
+                          parsed->name, parsed->attr);
     }
 
+    branch->op_flags |= PTQL_OP_FLAG_PID;
     branch->data.ui32 = strtoul(parsed->value, &ptr, 10);
     if (strtonum_failed(parsed->value, ptr)) {
         return PTQL_ERRNAN;
     }
 
     return SIGAR_OK;
-}
-
-static int SIGAPI ptql_port_match(sigar_t *sigar,
-                                  sigar_pid_t pid,
-                                  void *data)
-{
-    ptql_branch_t *branch =
-        (ptql_branch_t *)data;
-    unsigned long port =
-        branch->data.ui32;
-    int status;
-    sigar_pid_t match_pid=0;
-
-    status =
-        sigar_proc_port_get(sigar, branch->flags, port, &match_pid);
-
-    if (status != SIGAR_OK) {
-        return status;
-    }
-
-    return (pid == match_pid) ? SIGAR_OK : !SIGAR_OK;
 }
 
 #define PTQL_LOOKUP_ENTRY(cname, member, type) \
@@ -1300,7 +1307,7 @@ static ptql_lookup_t PTQL_Env[] = {
 };
 
 static ptql_lookup_t PTQL_Port[] = {
-    { NULL, ptql_port_match, 0, 0, PTQL_VALUE_TYPE_ANY, ptql_branch_init_port }
+    { NULL, ptql_pid_match, 0, 0, PTQL_VALUE_TYPE_ANY, ptql_branch_init_port }
 };
 
 static ptql_lookup_t PTQL_Pid[] = {
