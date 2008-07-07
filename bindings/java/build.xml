@@ -91,6 +91,7 @@
   <target name="compile">
     <mkdir dir="${build}/classes"/>
     <javac destdir="${build}/classes"
+           source="1.4" target="1.4"
            debug="true"
            classpathref="libjars">
       <src path="${src}"/>
