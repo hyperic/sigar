@@ -59,7 +59,9 @@ public class TestProcArgs extends SigarTestCase {
                 findArg(args, TestProcArgs.class.getName());
             }
 
-            assertTrue(args[0].indexOf("java") != -1);
+            if (args.length > 0) {
+                assertTrue(args[0].indexOf("java") != -1);
+            }
 
             //hpux has a limit less than what these args will be
             if (!System.getProperty("os.name").equals("HP-UX")) {
