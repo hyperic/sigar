@@ -328,8 +328,8 @@
     <delete dir="${sigar-bin}"/>
   </target>
 
- <target name="xtest">
-   <mkdir dir="${build}/testresults"/>
+ <target name="xtest" depends="jni-init">
+   <mkdir dir="${build}/testresults/${jni.libarch}"/>
 
    <condition property="win32.test" value="win32/test">
       <os family="windows"/>
@@ -340,9 +340,9 @@
      <jvmarg value="-Dsigar.fqdn=${sigar.fqdn}"/>
 
      <classpath refid="alljars"/>
-     <formatter type="plain"/>
+     <formatter type="xml"/>
 
-     <batchtest fork="yes" todir="${build}/testresults">
+     <batchtest fork="yes" todir="${build}/testresults/${jni.libarch}">
        <fileset dir="${src}">
          <include name="org/hyperic/sigar/test/Test*.java"/>
          <include name="org/hyperic/sigar/${win32.test}/Test*.java"/>
