@@ -1220,6 +1220,7 @@ static int ptql_branch_init_port(ptql_parse_branch_t *parsed,
     }
 
     branch->op_flags |= PTQL_OP_FLAG_PID;
+    SIGAR_CLEAR_ERRNO();
     branch->data.ui32 = strtoul(parsed->value, &ptr, 10);
     if (strtonum_failed(parsed->value, ptr)) {
         return PTQL_ERRNAN;
