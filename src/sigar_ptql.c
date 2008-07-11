@@ -37,6 +37,8 @@
 #include <errno.h>
 #endif
 
+#define SIGAR_CLEAR_ERRNO() errno = 0
+
 #define strtonum_failed(src, ptr) \
     ((src == ptr) || (errno == ERANGE) || (*ptr != '\0'))
 
@@ -761,6 +763,7 @@ static int ptql_branch_init_pid(ptql_parse_branch_t *parsed,
         }
         else {
             char *ptr;
+            SIGAR_CLEAR_ERRNO();
             branch->data.pid = str2pid(parsed->value, ptr);
             if (strtonum_failed(parsed->value, ptr)) {
                 return PTQL_ERRNAN;
@@ -986,6 +989,7 @@ static int ptql_pid_get(sigar_t *sigar,
         if (status != SIGAR_OK) {
             return status;
         }
+        SIGAR_CLEAR_ERRNO();
         *pid = str2pid(buffer, ptr);
         if ((buffer == ptr) || (errno == ERANGE)) {
             return errno;
@@ -1077,6 +1081,7 @@ static int ptql_args_branch_init(ptql_parse_branch_t *parsed,
     else {
         char *end;
 
+        SIGAR_CLEAR_ERRNO();
         branch->data.ui32 =
             strtol(parsed->attr, &end, 10);
 
@@ -1522,6 +1527,7 @@ static int ptql_branch_add(ptql_parse_branch_t *parsed,
       case PTQL_VALUE_TYPE_UI64:
         branch->match.ui64 = ptql_op_ui64[branch->op_name];
         if (!is_set) {
+            SIGAR_CLEAR_ERRNO();
             branch->value.ui64 = strtoull(parsed->value, &ptr, 10);
             if (strtonum_failed(parsed->value, ptr)) {
                 return PTQL_ERRNAN;
@@ -1531,6 +1537,7 @@ static int ptql_branch_add(ptql_parse_branch_t *parsed,
       case PTQL_VALUE_TYPE_UI32:
         branch->match.ui32 = ptql_op_ui32[branch->op_name];
         if (!is_set) {
+            SIGAR_CLEAR_ERRNO();
             branch->value.ui32 = strtoul(parsed->value, &ptr, 10);
             if (strtonum_failed(parsed->value, ptr)) {
                 return PTQL_ERRNAN;
@@ -1540,6 +1547,7 @@ static int ptql_branch_add(ptql_parse_branch_t *parsed,
       case PTQL_VALUE_TYPE_DBL:
         branch->match.dbl = ptql_op_dbl[branch->op_name];
         if (!is_set) {
+            SIGAR_CLEAR_ERRNO();
             branch->value.dbl = strtod(parsed->value, &ptr);
             if (strtonum_failed(parsed->value, ptr)) {
                 return PTQL_ERRNAN;
