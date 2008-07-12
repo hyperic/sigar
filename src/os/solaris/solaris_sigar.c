@@ -1057,6 +1057,40 @@ static int sigar_proc_path_exe_get(sigar_t *sigar, sigar_pid_t pid,
     return SIGAR_OK;
 }
 
+static int proc_module_get_exe(void *data, char *name, int len)
+{
+    sigar_proc_exe_t *procexe = (sigar_proc_exe_t *)data;
+    SIGAR_STRNCPY(procexe->name, name, sizeof(procexe->name));
+    return !SIGAR_OK; /* break loop */
+}
+
+static int sigar_which_exe_get(sigar_t *sigar, sigar_proc_exe_t *procexe)
+{
+    char *path = getenv("PATH");
+    char exe[PATH_MAX];
+    if (path == NULL) {
+        return EINVAL;
+    }
+
+    while (path) {
+        char *ptr = strchr(path, ':');
+        if (!ptr) {
+            break;
+        }
+        exe[0] = '\0';
+        strncat(exe, path, ptr-path);
+        strncat(exe, "/", 1);
+        strcat(exe, procexe->name);
+        if (access(exe, X_OK) == 0) {
+            SIGAR_STRNCPY(procexe->name, exe, sizeof(procexe->name));
+            break;
+        }
+        path = ptr+1;
+    }
+
+    return ENOENT;
+}
+
 int sigar_proc_exe_get(sigar_t *sigar, sigar_pid_t pid,
                        sigar_proc_exe_t *procexe)
 {
@@ -1076,10 +1110,16 @@ int sigar_proc_exe_get(sigar_t *sigar, sigar_pid_t pid,
 
     /* Pgrab would return G_SELF error */
     if (pid == sigar_pid_get(sigar)) {
-        /* XXX: dunno if this will always work? */
-        char *exe = getenv("_");
-        if (exe) {
-            SIGAR_STRNCPY(procexe->name, exe, sizeof(procexe->name));
+        sigar_proc_modules_t procmods;
+        procmods.module_getter = proc_module_get_exe;
+        procmods.data = procexe;
+
+        status =
+            sigar_dlinfo_modules(sigar, &procmods);
+        if (status == SIGAR_OK) {
+            if (procexe->name[0] != '/') {
+                sigar_which_exe_get(sigar, procexe);
+            }
         }
     }
     else {
