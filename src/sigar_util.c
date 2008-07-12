@@ -968,7 +968,7 @@ int sigar_dlinfo_modules(sigar_t *sigar, sigar_proc_modules_t *procmods)
 
         if (status != SIGAR_OK) {
             /* not an error; just stop iterating */
-            return status;
+            break;
         }
     } while ((map = map->l_next));
 
