@@ -62,9 +62,11 @@ struct sigar_t {
     int lcpu;
 #ifdef DARWIN
     mach_port_t mach_port;
+#  ifdef DARWIN_HAS_LIBPROC_H
     void *libproc;
     proc_pidinfo_func_t proc_pidinfo;
     proc_pidfdinfo_func_t proc_pidfdinfo;
+#  endif
 #else
     kvm_t *kmem;
     /* offsets for seeking on kmem */
