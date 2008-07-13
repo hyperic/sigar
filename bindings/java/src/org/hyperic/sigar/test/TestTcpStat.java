@@ -39,14 +39,14 @@ public class TestTcpStat extends SigarTestCase {
         }
 
         traceln("");
-        assertGtEqZeroTrace("ActiveOpens", tcp.getActiveOpens());
-        assertGtEqZeroTrace("PassiveOpens", tcp.getPassiveOpens());
-        assertGtEqZeroTrace("AttemptFails", tcp.getAttemptFails());
-        assertGtEqZeroTrace("EstabResets", tcp.getEstabResets());
-        assertGtEqZeroTrace("CurrEstab", tcp.getCurrEstab());
-        assertGtEqZeroTrace("InSegs", tcp.getInSegs());
-        assertGtEqZeroTrace("OutSegs", tcp.getOutSegs());
-        assertGtEqZeroTrace("RetransSegs", tcp.getRetransSegs());
-        assertGtEqZeroTrace("OutRsts", tcp.getOutRsts());
+        assertValidFieldTrace("ActiveOpens", tcp.getActiveOpens());
+        assertValidFieldTrace("PassiveOpens", tcp.getPassiveOpens());
+        assertValidFieldTrace("AttemptFails", tcp.getAttemptFails());
+        assertValidFieldTrace("EstabResets", tcp.getEstabResets());
+        assertValidFieldTrace("CurrEstab", tcp.getCurrEstab());
+        assertValidFieldTrace("InSegs", tcp.getInSegs());
+        assertValidFieldTrace("OutSegs", tcp.getOutSegs());
+        assertValidFieldTrace("RetransSegs", tcp.getRetransSegs());
+        assertValidFieldTrace("OutRsts", tcp.getOutRsts());
     }
 }

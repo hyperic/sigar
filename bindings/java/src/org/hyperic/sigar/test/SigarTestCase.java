@@ -152,6 +152,12 @@ public abstract class SigarTestCase extends TestCase {
         assertTrue(msg, value >= 0);
     }
 
+    public void assertValidFieldTrace(String msg, long value) {
+        if (value != Sigar.FIELD_NOTIMPL) {
+            assertGtEqZeroTrace(msg, value);
+        }
+    }
+
     public void assertEqualsTrace(String msg, long expected, long actual) {
         traceln(msg + "=" + actual + "/" + expected);
         assertEquals(msg, expected, actual);
