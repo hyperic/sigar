@@ -2791,7 +2791,7 @@ sigar_tcp_get(sigar_t *sigar,
         mib.tcps_rcvbadoff +
         mib.tcps_rcvmemdrop +
         mib.tcps_rcvshort;
-    tcp->out_rsts = mib.tcps_sndctrl - mib.tcps_closed;
+    tcp->out_rsts = -1; /* XXX mib.tcps_sndctrl - mib.tcps_closed; ? */
 
     return SIGAR_OK;
 }
