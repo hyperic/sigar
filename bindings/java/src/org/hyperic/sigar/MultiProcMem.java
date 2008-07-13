@@ -31,7 +31,13 @@ public class MultiProcMem extends ProcMem {
         long[] pids = ProcessFinder.find(sigar, query);
 
         for (int i=0; i<pids.length; i++) {
-            ProcMem pmem = sigar.getProcMem(pids[i]);
+            ProcMem pmem;
+            try {
+                pmem = sigar.getProcMem(pids[i]);
+            } catch (SigarException e) {
+                //process may have gone away or EPERM
+                continue;
+            }
             mem.size     += pmem.size;
             mem.resident += pmem.resident;
             if (pmem.share != Sigar.FIELD_NOTIMPL) {

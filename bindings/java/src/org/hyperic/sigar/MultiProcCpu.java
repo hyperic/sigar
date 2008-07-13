@@ -64,7 +64,13 @@ public class MultiProcCpu extends ProcCpu {
         cpu.nproc = pids.length;
 
         for (int i=0; i<pids.length; i++) {
-            ProcTime time = sigar.getProcTime(pids[i]);
+            ProcTime time;
+            try {
+                time = sigar.getProcTime(pids[i]);
+            } catch (SigarException e) {
+                //process may have gone away or EPERM
+                continue;
+            }
             cpu.total += time.total;
             cpu.user  += time.user;
             cpu.sys   += time.sys;
