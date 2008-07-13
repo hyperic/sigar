@@ -31,6 +31,14 @@
     <isset property="versioned"/>
    </not>
   </condition>
+  <condition property="junit.args" value="${env.ANT_OPTS}">
+    <isset property="${env.ANT_OPTS}"/>
+  </condition>
+  <condition property="junit.args" value="">
+   <not>
+    <isset property="junit.args"/>
+   </not>
+  </condition>
 
   <property name="jni.libversion" value="${file.version}"/>
   <property name="sigar.jar" value="sigar${file.version}.jar"/>
@@ -337,7 +345,7 @@
 
    <junit printsummary="yes" fork="yes"
           haltonfailure="yes" showoutput="true">
-     <jvmarg line="${env.ANT_OPTS} -Dsigar.fqdn=${sigar.fqdn}"/>
+     <jvmarg line="${junit.args}"/>
 
      <classpath refid="alljars"/>
      <formatter type="xml"/>
