@@ -337,7 +337,7 @@
 
    <junit printsummary="yes" fork="yes"
           haltonfailure="yes" showoutput="true">
-     <jvmarg value="-Dsigar.fqdn=${sigar.fqdn}"/>
+     <jvmarg line="${env.ANT_OPTS} -Dsigar.fqdn=${sigar.fqdn}"/>
 
      <classpath refid="alljars"/>
      <formatter type="xml"/>
