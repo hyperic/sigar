@@ -23,6 +23,7 @@ import org.hyperic.sigar.NetFlags;
 import org.hyperic.sigar.NetStat;
 import org.hyperic.sigar.Sigar;
 import org.hyperic.sigar.SigarNotImplementedException;
+import org.hyperic.sigar.SigarPermissionDeniedException;
 
 public class TestNetStat extends SigarTestCase {
 
@@ -37,6 +38,8 @@ public class TestNetStat extends SigarTestCase {
         try {
             netstat = sigar.getNetStat();
         } catch (SigarNotImplementedException e) {
+            return;
+        } catch (SigarPermissionDeniedException e) {
             return;
         }
 

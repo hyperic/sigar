@@ -23,6 +23,7 @@ import org.hyperic.sigar.NetFlags;
 import org.hyperic.sigar.NetInfo;
 import org.hyperic.sigar.NetInterfaceConfig;
 import org.hyperic.sigar.SigarException;
+import org.hyperic.sigar.SigarPermissionDeniedException;
 
 public class TestNetInfo extends SigarTestCase {
 
@@ -39,8 +40,14 @@ public class TestNetInfo extends SigarTestCase {
 
         int flags = NetFlags.CONN_SERVER | NetFlags.CONN_TCP;
 
-        NetConnection[] connections =
-            getSigar().getNetConnectionList(flags);
+        NetConnection[] connections;
+
+        try {
+            connections =
+                getSigar().getNetConnectionList(flags);
+        } catch (SigarPermissionDeniedException e) {
+            return;
+        }
 
         for (int i=0; i<connections.length; i++) {
             long port = connections[i].getLocalPort();

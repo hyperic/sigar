@@ -27,6 +27,7 @@ import org.hyperic.sigar.NetInterfaceConfig;
 import org.hyperic.sigar.NetStat;
 import org.hyperic.sigar.Sigar;
 import org.hyperic.sigar.SigarNotImplementedException;
+import org.hyperic.sigar.SigarPermissionDeniedException;
 
 public class TestNetStatPort extends SigarTestCase {
 
@@ -44,6 +45,8 @@ public class TestNetStatPort extends SigarTestCase {
         try {
             netstat = sigar.getNetStat(address.getAddress(), port);
         } catch (SigarNotImplementedException e) {
+            return;
+        } catch (SigarPermissionDeniedException e) {
             return;
         }
 

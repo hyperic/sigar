@@ -20,6 +20,7 @@ package org.hyperic.sigar.test;
 
 import org.hyperic.sigar.Sigar;
 import org.hyperic.sigar.SigarNotImplementedException;
+import org.hyperic.sigar.SigarPermissionDeniedException;
 import org.hyperic.sigar.Tcp;
 
 public class TestTcpStat extends SigarTestCase {
@@ -35,6 +36,8 @@ public class TestTcpStat extends SigarTestCase {
         try {
             tcp = sigar.getTcp();
         } catch (SigarNotImplementedException e) {
+            return;
+        } catch (SigarPermissionDeniedException e) {
             return;
         }
 
