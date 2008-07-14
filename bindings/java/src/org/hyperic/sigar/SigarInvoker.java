@@ -201,7 +201,9 @@ public class SigarInvoker {
     }
 
     public Object invoke(Object arg, String attr)
-        throws SigarException, SigarNotImplementedException {
+        throws SigarException,
+               SigarNotImplementedException,
+               SigarPermissionDeniedException {
 
         Object[] args = null;
 
@@ -218,7 +220,9 @@ public class SigarInvoker {
     }
 
     public Object invoke(Object[] args, String attr)
-        throws SigarException, SigarNotImplementedException {
+        throws SigarException,
+               SigarNotImplementedException,
+               SigarPermissionDeniedException {
 
         Method typeGetter, attrGetter;
         Object typeObject;
@@ -239,6 +243,9 @@ public class SigarInvoker {
                 ": " + t.getMessage();
             if (t instanceof SigarNotImplementedException) {
                 throw (SigarNotImplementedException)t;
+            }
+            else if (t instanceof SigarPermissionDeniedException) {
+                throw (SigarPermissionDeniedException)t;
             }
             throw new SigarException(msg);
         }

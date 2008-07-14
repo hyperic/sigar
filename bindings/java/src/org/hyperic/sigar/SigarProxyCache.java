@@ -216,6 +216,9 @@ public class SigarProxyCache
                 if (t instanceof SigarNotImplementedException) {
                     throw new SigarNotImplementedException(msg);
                 }
+                else if (t instanceof SigarPermissionDeniedException) {
+                    throw new SigarPermissionDeniedException(msg);
+                }
                 throw new SigarException(msg);
             } catch (Exception e) {
                 String msg =

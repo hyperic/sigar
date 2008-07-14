@@ -21,6 +21,7 @@ package org.hyperic.sigar.test;
 import org.hyperic.sigar.Sigar;
 import org.hyperic.sigar.SigarException;
 import org.hyperic.sigar.SigarNotImplementedException;
+import org.hyperic.sigar.SigarPermissionDeniedException;
 import org.hyperic.sigar.SigarProxy;
 import org.hyperic.sigar.SigarProxyCache;
 import org.hyperic.sigar.jmx.SigarInvokerJMX;
@@ -90,8 +91,10 @@ public class TestInvoker extends SigarTestCase {
                 assertTrue(true);
             } catch (SigarNotImplementedException e) {
                 traceln(query[0] + " NotImplemented");
+            } catch (SigarPermissionDeniedException e) {
+                traceln(query[0] + " PermissionDenied");
             } catch (SigarException e) {
-                traceln(query[0] + ":" + query[1] + "=" + e.getMessage());
+                traceln(query[0] + ":" + query[1] + "=" + e);
                 assertTrue(false);
             }
         }
