@@ -42,7 +42,7 @@ public class SigarTestPrinter extends ResultPrinter {
     //just print once if we're run w/ "time 10 test"
     private static boolean printedVersion;
     private static final String PREFIX =
-        "org.hyperic.sigar.test.Test";
+        "org.hyperic.sigar.test.";
 
     private static final String[][] LOG_PROPS = {
         {
