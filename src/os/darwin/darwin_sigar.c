@@ -57,7 +57,8 @@
 #include <stdio.h>
 #endif
 
-#ifdef __FreeBSD__
+#if defined(__FreeBSD__) && (__FreeBSD_version >= 500013)
+#define SIGAR_FREEBSD5_NFSSTAT
 #include <nfsclient/nfs.h>
 #include <nfsserver/nfs.h>
 #else
@@ -2796,7 +2797,7 @@ sigar_tcp_get(sigar_t *sigar,
     return SIGAR_OK;
 }
 
-#ifndef __FreeBSD__
+#ifndef SIGAR_FREEBSD5_NFSSTAT
 static int get_nfsstats(struct nfsstats *stats)
 {
     size_t len = sizeof(*stats);
@@ -2858,7 +2859,7 @@ int sigar_nfs_server_v2_get(sigar_t *sigar,
 int sigar_nfs_client_v3_get(sigar_t *sigar,
                             sigar_nfs_client_v3_t *nfs)
 {
-#ifdef __FreeBSD__
+#ifdef SIGAR_FREEBSD5_NFSSTAT
     struct nfsstats stats;
     size_t size = sizeof(stats);
 
@@ -2884,7 +2885,7 @@ int sigar_nfs_client_v3_get(sigar_t *sigar,
 int sigar_nfs_server_v3_get(sigar_t *sigar,
                             sigar_nfs_server_v3_t *nfs)
 {
-#ifdef __FreeBSD__
+#ifdef SIGAR_FREEBSD5_NFSSTAT
     struct nfsrvstats stats;
     size_t size = sizeof(stats);
 

@@ -24,7 +24,7 @@
 #include <sys/socket.h>
 #include <sys/time.h>
 #endif
-#ifdef __OpenBSD__
+#if defined(__OpenBSD__) || defined(__FreeBSD__)
 #include <netinet/in.h>
 #endif
 
