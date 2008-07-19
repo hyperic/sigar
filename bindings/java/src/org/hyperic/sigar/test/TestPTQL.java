@@ -156,7 +156,9 @@ public class TestPTQL extends SigarTestCase {
         }
     }
 
-    private void testOK(Sigar sigar) throws Exception {
+    public void testValidQueries() throws Exception {
+        Sigar sigar = getSigar();
+
         assertTrue(THIS_PROCESS,
                    runQuery(sigar, THIS_PROCESS) == 1);
 
@@ -172,20 +174,20 @@ public class TestPTQL extends SigarTestCase {
         this.qf.clear();
     }
 
-    private void testReOK(Sigar sigar) throws Exception {
+    public void testValidRegexQueries() throws Exception {
         for (int i=0; i<OK_RE_QUERIES.length; i++) {
             String qs = OK_RE_QUERIES[i];
             assertTrue(qs,
-                       runQuery(sigar, qs) >= 0);
+                       runQuery(getSigar(), qs) >= 0);
         }
         this.qf.clear();
     }
 
-    private void testMalformed(Sigar sigar) throws Exception {
+    public void testMalformedQueries() throws Exception {
         for (int i=0; i<MALFORMED_QUERIES.length; i++) {
             String qs = MALFORMED_QUERIES[i];
             try {
-                runQuery(sigar, qs);
+                runQuery(getSigar(), qs);
                 fail("'" + qs + "' did not throw MalformedQueryException");
             } catch (MalformedQueryException e) {
                 traceln(qs + ": " + e.getMessage());
@@ -193,16 +195,6 @@ public class TestPTQL extends SigarTestCase {
             }
         }
         this.qf.clear();
-    }
-
-    public void testCreate() throws Exception {
-        testOK(getSigar());
-
-        if (JDK_14_COMPAT) {
-            testReOK(getSigar());
-        }
-
-        testMalformed(getSigar());
     }
 }
 
