@@ -24,6 +24,7 @@ import java.util.Properties;
 
 import junit.framework.AssertionFailedError;
 import junit.framework.Test;
+import junit.framework.TestCase;
 import junit.framework.TestFailure;
 import junit.framework.TestSuite;
 
@@ -40,6 +41,8 @@ public class SigarTestPrinter extends ResultPrinter {
     private int maxNameLen = 0;
     //just print once if we're run w/ "time 10 test"
     private static boolean printedVersion;
+    private static final String PREFIX =
+        "org.hyperic.sigar.test.Test";
 
     private static final String[][] LOG_PROPS = {
         {
@@ -69,7 +72,10 @@ public class SigarTestPrinter extends ResultPrinter {
     //for each test success, failure or error.
     public void startTest(Test test) {
         PrintStream writer = getWriter();
-        String name = test.getClass().getName();
+        String cls = test.getClass().getName();
+        cls = cls.substring(PREFIX.length());
+        String method = ((TestCase)test).getName();
+        String name = cls + "." + method;
         writer.print(name);
         int n = ((maxNameLen+3) - name.length());
         for (int i=0; i<n; i++) {
