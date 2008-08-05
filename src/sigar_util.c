@@ -836,18 +836,23 @@ SIGAR_DECLARE(int) sigar_rpc_ping(char *host,
 
 int sigar_file2str(const char *fname, char *buffer, int buflen)
 {
-    int len;
+    int len, status;
     int fd = open(fname, O_RDONLY);
 
     if (fd < 0) {
         return ENOENT;
     }
 
-    len = read(fd, buffer, buflen);
-    buffer[len] = '\0';
+    if ((len = read(fd, buffer, buflen)) < 0) {
+        status = errno;
+    }
+    else {
+        status = SIGAR_OK;
+        buffer[len] = '\0';
+    }
     close(fd);
 
-    return SIGAR_OK;
+    return status;
 }
 
 #ifdef WIN32
