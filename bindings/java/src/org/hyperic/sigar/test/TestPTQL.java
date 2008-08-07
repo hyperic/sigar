@@ -196,5 +196,15 @@ public class TestPTQL extends SigarTestCase {
         }
         this.qf.clear();
     }
+
+    public void testSelf() throws Exception {
+        Sigar sigar = getSigar();
+
+        //should have eaten some cpu during this test
+        ProcessQuery status = 
+            this.qf.getQuery("Cpu.Percent.ge=0.01");
+        long pid = sigar.getPid();
+        assertTrue(status.match(sigar, pid));
+    }
 }
 

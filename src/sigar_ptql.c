@@ -624,6 +624,10 @@ static int ptql_branch_match(ptql_branch_t *branch)
         return branch->match.ui32(branch,
                                   *(sigar_uint32_t *)DATA_PTR(branch),
                                   branch->value.ui32);
+      case PTQL_VALUE_TYPE_DBL:
+        return branch->match.dbl(branch,
+                                 *(double *)DATA_PTR(branch),
+                                 branch->value.dbl);
       case PTQL_VALUE_TYPE_CHR:
         return branch->match.chr(branch,
                                  *(char *)DATA_PTR(branch),
@@ -652,6 +656,10 @@ static int ptql_branch_match_ref(ptql_branch_t *branch, ptql_branch_t *ref)
         return branch->match.ui32(branch,
                                   *(sigar_uint32_t *)DATA_PTR(branch),
                                   *(sigar_uint32_t *)DATA_PTR(ref));
+      case PTQL_VALUE_TYPE_DBL:
+        return branch->match.dbl(branch,
+                                 *(double *)DATA_PTR(branch),
+                                 *(double *)DATA_PTR(ref));
       case PTQL_VALUE_TYPE_CHR:
         return branch->match.chr(branch,
                                  *(char *)DATA_PTR(branch),
@@ -1253,7 +1261,7 @@ static ptql_lookup_t PTQL_Cpu[] = {
     { "User",      PTQL_LOOKUP_ENTRY(proc_cpu, user, UI64) },
     { "Sys",       PTQL_LOOKUP_ENTRY(proc_cpu, sys, UI64) },
     { "Total",     PTQL_LOOKUP_ENTRY(proc_cpu, total, UI64) },
-    { "Percent",   PTQL_LOOKUP_ENTRY(proc_cpu, total, DBL) },
+    { "Percent",   PTQL_LOOKUP_ENTRY(proc_cpu, percent, DBL) },
     { NULL }
 };
 
