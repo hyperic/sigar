@@ -114,7 +114,7 @@ public class Sigar implements SigarProxy {
         StringTokenizer nativeVersion =
             new StringTokenizer(nativeVersionString, ".");
         
-        String[] desc = { "major", "minor", "maint" };
+        String[] desc = { "major", "minor" };
 
         for (int i=0; i<desc.length; i++) {
             String jv = 
