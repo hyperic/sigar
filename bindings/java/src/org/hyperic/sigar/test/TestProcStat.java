@@ -37,12 +37,7 @@ public class TestProcStat extends SigarTestCase {
 
         long[] pids = sigar.getProcList();
 
-        //oh-no a racing condition!
-        //possible for this test to fail under normal 
-        //conditions if the process table changes in between.
-        //if this is a real problem, can just change to:
-        //assertTrue(stat.getTotal() > 1);
-        assertTrue(pids.length == stat.getTotal());
+        assertTrue(stat.getTotal() > 1);
         traceln(stat.toString());
         SigarProxy proxy = SigarProxyCache.newInstance(getSigar());
         traceln(CurrentProcessSummary.get(proxy).toString());
