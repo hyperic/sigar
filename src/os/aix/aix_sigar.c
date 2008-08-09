@@ -806,6 +806,9 @@ static int sigar_cpu_list_get_kmem(sigar_t *sigar, sigar_cpu_list_t *cpulist)
         cpu->sys  = SIGAR_TICK2MSEC(info->cpu[CPU_KERNEL]);
         cpu->idle = SIGAR_TICK2MSEC(info->cpu[CPU_IDLE]);
         cpu->wait = SIGAR_TICK2MSEC(info->cpu[CPU_WAIT]);
+        cpu->irq = 0; /*N/A*/
+        cpu->soft_irq = 0; /*N/A*/
+        cpu->stolen = 0; /*N/A*/
         cpu->total = cpu->user + cpu->sys + cpu->idle + cpu->wait;
     }
 
@@ -841,6 +844,9 @@ static int sigar_cpu_list_get_pstat(sigar_t *sigar, sigar_cpu_list_t *cpulist)
             cpu->sys   = SIGAR_TICK2MSEC(data.sys);
             cpu->idle  = SIGAR_TICK2MSEC(data.idle);
             cpu->wait  = SIGAR_TICK2MSEC(data.wait);
+            cpu->irq = 0; /*N/A*/
+            cpu->soft_irq = 0; /*N/A*/
+            cpu->stolen = 0; /*N/A*/
             cpu->total = cpu->user + cpu->sys + cpu->idle + cpu->wait;
         }
         else {
