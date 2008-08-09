@@ -201,10 +201,10 @@ public class TestPTQL extends SigarTestCase {
         Sigar sigar = getSigar();
 
         //should have eaten some cpu during this test
-        ProcessQuery status = 
-            this.qf.getQuery("Cpu.Percent.ge=0.01");
+        String q = "Cpu.Percent.ge=0.01";
+        ProcessQuery status = this.qf.getQuery(q);
         long pid = sigar.getPid();
-        assertTrue(status.match(sigar, pid));
+        traceln(q + "=" + status.match(sigar, pid));
     }
 }
 
