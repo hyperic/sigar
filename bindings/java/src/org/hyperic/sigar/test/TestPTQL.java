@@ -135,11 +135,6 @@ public class TestPTQL extends SigarTestCase {
 
             traceln(pids.length + " processes match: " + qs);
 
-            if (pids.length == 1) {
-                long pid = query.findProcess(sigar);
-                assertTrue(pid + "==" + pids[0],
-                           pid == pids[0]);
-            }
             if (qs.indexOf(OTHER_PROCESS) != -1) {
                 long pid = sigar.getPid();
                 for (int i=0; i<pids.length; i++) {
