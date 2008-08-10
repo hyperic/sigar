@@ -276,6 +276,13 @@ JNIEXPORT jstring SIGAR_JNIx(getNativeBuildDate)
     return JENV->NewStringUTF(env, version->build_date);
 }
 
+JNIEXPORT jstring SIGAR_JNIx(getNativeScmRevision)
+(JNIEnv *env, jclass cls)
+{
+    sigar_version_t *version = sigar_version_get();
+    return JENV->NewStringUTF(env, version->scm_revision);
+}
+
 JNIEXPORT void SIGAR_JNIx(open)
 (JNIEnv *env, jobject obj)
 {

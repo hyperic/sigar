@@ -56,6 +56,17 @@ public class Sigar implements SigarProxy {
     public static final String NATIVE_VERSION_STRING;
     
     /**
+     * The scm (svn) revision from which sigar.jar was built.
+     */
+    public static final String SCM_REVISION =
+        SigarVersion.SCM_REVISION;
+
+    /**
+     * The scm (svn) revision from which the sigar native binary was built.
+     */
+    public static final String NATIVE_SCM_REVISION;
+
+    /**
      * The date on which sigar.jar was built.
      */
     public static final String BUILD_DATE =
@@ -85,11 +96,13 @@ public class Sigar implements SigarProxy {
     static {
         String nativeVersion = "unknown";
         String nativeBuildDate = "unknown";
+        String nativeScmRevision = "unknown";
 
         try {
             loadLibrary();
             nativeVersion = getNativeVersion();
             nativeBuildDate = getNativeBuildDate();
+            nativeScmRevision = getNativeScmRevision();
             checkVersion(nativeVersion);
         } catch (SigarException e) {
             loadError = e.getMessage();
@@ -104,6 +117,7 @@ public class Sigar implements SigarProxy {
 
         NATIVE_VERSION_STRING = nativeVersion;
         NATIVE_BUILD_DATE = nativeBuildDate;
+        NATIVE_SCM_REVISION = nativeScmRevision;
     }
 
     private static void checkVersion(String nativeVersionString)
@@ -175,6 +189,7 @@ public class Sigar implements SigarProxy {
 
     private static native String getNativeVersion();
     private static native String getNativeBuildDate();
+    private static native String getNativeScmRevision();
 
     /**
      * Allocate and initialize the native Sigar object.

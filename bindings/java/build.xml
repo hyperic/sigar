@@ -111,11 +111,12 @@
 
     <echo>cp ${version.file.srcdir}/${version.file}.in -> ${version.tofile}</echo>
     <copy file="${version.file.srcdir}/${version.file}.in"
-          tofile="${version.tofile}"/>
+          tofile="${version.tofile}" overwrite="true"/>
 
     <replace file="${version.tofile}">
       <replacefilter token="@@BUILD_DATE@@" value="${BUILD_DATE}"/>
       <replacefilter token="@@VERSION_STRING@@" value="${sigar.version}"/>
+      <replacefilter token="@@SCM_REVISION@@" value="${sigar.scmrev}"/>
       <replacefilter token="@@ARCHNAME@@" value="${jni.libarch}"/>
       <replacefilter token="@@ARCHLIB@@" value="${jni.libname.full}"/>
       <replacefilter token="@@BINNAME@@" value="${jni.project.archname}"/>
@@ -127,10 +128,35 @@
     </replace>
   </target>
 
-  <target name="sigar-version">
+  <target name="check-svn">
+    <condition property="svn.available">
+      <and>
+        <available file=".svn" type="dir"/>
+        <available file="svn" type="file">
+          <filepath>
+            <pathelement path="${env.PATH}"/>
+          </filepath>
+        </available>
+     </and>
+    </condition>
+  </target>
+
+  <target name="scm-revision" if="svn.available">
+    <exec executable="svnversion" dir="."
+          outputproperty="sigar.scmrev"
+          failifexecutionfails="false">
+      <arg value="."/>
+    </exec>
+    <echo message="SIGAR svn revision #${sigar.scmrev}"/>
+  </target>
+
+  <target name="sigar-version" depends="check-svn,scm-revision">
     <tstamp>
       <format property="BUILD_DATE" pattern="MM/dd/yyyy hh:mm aa"/>
     </tstamp>
+
+    <!-- in the case of release source builds -->
+    <property name="sigar.scmrev" value="exported"/>
 
     <antcall target="version-file">
        <param name="version.file"

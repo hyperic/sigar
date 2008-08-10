@@ -62,13 +62,15 @@ public class Version extends SigarCommandBase {
         String build =
             "java=" + Sigar.BUILD_DATE +
             ", native=" + Sigar.NATIVE_BUILD_DATE;
-        
+        String scm =
+            "java=" + Sigar.SCM_REVISION +
+            ", native=" + Sigar.NATIVE_SCM_REVISION;
         String archlib =
             SigarLoader.getNativeLibraryName();
 
         os.println("Sigar version......." + version);
         os.println("Build date.........." + build);
-
+        os.println("SVN rev............." + scm);
         String host = getHostName();
         String fqdn;
         Sigar sigar = new Sigar(); 

@@ -2,6 +2,7 @@
 
 static sigar_version_t sigar_version = {
     "@@BUILD_DATE@@",
+    "@@SCM_REVISION@@",
     "@@VERSION_STRING@@",
     "@@ARCHNAME@@",
     "@@ARCHLIB@@",

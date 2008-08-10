@@ -852,6 +852,7 @@ SIGAR_DECLARE(int) sigar_proc_port_get(sigar_t *sigar,
 
 typedef struct {
     const char *build_date;
+    const char *scm_revision;
     const char *version;
     const char *archname;
     const char *archlib;
