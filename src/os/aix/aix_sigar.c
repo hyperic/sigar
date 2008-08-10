@@ -1274,7 +1274,7 @@ int sigar_proc_fd_get(sigar_t *sigar, sigar_pid_t pid,
     if (getuser(&pinfo, sizeof(pinfo),
                 &uinfo, sizeof(uinfo)) != 0) {
         if (errno == EINVAL) {
-            return errno;
+            return SIGAR_ENOTIMPL; /*XXX 5.2+*/
         }
     }
 
