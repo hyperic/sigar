@@ -356,19 +356,6 @@
   </target>
 
  <target name="xtest" depends="jni-init">
-   <property name="testresults"
-             location="${build}/testresults/${jni.libarch}"/>
-
-   <mkdir dir="${testresults}"/>
-
-   <!-- test/capture sigar.jar version -->
-   <java fork="yes" failonerror="yes"
-         output="${testresults}/version.txt"
-         jvm="${java.home}/bin/java"
-         jar="${sigar-bin}/lib/${sigar.jar}">
-     <arg value="version"/>
-   </java>
-
    <condition property="win32.test" value="win32/test">
       <os family="windows"/>
    </condition>
@@ -381,6 +368,20 @@
      <isset property="junit.args"/>
     </not>
    </condition>
+
+   <property name="testresults"
+             location="${build}/testresults/${jni.libarch}"/>
+
+   <mkdir dir="${testresults}"/>
+
+   <!-- test/capture sigar.jar version -->
+   <java fork="yes" failonerror="yes"
+         output="${testresults}/version.txt"
+         jvm="${java.home}/bin/java"
+         jvmargs="${junit.args}"
+         jar="${sigar-bin}/lib/${sigar.jar}">
+     <arg value="version"/>
+   </java>
 
    <junit printsummary="yes" fork="yes"
           haltonfailure="yes" showoutput="true">
