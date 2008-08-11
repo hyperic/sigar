@@ -356,7 +356,18 @@
   </target>
 
  <target name="xtest" depends="jni-init">
-   <mkdir dir="${build}/testresults/${jni.libarch}"/>
+   <property name="testresults"
+             location="${build}/testresults/${jni.libarch}"/>
+
+   <mkdir dir="${testresults}"/>
+
+   <!-- test/capture sigar.jar version -->
+   <java fork="yes" failonerror="yes"
+         output="${testresults}/version.txt"
+         jvm="${java.home}/bin/java"
+         jar="${sigar-bin}/lib/${sigar.jar}">
+     <arg value="version"/>
+   </java>
 
    <condition property="win32.test" value="win32/test">
       <os family="windows"/>
@@ -378,7 +389,7 @@
      <classpath refid="alljars"/>
      <formatter type="xml"/>
 
-     <batchtest fork="yes" todir="${build}/testresults/${jni.libarch}">
+     <batchtest fork="yes" todir="${testresults}">
        <fileset dir="${src}">
          <include name="org/hyperic/sigar/test/Test*.java"/>
          <include name="org/hyperic/sigar/${win32.test}/Test*.java"/>
