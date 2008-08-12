@@ -103,7 +103,7 @@ typedef long long sigar_int64_t;
 #elif defined(MAXPATHLEN)
 #   define SIGAR_PATH_MAX MAXPATHLEN
 #else
-#   define SIGAR_PATH_MAX 8192
+#   define SIGAR_PATH_MAX 4096
 #endif
 
 #ifdef WIN32
@@ -431,14 +431,15 @@ typedef enum {
     SIGAR_FSTYPE_MAX
 } sigar_file_system_type_e;
 
-#define SIGAR_FS_NAME_LEN 64
+#define SIGAR_FS_NAME_LEN SIGAR_PATH_MAX
+#define SIGAR_FS_INFO_LEN 256
 
 typedef struct {
     char dir_name[SIGAR_FS_NAME_LEN];
     char dev_name[SIGAR_FS_NAME_LEN];
-    char type_name[SIGAR_FS_NAME_LEN];     /* e.g. "local" */
-    char sys_type_name[SIGAR_FS_NAME_LEN]; /* e.g. "ext3" */
-    char options[SIGAR_FS_NAME_LEN];
+    char type_name[SIGAR_FS_INFO_LEN];     /* e.g. "local" */
+    char sys_type_name[SIGAR_FS_INFO_LEN]; /* e.g. "ext3" */
+    char options[SIGAR_FS_INFO_LEN];
     sigar_file_system_type_e type;
     unsigned long flags;
 } sigar_file_system_t;
