@@ -1788,7 +1788,9 @@ static void get_fs_options(char *opts, int osize, long flags)
     if (flags & MNT_SYNCHRONOUS)    strncat(opts, ",sync", osize);
     if (flags & MNT_NOEXEC)         strncat(opts, ",noexec", osize);
     if (flags & MNT_NOSUID)         strncat(opts, ",nosuid", osize);
+#ifdef MNT_NODEV
     if (flags & MNT_NODEV)          strncat(opts, ",nodev", osize);
+#endif
 #ifdef MNT_UNION
     if (flags & MNT_UNION)          strncat(opts, ",union", osize);
 #endif
