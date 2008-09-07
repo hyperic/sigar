@@ -35,6 +35,15 @@
 #include <sys/types.h>
 #include <stdlib.h>
 #include <unistd.h>
+#  ifdef __FreeBSD__
+#    include <sys/param.h>
+#    if (__FreeBSD_version < 700000)
+#      include <sys/time.h>
+#    endif
+#  else
+#    include <sys/time.h>
+#  endif
+#include <sys/resource.h>
 #endif
 
 #include "javasigar_generated.h"
@@ -1613,10 +1622,6 @@ JNIEXPORT jlong SIGAR_JNI(ResourceLimit_INFINITY)
 #ifdef WIN32
     return 0x7fffffff;
 #else
-#ifndef __FreeBSD__
-#include <sys/time.h>
-#endif
-#include <sys/resource.h>
     return RLIM_INFINITY;
 #endif
 }
