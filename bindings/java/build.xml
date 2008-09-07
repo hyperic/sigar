@@ -7,7 +7,7 @@
   <property file="version.properties"/>
 
   <property name="sigar.version"
-            value="${version.major}.${version.minor}.${version.maint}.${version.build}"/>
+            value="${version.major}.${version.minor}.${version.maint}"/>
 
   <property file="${user.home}/.sigar-build.properties"/>
   <property name="project.name" value="sigar"/>
@@ -115,7 +115,7 @@
 
     <replace file="${version.tofile}">
       <replacefilter token="@@BUILD_DATE@@" value="${BUILD_DATE}"/>
-      <replacefilter token="@@VERSION_STRING@@" value="${sigar.version}"/>
+      <replacefilter token="@@VERSION_STRING@@" value="${sigar.version}.${version.build}"/>
       <replacefilter token="@@SCM_REVISION@@" value="${sigar.scmrev}"/>
       <replacefilter token="@@ARCHNAME@@" value="${jni.libarch}"/>
       <replacefilter token="@@ARCHLIB@@" value="${jni.libname.full}"/>
