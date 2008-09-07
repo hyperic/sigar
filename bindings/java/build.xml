@@ -516,6 +516,7 @@
        <include name="README"/>
        <include name="COPYING"/>
        <include name="LICENSES"/>
+       <include name="EXCEPTIONS"/>
        <include name="ChangeLog"/>
      </fileset>
    </copy>
