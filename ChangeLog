@@ -1,3 +1,22 @@
+2008-09-06  Doug MacEachern  <dougm@hyperic.com>
+
+        * 1.6 released, change summary:
+
+        * OpenBSD support (binaries not included)
+
+        * NetBSD support (binaries not included)
+
+        * CPU list functions now return entry per-core rather than
+          per-socket rollup
+
+        * Added CPU irq, softirq and stolen metrics
+
+        * PTQL enhancements for Windows Services
+
+        * Added interface to Windows GetFileVersionInfo function
+
+        * Bug fixes: http://jira.hyperic.com/secure/IssueNavigator.jspa?requestId=10710
+
 2008-02-01  Doug MacEachern  <dougm@hyperic.com>
 
         * 1.5 released, change summary:
