@@ -29,6 +29,7 @@
 #define PERFBUF_SIZE 8192
 
 #define PERF_TITLE_PROC       230
+#define PERF_TITLE_SYS_KEY   "2"
 #define PERF_TITLE_MEM_KEY   "4"
 #define PERF_TITLE_PROC_KEY  "230"
 #define PERF_TITLE_CPU_KEY   "238"
@@ -975,11 +976,41 @@ SIGAR_DECLARE(int) sigar_cpu_list_get(sigar_t *sigar,
     }
 }
 
+#define PERF_TITLE_UPTIME_KEY 674 /* System Up Time */
+
 SIGAR_DECLARE(int) sigar_uptime_get(sigar_t *sigar,
                                     sigar_uptime_t *uptime)
 {
-    uptime->uptime = GetTickCount() / 1000;
-    return SIGAR_OK;
+    int status;
+    PERF_OBJECT_TYPE *object =
+        get_perf_object_inst(sigar, PERF_TITLE_SYS_KEY, 0, &status);
+    PERF_INSTANCE_DEFINITION *inst;
+    PERF_COUNTER_DEFINITION *counter;
+    BYTE *data;
+    DWORD i;
+
+    if (!object) {
+        return status;
+    }
+
+    data = (BYTE *)((BYTE *)object + object->DefinitionLength);
+
+    for (i=0, counter = PdhFirstCounter(object);
+         i<object->NumCounters;
+         i++, counter = PdhNextCounter(counter))
+    {
+        if (counter->CounterNameTitleIndex == PERF_TITLE_UPTIME_KEY) {
+            DWORD offset = counter->CounterOffset;
+            LONGLONG time = object->PerfTime.QuadPart;
+            LONGLONG freq = object->PerfFreq.QuadPart;
+            LONGLONG counter = *((LONGLONG *)(data + offset));
+            uptime->uptime = (time - counter) / freq;
+            return SIGAR_OK;
+        }
+    }
+
+    /* http://msdn.microsoft.com/en-us/library/ms724408.aspx */
+    return GetTickCount() / 1000;
 }
 
 /*
