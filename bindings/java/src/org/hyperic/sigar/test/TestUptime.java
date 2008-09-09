@@ -18,6 +18,7 @@
 
 package org.hyperic.sigar.test;
 
+import java.util.Date;
 import org.hyperic.sigar.Sigar;
 import org.hyperic.sigar.Uptime;
 
@@ -32,6 +33,9 @@ public class TestUptime extends SigarTestCase {
 
         Uptime uptime = sigar.getUptime();
 
+        long now = System.currentTimeMillis();
+        traceln("\nboottime=" +
+                new Date(now - (long)uptime.getUptime()*1000));
         assertTrue(uptime.getUptime() > 0);
     }
 }
