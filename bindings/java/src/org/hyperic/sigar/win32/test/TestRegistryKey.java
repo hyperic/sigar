@@ -89,6 +89,19 @@ public class TestRegistryKey extends SigarTestCase {
             sql.close();
         }
         ms.close();
+
+        final String TC =
+            "SOFTWARE\\Apache Software Foundation\\Procrun 2.0\\Tomcat6\\Parameters\\Java";
+        try {
+            RegistryKey tc =
+                RegistryKey.LocalMachine.openSubKey(TC);
+            traceln("Tomcat6...");
+            ArrayList values = new ArrayList();
+            tc.getMultiStringValue("Options", values);
+            assertGtZeroTrace("Options.size()", values.size());
+            traceln("Options=" + values);
+            tc.close();
+        } catch (Exception e) {}
     }
 
     //dont want to be writing to the registry
