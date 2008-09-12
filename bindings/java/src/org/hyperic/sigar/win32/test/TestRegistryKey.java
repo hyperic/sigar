@@ -18,10 +18,12 @@
 
 package org.hyperic.sigar.win32.test;
 
-import junit.framework.TestCase;
+import java.util.ArrayList;
+
+import org.hyperic.sigar.test.SigarTestCase;
 import org.hyperic.sigar.win32.RegistryKey;
 
-public class TestRegistryKey extends TestCase {
+public class TestRegistryKey extends SigarTestCase {
 
     private static final boolean TEST_WRITE = false;
     
@@ -35,6 +37,42 @@ public class TestRegistryKey extends TestCase {
         String[] keys = software.getSubKeyNames();
         assertTrue(keys.length > 0);
         software.close();
+    }
+
+    public void testHardwareValues() throws Exception {
+        RegistryKey hw =
+            RegistryKey.LocalMachine.openSubKey("HARDWARE\\DESCRIPTION\\System");
+        try {
+            ArrayList values = new ArrayList();
+            hw.getMultiStringValue("SystemBiosVersion", values);
+            assertGtZeroTrace("SystemBiosVersion.size()", values.size());
+            traceln("SystemBiosVersion=" + values);
+        } catch (Exception e) {}
+        RegistryKey cpu0 = hw.openSubKey("CentralProcessor\\0");
+        String cpu = cpu0.getStringValue("ProcessorNameString");
+        assertLengthTrace("cpu0", cpu);
+        cpu0.close();
+        hw.close();
+    }
+
+    public void testSoftwareValues() throws Exception {
+        RegistryKey ms =
+            RegistryKey.LocalMachine.openSubKey("SOFTWARE\\Microsoft");
+
+        RegistryKey msmq = null;
+        try {
+            msmq = ms.openSubKey("MSMQ\\Parameters");
+
+        } catch (Exception e) { /*not installed - ok*/ }
+        if (msmq != null) {
+            traceln("MSMQ...");
+            assertTrue(msmq.getSubKeyNames().length > 0);
+            String build = msmq.getStringValue("CurrentBuild");
+            assertLengthTrace("CurrentBuild", build);
+            int id = msmq.getIntValue("SeqID");
+            assertGtZeroTrace("SeqID", id);
+        }
+        ms.close();
     }
 
     //dont want to be writing to the registry
