@@ -62,7 +62,6 @@ public class TestRegistryKey extends SigarTestCase {
         RegistryKey msmq = null;
         try {
             msmq = ms.openSubKey("MSMQ\\Parameters");
-
         } catch (Exception e) { /*not installed - ok*/ }
         if (msmq != null) {
             traceln("MSMQ...");
@@ -71,6 +70,18 @@ public class TestRegistryKey extends SigarTestCase {
             assertLengthTrace("CurrentBuild", build);
             int id = msmq.getIntValue("SeqID");
             assertGtZeroTrace("SeqID", id);
+            msmq.close();
+        }
+
+        RegistryKey sql = null;
+        try {
+            sql = ms.openSubKey("Microsoft SQL Server\\MSSQL.1\\Setup");
+        } catch (Exception e) { /*not installed - ok*/ }
+        if (sql != null) {
+            traceln("MsSQL...");
+            String edition = sql.getStringValue("Edition");
+            assertLengthTrace("Edition", edition);
+            sql.close();
         }
         ms.close();
     }
