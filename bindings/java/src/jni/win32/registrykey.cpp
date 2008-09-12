@@ -106,6 +106,19 @@ JNIEXPORT jint SIGAR_JNI(win32_RegistryKey_RegLoadKey)
     return lResult;
 }
 
+/* http://msdn.microsoft.com/en-us/library/aa384129(VS.85).aspx */
+#ifndef KEY_WOW64_64KEY
+#define KEY_WOW64_64KEY 0x0100
+#endif
+#ifndef KEY_WOW64_32KEY
+#define KEY_WOW64_32KEY 0x0200
+#endif
+
+static DWORD RegOpenOpts[] = {
+    KEY_WOW64_32KEY,
+    KEY_WOW64_64KEY
+};
+
 JNIEXPORT jlong SIGAR_JNI(win32_RegistryKey_RegOpenKey)
 (JNIEnv *env, jclass, jlong hkey, jstring subkey)
 {
@@ -113,6 +126,7 @@ JNIEXPORT jlong SIGAR_JNI(win32_RegistryKey_RegOpenKey)
     jsize len = env->GetStringLength(subkey);
     LPTSTR lpSubkey = (LPTSTR)env->GetStringChars(subkey, NULL);
     LPTSTR copy;
+    int i;
 
     /* required under IBM/WebSphere 4.0 for certain keys */
     if (lpSubkey[len] != '\0') {
@@ -122,7 +136,18 @@ JNIEXPORT jlong SIGAR_JNI(win32_RegistryKey_RegOpenKey)
     else {
         copy = lpSubkey;
     }
-    RegOpenKey((HKEY)hkey, copy, &hkeyResult);
+
+    /* try both flags so 32-bit apps can access registry entries
+       of 64-bit apps and vice-versa */
+    for (i=0; i<sizeof(RegOpenOpts)/sizeof(RegOpenOpts[0]); i++) {
+        DWORD status =
+            RegOpenKeyEx((HKEY)hkey, copy,
+                         0, KEY_READ|RegOpenOpts[i],
+                         &hkeyResult);
+        if (status == ERROR_SUCCESS) {
+            break;
+        }
+    }
 
     env->ReleaseStringChars(subkey, (const jchar *)lpSubkey);
     if (copy != lpSubkey) {
