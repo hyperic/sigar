@@ -102,6 +102,10 @@ public class TestEventLog extends SigarTestCase {
         EventLog log = new EventLog();
 
         log.open(logname);
+        if (log.getNumberOfRecords() == 0) {
+            log.close();
+            return 0; //else log.getOldestRecord() throws Exception
+        }
         int oldestRecord = log.getOldestRecord();
         int numRecords = log.getNumberOfRecords();
         traceln("oldest=" + oldestRecord +
