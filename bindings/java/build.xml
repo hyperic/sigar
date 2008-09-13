@@ -445,7 +445,8 @@
        <include name="lib/*.lib"/>
      </fileset>
      <fileset dir=".">
-       <include name="lib/*.jar"/>
+       <include name="lib/junit.jar"/>
+       <include name="lib/log4j.jar"/>
      </fileset>
    </copy>
 
@@ -549,8 +550,8 @@
        <include name="bindings/java/.classpath"/>
        <include name="bindings/java/.project"/>
        <include name="bindings/java/.sigar_shellrc"/>
-       <include name="bindings/java/lib/*.jar"/>
-       <include name="bindings/java/lib/*.dll"/>
+       <include name="bindings/java/lib/log4j.jar"/>
+       <include name="bindings/java/lib/junit.jar"/>
        <exclude name="**/.svn/**"/>
        <exclude name="bindings/java/build/**"/>
      </fileset>
