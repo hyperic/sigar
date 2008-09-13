@@ -37,6 +37,7 @@ typedef sigar_proc_cred_name_t * Sigar__ProcCredName;
 typedef sigar_file_attrs_t * Sigar__FileAttrs;
 typedef sigar_cpu_t * Sigar__Cpu;
 typedef sigar_cpu_info_t * Sigar__CpuInfo;
+typedef sigar_cpu_perc_t * Sigar__CpuPerc;
 typedef sigar_net_interface_config_t * Sigar__NetInterfaceConfig;
 typedef sigar_swap_t * Sigar__Swap;
 typedef sigar_proc_state_t * Sigar__ProcState;

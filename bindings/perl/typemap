@@ -14,6 +14,7 @@ Sigar::ProcCredName T_PTROBJ
 Sigar::FileAttrs T_PTROBJ
 Sigar::Cpu T_PTROBJ
 Sigar::CpuInfo T_PTROBJ
+Sigar::CpuPerc T_PTROBJ
 Sigar::NetInterfaceConfig T_PTROBJ
 Sigar::Swap T_PTROBJ
 Sigar::ProcState T_PTROBJ
