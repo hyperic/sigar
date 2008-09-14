@@ -270,6 +270,8 @@ static VALUE rb_sigar_cpu_info_list(VALUE obj)
     return RETVAL;
 }
 
+static VALUE rb_cSigarCpuPerc;
+
 static VALUE rb_cSigarFileSystem;
 
 static VALUE rb_sigar_file_system_list(VALUE obj)
