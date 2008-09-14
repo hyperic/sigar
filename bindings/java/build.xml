@@ -281,6 +281,8 @@
          <include name="sigar.h"/>
          <include name="sigar_fileinfo.h"/>
          <include name="sigar_format.h"/>
+         <include name="sigar_ptql.h"/>
+         <include name="sigar_log.h"/>
      </fileset>
    </copy>
   </target>
