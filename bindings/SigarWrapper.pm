@@ -824,22 +824,22 @@ use vars qw(%classes %cmds);
     FileSystemUsage => [
       {
          name => 'total', type => 'Long',
-         desc => 'Total bytes of filesystem',
+         desc => 'Total Kbytes of filesystem',
          plat => '*'
       },
       {
          name => 'free', type => 'Long',
-         desc => 'Total free bytes on filesystem',
+         desc => 'Total free Kbytes on filesystem',
          plat => '*'
       },
       {
          name => 'used', type => 'Long',
-         desc => 'Total used bytes on filesystem',
+         desc => 'Total used Kbytes on filesystem',
          plat => '*'
       },
       {
          name => 'avail', type => 'Long',
-         desc => 'Total free bytes on filesystem available to caller',
+         desc => 'Total free Kbytes on filesystem available to caller',
          plat => '*'
       },
       {
