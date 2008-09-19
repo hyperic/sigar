@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hyperic.sigar.Sigar;
+import org.hyperic.sigar.SigarException;
 
 public class Service extends Win32 {
     // Service State
@@ -388,6 +389,18 @@ public class Service extends Win32 {
     public void list(PrintStream out) throws Win32Exception {
         getConfig().list(out);
         out.println("status........[" + getStatusString() + "]");
+
+        if (getStatus() != SERVICE_RUNNING) {
+            return;
+        }
+        Sigar sigar = new Sigar();
+        try {
+            long pid = sigar.getServicePid(getConfig().getName());
+            out.println("pid...........[" + pid + "]");
+        } catch (SigarException e) {
+        } finally {
+            sigar.close();
+        }
     }
     
     public static void main(String[] args) throws Exception {
