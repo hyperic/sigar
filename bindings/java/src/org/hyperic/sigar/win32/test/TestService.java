@@ -20,6 +20,8 @@ package org.hyperic.sigar.win32.test;
 
 import java.util.List;
 
+import org.hyperic.sigar.Sigar;
+import org.hyperic.sigar.ptql.ProcessFinder;
 import org.hyperic.sigar.test.SigarTestCase;
 
 import org.hyperic.sigar.win32.Service;
@@ -27,6 +29,7 @@ import org.hyperic.sigar.win32.ServiceConfig;
 import org.hyperic.sigar.win32.Win32Exception;
 
 public class TestService extends SigarTestCase {
+    private static final String EVENTLOG_NAME = "Eventlog";
     private static final String TEST_NAME = "MyTestService";
 
     private static final String PREFIX =
@@ -43,7 +46,7 @@ public class TestService extends SigarTestCase {
     }
 
     public void testServiceOpen() throws Exception {
-        Service service = new Service("Eventlog");
+        Service service = new Service(EVENTLOG_NAME);
         service.getConfig();
         service.close();
         
@@ -91,6 +94,19 @@ public class TestService extends SigarTestCase {
         List configs =
             Service.getServiceConfigs(getSigar(), "svchost.exe");
         assertGtZeroTrace("getServiceConfigs", configs.size());
+    }
+
+    public void testServicePtql() throws Exception {
+        Sigar sigar = new Sigar();
+        try {
+            long pid = sigar.getServicePid(EVENTLOG_NAME);
+            String ptql = "Service.Pid.eq=" + pid;
+            List names = Service.getServiceNames(sigar, ptql);
+            traceln(ptql + "==" + names);
+            assertTrue(names.contains(EVENTLOG_NAME));
+        } finally {
+            sigar.close();
+        }
     }
 
     public void testServiceCreateDelete() throws Exception {

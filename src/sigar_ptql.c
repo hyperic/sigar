@@ -683,7 +683,8 @@ enum {
     PTQL_PID_SERVICE_NAME,
     PTQL_PID_SERVICE_DISPLAY,
     PTQL_PID_SERVICE_PATH,
-    PTQL_PID_SERVICE_EXE
+    PTQL_PID_SERVICE_EXE,
+    PTQL_PID_SERVICE_PID
 };
 
 #ifdef SIGAR_64BIT
@@ -744,6 +745,9 @@ static int ptql_branch_init_service(ptql_parse_branch_t *parsed,
     else if (strEQ(parsed->attr, "Exe")) {
         /* basename of Path */
         branch->flags = PTQL_PID_SERVICE_EXE;
+    }
+    else if (strEQ(parsed->attr, "Pid")) {
+        branch->flags = PTQL_PID_SERVICE_PID;
     }
     else {
         return ptql_error(error, "Unsupported %s attribute: %s",
@@ -834,6 +838,7 @@ static int sigar_services_walk(sigar_services_walker_t *walker,
         return status;
     }
     for (i=0; i<ss.count; i++) {
+        sigar_pid_t service_pid = 0;
         int status;
         char *value = NULL;
         char *name = ss.services[i].lpServiceName;
@@ -867,13 +872,21 @@ static int sigar_services_walk(sigar_services_walker_t *walker,
                 continue;
             }
             break;
+          case PTQL_PID_SERVICE_PID:
+            sigar_service_pid_get(walker->sigar,
+                                  name,
+                                  &service_pid);
+            break;
           case PTQL_PID_SERVICE_NAME:
           default:
             value = name;
             break;
         }
 
-        if (ptql_str_match(walker->sigar, branch, value)) {
+        if ((value && ptql_str_match(walker->sigar, branch, value)) ||
+            (service_pid &&
+             pid_branch_match(branch, service_pid, atoi(branch->data.str))))
+        {
             if (walker->add_service(walker, name) != SIGAR_OK) {
                 break;
             }
