@@ -21,7 +21,6 @@ package org.hyperic.sigar.win32.test;
 import java.util.List;
 
 import org.hyperic.sigar.Sigar;
-import org.hyperic.sigar.ptql.ProcessFinder;
 import org.hyperic.sigar.test.SigarTestCase;
 
 import org.hyperic.sigar.win32.Service;
