@@ -95,6 +95,17 @@ public class TestService extends SigarTestCase {
         assertGtZeroTrace("getServiceConfigs", configs.size());
     }
 
+    private boolean contains(List list, String match) {
+        match = match.toLowerCase();
+        for (int i=0; i<list.size(); i++) {
+            String name = (String)list.get(i);
+            if (name.toLowerCase().equals(match)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public void testServicePtql() throws Exception {
         Sigar sigar = new Sigar();
         try {
@@ -102,7 +113,8 @@ public class TestService extends SigarTestCase {
             String ptql = "Service.Pid.eq=" + pid;
             List names = Service.getServiceNames(sigar, ptql);
             traceln(ptql + "==" + names);
-            assertTrue(names.contains(EVENTLOG_NAME));
+            //different case between XP (Eventlog) and 2008 (EventLog)
+            assertTrue(contains(names, EVENTLOG_NAME));
         } finally {
             sigar.close();
         }
