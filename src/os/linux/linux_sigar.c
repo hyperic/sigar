@@ -882,6 +882,11 @@ int sigar_os_proc_args_get(sigar_t *sigar, sigar_pid_t pid,
     return sigar_procfs_args_get(sigar, pid, procargs);
 }
 
+/* glibc 2.8 XXX use sysconf(_SC_ARG_MAX) */
+#ifndef ARG_MAX
+#define ARG_MAX 131072
+#endif
+
 int sigar_proc_env_get(sigar_t *sigar, sigar_pid_t pid,
                        sigar_proc_env_t *procenv)
 {
