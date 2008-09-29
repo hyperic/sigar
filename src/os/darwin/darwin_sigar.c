@@ -895,6 +895,10 @@ static int sigar_get_pinfo(sigar_t *sigar, sigar_pid_t pid)
     return SIGAR_OK;
 }
 
+#ifdef DARWIN
+#define GLOBAL_SHARED_SIZE (SHARED_TEXT_REGION_SIZE + SHARED_DATA_REGION_SIZE)
+#endif
+
 int sigar_proc_mem_get(sigar_t *sigar, sigar_pid_t pid,
                        sigar_proc_mem_t *procmem)
 {
@@ -906,6 +910,8 @@ int sigar_proc_mem_get(sigar_t *sigar, sigar_pid_t pid,
     mach_msg_type_number_t count;
 #  ifdef DARWIN_HAS_LIBPROC_H
     struct proc_taskinfo pti;
+    struct proc_regioninfo pri;
+
     if (sigar->libproc) {
         int sz =
             sigar->proc_pidinfo(pid, PROC_PIDTASKINFO, 0, &pti, sizeof(pti));
@@ -917,6 +923,15 @@ int sigar_proc_mem_get(sigar_t *sigar, sigar_pid_t pid,
             procmem->minor_faults = SIGAR_FIELD_NOTIMPL;
             procmem->major_faults = SIGAR_FIELD_NOTIMPL;
             procmem->share        = SIGAR_FIELD_NOTIMPL;
+
+            sz = sigar->proc_pidinfo(pid, PROC_PIDREGIONINFO, 0, &pri, sizeof(pri));
+            if (sz == sizeof(pri)) {
+                if ((pri.pri_share_mode == SM_EMPTY) &&
+                    (procmem->size > GLOBAL_SHARED_SIZE))
+                {
+                    procmem->size -= GLOBAL_SHARED_SIZE; /* SIGAR-123 */
+                }
+            }
             return SIGAR_OK;
         }
     }
