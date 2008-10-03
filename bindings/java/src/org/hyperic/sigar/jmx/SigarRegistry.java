@@ -231,9 +231,9 @@ public class SigarRegistry extends AbstractMBean {
         }
 
         //physical memory bean
-        registerMBean(new SigarMem(sigarImpl));
+        registerMBean(new ReflectedMBean(sigarImpl, "Mem"));
         //swap memory bean
-        registerMBean(new SigarSwap(sigarImpl));
+        registerMBean(new ReflectedMBean(sigarImpl, "Swap"));
         //load average bean
         registerMBean(new SigarLoadAverage(sigarImpl));
     }
