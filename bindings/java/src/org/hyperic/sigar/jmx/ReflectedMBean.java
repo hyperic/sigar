@@ -32,7 +32,7 @@ import org.hyperic.sigar.Sigar;
 
 public class ReflectedMBean extends AbstractMBean {
 
-    private Method getter;
+    private Method method;
     private Map methods;
     private String type;
 
@@ -42,7 +42,7 @@ public class ReflectedMBean extends AbstractMBean {
 
     protected Class getMBeanClass() {
         try {
-            return getGetter().getReturnType();
+            return getMethod().getReturnType();
         } catch (Exception e) {
             e.printStackTrace();
             return null;
@@ -60,30 +60,31 @@ public class ReflectedMBean extends AbstractMBean {
             MBEAN_ATTR_TYPE + "=" + getType();
     }
 
-    protected Method getGetter() throws Exception {
-        if (this.getter == null) {
+    protected Method getMethod() throws Exception {
+        if (this.method == null) {
             String getName = "get" + getType();
-            Class[] params = getGetterParams();
-            this.getter =
+            Class[] params = getMethodParamTypes();
+            this.method =
                 this.sigarImpl.getClass().getDeclaredMethod(getName,
                                                             params);
         }
-        return this.getter;
+        return this.method;
     }
 
-    protected Class[] getGetterParams() {
+    protected Class[] getMethodParamTypes() {
         return new Class[0];
     }
 
     private Object getReflectedAttribute(String name)
         throws Exception {
 
-        Method getter = getGetter();
-        Class[] params = getGetterParams();
-        Object obj = getter.invoke(this.sigarImpl, params);
-        Method method =
+        Method method = getMethod();
+        Object obj =
+            method.invoke(this.sigarImpl,
+                          getMethodParamTypes());
+        Method attr =
             obj.getClass().getMethod("get" + name, new Class[0]);
-        return method.invoke(obj, new Object[0]);
+        return attr.invoke(obj, new Object[0]);
     }
 
     public Object getAttribute(String name)
