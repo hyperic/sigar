@@ -113,6 +113,10 @@ public class Shell extends ShellBase {
             //requires junit.jar
             registerCommandHandler("test", new SigarTestRunner(this));
         } catch (NoClassDefFoundError e) { }
+        try {
+            //requires jre 1.5+ or mx4j
+            registerCommandHandler("mx", new Mx(this));
+        } catch (NoClassDefFoundError e) { }
     }
 
     public void processCommand(ShellCommandHandler handler, String args[])
