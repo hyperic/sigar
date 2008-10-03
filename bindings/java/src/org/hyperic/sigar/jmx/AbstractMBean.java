@@ -22,7 +22,6 @@ import javax.management.Attribute;
 import javax.management.AttributeList;
 import javax.management.AttributeNotFoundException;
 import javax.management.DynamicMBean;
-import javax.management.InvalidAttributeValueException;
 import javax.management.MBeanException;
 import javax.management.MBeanRegistration;
 import javax.management.MBeanServer;
@@ -202,12 +201,6 @@ public abstract class AbstractMBean implements DynamicMBean, MBeanRegistration {
                 result.add(next);
             } catch (AttributeNotFoundException e) {
                 // ignore, as we cannot throw this exception
-            } catch (InvalidAttributeValueException e) {
-                // ignore, as we cannot throw this exception
-            } catch (MBeanException e) {
-                // ignore, as we cannot throw this exception
-            } catch (ReflectionException e) {
-                // ignore, as we cannot throw this exception
             }
         }
         return result;
@@ -233,7 +226,7 @@ public abstract class AbstractMBean implements DynamicMBean, MBeanRegistration {
     }
 
     /**
-     * Empty implementation, allowing aubclasses to ignore the interface.
+     * Empty implementation, allowing subclasses to ignore the interface.
      * 
      * <p><b>Note:</b> Make sure any subclass does a super call to this method, 
      * otherwise the implementation might be broken.</p>
@@ -244,7 +237,7 @@ public abstract class AbstractMBean implements DynamicMBean, MBeanRegistration {
     }
 
     /**
-     * Empty implementation, allowing aubclasses to ignore the interface.
+     * Empty implementation, allowing subclasses to ignore the interface.
      * 
      * <p><b>Note:</b> Make sure any subclass does a super call to this method, 
      * otherwise the implementation might be broken.</p>
@@ -255,7 +248,7 @@ public abstract class AbstractMBean implements DynamicMBean, MBeanRegistration {
     }
 
     /**
-     * Empty implementation, allowing aubclasses to ignore the interface.
+     * Empty implementation, allowing subclasses to ignore the interface.
      * 
      * <p><b>Note:</b> Make sure any subclass does a super call to this method, 
      * otherwise the implementation might be broken.</p>
@@ -264,5 +257,16 @@ public abstract class AbstractMBean implements DynamicMBean, MBeanRegistration {
      */
     public void postDeregister() {
         this.mbeanServer = null;
+    }
+
+    public void setAttribute(Attribute attr) throws AttributeNotFoundException {
+        throw new AttributeNotFoundException(attr.getName());
+    }
+
+    public Object invoke(String name, Object[] params, String[] signature)
+        throws ReflectionException {
+
+        throw new ReflectionException(new NoSuchMethodException(name),
+                                      name);
     }
 }

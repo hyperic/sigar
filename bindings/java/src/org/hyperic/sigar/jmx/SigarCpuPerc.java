@@ -18,13 +18,11 @@
 
 package org.hyperic.sigar.jmx;
 
-import javax.management.Attribute;
 import javax.management.AttributeNotFoundException;
 import javax.management.MBeanAttributeInfo;
 import javax.management.MBeanConstructorInfo;
 import javax.management.MBeanInfo;
 import javax.management.MBeanParameterInfo;
-import javax.management.ReflectionException;
 
 import org.hyperic.sigar.Sigar;
 import org.hyperic.sigar.SigarException;
@@ -303,24 +301,6 @@ public class SigarCpuPerc extends AbstractMBean {
         } else {
             throw new AttributeNotFoundException(attr);
         }
-    }
-
-    /*
-     * (non-Javadoc)
-     * @see DynamicMBean#setAttribute(Attribute)
-     */
-    public void setAttribute(Attribute attr) throws AttributeNotFoundException {
-        throw new AttributeNotFoundException(attr.getName());
-    }
-
-    /*
-     * (non-Javadoc)
-     * @see DynamicMBean#invoke(String, Object[], String[])
-     */
-    public Object invoke(String actionName, Object[] params, String[] signature)
-            throws ReflectionException {
-        throw new ReflectionException(new NoSuchMethodException(actionName),
-                actionName);
     }
 
     /*

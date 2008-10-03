@@ -23,17 +23,14 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import javax.management.Attribute;
 import javax.management.AttributeNotFoundException;
 import javax.management.MBeanAttributeInfo;
 import javax.management.MBeanConstructorInfo;
-import javax.management.MBeanException;
 import javax.management.MBeanInfo;
 import javax.management.MBeanParameterInfo;
 import javax.management.MBeanServer;
 import javax.management.ObjectInstance;
 import javax.management.ObjectName;
-import javax.management.ReflectionException;
 
 import org.hyperic.sigar.Sigar;
 import org.hyperic.sigar.SigarException;
@@ -180,26 +177,6 @@ public class SigarRegistry extends AbstractMBean {
             throw new AttributeNotFoundException(attr);
         }
         return obj;
-    }
-
-    /* (non-Javadoc)
-     * @see javax.management.DynamicMBean#setAttribute(javax.management.Attribute)
-     */
-    public void setAttribute(Attribute attr) throws AttributeNotFoundException {
-        throw new AttributeNotFoundException(attr.getName());
-    }
-
-    /* (non-Javadoc)
-     * @see javax.management.DynamicMBean#invoke(java.lang.String, java.lang.Object[], java.lang.String[])
-     */
-    public Object invoke(String action, Object[] params, String[] signatures)
-            throws MBeanException, ReflectionException {
-        
-/*      if (MBEAN_OPER_LISTPROCESSES.getName().equals(action))
-            return listProcesses();
-        
-        else */
-            throw new ReflectionException(new NoSuchMethodException(action), action);
     }
 
     /* (non-Javadoc)

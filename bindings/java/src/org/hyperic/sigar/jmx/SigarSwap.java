@@ -18,7 +18,6 @@
 
 package org.hyperic.sigar.jmx;
 
-import javax.management.Attribute;
 import javax.management.AttributeNotFoundException;
 import javax.management.MBeanAttributeInfo;
 import javax.management.MBeanConstructorInfo;
@@ -168,25 +167,6 @@ public class SigarSwap extends AbstractMBean {
         } else {
             throw new AttributeNotFoundException(attr);
         }
-    }
-
-    /*
-     * (non-Javadoc)
-     * @see javax.management.DynamicMBean#setAttribute(javax.management.Attribute)
-     */
-    public void setAttribute(Attribute attr) throws AttributeNotFoundException {
-        throw new AttributeNotFoundException(attr.getName());
-    }
-
-    /*
-     * (non-Javadoc)
-     * @see javax.management.DynamicMBean#invoke(java.lang.String,
-     *      java.lang.Object[], java.lang.String[])
-     */
-    public Object invoke(String actionName, Object[] params, String[] signature)
-            throws ReflectionException {
-        throw new ReflectionException(new NoSuchMethodException(actionName),
-                actionName);
     }
 
     /*
