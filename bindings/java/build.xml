@@ -387,7 +387,7 @@
 
    <junit printsummary="yes" fork="yes"
           haltonfailure="yes" showoutput="true">
-     <jvmarg line="${junit.args}"/>
+     <jvmarg line="${junit.args} -Dcom.sun.management.jmxremote"/>
 
      <classpath refid="alljars"/>
      <formatter type="xml"/>
