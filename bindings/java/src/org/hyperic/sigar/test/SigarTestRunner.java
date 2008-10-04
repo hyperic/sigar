@@ -44,6 +44,7 @@ public class SigarTestRunner extends SigarCommandBase {
     private static final Class[] ALL_TESTS = {
         TestLog.class,
         TestInvoker.class,
+        TestMx.class,
         TestPTQL.class,
         TestCpu.class,
         TestCpuInfo.class,

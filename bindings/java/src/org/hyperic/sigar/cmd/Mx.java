@@ -43,11 +43,17 @@ public class Mx extends SigarCommandBase {
         return "Register MBeans for use via jconsole, etc.";
     }
 
-    private static MBeanServer getMBeanServer() {
+    public static MBeanServer getMBeanServer()
+        throws SigarException {
         List servers = 
             MBeanServerFactory.findMBeanServer(null);
     
-        return (MBeanServer)servers.get(0);
+        if (servers.size() == 0) {
+            throw new SigarException("No MBeanServers available");
+        }
+        else {
+            return (MBeanServer)servers.get(0);
+        }
     }
 
     private void register(MBeanServer server) throws SigarException {
