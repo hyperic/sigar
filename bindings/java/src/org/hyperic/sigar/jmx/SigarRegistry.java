@@ -33,6 +33,7 @@ import javax.management.ObjectInstance;
 import javax.management.ObjectName;
 
 import org.hyperic.sigar.FileSystem;
+import org.hyperic.sigar.NetInterfaceConfig;
 import org.hyperic.sigar.Sigar;
 import org.hyperic.sigar.SigarException;
 import org.hyperic.sigar.SigarLoader;
@@ -248,6 +249,28 @@ public class SigarRegistry extends AbstractMBean {
             }
         } catch (SigarException e) {
             throw unexpectedError("FileSystemList", e);
+        }
+
+        //NetInterface beans
+        try {
+            String[] ifnames = sigarImpl.getNetInterfaceList();
+            for (int i=0; i<ifnames.length; i++) {
+                String name = ifnames[i];
+                NetInterfaceConfig ifconfig =
+                    this.sigar.getNetInterfaceConfig(name);
+                try {
+                    sigarImpl.getNetInterfaceStat(name);
+                } catch (SigarException e) {
+                    continue;
+                }
+                ReflectedMBean mbean =
+                    new ReflectedMBean(sigarImpl, "NetInterface", name);
+                mbean.setType(mbean.getType() + "Stat");
+                mbean.putAttributes(ifconfig);
+                registerMBean(mbean);
+            }
+        } catch (SigarException e) {
+            throw unexpectedError("NetInterfaceList", e);
         }
 
         //physical memory bean
