@@ -35,6 +35,8 @@ public class ReflectedMBean extends AbstractMBean {
     private Method method;
     private Map methods;
     private String type;
+    private Object[] args;
+    private String name;
 
     protected String getType() {
         return this.type;
@@ -52,12 +54,28 @@ public class ReflectedMBean extends AbstractMBean {
     protected ReflectedMBean(Sigar sigar, String type) {
         super(sigar, CACHELESS);
         this.type = type;
+        this.args = new Object[0];
+        this.name =
+            SigarInvokerJMX.DOMAIN_NAME + ":" +
+            MBEAN_ATTR_TYPE + "=" + getType();
+    }
+
+    protected ReflectedMBean(Sigar sigar, String type, Object[] args) {
+        this(sigar, type);
+        this.args = args;
+    }
+
+    protected ReflectedMBean(Sigar sigar, String type, String arg) {
+        this(sigar, type, new Object[] { arg });
+        this.name += ",Name=" + encode(arg);
+    }
+
+    private String encode(String arg) {
+        return arg.replaceAll(":", "%3A");
     }
 
     public String getObjectName() {
-        return
-            SigarInvokerJMX.DOMAIN_NAME + ":" +
-            MBEAN_ATTR_TYPE + "=" + getType();
+        return this.name;
     }
 
     protected Method getMethod() throws Exception {
@@ -72,7 +90,16 @@ public class ReflectedMBean extends AbstractMBean {
     }
 
     protected Class[] getMethodParamTypes() {
-        return new Class[0];
+        int len = this.args.length;
+        Class[] types = new Class[len];
+        for (int i=0; i<len; i++) {
+            types[i] = this.args[i].getClass();
+        }
+        return types;
+    }
+
+    protected Object[] getMethodParams() {
+        return this.args;
     }
 
     private Object getReflectedAttribute(String name)
@@ -81,7 +108,7 @@ public class ReflectedMBean extends AbstractMBean {
         Method method = getMethod();
         Object obj =
             method.invoke(this.sigarImpl,
-                          getMethodParamTypes());
+                          getMethodParams());
         Method attr =
             obj.getClass().getMethod("get" + name, new Class[0]);
         return attr.invoke(obj, new Object[0]);
@@ -93,6 +120,7 @@ public class ReflectedMBean extends AbstractMBean {
         try {
             return getReflectedAttribute(name);
         } catch (Exception e) {
+            e.printStackTrace();
             throw new ReflectionException(e);
         }
     }
