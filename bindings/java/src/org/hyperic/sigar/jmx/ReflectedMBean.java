@@ -18,6 +18,7 @@
 package org.hyperic.sigar.jmx;
 
 import java.lang.reflect.Method;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -34,12 +35,47 @@ public class ReflectedMBean extends AbstractMBean {
 
     private Method method;
     private Map methods;
+    private Map attrs = new HashMap();
     private String type;
     private Object[] args;
     private String name;
 
     protected String getType() {
         return this.type;
+    }
+
+    void setType(String type) {
+        this.type = type;
+    }
+
+    //static attributes
+    void putAttribute(String name, Object val) {
+        this.attrs.put(name, val);
+    }
+
+    void putAttributes(Map attrs) {
+        this.attrs.putAll(attrs);
+    }
+
+    void putAttributes(Object obj) {
+        Method[] methods = obj.getClass().getDeclaredMethods();
+        for (int i=0; i<methods.length; i++) {
+            Method method = methods[i];
+            if (method.getParameterTypes().length != 0) {
+                continue;
+            }
+            String name = method.getName();
+            if (!name.startsWith("get")) {
+                continue;
+            }
+            name = name.substring(3);
+            try {
+                putAttribute(name,
+                             method.invoke(obj, new Object[0]));
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     protected Class getMBeanClass() {
@@ -50,7 +86,7 @@ public class ReflectedMBean extends AbstractMBean {
             return null;
         }
     }
-    
+
     protected ReflectedMBean(Sigar sigar, String type) {
         super(sigar, CACHELESS);
         this.type = type;
@@ -117,6 +153,13 @@ public class ReflectedMBean extends AbstractMBean {
     public Object getAttribute(String name)
         throws AttributeNotFoundException,
                MBeanException, ReflectionException {
+        Object val = this.attrs.get(name);
+        if (val != null) {
+            return val;
+        }
+        if (this.methods.get(name) == null) {
+            throw new AttributeNotFoundException(name);
+        }
         try {
             return getReflectedAttribute(name);
         } catch (Exception e) {
@@ -145,7 +188,7 @@ public class ReflectedMBean extends AbstractMBean {
     protected MBeanAttributeInfo[] getAttributeInfo() {
         Map methods = getMethods();
         MBeanAttributeInfo[] attrs =
-            new MBeanAttributeInfo[methods.size()];
+            new MBeanAttributeInfo[methods.size() + this.attrs.size()];
         int i=0;
         for (Iterator it=methods.entrySet().iterator();
              it.hasNext();)
@@ -161,6 +204,20 @@ public class ReflectedMBean extends AbstractMBean {
                                        false,  // isWritable
                                        false); // isIs
         }        
+        for (Iterator it=this.attrs.entrySet().iterator();
+             it.hasNext();)
+        {
+            Map.Entry entry = (Map.Entry)it.next();
+            String name = (String)entry.getKey();
+            Object obj = entry.getValue();
+            attrs[i++] =
+                new MBeanAttributeInfo(name,
+                                       obj.getClass().getName(),
+                                       name + " MBean",
+                                       true,   // isReadable
+                                       false,  // isWritable
+                                       false); // isIs
+        }
         return attrs;
     }
 
