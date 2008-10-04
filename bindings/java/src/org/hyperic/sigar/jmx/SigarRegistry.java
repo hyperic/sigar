@@ -32,6 +32,7 @@ import javax.management.MBeanServer;
 import javax.management.ObjectInstance;
 import javax.management.ObjectName;
 
+import org.hyperic.sigar.FileSystem;
 import org.hyperic.sigar.Sigar;
 import org.hyperic.sigar.SigarException;
 import org.hyperic.sigar.SigarLoader;
@@ -197,7 +198,7 @@ public class SigarRegistry extends AbstractMBean {
                 this.mbeanServer.registerMBean(mbean, name);
             this.managedBeans.add(instance.getObjectName());
         } catch (Exception e) {
-            
+            e.printStackTrace();
         }
     }
 
@@ -228,6 +229,25 @@ public class SigarRegistry extends AbstractMBean {
             }
         } catch (SigarException e) {
             throw unexpectedError("CpuInfoList", e);
+        }
+
+        //FileSystem beans
+        try {
+            FileSystem[] fslist = sigarImpl.getFileSystemList();
+            for (int i=0; i<fslist.length; i++) {
+                FileSystem fs = fslist[i];
+                if (fs.getType() != FileSystem.TYPE_LOCAL_DISK) {
+                    continue;
+                }
+                String name = fs.getDirName();
+                ReflectedMBean mbean =
+                    new ReflectedMBean(sigarImpl, "FileSystem", name);
+                mbean.setType(mbean.getType() + "Usage");
+                mbean.putAttributes(fs);
+                registerMBean(mbean);
+            }
+        } catch (SigarException e) {
+            throw unexpectedError("FileSystemList", e);
         }
 
         //physical memory bean
