@@ -34,6 +34,15 @@ public class TestMx extends SigarTestCase {
     }
 
     public void testRegister() throws Exception {
+        try {
+            _testRegister();
+        } catch (NoClassDefFoundError e) {
+            //1.4 jre
+            traceln(e + ", skipping");
+        }
+    }
+
+    private void _testRegister() throws Exception {
         MBeanServer server;
         try {
             server = Mx.getMBeanServer();
