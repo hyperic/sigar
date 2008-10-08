@@ -273,6 +273,13 @@ public class SigarRegistry extends AbstractMBean {
             throw unexpectedError("NetInterfaceList", e);
         }
 
+        //network info bean
+        ReflectedMBean mbean = new ReflectedMBean(sigarImpl, "NetInfo");
+        try {
+            mbean.putAttribute("FQDN", sigarImpl.getFQDN());
+        } catch (SigarException e) {
+        }
+        registerMBean(mbean);
         //physical memory bean
         registerMBean(new ReflectedMBean(sigarImpl, "Mem"));
         //swap memory bean
