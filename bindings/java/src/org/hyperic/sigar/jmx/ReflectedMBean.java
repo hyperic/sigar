@@ -100,7 +100,7 @@ public class ReflectedMBean extends AbstractMBean {
         super(sigar, CACHED_5SEC);
         this.type = type;
         this.name =
-            SigarInvokerJMX.DOMAIN_NAME + ":" +
+            MBEAN_DOMAIN + ":" +
             MBEAN_ATTR_TYPE + "=" + getType();
     }
 

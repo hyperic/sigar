@@ -137,7 +137,7 @@ public class SigarRegistry extends AbstractMBean {
      */
     public SigarRegistry() {
         super(new Sigar(), CACHELESS);
-        this.objectName = SigarInvokerJMX.DOMAIN_NAME + ":" + MBEAN_ATTR_TYPE
+        this.objectName = MBEAN_DOMAIN + ":" + MBEAN_ATTR_TYPE
                 + "=" + MBEAN_TYPE;
         this.managedBeans = new ArrayList();
     }

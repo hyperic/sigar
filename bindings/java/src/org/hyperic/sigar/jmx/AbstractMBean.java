@@ -46,7 +46,8 @@ import org.hyperic.sigar.SigarProxyCache;
  */
 public abstract class AbstractMBean implements DynamicMBean, MBeanRegistration {
 
-    protected static final String MBEAN_ATTR_TYPE = "type";
+    protected static final String MBEAN_DOMAIN = SigarInvokerJMX.DOMAIN_NAME;
+    protected static final String MBEAN_ATTR_TYPE = SigarInvokerJMX.PROP_TYPE;
 
     protected static final short CACHED_30SEC = 0;
 

@@ -146,7 +146,7 @@ public class SigarLoadAverage extends AbstractMBean {
         super(sigar, CACHED_30SEC);
 
         // all fine
-        this.objectName = SigarInvokerJMX.DOMAIN_NAME + ":" + MBEAN_ATTR_TYPE
+        this.objectName = MBEAN_DOMAIN + ":" + MBEAN_ATTR_TYPE
                 + "=" + MBEAN_TYPE;
     }
 
