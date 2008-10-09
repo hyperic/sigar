@@ -385,9 +385,11 @@
      <arg value="version"/>
    </java>
 
+   <property name="junit.mx" value="-Dcom.sun.management.jmxremote"/>
+
    <junit printsummary="yes" fork="yes"
           haltonfailure="yes" showoutput="true">
-     <jvmarg line="${junit.args} -Dcom.sun.management.jmxremote"/>
+     <jvmarg line="${junit.args} ${junit.mx}"/>
 
      <classpath refid="alljars"/>
      <formatter type="xml"/>
