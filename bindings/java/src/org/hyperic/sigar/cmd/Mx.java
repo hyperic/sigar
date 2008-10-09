@@ -21,6 +21,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import javax.management.MBeanAttributeInfo;
+import javax.management.MBeanInfo;
 import javax.management.MBeanServer;
 import javax.management.MBeanServerFactory;
 import javax.management.ObjectName;
@@ -42,6 +44,10 @@ public class Mx extends SigarCommandBase {
     //java -Dcom.sun.management.jmxremote -jar sigar.jar
     public String getUsageShort() {
         return "Register MBeans for use via jconsole, etc.";
+    }
+
+    protected boolean validateArgs(String[] args) {
+        return args.length <= 1;
     }
 
     public static MBeanServer getMBeanServer()
@@ -73,12 +79,32 @@ public class Mx extends SigarCommandBase {
     public void output(String[] args) throws SigarException {
         MBeanServer server = getMBeanServer();
         register(server);
+        boolean hasQuery = args.length != 0;
         try {
+            String query;
+            if (hasQuery) {
+                query = args[0];
+            }
+            else {
+                query = "sigar:*";
+            }
             Set beans =
-                server.queryNames(new ObjectName("sigar:*"), null);
+                server.queryNames(new ObjectName(query), null);
             println(beans.size() + " MBeans are registered...");
             for (Iterator it=beans.iterator(); it.hasNext();) {
-                println(it.next().toString());
+                ObjectName name = (ObjectName)it.next(); 
+                if (hasQuery) {
+                    MBeanInfo info = server.getMBeanInfo(name);
+                    MBeanAttributeInfo[] attrs = info.getAttributes();
+                    for (int i=0; i<attrs.length; i++) {
+                        String attr = attrs[i].getName();
+                        Object val = server.getAttribute(name, attr);
+                        println(name + ":" + attr + "=" + val);
+                    }                    
+                }
+                else {
+                    println(name.toString());
+                }
             }
         } catch (Exception e) {
             throw new SigarException(e.getMessage());
