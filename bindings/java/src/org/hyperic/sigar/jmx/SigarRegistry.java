@@ -222,21 +222,23 @@ public class SigarRegistry extends AbstractMBean {
             return;
 
         //CPU beans
+        CpuInfo[] info;
         try {
-            CpuInfo[] info = sigar.getCpuInfoList();
-            for (int i=0; i<info.length; i++) {
-                String idx = String.valueOf(i);
-                ReflectedMBean mbean =
-                    new ReflectedMBean(sigarImpl, "CpuCoreTime", idx);
-                mbean.setType("CpuList");
-                registerMBean(mbean);
-                mbean =
-                    new ReflectedMBean(sigarImpl, "CpuCoreUsage", idx);
-                mbean.setType("CpuPercList");
-                registerMBean(mbean);
-            }
+            info = sigar.getCpuInfoList();            
         } catch (SigarException e) {
-            throw unexpectedError("CpuInfoList", e);
+            throw unexpectedError("CpuInfoList", e);            
+        }
+
+        for (int i=0; i<info.length; i++) {
+            String idx = String.valueOf(i);
+            ReflectedMBean mbean =
+                new ReflectedMBean(sigarImpl, "CpuCoreTime", idx);
+            mbean.setType("CpuList");
+            registerMBean(mbean);
+            mbean =
+                new ReflectedMBean(sigarImpl, "CpuCoreUsage", idx);
+            mbean.setType("CpuPercList");
+            registerMBean(mbean);
         }
 
         //FileSystem beans
