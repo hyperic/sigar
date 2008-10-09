@@ -33,12 +33,11 @@ import org.hyperic.sigar.Sigar;
 
 public class ReflectedMBean extends AbstractMBean {
 
-    private Method method;
     private Map methods;
     private Map attrs = new HashMap();
     private String type;
-    private Object[] args;
     private String name;
+    private SigarInvokerJMX invoker;
 
     protected String getType() {
         return this.type;
@@ -78,9 +77,13 @@ public class ReflectedMBean extends AbstractMBean {
         }
     }
 
-    protected Class getMBeanClass() {
+    private String getMBeanClassName() {
+        return "org.hyperic.sigar." + getType();
+    }
+
+    private Class getMBeanClass() {
         try {
-            return getMethod().getReturnType();
+            return Class.forName(getMBeanClassName());
         } catch (Exception e) {
             e.printStackTrace();
             return null;
@@ -88,21 +91,15 @@ public class ReflectedMBean extends AbstractMBean {
     }
 
     protected ReflectedMBean(Sigar sigar, String type) {
-        super(sigar, CACHELESS);
+        super(sigar, CACHED_5SEC);
         this.type = type;
-        this.args = new Object[0];
         this.name =
             SigarInvokerJMX.DOMAIN_NAME + ":" +
             MBEAN_ATTR_TYPE + "=" + getType();
     }
 
-    protected ReflectedMBean(Sigar sigar, String type, Object[] args) {
-        this(sigar, type);
-        this.args = args;
-    }
-
     protected ReflectedMBean(Sigar sigar, String type, String arg) {
-        this(sigar, type, new Object[] { arg });
+        this(sigar, type);
         this.name += ",Name=" + encode(arg);
     }
 
@@ -114,42 +111,15 @@ public class ReflectedMBean extends AbstractMBean {
         return this.name;
     }
 
-    protected Method getMethod() throws Exception {
-        if (this.method == null) {
-            String getName = "get" + getType();
-            Class[] params = getMethodParamTypes();
-            this.method =
-                this.sigarImpl.getClass().getDeclaredMethod(getName,
-                                                            params);
+    protected SigarInvokerJMX getInvoker() {
+        if (this.invoker == null) {
+            this.invoker =
+                SigarInvokerJMX.getInstance(this.sigar, getObjectName());
+            this.invoker.setType(getType());
         }
-        return this.method;
+        return this.invoker;
     }
-
-    protected Class[] getMethodParamTypes() {
-        int len = this.args.length;
-        Class[] types = new Class[len];
-        for (int i=0; i<len; i++) {
-            types[i] = this.args[i].getClass();
-        }
-        return types;
-    }
-
-    protected Object[] getMethodParams() {
-        return this.args;
-    }
-
-    private Object getReflectedAttribute(String name)
-        throws Exception {
-
-        Method method = getMethod();
-        Object obj =
-            method.invoke(this.sigarImpl,
-                          getMethodParams());
-        Method attr =
-            obj.getClass().getMethod("get" + name, new Class[0]);
-        return attr.invoke(obj, new Object[0]);
-    }
-
+    
     public Object getAttribute(String name)
         throws AttributeNotFoundException,
                MBeanException, ReflectionException {
@@ -157,11 +127,8 @@ public class ReflectedMBean extends AbstractMBean {
         if (val != null) {
             return val;
         }
-        if (this.methods.get(name) == null) {
-            throw new AttributeNotFoundException(name);
-        }
         try {
-            return getReflectedAttribute(name);
+            return getInvoker().invoke(name);
         } catch (Exception e) {
             e.printStackTrace();
             throw new ReflectionException(e);
@@ -223,8 +190,8 @@ public class ReflectedMBean extends AbstractMBean {
 
     public MBeanInfo getMBeanInfo() {
         MBeanInfo info =
-            new MBeanInfo(getMBeanClass().getName(),
-                          "",
+            new MBeanInfo(getClass().getName(),
+                          getMBeanClassName(),
                           getAttributeInfo(),
                           null, //constructors
                           null, //operations
