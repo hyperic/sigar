@@ -36,6 +36,7 @@ public class SigarInvokerJMX extends SigarInvoker {
     public static final String DOMAIN_NAME = "sigar";
 
     public static final String PROP_TYPE = "Type";
+    public static final String PROP_NAME = "Name"; //prefer Name (Arg for compat)
     public static final String PROP_ARG  = "Arg";
 
     private String arg = null;
@@ -84,10 +85,12 @@ public class SigarInvokerJMX extends SigarInvoker {
             String key = attr.substring(0, ix);
             String val = attr.substring(key.length()+1);
 
-            if (key.equals(PROP_TYPE)) {
+            if (key.equalsIgnoreCase(PROP_TYPE)) {
                 invoker.setType(val);
             }
-            else if (key.equals(PROP_ARG)) {
+            else if (key.equalsIgnoreCase(PROP_NAME) ||
+                     key.equalsIgnoreCase(PROP_ARG))
+            {
                 //need to decode value, e.g. Arg=C%3D\ => Arg=C:\
                 invoker.setArg(decode(val));
             }
