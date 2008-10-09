@@ -32,6 +32,7 @@ import javax.management.MBeanServer;
 import javax.management.ObjectInstance;
 import javax.management.ObjectName;
 
+import org.hyperic.sigar.CpuInfo;
 import org.hyperic.sigar.FileSystem;
 import org.hyperic.sigar.NetInterfaceConfig;
 import org.hyperic.sigar.Sigar;
@@ -222,11 +223,17 @@ public class SigarRegistry extends AbstractMBean {
 
         //CPU beans
         try {
-            final int cpuCount = sigar.getCpuInfoList().length;
-            for (int i = 0; i < cpuCount; i++) {
-                registerMBean(new SigarCpu(sigarImpl, i));
-                registerMBean(new SigarCpuPerc(sigarImpl, i));
-                registerMBean(new SigarCpuInfo(sigarImpl, i));
+            CpuInfo[] info = sigar.getCpuInfoList();
+            for (int i=0; i<info.length; i++) {
+                String idx = String.valueOf(i);
+                ReflectedMBean mbean =
+                    new ReflectedMBean(sigarImpl, "CpuCoreTime", idx);
+                mbean.setType("CpuList");
+                registerMBean(mbean);
+                mbean =
+                    new ReflectedMBean(sigarImpl, "CpuCoreUsage", idx);
+                mbean.setType("CpuPercList");
+                registerMBean(mbean);
             }
         } catch (SigarException e) {
             throw unexpectedError("CpuInfoList", e);
