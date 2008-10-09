@@ -215,6 +215,7 @@ public class SigarRegistry extends AbstractMBean {
      * @see AbstractMBean#postRegister(Boolean)
      */
     public void postRegister(Boolean success) {
+        ReflectedMBean mbean;
 
         super.postRegister(success);
 
@@ -231,8 +232,8 @@ public class SigarRegistry extends AbstractMBean {
 
         for (int i=0; i<info.length; i++) {
             String idx = String.valueOf(i);
-            ReflectedMBean mbean =
-                new ReflectedMBean(sigarImpl, "CpuCoreTime", idx);
+            mbean =
+                new ReflectedMBean(sigarImpl, "CpuCore", idx);
             mbean.setType("CpuList");
             registerMBean(mbean);
             mbean =
@@ -240,6 +241,14 @@ public class SigarRegistry extends AbstractMBean {
             mbean.setType("CpuPercList");
             registerMBean(mbean);
         }
+
+        mbean = new ReflectedMBean(sigarImpl, "Cpu");
+        mbean.putAttributes(info[0]);
+        registerMBean(mbean);
+
+        mbean = new ReflectedMBean(sigarImpl, "CpuUsage");
+        mbean.setType("CpuPerc");
+        registerMBean(mbean);
 
         //FileSystem beans
         try {
@@ -250,7 +259,7 @@ public class SigarRegistry extends AbstractMBean {
                     continue;
                 }
                 String name = fs.getDirName();
-                ReflectedMBean mbean =
+                mbean =
                     new ReflectedMBean(sigarImpl, "FileSystem", name);
                 mbean.setType(mbean.getType() + "Usage");
                 mbean.putAttributes(fs);
@@ -272,7 +281,7 @@ public class SigarRegistry extends AbstractMBean {
                 } catch (SigarException e) {
                     continue;
                 }
-                ReflectedMBean mbean =
+                mbean =
                     new ReflectedMBean(sigarImpl, "NetInterface", name);
                 mbean.setType(mbean.getType() + "Stat");
                 mbean.putAttributes(ifconfig);
@@ -283,7 +292,7 @@ public class SigarRegistry extends AbstractMBean {
         }
 
         //network info bean
-        ReflectedMBean mbean = new ReflectedMBean(sigarImpl, "NetInfo");
+        mbean = new ReflectedMBean(sigarImpl, "NetInfo");
         try {
             mbean.putAttribute("FQDN", sigarImpl.getFQDN());
         } catch (SigarException e) {
