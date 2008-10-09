@@ -78,7 +78,13 @@ public class ReflectedMBean extends AbstractMBean {
     }
 
     private String getMBeanClassName() {
-        return "org.hyperic.sigar." + getType();
+        String type = getType();
+        final String list = "List";
+        if (type.endsWith(list)) {
+            type =
+                type.substring(0, type.length() - list.length());
+        }
+        return "org.hyperic.sigar." + type;
     }
 
     private Class getMBeanClass() {
