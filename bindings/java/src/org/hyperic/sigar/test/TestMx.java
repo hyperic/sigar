@@ -18,8 +18,11 @@
 
 package org.hyperic.sigar.test;
 
+import java.util.Iterator;
 import java.util.Set;
 
+import javax.management.MBeanAttributeInfo;
+import javax.management.MBeanInfo;
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
 
@@ -56,5 +59,16 @@ public class TestMx extends SigarTestCase {
             server.queryNames(new ObjectName("sigar:*"), null);
 
         assertGtZeroTrace("beans.size", beans.size());
+
+        for (Iterator it=beans.iterator(); it.hasNext();) {
+            ObjectName name = (ObjectName)it.next(); 
+            MBeanInfo info = server.getMBeanInfo(name);
+            MBeanAttributeInfo[] attrs = info.getAttributes();
+            for (int k = 0; k < attrs.length; k++) {
+                String attr = attrs[k].getName();
+                Object o = server.getAttribute(name, attr);
+                traceln(name + ":" + attr + "=" + o);
+            }
+        }
     }
 }
