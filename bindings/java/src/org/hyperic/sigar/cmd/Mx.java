@@ -17,6 +17,7 @@
 
 package org.hyperic.sigar.cmd;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -75,7 +76,10 @@ public class Mx extends SigarCommandBase {
         try {
             Set beans =
                 server.queryNames(new ObjectName("sigar:*"), null);
-            println(beans.size() + " MBeans are registered");
+            println(beans.size() + " MBeans are registered...");
+            for (Iterator it=beans.iterator(); it.hasNext();) {
+                println(it.next().toString());
+            }
         } catch (Exception e) {
             throw new SigarException(e.getMessage());
         }
