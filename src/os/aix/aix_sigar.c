@@ -164,8 +164,9 @@ int sigar_os_open(sigar_t **sigar)
 
     if (kmem > 0) {
         if ((status = get_koffsets(*sigar)) != SIGAR_OK) {
-            free(*sigar);
-            return status;
+            /* libperfstat only mode (aix 6) */
+            close((*sigar)->kmem);
+            (*sigar)->kmem = -1;
         }
     }
 
