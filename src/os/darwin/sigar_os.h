@@ -60,6 +60,7 @@ struct sigar_t {
     sigar_pid_t last_pid;
     bsd_pinfo_t *pinfo;
     int lcpu;
+    size_t argmax;
 #ifdef DARWIN
     mach_port_t mach_port;
 #  ifdef DARWIN_HAS_LIBPROC_H

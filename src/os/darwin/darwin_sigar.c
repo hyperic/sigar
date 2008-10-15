@@ -252,7 +252,7 @@ int sigar_os_open(sigar_t **sigar)
 
     (*sigar)->ncpu = ncpu;
     (*sigar)->lcpu = -1;
-
+    (*sigar)->argmax = 0;
     (*sigar)->boot_time = boottime.tv_sec; /* XXX seems off a bit */
 
     (*sigar)->pagesize = getpagesize();
@@ -292,6 +292,25 @@ char *sigar_os_error_string(sigar_t *sigar, int err)
       default:
         return NULL;
     }
+}
+
+/* ARG_MAX in FreeBSD 6.0 == 262144, which blows up the stack */
+#define SIGAR_ARG_MAX 65536
+
+static size_t sigar_argmax_get(sigar_t *sigar)
+{
+#ifdef KERN_ARGMAX
+    int mib[] = { CTL_KERN, KERN_ARGMAX };
+    size_t size = sizeof(sigar->argmax);
+
+    if (sigar->argmax != 0) {
+        return sigar->argmax;
+    }
+    if (sysctl(mib, NMIB(mib), &sigar->argmax, &size, NULL, 0) == 0) {
+        return sigar->argmax;
+    }
+#endif
+    return SIGAR_ARG_MAX;
 }
 
 #if defined(DARWIN)
@@ -1384,12 +1403,21 @@ int sigar_proc_state_get(sigar_t *sigar, sigar_pid_t pid,
 
 #if defined(DARWIN)
 typedef struct {
-    char buffer[8096], *ptr, *end;
+    char *buf, *ptr, *end;
     int count;
 } sigar_kern_proc_args_t;
 
+static void sigar_kern_proc_args_destroy(sigar_kern_proc_args_t *kargs) 
+{
+    if (kargs->buf) {
+        free(kargs->buf);
+        kargs->buf = NULL;
+    }
+}
+
 /* re-usable hack for use by proc_args and proc_env */
-static int sigar_kern_proc_args_get(sigar_pid_t pid,
+static int sigar_kern_proc_args_get(sigar_t *sigar,
+                                    sigar_pid_t pid,
                                     char *exe,
                                     sigar_kern_proc_args_t *kargs)
 {
@@ -1398,21 +1426,23 @@ static int sigar_kern_proc_args_get(sigar_pid_t pid,
      * http://darwinsource.opendarwin.org/10.4.1/adv_cmds-79.1/ps.tproj/print.c
      */
     int mib[3], len;
-    size_t size = sizeof(kargs->buffer);
-    char *args = kargs->buffer;
+    size_t size = sigar_argmax_get(sigar);
+
+    kargs->buf = malloc(size);
 
     mib[0] = CTL_KERN;
     mib[1] = KERN_PROCARGS2;
     mib[2] = pid;
 
-    if (sysctl(mib, NMIB(mib), args, &size, NULL, 0) < 0) {
+    if (sysctl(mib, NMIB(mib), kargs->buf, &size, NULL, 0) < 0) {
+        sigar_kern_proc_args_destroy(kargs);
         return errno;
     }
 
-    kargs->end = &args[size];
+    kargs->end = &kargs->buf[size];
 
-    memcpy(&kargs->count, args, sizeof(kargs->count));
-    kargs->ptr = args + sizeof(kargs->count);
+    memcpy(&kargs->count, kargs->buf, sizeof(kargs->count));
+    kargs->ptr = kargs->buf + sizeof(kargs->count);
 
     len = strlen(kargs->ptr);
     if (exe) {
@@ -1421,6 +1451,7 @@ static int sigar_kern_proc_args_get(sigar_pid_t pid,
     kargs->ptr += len+1;
 
     if (kargs->ptr == kargs->end) {
+        sigar_kern_proc_args_destroy(kargs);
         return exe ? SIGAR_OK : ENOENT;
     }
 
@@ -1431,6 +1462,7 @@ static int sigar_kern_proc_args_get(sigar_pid_t pid,
     }
 
     if (kargs->ptr == kargs->end) {
+        sigar_kern_proc_args_destroy(kargs);
         return exe ? SIGAR_OK : ENOENT;
     }
 
@@ -1462,9 +1494,6 @@ static int kern_proc_args_skip_argv(sigar_kern_proc_args_t *kargs)
 }
 #endif
 
-/* ARG_MAX in FreeBSD 6.0 == 262144, which blows up the stack */
-#define SIGAR_ARG_MAX 65536
-
 int sigar_os_proc_args_get(sigar_t *sigar, sigar_pid_t pid,
                            sigar_proc_args_t *procargs)
 {
@@ -1473,7 +1502,7 @@ int sigar_os_proc_args_get(sigar_t *sigar, sigar_pid_t pid,
     sigar_kern_proc_args_t kargs;
     char *ptr, *end;
 
-    status = sigar_kern_proc_args_get(pid, NULL, &kargs);
+    status = sigar_kern_proc_args_get(sigar, pid, NULL, &kargs);
     if (status != SIGAR_OK) {
         return status;
     }
@@ -1509,6 +1538,7 @@ int sigar_os_proc_args_get(sigar_t *sigar, sigar_pid_t pid,
         ptr += alen;
     }
 
+    sigar_kern_proc_args_destroy(&kargs);
     return SIGAR_OK;
 #elif defined(__FreeBSD__) || defined(__NetBSD__)
     char buffer[SIGAR_ARG_MAX+1], *ptr=buffer;
@@ -1587,13 +1617,14 @@ int sigar_proc_env_get(sigar_t *sigar, sigar_pid_t pid,
     sigar_kern_proc_args_t kargs;
     char *ptr, *end;
 
-    status = sigar_kern_proc_args_get(pid, NULL, &kargs);
+    status = sigar_kern_proc_args_get(sigar, pid, NULL, &kargs);
     if (status != SIGAR_OK) {
         return status;
     }
 
     status = kern_proc_args_skip_argv(&kargs);
     if (status != SIGAR_OK) {
+        sigar_kern_proc_args_destroy(&kargs);
         return status;
     }
 
@@ -1633,6 +1664,7 @@ int sigar_proc_env_get(sigar_t *sigar, sigar_pid_t pid,
         }
     }
 
+    sigar_kern_proc_args_destroy(&kargs);
     return SIGAR_OK;
 #else
     char **env;
@@ -1747,7 +1779,7 @@ int sigar_proc_exe_get(sigar_t *sigar, sigar_pid_t pid,
     int status;
     sigar_kern_proc_args_t kargs;
 
-    status = sigar_kern_proc_args_get(pid, procexe->name, &kargs);
+    status = sigar_kern_proc_args_get(sigar, pid, procexe->name, &kargs);
     if (status != SIGAR_OK) {
         return status;
     }
