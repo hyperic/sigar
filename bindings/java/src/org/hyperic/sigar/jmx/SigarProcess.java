@@ -21,6 +21,7 @@ package org.hyperic.sigar.jmx;
 import org.hyperic.sigar.ProcCpu;
 import org.hyperic.sigar.ProcFd;
 import org.hyperic.sigar.ProcMem;
+import org.hyperic.sigar.ProcUtil;
 import org.hyperic.sigar.Sigar;
 import org.hyperic.sigar.SigarException;
 import org.hyperic.sigar.SigarProxy;
@@ -80,6 +81,23 @@ public class SigarProcess implements SigarProcessMBean {
         } catch (SigarException e) {
             throw unexpectedError("Fd", e);
         }   
+    }
+
+    public String getObjectName() throws SigarException {
+        long pid = getPid();
+        String name = this.sigar.getProcState(pid).getName();
+        String cls = "unknown";
+        if (name.startsWith("java")) {
+            try {
+                cls = ProcUtil.getJavaMainClass(this.sigar, pid);
+            } catch (SigarException e) {}
+        } //else XXX
+        return
+            AbstractMBean.MBEAN_DOMAIN + ":" +
+            AbstractMBean.MBEAN_ATTR_TYPE + "=" + "Process" + "," +
+            "Name" + "=" + name + "," +
+            "Class" + "=" + cls + "," +
+            "Pid" + "=" + pid;
     }
 
     public long getPid() {
