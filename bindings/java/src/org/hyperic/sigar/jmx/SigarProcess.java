@@ -35,6 +35,7 @@ public class SigarProcess implements SigarProcessMBean {
 
     private Sigar sigarImpl;
     private SigarProxy sigar;
+    private long pid = -1;
 
     public SigarProcess() {
         this(new Sigar());
@@ -59,8 +60,7 @@ public class SigarProcess implements SigarProcessMBean {
                                    
     private synchronized ProcMem getMem() {
         try {
-            long pid = this.sigar.getPid();
-            return this.sigar.getProcMem(pid);
+            return this.sigar.getProcMem(getPid());
         } catch (SigarException e) {
             throw unexpectedError("Mem", e);
         }
@@ -68,8 +68,7 @@ public class SigarProcess implements SigarProcessMBean {
 
     private synchronized ProcCpu getCpu() {
         try {
-            long pid = this.sigar.getPid();
-            return this.sigar.getProcCpu(pid);
+            return this.sigar.getProcCpu(getPid());
         } catch (SigarException e) {
             throw unexpectedError("Cpu", e);
         }   
@@ -77,13 +76,25 @@ public class SigarProcess implements SigarProcessMBean {
 
     private synchronized ProcFd getFd() {
         try {
-            long pid = this.sigar.getPid();
-            return this.sigar.getProcFd(pid);
+            return this.sigar.getProcFd(getPid());
         } catch (SigarException e) {
             throw unexpectedError("Fd", e);
         }   
     }
-    
+
+    public long getPid() {
+        if (this.pid < 0) {
+            return this.sigar.getPid();
+        }
+        else {
+            return this.pid;
+        }
+    }
+
+    public void setPid(long pid) {
+        this.pid = pid;
+    }
+
     public Long getMemSize() {
         return new Long(getMem().getSize());
     }
