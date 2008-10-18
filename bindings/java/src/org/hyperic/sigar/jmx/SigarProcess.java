@@ -123,15 +123,4 @@ public class SigarProcess implements SigarProcessMBean {
     public Long getOpenFd() {
         return new Long(getFd().getTotal());
     }
-
-    public static void main(String args[]) {
-        SigarProcessMBean proc = new SigarProcess();
-        System.out.println("MemSize=" + proc.getMemSize());
-        System.out.println("MemResident=" + proc.getMemResident());
-        System.out.println("MemShared=" + proc.getMemShare());
-        System.out.println("MemPageFaults=" + proc.getMemPageFaults());
-        System.out.println("TimeUser=" + proc.getTimeUser());
-        System.out.println("TimeSys=" + proc.getTimeSys());
-        System.out.println("OpenFd=" + proc.getOpenFd());
-    }
 }
