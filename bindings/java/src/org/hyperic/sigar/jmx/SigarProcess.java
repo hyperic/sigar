@@ -34,6 +34,7 @@ import org.hyperic.sigar.SigarProxyCache;
 
 public class SigarProcess implements SigarProcessMBean {
 
+    private static final Long NOTIMPL = new Long(Sigar.FIELD_NOTIMPL);
     private Sigar sigarImpl;
     private SigarProxy sigar;
     private long pid = -1;
@@ -75,12 +76,8 @@ public class SigarProcess implements SigarProcessMBean {
         }   
     }
 
-    private synchronized ProcFd getFd() {
-        try {
-            return this.sigar.getProcFd(getPid());
-        } catch (SigarException e) {
-            throw unexpectedError("Fd", e);
-        }   
+    private synchronized ProcFd getFd() throws SigarException {
+        return this.sigar.getProcFd(getPid());
     }
 
     public String getObjectName() throws SigarException {
@@ -150,6 +147,10 @@ public class SigarProcess implements SigarProcessMBean {
     }
 
     public Long getOpenFd() {
-        return new Long(getFd().getTotal());
+        try {
+            return new Long(getFd().getTotal());
+        } catch (SigarException e) {
+            return NOTIMPL;
+        }
     }
 }
