@@ -28,6 +28,7 @@ import javax.management.MBeanServerFactory;
 import javax.management.ObjectName;
 
 import org.hyperic.sigar.SigarException;
+import org.hyperic.sigar.jmx.SigarProcess;
 import org.hyperic.sigar.jmx.SigarRegistry;
 
 public class Mx extends SigarCommandBase {
@@ -70,6 +71,8 @@ public class Mx extends SigarCommandBase {
         SigarRegistry registry = new SigarRegistry();
         try {
             server.registerMBean(registry, null);
+            SigarProcess proc = new SigarProcess();
+            server.registerMBean(proc, new ObjectName(proc.getObjectName()));
             isRegistered = true;
         } catch (Exception e) {
             throw new SigarException(e.getMessage());

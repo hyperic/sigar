@@ -28,6 +28,7 @@ import javax.management.ObjectName;
 
 import org.hyperic.sigar.SigarException;
 import org.hyperic.sigar.cmd.Mx;
+import org.hyperic.sigar.jmx.SigarProcess;
 import org.hyperic.sigar.jmx.SigarRegistry;
 
 public class TestMx extends SigarTestCase {
@@ -45,6 +46,19 @@ public class TestMx extends SigarTestCase {
         }
     }
 
+    private void _testProcess(MBeanServer server) throws Exception {
+        long[] pids = getSigar().getProcList();
+        for (int i=0; i<pids.length; i++) {
+            SigarProcess proc = new SigarProcess();
+            proc.setPid(pids[i]);
+            ObjectName name =  new ObjectName(proc.getObjectName());
+            if (server.isRegistered(name)) {
+                continue;
+            }
+            server.registerMBean(proc, name);
+        }
+    }
+
     private void _testRegister() throws Exception {
         MBeanServer server;
         try {
@@ -54,14 +68,18 @@ public class TestMx extends SigarTestCase {
             return;
         }
 
-        server.registerMBean(new SigarRegistry(), null);
+        SigarRegistry rgy = new SigarRegistry();
+        ObjectName name = new ObjectName(rgy.getObjectName());
+        if (!server.isRegistered(name)) {
+            server.registerMBean(new SigarRegistry(), name);
+        }
         Set beans =
             server.queryNames(new ObjectName("sigar:*"), null);
 
         assertGtZeroTrace("beans.size", beans.size());
 
         for (Iterator it=beans.iterator(); it.hasNext();) {
-            ObjectName name = (ObjectName)it.next(); 
+            name = (ObjectName)it.next(); 
             MBeanInfo info = server.getMBeanInfo(name);
             MBeanAttributeInfo[] attrs = info.getAttributes();
             for (int k = 0; k < attrs.length; k++) {
@@ -70,5 +88,7 @@ public class TestMx extends SigarTestCase {
                 traceln(name + ":" + attr + "=" + o);
             }
         }
+
+        _testProcess(server);
     }
 }
