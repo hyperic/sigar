@@ -304,6 +304,8 @@ public class SigarRegistry extends AbstractMBean {
         registerMBean(new ReflectedMBean(sigarImpl, "Swap"));
         //load average bean
         registerMBean(new SigarLoadAverage(sigarImpl));
+        //global process stats
+        registerMBean(new ReflectedMBean(sigarImpl, "ProcStat"));
     }
 
     /**
