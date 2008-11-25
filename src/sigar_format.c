@@ -614,14 +614,14 @@ SIGAR_DECLARE(int) sigar_cpu_perc_calculate(sigar_cpu_t *prev,
     double diff_wait, diff_irq, diff_soft_irq, diff_stolen;
     double diff_total;
 
-    diff_user = (sigar_int64_t)(curr->user - prev->user);
-    diff_sys  = (sigar_int64_t)(curr->sys  - prev->sys);
-    diff_nice = (sigar_int64_t)(curr->nice - prev->nice);
-    diff_idle = (sigar_int64_t)(curr->idle - prev->idle);
-    diff_wait = (sigar_int64_t)(curr->wait - prev->wait);
-    diff_irq = (sigar_int64_t)(curr->irq - prev->irq);
-    diff_soft_irq = (sigar_int64_t)(curr->soft_irq - prev->soft_irq);
-    diff_stolen = (sigar_int64_t)(curr->stolen - prev->stolen);
+    diff_user = curr->user - prev->user;
+    diff_sys  = curr->sys  - prev->sys;
+    diff_nice = curr->nice - prev->nice;
+    diff_idle = curr->idle - prev->idle;
+    diff_wait = curr->wait - prev->wait;
+    diff_irq = curr->irq - prev->irq;
+    diff_soft_irq = curr->soft_irq - prev->soft_irq;
+    diff_stolen = curr->stolen - prev->stolen;
 
     diff_user = diff_user < 0 ? 0 : diff_user;
     diff_sys  = diff_sys  < 0 ? 0 : diff_sys;
