@@ -1,0 +1,1 @@
+SUBDIRS = @SRC_OS@
