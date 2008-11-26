@@ -83,7 +83,12 @@ public class Top {
 
                 String cpuPerc = "?";
 
-                List info = Ps.getInfo(sigar, pid);
+                List info;
+                try {
+                    info = Ps.getInfo(sigar, pid);
+                } catch (SigarException e) {
+                    continue; //process may have gone away
+                }
                 try {
                     ProcCpu cpu = sigar.getProcCpu(pid);
                     cpuPerc = CpuPerc.format(cpu.getPercent());
