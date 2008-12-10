@@ -156,6 +156,9 @@ SIGAR_DECLARE(int) sigar_proc_cpu_get(sigar_t *sigar, sigar_pid_t pid,
 
     total_diff = proccpu->total - otime;
     proccpu->percent = total_diff / (double)time_diff;
+    if (proccpu->percent > 1.0) {
+        proccpu->percent = 1.0;
+    }
 
     return SIGAR_OK;
 }
