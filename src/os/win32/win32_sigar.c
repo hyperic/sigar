@@ -1254,11 +1254,13 @@ SIGAR_DECLARE(int) sigar_proc_cred_get(sigar_t *sigar, sigar_pid_t pid,
 
 sigar_int64_t sigar_time_now_millis(void)
 {
+    SYSTEMTIME st;
     FILETIME time;
 
-    GetSystemTimeAsFileTime(&time);
+    GetSystemTime(&st);
+    SystemTimeToFileTime(&st, &time);
 
-    return FILETIME2MSEC(time);
+    return sigar_FileTimeToTime(&time) / 1000;
 }
 
 SIGAR_DECLARE(int) sigar_proc_time_get(sigar_t *sigar, sigar_pid_t pid,
