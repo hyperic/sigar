@@ -824,13 +824,9 @@ SIGAR_DECLARE(int) sigar_rpc_ping(char *host,
     rpc_stat = clnt_call(client, NULLPROC, (xdrproc_t)xdr_void, NULL,
                          (xdrproc_t)xdr_void, NULL, timeout);
 
-    if (rpc_stat != RPC_SUCCESS) {
-        return rpc_stat;
-    }
-
     clnt_destroy(client);
 
-    return RPC_SUCCESS;
+    return rpc_stat;
 }
 #endif
 
