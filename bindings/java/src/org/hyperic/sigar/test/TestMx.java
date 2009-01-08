@@ -51,7 +51,12 @@ public class TestMx extends SigarTestCase {
         for (int i=0; i<pids.length; i++) {
             SigarProcess proc = new SigarProcess();
             proc.setPid(pids[i]);
-            ObjectName name =  new ObjectName(proc.getObjectName());
+            ObjectName name;
+            try {
+                name = new ObjectName(proc.getObjectName());
+            } catch (SigarException e) {
+                continue; //process may have gone away
+            }
             if (server.isRegistered(name)) {
                 continue;
             }
