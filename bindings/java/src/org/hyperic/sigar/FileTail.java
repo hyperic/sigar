@@ -18,8 +18,10 @@
 
 package org.hyperic.sigar;
 
+import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 
@@ -54,30 +56,33 @@ public abstract class FileTail extends FileWatcher {
     }
 
     public void onChange(FileInfo info) {
+        InputStream in = null;
         Reader reader = null;
         String name = info.getName();
 
         try {
             if (this.useSudo) {
-                reader =
-                    new InputStreamReader(new SudoFileInputStream(name));
+                in = new SudoFileInputStream(name);
             }
             else {
-                reader = new FileReader(name);
+                in = new FileInputStream(name);
             }
 
             long offset = getOffset(info);
 
             if (offset > 0) {
-                reader.skip(offset);
+                in.skip(offset); //use InputStream to skip bytes
             }
-
+            reader = new InputStreamReader(in);
             tail(info, reader);
         } catch (IOException e) {
             error(name, e);
         } finally {
             if (reader != null) {
                 try { reader.close(); } catch (IOException e) { }
+            }
+            if (in != null) {
+                try { in.close(); } catch (IOException e) { }
             }
         }
     }
