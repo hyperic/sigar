@@ -8,10 +8,6 @@ of the projects listed below for their contributions.
 
 The following components are included without modification:
 
-- BCEL -
-Information: http://jakarta.apache.org/bcel/index.html
-License: http://www.apache.org/licenses/LICENSE-2.0
-
 - log4j -
 Information: http://logging.apache.org/
 License: http://www.apache.org/licenses/LICENSE-2.0
