@@ -70,7 +70,7 @@ public class Version extends SigarCommandBase {
 
         os.println("Sigar version......." + version);
         os.println("Build date.........." + build);
-        os.println("SVN rev............." + scm);
+        os.println("SCM rev............." + scm);
         String host = getHostName();
         String fqdn;
         Sigar sigar = new Sigar(); 
