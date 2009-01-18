@@ -1,0 +1,22 @@
+
+cpptasks.pat - provides support for HP cc and AIX xlc_r
+the classes listed below are copy-n-pastes from existing cpptasks
+classes, simply changed program names, flags, etc.  the HP classes
+were submitted as a patch to ant-contrib-developers on 10/09/2002,
+to which there was no response, so have not bothered to submit the aix
+patch.
+SubsystemEnum patch is for the osf1 javac (aka tru64).
+was throwing IllegalAccessError.  why clone a final String[] anyhow??
+CUtil patch is for jdk 1.3 (StringBuffer.indexOf is 1.4+)
+GccLinker patch adds -arch to known flags for building universal binaries
+
+added       | derived from
+--------------------------
+HPCompiler  | aCCCompiler
+HPLinker    | aCCLinker
+XlcCompiler | VisualAgeCCompiler
+XlcLinker   | VisualAgeLinker
+
+cpptasks.pat applies to:
+cvs -d:pserver:anonymous@cvs.sourceforge.net:/cvsroot/ant-contrib \
+co -D"2006/04/28 15:00:00" cpptasks
