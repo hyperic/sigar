@@ -141,7 +141,7 @@
     </condition>
   </target>
 
-  <target name="scm-revision" if="svn.available">
+  <target name="svn-revision" if="svn.available">
     <exec executable="svnversion" dir="."
           outputproperty="sigar.scmrev"
           failifexecutionfails="false">
@@ -150,7 +150,30 @@
     <echo message="SIGAR svn revision #${sigar.scmrev}"/>
   </target>
 
-  <target name="sigar-version" depends="check-svn,scm-revision">
+  <target name="check-git">
+    <condition property="git.available">
+      <and>
+        <available file="../../.git" type="dir"/>
+        <available file="git" type="file">
+          <filepath>
+            <pathelement path="${env.PATH}"/>
+          </filepath>
+        </available>
+     </and>
+    </condition>
+  </target>
+
+  <target name="git-revision" if="git.available">
+    <exec executable="git-rev-parse" dir="."
+          outputproperty="sigar.scmrev"
+          failifexecutionfails="false">
+      <arg value="--short"/>
+      <arg value="HEAD"/>
+    </exec>
+    <echo message="SIGAR git revision #${sigar.scmrev}"/>
+  </target>
+
+  <target name="sigar-version" depends="check-svn,svn-revision,check-git,git-revision">
     <tstamp>
       <format property="BUILD_DATE" pattern="MM/dd/yyyy hh:mm aa"/>
     </tstamp>
