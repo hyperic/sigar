@@ -192,7 +192,7 @@
        <param name="version.file"
               value="src/sigar_version.c"/>
        <param name="version.tofile"
-              value="${build}/src/sigar_version_${jni.libarch}.c"/>
+              value="${build}/src/sigar_version.c"/>
     </antcall>
 
     <antcall target="version-file">
@@ -262,7 +262,7 @@
       <include name="bindings/java/src/${win32.jni}/*.cpp"/>
       <include name="bindings/java/src/${win32.jni}/*.c"/>
       <include name="bindings/java/src/${vmware.jni}/*.c"/>
-      <include name="bindings/java/build/src/sigar_version_${jni.libarch}.c"/>
+      <include name="bindings/java/build/src/sigar_version.c"/>
     </patternset>
 
     <path id="jni.include.dirs">
