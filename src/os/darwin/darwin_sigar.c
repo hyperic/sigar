@@ -1983,6 +1983,7 @@ int sigar_file_system_list_get(sigar_t *sigar,
     fs = malloc(len);
 
     if ((num = sigar_getfsstat(fs, len, MNT_NOWAIT)) < 0) {
+        free(fs);
         return errno;
     }
 
@@ -2026,6 +2027,7 @@ int sigar_file_system_list_get(sigar_t *sigar,
         sigar_fs_type_init(fsp);
     }
 
+    free(fs);
     return SIGAR_OK;
 }
 
