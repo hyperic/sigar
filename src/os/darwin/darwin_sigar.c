@@ -2447,8 +2447,10 @@ static int sigar_ifmsg_iter(sigar_t *sigar, ifmsg_iter_t *iter)
           case IFMSG_ITER_LIST:
             SIGAR_NET_IFLIST_GROW(iter->data.iflist);
 
+            /* sdl_data doesn't include a trailing \0, it is only sdl_nlen long */
             name = malloc(sdl->sdl_nlen+1);
-            memcpy(name, sdl->sdl_data, sdl->sdl_nlen+1);
+            memcpy(name, sdl->sdl_data, sdl->sdl_nlen);
+            name[sdl->sdl_nlen] = '\0'; /* add the missing \0 */
 
             iter->data.iflist->data[iter->data.iflist->number++] = name;
             break;
