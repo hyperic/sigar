@@ -164,9 +164,10 @@
   </target>
 
   <target name="git-revision" if="git.available">
-    <exec executable="git-rev-parse" dir="."
+    <exec executable="git" dir="."
           outputproperty="sigar.scmrev"
           failifexecutionfails="false">
+      <arg value="rev-parse"/>
       <arg value="--short"/>
       <arg value="HEAD"/>
     </exec>
