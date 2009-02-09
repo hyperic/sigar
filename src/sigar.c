@@ -447,6 +447,11 @@ static int sigar_common_fs_type_get(sigar_file_system_t *fsp)
             fsp->type = SIGAR_FSTYPE_LOCAL_DISK;
         }
         break;
+      case 'z': 
+        if (strEQ(type, "zfs")) { 
+            fsp->type = SIGAR_FSTYPE_LOCAL_DISK; 
+        } 
+        break;
     }
 
     return fsp->type;
