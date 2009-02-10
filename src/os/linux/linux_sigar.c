@@ -1086,7 +1086,7 @@ int sigar_os_fs_type_get(sigar_file_system_t *fsp)
         }
         break;
       case 'o':
-        if (strEQ(type, "ocfs2")) {
+        if (strnEQ(type, "ocfs", 4)) {
             fsp->type = SIGAR_FSTYPE_LOCAL_DISK;
         }
         break;
