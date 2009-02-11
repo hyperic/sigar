@@ -8,7 +8,7 @@ static sigar_version_t sigar_version = {
     "@@ARCHLIB@@",
     "@@BINNAME@@",
     "SIGAR-@@VERSION_STRING@@, "
-    "SVN revision @@SCM_REVISION@@, "
+    "SCM revision @@SCM_REVISION@@, "
     "built @@BUILD_DATE@@ as @@ARCHLIB@@",
     @@VERSION_MAJOR@@,
     @@VERSION_MINOR@@,
