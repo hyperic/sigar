@@ -17,13 +17,25 @@
  */
 
 #ifdef WIN32
+#define UNICODE
+#define _UNICODE
+
 #include "javasigar.h"
 #include "win32bindings.h"
 
 #define MAX_MSG_LENGTH   8192
 #define MAX_ERROR_LENGTH 1024
 
-#define REG_MSGFILE_ROOT "SYSTEM\\CurrentControlSet\\Services\\EventLog\\"
+#define REG_MSGFILE_ROOT L"SYSTEM\\CurrentControlSet\\Services\\EventLog\\"
+#define FILESEP L";"
+#define STRING_SIG "Ljava/lang/String;"
+
+#define UNICODE_SetStringField(field, str) \
+    id = JENV->GetFieldID(env, cls, field, STRING_SIG); \
+    value = JENV->NewString(env, (const jchar *)str, wcslen(str)); \
+    JENV->SetObjectField(env, obj, id, value)
+
+#define ARRLEN(arr) (sizeof(arr) / sizeof(arr[0]))
 
 static void win32_set_pointer(JNIEnv *env, jobject obj, const void *ptr)
 {
@@ -57,27 +69,32 @@ static HANDLE win32_get_pointer(JNIEnv *env, jobject obj)
     return h;
 }
 
-static int get_messagefile_dll(const char *app, char *source, char *dllfile)
+static int get_messagefile_dll(LPWSTR app, LPWSTR source, LPWSTR dllfile)
 {
     HKEY hk;
-    char buf[MAX_MSG_LENGTH];
+    WCHAR buf[MAX_MSG_LENGTH];
     DWORD type, data = sizeof(buf);
     LONG rc;
 
-    sprintf(buf, "%s%s\\%s", REG_MSGFILE_ROOT, app, source);
-    rc = RegOpenKey(HKEY_LOCAL_MACHINE, buf, &hk); 
+    wcscpy(buf, REG_MSGFILE_ROOT);
+    wcscat(buf, app);
+    wcscat(buf, L"\\");
+    wcscat(buf, source);
+
+    rc = RegOpenKeyEx(HKEY_LOCAL_MACHINE, buf,
+                      0, KEY_READ, &hk); 
     if (rc) {
         return rc;
     }
 
-    rc = RegQueryValueEx(hk, "EventMessageFile", NULL, &type,
-                         (UCHAR *)buf, &data);
+    rc = RegQueryValueEx(hk, L"EventMessageFile", NULL, &type,
+                         (LPBYTE)buf, &data);
     if (rc) {
         RegCloseKey(hk);
         return rc;
     }
 
-    strncpy(dllfile, buf, MAX_MSG_LENGTH);
+    wcsncpy(dllfile, buf, MAX_MSG_LENGTH);
     dllfile[MAX_MSG_LENGTH-1] = '\0';
 
     RegCloseKey(hk);
@@ -85,13 +102,13 @@ static int get_messagefile_dll(const char *app, char *source, char *dllfile)
     return ERROR_SUCCESS;
 }
 
-static int get_formatted_message(EVENTLOGRECORD *pevlr, char *dllfile,
-                                 char *msg)
+static int get_formatted_message(EVENTLOGRECORD *pevlr, LPWSTR dllfile,
+                                 LPWSTR msg)
 {
     LPVOID msgbuf = NULL;
-    char msgdll[MAX_MSG_LENGTH];
-    char *insert_strs[56], *ptr;
-    int i, max = sizeof(insert_strs) / sizeof(char *);
+    WCHAR msgdll[MAX_MSG_LENGTH];
+    LPWSTR insert_strs[56], ptr;
+    int i, max = ARRLEN(insert_strs);
     const DWORD flags =
         FORMAT_MESSAGE_FROM_HMODULE |
         FORMAT_MESSAGE_FROM_SYSTEM |
@@ -99,25 +116,20 @@ static int get_formatted_message(EVENTLOGRECORD *pevlr, char *dllfile,
         FORMAT_MESSAGE_ARGUMENT_ARRAY |
         FORMAT_MESSAGE_MAX_WIDTH_MASK;
 
-    if (!ExpandEnvironmentStrings(dllfile, msgdll, sizeof(msgdll))) {
+    if (!ExpandEnvironmentStrings(dllfile, msgdll, ARRLEN(msgdll))) {
         return GetLastError();
     }
 
     memset(insert_strs, '\0', sizeof(insert_strs));
-    ptr = (char *)((LPBYTE)pevlr + pevlr->StringOffset);
+    ptr = (LPWSTR)((LPBYTE)pevlr + pevlr->StringOffset);
     for (i = 0; i < pevlr->NumStrings && i < max; i++) {
         insert_strs[i] = ptr;
-        ptr += strlen(ptr) + 1;
+        ptr += wcslen(ptr) + 1;
     }
 
-    ptr = msgdll;
+    ptr = wcstok(msgdll, FILESEP);
     while (ptr) {
         HINSTANCE hlib;
-        char *delim = strchr(ptr, ';');
-
-        if (delim) {
-            *delim++ = '\0';
-        }
 
         hlib = LoadLibraryEx(ptr, NULL,
                              LOAD_LIBRARY_AS_DATAFILE);
@@ -126,20 +138,20 @@ static int get_formatted_message(EVENTLOGRECORD *pevlr, char *dllfile,
                           hlib,
                           pevlr->EventID,
                           MAKELANGID(LANG_NEUTRAL, SUBLANG_ENGLISH_US),
-                          (LPTSTR) &msgbuf,
-                          sizeof(msgbuf),
-                          insert_strs);
+                          (LPWSTR) &msgbuf,
+                          sizeof(msgbuf), //min bytes w/ FORMAT_MESSAGE_ALLOCATE_BUFFER
+                          (va_list *)insert_strs);
             FreeLibrary(hlib);
 
             if (msgbuf) {
                 break;
             }
         }
-        ptr = delim;
+        ptr = wcstok(NULL, FILESEP);
     }
 
     if (msgbuf) {
-        strncpy(msg, msgbuf, MAX_MSG_LENGTH);
+        wcsncpy(msg, msgbuf, MAX_MSG_LENGTH);
         msg[MAX_MSG_LENGTH-1] = '\0';
         LocalFree(msgbuf);
         return ERROR_SUCCESS;
@@ -153,9 +165,9 @@ JNIEXPORT void SIGAR_JNI(win32_EventLog_openlog)
 (JNIEnv *env, jobject obj, jstring lpSourceName)
 {
     HANDLE h;
-    const char *name;
+    LPWSTR name;
 
-    name = JENV->GetStringUTFChars(env, lpSourceName, 0);
+    name = (LPWSTR)JENV->GetStringChars(env, lpSourceName, NULL);
 
     h = OpenEventLog(NULL, name);
     if (h == NULL) {
@@ -163,12 +175,12 @@ JNIEXPORT void SIGAR_JNI(win32_EventLog_openlog)
         DWORD lastError = GetLastError();
 
         sprintf(buf, "Unable to open event log: %d", lastError);
-        JENV->ReleaseStringUTFChars(env, lpSourceName, name);
+        JENV->ReleaseStringChars(env, lpSourceName, name);
         win32_throw_exception(env, buf);
         return;
     }
 
-    JENV->ReleaseStringUTFChars(env, lpSourceName, name);
+    JENV->ReleaseStringChars(env, lpSourceName, name);
 
     /* Save the handle for later use */
     win32_set_pointer(env, obj, h);
@@ -217,16 +229,16 @@ JNIEXPORT jobject SIGAR_JNI(win32_EventLog_readlog)
 {
     EVENTLOGRECORD *pevlr;
     BYTE buffer[8192];
-    char dllfile[MAX_MSG_LENGTH];
-    char msg[MAX_MSG_LENGTH];
+    WCHAR dllfile[MAX_MSG_LENGTH];
+    WCHAR msg[MAX_MSG_LENGTH];
     DWORD dwRead, dwNeeded;
-    LPSTR source, machineName;
+    LPWSTR source, machineName;
     HANDLE h;
     BOOL rv;
     jclass cls = WIN32_FIND_CLASS("EventLogRecord");
-    jobject eventObj; /* Actual instance of the EventLogRecord */
     jfieldID id;
-    const char *name;
+    jstring value;
+    LPWSTR name;
 
     h = win32_get_pointer(env, obj);
 
@@ -254,59 +266,54 @@ JNIEXPORT jobject SIGAR_JNI(win32_EventLog_readlog)
         return NULL;
     }
 
-    eventObj = JENV->AllocObject(env, cls);
+    obj = JENV->AllocObject(env, cls);
 
     id = JENV->GetFieldID(env, cls, "recordNumber", "J");
-    JENV->SetLongField(env, eventObj, id, pevlr->RecordNumber);
+    JENV->SetLongField(env, obj, id, pevlr->RecordNumber);
 
     id = JENV->GetFieldID(env, cls, "timeGenerated", "J");
-    JENV->SetLongField(env, eventObj, id, pevlr->TimeGenerated);
+    JENV->SetLongField(env, obj, id, pevlr->TimeGenerated);
 
     id = JENV->GetFieldID(env, cls, "timeWritten", "J");
-    JENV->SetLongField(env, eventObj, id, pevlr->TimeWritten);
+    JENV->SetLongField(env, obj, id, pevlr->TimeWritten);
 
     id = JENV->GetFieldID(env, cls, "eventId", "J");
-    JENV->SetLongField(env, eventObj, id, pevlr->EventID);
+    JENV->SetLongField(env, obj, id, pevlr->EventID);
 
     id = JENV->GetFieldID(env, cls, "eventType", "S");
-    JENV->SetShortField(env, eventObj, id, pevlr->EventType);
+    JENV->SetShortField(env, obj, id, pevlr->EventType);
 
     /* Extract string data from the end of the structure.  Lame. */
 
-    id = JENV->GetFieldID(env, cls, "source", "Ljava/lang/String;");
-    source = (LPSTR)((LPBYTE)pevlr + sizeof(EVENTLOGRECORD));
-    SetStringField(env, eventObj, id, source);
+    source = (LPWSTR)((LPBYTE)pevlr + sizeof(EVENTLOGRECORD));
+    UNICODE_SetStringField("source", source);
 
-    name = JENV->GetStringUTFChars(env, jname, 0);
+    name = (LPWSTR)JENV->GetStringChars(env, jname, NULL);
 
     /* Get the formatted message */
     if ((pevlr->NumStrings > 0) &&
         (get_messagefile_dll(name, source, dllfile) == ERROR_SUCCESS) &&
         (get_formatted_message(pevlr, dllfile, msg) == ERROR_SUCCESS))
     {
-        id = JENV->GetFieldID(env, cls, "message", 
-                              "Ljava/lang/String;");
-        SetStringField(env, eventObj, id, msg);
+        UNICODE_SetStringField("message", msg);
     }
     else if (pevlr->NumStrings > 0) {
-        char *tmp = (LPSTR)((LPBYTE)pevlr + pevlr->StringOffset);            
-        id = JENV->GetFieldID(env, cls, "message", "Ljava/lang/String;");
-        SetStringField(env, eventObj, id, tmp);
+        LPWSTR tmp = (LPWSTR)((LPBYTE)pevlr + pevlr->StringOffset);            
+        UNICODE_SetStringField("message", tmp);
     }
-    JENV->ReleaseStringUTFChars(env, jname, name);
+    JENV->ReleaseStringChars(env, jname, name);
 
     /* Increment up to the machine name. */
-    id = JENV->GetFieldID(env, cls, "computerName", "Ljava/lang/String;");
-    machineName = (LPSTR)((LPBYTE)pevlr + sizeof(EVENTLOGRECORD) +
-                          strlen(source) + 1);
-    SetStringField(env, eventObj, id, machineName);
+    machineName = (LPWSTR)((LPBYTE)pevlr + sizeof(EVENTLOGRECORD) +
+                           wcslen(source) + 1);
+    UNICODE_SetStringField("computerName", machineName);
 
     /* Get user id info */
     if (pevlr->UserSidLength > 0) {
-        char name[256];
-        char domain[256];
-        DWORD namelen = sizeof(name);
-        DWORD domainlen = sizeof(domain);
+        WCHAR name[256];
+        WCHAR domain[256];
+        DWORD namelen = ARRLEN(name);
+        DWORD domainlen = ARRLEN(domain);
         DWORD len;
         SID_NAME_USE snu;
         PSID sid;
@@ -314,12 +321,11 @@ JNIEXPORT jobject SIGAR_JNI(win32_EventLog_readlog)
         sid = (PSID)((LPBYTE)pevlr + pevlr->UserSidOffset);
         if (LookupAccountSid(NULL, sid, name, &namelen, domain,
                              &domainlen, &snu)) {
-            id = JENV->GetFieldID(env, cls, "user", "Ljava/lang/String;");
-            SetStringField(env, eventObj, id, name);
+            UNICODE_SetStringField("user", name);
         }
     }
     
-    return eventObj;
+    return obj;
 }
 
 JNIEXPORT void SIGAR_JNI(win32_EventLog_waitForChange)
