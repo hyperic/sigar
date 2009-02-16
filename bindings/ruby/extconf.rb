@@ -48,6 +48,9 @@ when /hpux/
   os = 'hpux'
 when /aix/
   os = 'aix'
+  have_library("odm")
+  have_library("cfg")
+  have_library("perfstat")
 else
   os = RUBY_PLATFORM
 end
