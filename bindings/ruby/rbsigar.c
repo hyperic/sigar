@@ -25,6 +25,14 @@
 #define RB_SIGAR_CROAK rb_raise(rb_eArgError, "%s", sigar_strerror(sigar, status))
 #define NUM2PID NUM2UINT
 
+#ifndef RSTRING_PTR
+#define RSTRING_PTR(s) (s)->ptr
+#endif
+
+#ifndef RSTRING_LEN
+#define RSTRING_LEN(s) (s)->len
+#endif
+
 static sigar_t *rb_sigar_get(VALUE obj)
 {
     sigar_t *sigar;
@@ -141,7 +149,7 @@ static VALUE rb_sigar_net_interface_list(VALUE obj)
 
 static int rb_sigar_str2net_address(VALUE bytes, sigar_net_address_t *address)
 {
-    long len = RSTRING(bytes)->len;
+    long len = RSTRING_LEN(bytes);
 
     switch (len) {
       case 4:
@@ -154,7 +162,7 @@ static int rb_sigar_str2net_address(VALUE bytes, sigar_net_address_t *address)
         return EINVAL;
     }
 
-    memcpy(RSTRING(bytes)->ptr, &address->addr.in6, len);
+    memcpy(RSTRING_PTR(bytes), &address->addr.in6, len);
 
     return SIGAR_OK;
 }
