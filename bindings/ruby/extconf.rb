@@ -24,7 +24,7 @@ when /darwin/
 when /bsd/
   os = 'darwin'
   have_library("kvm")
-when /mswin32|mingw|cygwin|bccwin32/
+when /mswin|mingw|cygwin|bccwin/
   os = 'win32'
   require 'ftools'
   $CPPFLAGS += ' -DWIN32'
