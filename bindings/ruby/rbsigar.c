@@ -26,11 +26,11 @@
 #define NUM2PID NUM2UINT
 
 #ifndef RSTRING_PTR
-#define RSTRING_PTR(s) (s)->ptr
+#define RSTRING_PTR(s) RSTRING(s)->ptr
 #endif
 
 #ifndef RSTRING_LEN
-#define RSTRING_LEN(s) (s)->len
+#define RSTRING_LEN(s) RSTRING(s)->len
 #endif
 
 static sigar_t *rb_sigar_get(VALUE obj)
