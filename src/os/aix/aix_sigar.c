@@ -33,6 +33,8 @@
 #include <pthread.h>
 #include <stdio.h>
 #include <utmp.h>
+#include <libperfstat.h>
+#include <pthread.h>
 
 #include <sys/statfs.h>
 #include <sys/systemcfg.h>
@@ -134,6 +136,21 @@ static int kread(sigar_t *sigar, void *data, int size, long offset)
     return SIGAR_OK;
 }
 
+static int sigar_thread_rusage(struct rusage *usage, int mode)
+{
+    return pthread_getrusage_np(pthread_self(), usage, mode);
+}
+
+static int sigar_perfstat_memory(perfstat_memory_total_t *memory)
+{
+    return perfstat_memory_total(NULL, memory, sizeof(*memory), 1);
+}
+
+static int sigar_perfstat_cpu(perfstat_cpu_total_t *cpu_total)
+{
+    return perfstat_cpu_total(NULL, cpu_total, sizeof(*cpu_total), 1);
+}
+
 int sigar_os_open(sigar_t **sigar)
 {
     int status, i;
@@ -146,7 +163,6 @@ int sigar_os_open(sigar_t **sigar)
 
     (*sigar)->getprocfd = NULL; /*XXX*/
     (*sigar)->kmem = kmem;
-    (*sigar)->dmem = -1;
     (*sigar)->pagesize = 0;
     (*sigar)->ticks = sysconf(_SC_CLK_TCK);
     (*sigar)->boot_time = 0;
@@ -155,7 +171,6 @@ int sigar_os_open(sigar_t **sigar)
     (*sigar)->cpuinfo = NULL;
     (*sigar)->cpuinfo_size = 0;
     SIGAR_ZERO(&(*sigar)->swaps);
-    SIGAR_ZERO(&(*sigar)->perfstat);
 
     i = getpagesize();
     while ((i >>= 1) > 0) {
@@ -193,25 +208,19 @@ int sigar_os_close(sigar_t *sigar)
     if (sigar->kmem > 0) {
         close(sigar->kmem);
     }
-    if (sigar->dmem > 0) {
-        close(sigar->dmem);
-    }
     if (sigar->pinfo) {
         free(sigar->pinfo);
     }
     if (sigar->cpuinfo) {
         free(sigar->cpuinfo);
     }
-    if (sigar->perfstat.handle) {
-        dlclose(sigar->perfstat.handle);
-    }
     if (sigar->diskmap) {
         sigar_cache_destroy(sigar->diskmap);
     }
     if (sigar->thrusage == PTHRDSINFO_RUSAGE_START) {
         struct rusage usage;
-        sigar->perfstat.thread_rusage(&usage,
-                                      PTHRDSINFO_RUSAGE_STOP);
+        sigar_thread_rusage(&usage,
+                            PTHRDSINFO_RUSAGE_STOP);
     }
     free(sigar);
     return SIGAR_OK;
@@ -227,263 +236,21 @@ char *sigar_os_error_string(sigar_t *sigar, int err)
     }
 }
 
-static int proc_module_get_self(void *data, char *name, int len)
-{
-    sigar_t *sigar = (sigar_t *)data;
-    char *ptr = rindex(name, '/');
-
-    if (!ptr) {
-        return SIGAR_OK;
-    }
-
-    if (strnEQ(ptr+1, "libsigar-", 9)) {
-        *ptr = '\0'; /* chop libsigar-powerpc-ibm-aix-4.3.x.so */
-
-        sigar->self_path = sigar_strdup(name);
-
-        if (SIGAR_LOG_IS_DEBUG(sigar)) {
-            sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
-                             "detected sigar-lib='%s'",
-                             sigar->self_path);
-        }
-
-        return !SIGAR_OK; /* break loop */
-    }
-
-    return SIGAR_OK;
-}
-
-static char *sigar_get_self_path(sigar_t *sigar)
-{
-    if (!sigar->self_path) {
-        sigar_proc_modules_t procmods;
-        procmods.module_getter = proc_module_get_self;
-        procmods.data = sigar;
-
-        sigar_proc_modules_get(sigar, sigar_pid_get(sigar),
-                               &procmods);
-
-        if (!sigar->self_path) {
-            /* dont try again */
-            sigar->self_path = sigar_strdup(".");
-        }
-    }
-
-    return sigar->self_path;
-}
-
-/*
- * the perfstat api is only supported in aix 5.2+
- * in order to be binary compatible with 4.3 and 5.1
- * we must jump through some hoops.  libperfstat.a
- * is a static library, we need dynamic.
- * libsigar_aixperfstat.so is juat a proxy to libperfstat.a
- */
-#define SIGAR_AIXPERFSTAT "/libsigar_aixperfstat.so"
-
-static int sigar_perfstat_init(sigar_t *sigar)
-{
-    void *handle;
-    char libperfstat[SIGAR_PATH_MAX+1], *path;
-    int len;
-
-    if (sigar->perfstat.avail == 1) {
-        return SIGAR_OK;
-    }
-    if (sigar->perfstat.avail == -1) {
-        return ENOENT;
-    }
-
-    path = sigar_get_self_path(sigar);
-    len = strlen(path);
-
-    memcpy(&libperfstat[0], path, len);
-    memcpy(&libperfstat[len], SIGAR_AIXPERFSTAT, 
-           sizeof(SIGAR_AIXPERFSTAT));
-
-    if (!(handle = dlopen(libperfstat, RTLD_LOCAL|RTLD_LAZY))) {
-        if (SIGAR_LOG_IS_DEBUG(sigar)) {
-            sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
-                             "failed to open '%s': %s",
-                             libperfstat, sigar_strerror(sigar, errno));
-        }
-
-        sigar->perfstat.avail = -1;
-        return errno;
-    }
-
-    sigar->perfstat.thread_rusage =
-        (thread_rusage_func_t)dlsym(handle,
-                                    "sigar_thread_rusage");
-
-    if (!sigar->perfstat.thread_rusage) {
-        if (SIGAR_LOG_IS_DEBUG(sigar)) {
-            sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
-                             "dlsym(sigar_thread_rusage) failed: %s",
-                             dlerror());
-        }
-    }
-
-    sigar->perfstat.cpu_total =
-        (perfstat_cpu_total_func_t)dlsym(handle,
-                                         "sigar_perfstat_cpu_total");
-
-    if (!sigar->perfstat.cpu_total) {
-        if (SIGAR_LOG_IS_DEBUG(sigar)) {
-            sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
-                             "dlsym(sigar_perfstat_cpu_total) failed: %s",
-                             dlerror());
-        }
-
-        dlclose(handle);
-
-        sigar->perfstat.avail = -1;
-        return ENOENT;
-    }
-
-    sigar->perfstat.cpu =
-        (perfstat_cpu_func_t)dlsym(handle,
-                                   "sigar_perfstat_cpu");
-
-    if (!sigar->perfstat.cpu) {
-        if (SIGAR_LOG_IS_DEBUG(sigar)) {
-            sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
-                             "dlsym(sigar_perfstat_cpu) failed: %s",
-                             dlerror());
-        }
-
-        dlclose(handle);
-
-        sigar->perfstat.avail = -1;
-        return ENOENT;
-    }
-
-    sigar->perfstat.swap =
-        (perfstat_swap_func_t)dlsym(handle,
-                                    "sigar_perfstat_pagingspace");
-
-    if (!sigar->perfstat.swap) {
-        if (SIGAR_LOG_IS_DEBUG(sigar)) {
-            sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
-                             "dlsym(sigar_perfstat_pagingspace) failed: %s",
-                             dlerror());
-        }
-
-        dlclose(handle);
-
-        sigar->perfstat.avail = -1;
-        return ENOENT;
-    }
-
-    sigar->perfstat.mem =
-        (perfstat_mem_func_t)dlsym(handle,
-                                   "sigar_perfstat_memory");
-
-    if (!sigar->perfstat.mem) {
-        if (SIGAR_LOG_IS_DEBUG(sigar)) {
-            sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
-                             "dlsym(sigar_perfstat_memory) failed: %s",
-                             dlerror());
-        }
-
-        dlclose(handle);
-
-        sigar->perfstat.avail = -1;
-        return ENOENT;
-    }
-
-    sigar->perfstat.disk =
-        (perfstat_disk_func_t)dlsym(handle,
-                                    "sigar_perfstat_disk");
-
-    if (!sigar->perfstat.disk) {
-        if (SIGAR_LOG_IS_DEBUG(sigar)) {
-            sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
-                             "dlsym(sigar_perfstat_disk) failed: %s",
-                             dlerror());
-        }
-
-        dlclose(handle);
-
-        sigar->perfstat.avail = -1;
-        return ENOENT;
-    }
-
-    sigar->perfstat.ifstat =
-        (perfstat_ifstat_func_t)dlsym(handle,
-                                      "sigar_perfstat_netinterface");
-
-    if (!sigar->perfstat.ifstat) {
-        if (SIGAR_LOG_IS_DEBUG(sigar)) {
-            sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
-                             "dlsym(sigar_perfstat_netinterface) failed: %s",
-                             dlerror());
-        }
-
-        dlclose(handle);
-
-        sigar->perfstat.avail = -1;
-        return ENOENT;
-    }
-
-    sigar->perfstat.protocol =
-        (perfstat_protocol_func_t)dlsym(handle,
-                                        "sigar_perfstat_protocol");
-
-    if (!sigar->perfstat.protocol) {
-        if (SIGAR_LOG_IS_DEBUG(sigar)) {
-            sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
-                             "dlsym(sigar_perfstat_protocol) failed: %s",
-                             dlerror());
-        }
-
-        dlclose(handle);
-
-        sigar->perfstat.avail = -1;
-        return ENOENT;
-    }
-
-    sigar->perfstat.avail = 1;
-    sigar->perfstat.handle = handle;
-
-    return SIGAR_OK;
-}
-
 #define PAGESHIFT(v) \
     ((v) << sigar->pagesize)
 
 int sigar_mem_get(sigar_t *sigar, sigar_mem_t *mem)
 {
     int status;
+    perfstat_memory_total_t minfo;
 
-    if (sigar_perfstat_init(sigar) == SIGAR_OK) {
-        perfstat_memory_total_t minfo;
-
-        sigar_log(sigar, SIGAR_LOG_DEBUG, "[mem] using libperfstat");
-
-        if (sigar->perfstat.mem(&minfo) == 1) {
-            mem->total = PAGESHIFT(minfo.real_total);
-            mem->free  = PAGESHIFT(minfo.real_free);
-        }
-        else {
-            return errno;
-        }            
+    if (sigar_perfstat_memory(&minfo) == 1) {
+        mem->total = PAGESHIFT(minfo.real_total);
+        mem->free  = PAGESHIFT(minfo.real_free);
     }
     else {
-        struct vminfo vm;
-
-        sigar_log(sigar, SIGAR_LOG_DEBUG, "[mem] using /dev/kmem");
-
-        status = kread(sigar, &vm, sizeof(vm),
-                       sigar->koffsets[KOFFSET_VMINFO]);
-
-        if (status != SIGAR_OK) {
-            return status;
-        }
-
-        mem->total = PAGESHIFT(vm.memsizepgs); /* lsattr -El sys0 -a realmem */
-        mem->free  = PAGESHIFT(vm.numfrb);
-    }
+        return errno;
+    }            
 
     mem->used = mem->total - mem->free;
     mem->actual_used = mem->used;
@@ -638,12 +405,12 @@ static int sigar_swap_get_swapqry(sigar_t *sigar, sigar_swap_t *swap)
 
 #define SWAP_DEV(ps) \
    ((ps.type == LV_PAGING) ? \
-     ps.id.lv_paging.vgname : \
-     ps.id.nfs_paging.filename)
+     ps.u.lv_paging.vgname : \
+     ps.u.nfs_paging.filename)
 
 #define SWAP_MB_TO_BYTES(v) ((v) * (1024 * 1024))
 
-static int sigar_swap_get_perfstat(sigar_t *sigar, sigar_swap_t *swap)
+int sigar_swap_get(sigar_t *sigar, sigar_swap_t *swap)
 {
     perfstat_memory_total_t minfo;
     perfstat_pagingspace_t ps;
@@ -654,7 +421,7 @@ static int sigar_swap_get_perfstat(sigar_t *sigar, sigar_swap_t *swap)
     SIGAR_ZERO(swap);
 
     do {
-        if (sigar->perfstat.swap(&id, &ps, 1) != 1) {
+        if (perfstat_pagingspace(&id, &ps, sizeof(ps), 1) != 1) {
             if (SIGAR_LOG_IS_DEBUG(sigar)) {
                 sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
                                  "[swap] dev=%s query failed: %s",
@@ -681,26 +448,14 @@ static int sigar_swap_get_perfstat(sigar_t *sigar, sigar_swap_t *swap)
 
     swap->free = swap->total - swap->used;
 
-    if (sigar->perfstat.mem(&minfo) == 1) {
+    if (sigar_perfstat_memory(&minfo) == 1) {
         swap->page_in = minfo.pgins;
         swap->page_out = minfo.pgouts;
     }
-            
-    return SIGAR_OK;
-}
-
-int sigar_swap_get(sigar_t *sigar, sigar_swap_t *swap)
-{
-    swap->page_in = swap->page_out = -1;
-
-    if (sigar_perfstat_init(sigar) == SIGAR_OK) {
-        sigar_log(sigar, SIGAR_LOG_DEBUG, "[swap] using libperfstat");
-        return sigar_swap_get_perfstat(sigar, swap);
-    }
     else {
-        sigar_log(sigar, SIGAR_LOG_DEBUG, "[swap] using /dev/kmem");
-        return sigar_swap_get_swapqry(sigar, swap);
+        swap->page_in = swap->page_out = -1;
     }
+    return SIGAR_OK;
 }
 
 int sigar_cpu_get(sigar_t *sigar, sigar_cpu_t *cpu)
@@ -709,43 +464,21 @@ int sigar_cpu_get(sigar_t *sigar, sigar_cpu_t *cpu)
     struct sysinfo data;
     perfstat_cpu_total_t cpu_data;
 
-    if (sigar_perfstat_init(sigar) == SIGAR_OK) {
-        sigar_log(sigar, SIGAR_LOG_DEBUG, "[cpu] using libperfstat");
-
-        if (sigar->perfstat.cpu_total(&cpu_data) == 1) {
-            cpu->user  = SIGAR_TICK2MSEC(cpu_data.user);
-            cpu->nice  = SIGAR_FIELD_NOTIMPL; /* N/A */
-            cpu->sys   = SIGAR_TICK2MSEC(cpu_data.sys);
-            cpu->idle  = SIGAR_TICK2MSEC(cpu_data.idle);
-            cpu->wait  = SIGAR_TICK2MSEC(cpu_data.wait);
-            cpu->irq = 0; /*N/A*/
-            cpu->soft_irq = 0; /*N/A*/
-            cpu->stolen = 0; /*N/A*/
-            cpu->total = cpu->user + cpu->sys + cpu->idle + cpu->wait;
-            return SIGAR_OK;
-        }
+    if (sigar_perfstat_cpu(&cpu_data) == 1) {
+        cpu->user  = SIGAR_TICK2MSEC(cpu_data.user);
+        cpu->nice  = SIGAR_FIELD_NOTIMPL; /* N/A */
+        cpu->sys   = SIGAR_TICK2MSEC(cpu_data.sys);
+        cpu->idle  = SIGAR_TICK2MSEC(cpu_data.idle);
+        cpu->wait  = SIGAR_TICK2MSEC(cpu_data.wait);
+        cpu->irq = 0; /*N/A*/
+        cpu->soft_irq = 0; /*N/A*/
+        cpu->stolen = 0; /*N/A*/
+        cpu->total = cpu->user + cpu->sys + cpu->idle + cpu->wait;
+        return SIGAR_OK;
     }
-
-    sigar_log(sigar, SIGAR_LOG_DEBUG, "[cpu] using /dev/kmem");
-
-    status = kread(sigar, &data, sizeof(data),
-                   sigar->koffsets[KOFFSET_SYSINFO]);
-
-    if (status != SIGAR_OK) {
-        return status;
+    else {
+        return errno;
     }
-
-    cpu->user = SIGAR_TICK2MSEC(data.cpu[CPU_USER]);
-    cpu->nice = SIGAR_FIELD_NOTIMPL; /* N/A */
-    cpu->sys  = SIGAR_TICK2MSEC(data.cpu[CPU_KERNEL]);
-    cpu->idle = SIGAR_TICK2MSEC(data.cpu[CPU_IDLE]);
-    cpu->wait = SIGAR_TICK2MSEC(data.cpu[CPU_WAIT]);
-    cpu->irq = 0; /*N/A*/
-    cpu->soft_irq = 0; /*N/A*/
-    cpu->stolen = 0; /*N/A*/
-    cpu->total = cpu->user + cpu->sys + cpu->idle + cpu->wait;
-
-    return SIGAR_OK;
 }
 
 /*
@@ -774,49 +507,7 @@ int sigar_cpu_get(sigar_t *sigar, sigar_cpu_t *cpu)
  * };
  */
 
-static int sigar_cpu_list_get_kmem(sigar_t *sigar, sigar_cpu_list_t *cpulist)
-{
-    int status, i, j;
-    int ncpu = _system_configuration.ncpus; /* this can change */
-    int size = ncpu * sizeof(struct cpuinfo);
-
-    if (sigar->cpuinfo_size < size) {
-        sigar->cpuinfo = realloc(sigar->cpuinfo, size);
-    }
-
-    status = kread(sigar, sigar->cpuinfo, size,
-                   sigar->koffsets[KOFFSET_CPUINFO]);
-
-    if (status != SIGAR_OK) {
-        return status;
-    }
-
-    sigar_cpu_list_create(cpulist);
-
-    for (i=0; i<ncpu; i++) {
-        sigar_cpu_t *cpu;
-        struct cpuinfo *info;
-
-        SIGAR_CPU_LIST_GROW(cpulist);
-
-        cpu = &cpulist->data[cpulist->number++];
-
-        info = &sigar->cpuinfo[i];
-        cpu->user = SIGAR_TICK2MSEC(info->cpu[CPU_USER]);
-        cpu->nice = 0; /* N/A */
-        cpu->sys  = SIGAR_TICK2MSEC(info->cpu[CPU_KERNEL]);
-        cpu->idle = SIGAR_TICK2MSEC(info->cpu[CPU_IDLE]);
-        cpu->wait = SIGAR_TICK2MSEC(info->cpu[CPU_WAIT]);
-        cpu->irq = 0; /*N/A*/
-        cpu->soft_irq = 0; /*N/A*/
-        cpu->stolen = 0; /*N/A*/
-        cpu->total = cpu->user + cpu->sys + cpu->idle + cpu->wait;
-    }
-
-    return SIGAR_OK;
-}
-
-static int sigar_cpu_list_get_pstat(sigar_t *sigar, sigar_cpu_list_t *cpulist)
+int sigar_cpu_list_get(sigar_t *sigar, sigar_cpu_list_t *cpulist)
 {
     perfstat_cpu_t data;
     int i, ncpu = _system_configuration.ncpus; /* this can change */
@@ -839,7 +530,7 @@ static int sigar_cpu_list_get_pstat(sigar_t *sigar, sigar_cpu_list_t *cpulist)
                              i, id.name);
         }
 
-        if (sigar->perfstat.cpu(&id, &data, 1) == 1) {
+        if (perfstat_cpu(&id, &data, sizeof(data), 1) == 1) {
             cpu->user  = SIGAR_TICK2MSEC(data.user);
             cpu->nice  = SIGAR_FIELD_NOTIMPL; /* N/A */
             cpu->sys   = SIGAR_TICK2MSEC(data.sys);
@@ -859,18 +550,6 @@ static int sigar_cpu_list_get_pstat(sigar_t *sigar, sigar_cpu_list_t *cpulist)
     }
 
     return SIGAR_OK;
-}
-
-int sigar_cpu_list_get(sigar_t *sigar, sigar_cpu_list_t *cpulist)
-{
-    if (sigar_perfstat_init(sigar) == SIGAR_OK) {
-        sigar_log(sigar, SIGAR_LOG_DEBUG, "[cpu_list] using libperfstat");
-        return sigar_cpu_list_get_pstat(sigar, cpulist);
-    }
-    else {
-        sigar_log(sigar, SIGAR_LOG_DEBUG, "[cpu_list] using /dev/kmem");
-        return sigar_cpu_list_get_kmem(sigar, cpulist);
-    }
 }
 
 static int boot_time(sigar_t *sigar, time_t *time)
@@ -980,38 +659,15 @@ int sigar_loadavg_get(sigar_t *sigar,
     int data[3];
     perfstat_cpu_total_t cpu_data;
 
-    if (sigar_perfstat_init(sigar) == SIGAR_OK) {
-        sigar_log(sigar, SIGAR_LOG_DEBUG,
-                  "[loadavg] using libperfstat");
-
-        if (sigar->perfstat.cpu_total(&cpu_data) == 1) {
-            for (i=0; i<3; i++) {
-                loadavg->loadavg[i] = FIXED_TO_DOUBLE(cpu_data.loadavg[i]);
-            }
-            return SIGAR_OK;
+    if (sigar_perfstat_cpu(&cpu_data) == 1) {
+        for (i=0; i<3; i++) {
+            loadavg->loadavg[i] = FIXED_TO_DOUBLE(cpu_data.loadavg[i]);
         }
-        else {
-            sigar_log_printf(sigar, SIGAR_LOG_ERROR,
-                             "perfstat_cpu_total failed: %s",
-                             sigar_strerror(sigar, errno));
-        }
+        return SIGAR_OK;
     }
-
-    sigar_log(sigar, SIGAR_LOG_DEBUG,
-              "[loadavg] using /dev/kmem");
-
-    status = kread(sigar, &data, sizeof(data),
-                   sigar->koffsets[KOFFSET_LOADAVG]);
-
-    if (status != SIGAR_OK) {
-        return status;
+    else {
+        return errno;
     }
-
-    for (i=0; i<3; i++) {
-        loadavg->loadavg[i] = FIXED_TO_DOUBLE(data[i]);
-    }
-
-    return SIGAR_OK;
 }
 
 int sigar_os_proc_list_get(sigar_t *sigar,
@@ -1359,24 +1015,19 @@ int sigar_thread_cpu_get(sigar_t *sigar,
     struct rusage usage;
     int retval;
 
-    sigar_perfstat_init(sigar);
-    if (!sigar->perfstat.thread_rusage) {
-        return SIGAR_ENOTIMPL;
-    }
-
     if (sigar->thrusage != PTHRDSINFO_RUSAGE_START) {
         sigar->thrusage = PTHRDSINFO_RUSAGE_START;
         retval =
-            sigar->perfstat.thread_rusage(&usage,
-                                          PTHRDSINFO_RUSAGE_START);
+            sigar_thread_rusage(&usage,
+                                PTHRDSINFO_RUSAGE_START);
         if (retval != 0) {
             return retval;
         }
     }
 
     retval = 
-        sigar->perfstat.thread_rusage(&usage,
-                                      PTHRDSINFO_RUSAGE_COLLECT);
+        sigar_thread_rusage(&usage,
+                            PTHRDSINFO_RUSAGE_COLLECT);
     if (retval != 0) {
         return retval;
     }
@@ -1514,88 +1165,18 @@ int sigar_file_system_list_get(sigar_t *sigar,
     return SIGAR_OK;
 }
 
-#define LSPV_CMD "/usr/sbin/lspv"
-
 typedef struct {
     char name[IDENTIFIER_LENGTH];
     long addr;
 } aix_diskio_t;
 
-/*
- * dont have per-partition metrics on aix.
- * need to build a mount point => diskname map.
- * see 'lspv -l hdisk0' for example.
- */
-static int create_diskmap_v4(sigar_t *sigar)
-{
-    FILE *fp = popen(LSPV_CMD, "r");
-    char buffer[BUFSIZ], *ptr;
-
-    sigar->diskmap = sigar_cache_new(25);
-
-    if (!fp) {
-        return ENOENT;
-    }
-
-    while ((ptr = fgets(buffer, sizeof(buffer), fp))) {
-        FILE *lfp;
-        char cmd[256], disk[IDENTIFIER_LENGTH];
-        char *s;
-
-        if (strstr(ptr, " None")) {
-            continue; /* no volume group */
-        }
-        if ((s = strchr(ptr, ' '))) {
-            *s = '\0';
-        }
-        SIGAR_SSTRCPY(disk, ptr);
-        snprintf(cmd, sizeof(cmd),
-                 LSPV_CMD " -l %s", disk);
-        if (!(lfp = popen(cmd, "r"))) {
-            continue;
-        }
-
-        (void)fgets(buffer, sizeof(buffer), lfp); /* skip disk: */
-        (void)fgets(buffer, sizeof(buffer), lfp); /* skip headers */
-        while ((ptr = fgets(buffer, sizeof(buffer), lfp))) {
-            sigar_cache_entry_t *ent;
-            struct stat sb;
-            int retval;
-            /* LV NAME LPs PPs DISTRIBUTION */
-            ptr = sigar_skip_multiple_token(ptr, 4);
-            SIGAR_SKIP_SPACE(ptr);
-            if ((s = strchr(ptr, '\n'))) {
-                *s = '\0';
-            }
-            if (strEQ(ptr, "N/A")) {
-                continue;
-            }
-            retval = stat(ptr, &sb);
-            if (retval == 0) {
-                aix_diskio_t *diskio = malloc(sizeof(*diskio));
-                SIGAR_SSTRCPY(diskio->name, disk);
-                diskio->addr = -1;
-                ent = sigar_cache_get(sigar->diskmap, SIGAR_FSDEV_ID(sb));
-                ent->value = diskio;
-            }
-        }
-        pclose(lfp);
-    }
-    pclose(fp);
-}
-
-static int create_diskmap_v5(sigar_t *sigar)
+static int create_diskmap(sigar_t *sigar)
 {
     int i, total, num;
     perfstat_disk_t *disk;
     perfstat_id_t id;
 
-    sigar_perfstat_init(sigar);
-    if (!sigar->perfstat.disk) {
-        return SIGAR_ENOTIMPL;
-    }
-
-    total = sigar->perfstat.disk(NULL, NULL, 0);
+    total = perfstat_disk(NULL, NULL, sizeof(*disk), 0);
     if (total < 1) {
         return ENOENT;
     }
@@ -1603,7 +1184,7 @@ static int create_diskmap_v5(sigar_t *sigar)
     disk = malloc(total * sizeof(*disk));
     id.name[0] = '\0';
 
-    num = sigar->perfstat.disk(&id, disk, total);
+    num = perfstat_disk(&id, disk, sizeof(*disk), total);
     if (num < 1) {
         free(disk);
         return ENOENT;
@@ -1657,115 +1238,15 @@ static int create_diskmap_v5(sigar_t *sigar)
     return SIGAR_OK;
 }
 
-static int create_diskmap(sigar_t *sigar)
-{
-    if (create_diskmap_v5(sigar) != SIGAR_OK) {
-        return create_diskmap_v4(sigar);
-    }
-    return SIGAR_OK;
-}
-
-static void set_disk_metrics(struct dkstat *dkstat,
-                             sigar_file_system_usage_t *fsusage)
-{
-    fsusage->disk.reads = dkstat->dk_rblks;
-    fsusage->disk.writes = dkstat->dk_wblks;
-    fsusage->disk.read_bytes  = dkstat->dk_rblks * dkstat->dk_bsize;
-    fsusage->disk.write_bytes = dkstat->dk_wblks * dkstat->dk_bsize;
-    fsusage->disk.time        = dkstat->dk_time;
-    fsusage->disk.rtime       = SIGAR_FIELD_NOTIMPL;
-    fsusage->disk.wtime       = SIGAR_FIELD_NOTIMPL;
-    if (dkstat->dk_qd_magic == dk_q_depth_magic) {
-        fsusage->disk.queue = dkstat->dk_q_depth;
-    }
-    else {
-        fsusage->disk.queue = SIGAR_FIELD_NOTIMPL;
-    }
-}
-
-static int get_disk_metrics(sigar_t *sigar,
-                            sigar_file_system_usage_t *fsusage,
-                            aix_diskio_t *diskio)
-{
-    int i, cnt, fd, status;
-    struct iostat iostat;
-    struct dkstat dkstat, *dp;
-    struct nlist nl[] = {
-        { "iostat" },
-    };
-
-    status = sigar_disk_usage_get(sigar, diskio->name, &fsusage->disk);
-    if (status == SIGAR_OK) {
-        return SIGAR_OK;
-    }
-
-    if (sigar->dmem == -1) {
-        if ((sigar->dmem = open("/dev/mem", O_RDONLY)) <= 0) {
-            return errno;
-        }
-    }
-
-    fd = sigar->dmem;
-
-    if (diskio->addr != -1) {
-        int status;
-        lseek(fd, diskio->addr, SEEK_SET);
-        read(fd, &dkstat, sizeof(dkstat));
-
-        if (strEQ(diskio->name, dkstat.diskname)) {
-            set_disk_metrics(&dkstat, fsusage);
-            status = SIGAR_OK;
-        }
-        else {
-            status = ENOENT;
-        }
-        return status;
-    }
-
-    i = knlist(nl, 1, sizeof(struct nlist));
-
-    if (i == -1) {
-        return errno;
-    }
-
-    if (nl[i].n_value == 0) {
-        return ENOENT;
-    }
-
-    lseek(fd, nl[0].n_value, SEEK_SET);
-    read(fd, &iostat, sizeof(iostat));
-
-    for (dp = iostat.dkstatp, cnt = iostat.dk_cnt;
-         cnt && dp;
-         --cnt, dp = dkstat.dknextp)
-    {
-        lseek(fd, (long)dp, SEEK_SET);
-        read(fd, &dkstat, sizeof(dkstat));
-
-        if (strEQ(diskio->name, dkstat.diskname)) {
-            set_disk_metrics(&dkstat, fsusage);
-            diskio->addr = (long)dp;
-            break;
-        }
-    }
-
-    return SIGAR_OK;
-}
-
 int sigar_disk_usage_get(sigar_t *sigar, const char *name,
                          sigar_disk_usage_t *usage)
 {
     perfstat_disk_t disk;
     perfstat_id_t id;
 
-    sigar_perfstat_init(sigar);
-    if (!sigar->perfstat.disk) {
-        return SIGAR_ENOTIMPL;
-    }
-
     SIGAR_SSTRCPY(id.name, name);
 
-    if (sigar->perfstat.disk(&id, &disk, 1) != 1) {
+    if (perfstat_disk(&id, &disk, sizeof(disk), 1) != 1) {
         return ENOENT;
     }
 
@@ -1827,7 +1308,7 @@ int sigar_file_system_usage_get(sigar_t *sigar,
         if (!ent->value) {
             return SIGAR_OK;
         }
-        get_disk_metrics(sigar, fsusage, (aix_diskio_t *)ent->value);
+        sigar_disk_usage_get(sigar, ((aix_diskio_t *)ent->value)->name, &fsusage->disk);
     }
 
     return SIGAR_OK;
@@ -1866,45 +1347,18 @@ static char *sigar_get_odm_model(sigar_t *sigar)
 #define SIGAR_CPU_CACHE_SIZE \
   (_system_configuration.L2_cache_size / 1024)
 
-static int sigar_get_cpu_mhz_perfstat(sigar_t *sigar)
+static int sigar_get_cpu_mhz(sigar_t *sigar)
 {
-    perfstat_cpu_total_t data;
+    if (sigar->cpu_mhz == SIGAR_FIELD_NOTIMPL) {
+        perfstat_cpu_total_t data;
 
-    if (sigar_perfstat_init(sigar) == SIGAR_OK) {
-        if (sigar->perfstat.cpu_total(&data) == 1) {
+        if (sigar_perfstat_cpu(&data) == 1) {
             sigar->cpu_mhz = data.processorHZ / 1000000;
-            return SIGAR_OK;
         }
         else {
             sigar_log_printf(sigar, SIGAR_LOG_ERROR,
                              "perfstat_cpu_total failed: %s",
                              sigar_strerror(sigar, errno));
-        }
-    }
-
-    return ENOENT;
-}
-
-static int sigar_get_cpu_mhz(sigar_t *sigar)
-{
-    if (sigar->cpu_mhz == SIGAR_FIELD_NOTIMPL) {
-        if (sigar_get_cpu_mhz_perfstat(sigar) != SIGAR_OK) {
-            sigar_uint64_t cache_size = SIGAR_CPU_CACHE_SIZE;
-
-            switch (cache_size) {
-              case 1024:
-                sigar->cpu_mhz = 333;
-                break;
-              case 4096:
-                sigar->cpu_mhz = 400;
-                break;
-              case 8192:
-                sigar->cpu_mhz = 450;
-                break;
-              default:
-                sigar->cpu_mhz = SIGAR_FIELD_NOTIMPL;
-                break;
-            }
         }
     }
 
@@ -2031,69 +1485,9 @@ int sigar_net_route_list_get(sigar_t *sigar,
     return SIGAR_ENOTIMPL;
 }
 
-static int sigar_net_interface_stat_get_kmem(sigar_t *sigar,
-                                             const char *name,
-                                             sigar_net_interface_stat_t *ifstat)
-{
-    int status;
-    struct ifnet data;
-    caddr_t offset = 0;
-    char if_name[32];
-
-    sigar_log(sigar, SIGAR_LOG_DEBUG, "[ifstat] using /dev/kmem");
-
-    status = kread(sigar, &offset, sizeof(offset),
-                   sigar->koffsets[KOFFSET_IFNET]);
-
-    if (status != SIGAR_OK) {
-        return status;
-    }
-
-    for (; offset; offset = (caddr_t)data.if_next) {
-        status = kread(sigar, &data, sizeof(data), (long)offset);
-
-        if (status != SIGAR_OK) {
-            return status;
-        }
-
-        status = kread(sigar, if_name, sizeof(if_name),
-                       (long)&data.if_name[0]);
-
-        if (status != SIGAR_OK) {
-            return status;
-        }
-
-        /* XXX if_name is 'en' or 'lo', not 'en0' or 'lo0' */
-        if (!strnEQ(if_name, name, strlen(if_name))) {
-            continue;
-        }
-
-        ifstat->rx_bytes      = data.if_ibytes;
-        ifstat->rx_packets    = data.if_ipackets;
-        ifstat->rx_errors     = data.if_ierrors;
-        ifstat->rx_dropped    = data.if_iqdrops;
-        ifstat->rx_overruns   = SIGAR_FIELD_NOTIMPL;
-        ifstat->rx_frame      = SIGAR_FIELD_NOTIMPL;
-
-        ifstat->tx_bytes      = data.if_obytes;
-        ifstat->tx_packets    = data.if_opackets;
-        ifstat->tx_errors     = data.if_oerrors;
-        ifstat->tx_dropped    = SIGAR_FIELD_NOTIMPL;
-        ifstat->tx_overruns   = SIGAR_FIELD_NOTIMPL;
-        ifstat->tx_collisions = data.if_collisions;
-        ifstat->tx_carrier    = SIGAR_FIELD_NOTIMPL;
-
-        ifstat->speed         = data.if_baudrate;
-
-        return SIGAR_OK;
-    }
-
-    return ENXIO;
-}
-
-static int sigar_net_interface_stat_get_perfstat(sigar_t *sigar,
-                                                 const char *name,
-                                                 sigar_net_interface_stat_t *ifstat)
+int sigar_net_interface_stat_get(sigar_t *sigar,
+                                 const char *name,
+                                 sigar_net_interface_stat_t *ifstat)
 {
     perfstat_id_t id;
     perfstat_netinterface_t data;
@@ -2102,7 +1496,7 @@ static int sigar_net_interface_stat_get_perfstat(sigar_t *sigar,
 
     SIGAR_SSTRCPY(id.name, name);
 
-    if (sigar->perfstat.ifstat(&id, &data) == 1) {
+    if (perfstat_netinterface(&id, &data, sizeof(data), 1) == 1) {
         ifstat->rx_bytes      = data.ibytes;
         ifstat->rx_packets    = data.ipackets;
         ifstat->rx_errors     = data.ierrors;
@@ -2122,27 +1516,8 @@ static int sigar_net_interface_stat_get_perfstat(sigar_t *sigar,
 
         return SIGAR_OK;
     }
-
-    if (SIGAR_LOG_IS_DEBUG(sigar)) {
-        sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
-                         "[ifstat] dev=%s query failed: %s",
-                         name,
-                         sigar_strerror(sigar, errno));
-    }
-
-    return sigar_net_interface_stat_get_kmem(sigar, name, ifstat);
-}
-
-int sigar_net_interface_stat_get(sigar_t *sigar, const char *name,
-                                 sigar_net_interface_stat_t *ifstat)
-{
-    sigar_perfstat_init(sigar);
-
-    if (sigar->perfstat.ifstat) {
-        return sigar_net_interface_stat_get_perfstat(sigar, name, ifstat);
-    }
     else {
-        return sigar_net_interface_stat_get_kmem(sigar, name, ifstat);
+        return errno;
     }
 }
 
@@ -2286,13 +1661,9 @@ sigar_tcp_get(sigar_t *sigar,
     perfstat_id_t id;
     perfstat_protocol_t proto;
 
-    if (sigar_perfstat_init(sigar) != SIGAR_OK) {
-        return SIGAR_ENOTIMPL;
-    }
-
     SIGAR_SSTRCPY(id.name, "tcp");
 
-    if (sigar->perfstat.protocol(&id, &proto, 1) != 1) {
+    if (perfstat_protocol(&id, &proto, sizeof(proto), 1) != 1) {
         return ENOENT;
     }    
 
@@ -2334,13 +1705,9 @@ int sigar_nfs_client_v2_get(sigar_t *sigar,
     perfstat_id_t id;
     perfstat_protocol_t proto;
 
-    if (sigar_perfstat_init(sigar) != SIGAR_OK) {
-        return SIGAR_ENOTIMPL;
-    }
-
     SIGAR_SSTRCPY(id.name, "nfsv2");
 
-    if (sigar->perfstat.protocol(&id, &proto, 1) != 1) {
+    if (perfstat_protocol(&id, &proto, sizeof(proto), 1) != 1) {
         return ENOENT;
     }    
 
@@ -2355,13 +1722,9 @@ int sigar_nfs_server_v2_get(sigar_t *sigar,
     perfstat_id_t id;
     perfstat_protocol_t proto;
 
-    if (sigar_perfstat_init(sigar) != SIGAR_OK) {
-        return SIGAR_ENOTIMPL;
-    }
-
     SIGAR_SSTRCPY(id.name, "nfsv2");
 
-    if (sigar->perfstat.protocol(&id, &proto, 1) != 1) {
+    if (perfstat_protocol(&id, &proto, sizeof(proto), 1) != 1) {
         return ENOENT;
     }    
 
@@ -2400,13 +1763,9 @@ int sigar_nfs_client_v3_get(sigar_t *sigar,
     perfstat_id_t id;
     perfstat_protocol_t proto;
 
-    if (sigar_perfstat_init(sigar) != SIGAR_OK) {
-        return SIGAR_ENOTIMPL;
-    }
-
     SIGAR_SSTRCPY(id.name, "nfsv3");
 
-    if (sigar->perfstat.protocol(&id, &proto, 1) != 1) {
+    if (perfstat_protocol(&id, &proto, sizeof(proto), 1) != 1) {
         return ENOENT;
     }    
 
@@ -2421,13 +1780,9 @@ int sigar_nfs_server_v3_get(sigar_t *sigar,
     perfstat_id_t id;
     perfstat_protocol_t proto;
 
-    if (sigar_perfstat_init(sigar) != SIGAR_OK) {
-        return SIGAR_ENOTIMPL;
-    }
-
     SIGAR_SSTRCPY(id.name, "nfsv3");
 
-    if (sigar->perfstat.protocol(&id, &proto, 1) != 1) {
+    if (perfstat_protocol(&id, &proto, sizeof(proto), 1) != 1) {
         return ENOENT;
     }    
 
