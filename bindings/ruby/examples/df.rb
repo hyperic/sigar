@@ -11,12 +11,16 @@ puts "Filesystem\tSize\tUsed\tAvail\tUse%\tMounted on\tType\n"
 
 fslist.each do |fs|
   dir_name = fs.dir_name
-  usage = sigar.file_system_usage(dir_name)
-
-  total = usage.total
-  used = total - usage.free
-  avail = usage.avail
-  pct = usage.use_percent * 100
+  begin
+    usage = sigar.file_system_usage(dir_name)
+    total = usage.total
+    used = total - usage.free
+    avail = usage.avail
+    pct = usage.use_percent * 100
+  rescue Exception => e
+    #e.g. floppy or cdrom drive
+    used = avail = total = pct = 0;
+  end
 
   puts fs.dev_name + "\t" +
     format_size(total) + "\t" +
