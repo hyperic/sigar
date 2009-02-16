@@ -1,5 +1,4 @@
 require 'mkmf'
-require 'ftools'
 
 extension_name = 'rbsigar'
 
