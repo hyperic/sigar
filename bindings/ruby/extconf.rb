@@ -45,6 +45,8 @@ when /solaris|sun/
   have_library("kstat")
 when /hpux/
   os = 'hpux'
+  #XXX have_libary no workie on hpux?
+  $LDFLAGS += ' -lnsl -lnm'
 when /aix/
   os = 'aix'
   have_library("odm")

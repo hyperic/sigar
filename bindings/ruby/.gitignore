@@ -3,6 +3,7 @@ rbsigar_generated.rx
 mkmf.log
 *.o
 *.so
+*.sl
 *.bundle
 *.obj
 *.def
@@ -17,3 +18,4 @@ get_mib2.c
 kstats.c
 procfs.c
 peb.c
+dlpi.c
