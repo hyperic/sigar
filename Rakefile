@@ -1,8 +1,5 @@
 require 'rubygems'
 require 'rake/gempackagetask'
-require 'rubygems/specification'
-require 'date'
-require 'spec/rake/spectask'
 
 props = {}
 File.open("bindings/java/version.properties").each { |line|
