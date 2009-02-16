@@ -12,6 +12,7 @@ File.open("bindings/java/version.properties").each { |line|
 }
 
 GEM = props['project.name']
+MAKE = (/mswin/ =~ RUBY_PLATFORM) ? 'nmake' : 'make'
 
 spec = Gem::Specification.new do |s|
   s.name = GEM
@@ -40,5 +41,45 @@ end
 task :make_spec do
   File.open("#{GEM}.gemspec", "w") do |file|
     file.puts spec.to_ruby
+  end
+end
+
+def in_ext()
+  ext = 'bindings/ruby'
+  Dir.chdir(ext) if File.directory? ext
+end
+
+desc 'Build sigar extension'
+task :build do
+  in_ext();
+  unless system("ruby extconf.rb")
+    STDERR.puts "Failed to configure"
+    break
+  end
+  unless system(MAKE)
+    STDERR.puts 'Failed to ' + MAKE
+    break
+  end
+end
+
+desc 'Clean sigar extension'
+task :clean do
+  in_ext()
+  system(MAKE + ' clean')
+end
+
+desc 'Dist Clean sigar extension'
+task :distclean do
+  in_ext()
+  system(MAKE + ' distclean')
+end
+
+desc 'Run sigar examples (test)'
+task :examples => [:build] do
+  in_ext()
+  Dir["examples/*.rb"].each do |file|
+    cmd = "ruby #{file}"
+    print cmd + "\n"
+    system(cmd)
   end
 end
