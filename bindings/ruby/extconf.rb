@@ -26,6 +26,7 @@ when /bsd/
   have_library("kvm")
 when /mswin32|mingw|cygwin|bccwin32/
   os = 'win32'
+  require 'ftools'
   $CPPFLAGS += ' -DWIN32'
   is_win32 = true
   have_library("kernel32")
