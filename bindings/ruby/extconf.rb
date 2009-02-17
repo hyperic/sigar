@@ -61,6 +61,21 @@ osdir = "../../src/os/#{os}"
 $CPPFLAGS += ' -I../../include' + ' -I' + osdir
 $CPPFLAGS += ' -U_FILE_OFFSET_BITS' unless is_win32
 
+#incase of nfs shared dir...
+unless is_win32
+  if File.exist?('Makefile')
+    cmd = 'make distclean'
+    print cmd + "\n"
+    system(cmd)
+  end
+  Dir["./*.c"].each do |file|
+    if File.lstat(file).symlink?
+      print "unlink #{file}\n"
+      File.delete(file)
+    end
+  end
+end
+
 system('perl -Mlib=.. -MSigarWrapper -e generate Ruby .')
 
 $distcleanfiles = ['rbsigar_generated.rx']
