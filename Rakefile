@@ -1,6 +1,9 @@
 require 'rubygems'
 require 'rake/gempackagetask'
 
+#so we can: ssh host rake -f $hudson_workspace/sigar/Rakefile
+Dir.chdir(File.dirname(__FILE__))
+
 props = {}
 File.open("bindings/java/version.properties").each { |line|
   next if line =~ /^#/
