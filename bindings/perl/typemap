@@ -45,7 +45,7 @@ Sigar::NfsServerV3 T_PTROBJ
 OUTPUT
 T_NETADDR
 	{
-	    char addr_str[INET6_ADDRSTRLEN];
+	    char addr_str[SIGAR_INET6_ADDRSTRLEN];
 	    sigar_net_address_to_string(NULL, &$var, addr_str);
 	    sv_setpv($arg, addr_str);
 	}
