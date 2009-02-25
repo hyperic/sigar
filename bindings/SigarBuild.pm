@@ -3,6 +3,7 @@ package SigarBuild;
 use strict;
 use Exporter;
 use File::Basename qw(basename);
+use File::Copy qw(copy);
 
 use vars qw(@ISA @EXPORT);
 @ISA = qw(Exporter);
