@@ -112,6 +112,10 @@ sub inline_src {
     }
     for my $file (@$src) {
         my $cf = basename $file;
+        #sigar.c -> libsigar.c else
+        #sigar.o and perl Sigar.o clash on case insensitive filesystems
+        $cf = 'libsigar.c' if $cf eq 'sigar.c';
+
         push @files, $cf;
         if ($flags->{is_win32}) {
             copy($file, $cf);
