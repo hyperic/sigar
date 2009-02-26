@@ -25,7 +25,6 @@ USA.
   <property name="jni.src.java" value="src"/>
   <property name="jni.libprefix" value="java"/>
   <property name="jni.libversion" value=""/>
-  <property name="uni.sdk.version" value="4u"/>
   <property name="osx.min" value="-mmacosx-version-min=10.3"/>
 
   <property name="cpptasks.jar" location="lib/cpptasks.jar"/>
@@ -194,11 +193,6 @@ USA.
               value="${jni.libpre}${jni.libname}${jni.libext}"/>
 
     <property name="jni.objdir" value="${build}/obj/${jni.libarch}"/>
-
-    <condition property="uni.sdk"
-               value="/Developer/SDKs/MacOSX10.${uni.sdk.version}.sdk">
-        <istrue value="${darwin}"/>
-    </condition>
 
     <condition property="jni.cc" value="uni-cc">
       <isset property="darwin"/>
