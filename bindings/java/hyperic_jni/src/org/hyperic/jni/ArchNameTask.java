@@ -18,6 +18,11 @@
 
 package org.hyperic.jni;
 
+import java.io.File;
+import java.io.FileFilter;
+import java.util.Arrays;
+import java.util.Comparator;
+
 import org.apache.tools.ant.Task;
 import org.apache.tools.ant.BuildException;
 
@@ -76,6 +81,35 @@ public class ArchNameTask extends Task {
             if (ArchLoader.IS_LINUX && osArch.equals("s390")) {
                 //gcc defaults to m64 on s390x platforms
                 getProject().setProperty("jni.gccm", "-m31");
+            }
+        }
+
+        if (ArchLoader.IS_DARWIN) {
+            //default to most recent SDK
+            //MacOSX10.3.9.sdk, MacOSX10.4u.sdk, MacOSX10.5.sdk,etc.
+            File[] sdks =
+                new File("/Developer/SDKs").listFiles(new FileFilter() {
+                    public boolean accept(File file) {
+                        String name = file.getName();
+                        return
+                            name.startsWith("MacOSX10.") &&
+                            name.endsWith(".sdk");
+                    }
+                });
+            if (sdks != null) {
+                Arrays.sort(sdks, new Comparator() {
+                    public int compare(Object s1, Object s2) {
+                        return (int)(((File)s2).lastModified() -
+                                     ((File)s1).lastModified());
+                    }
+                });
+                final String prop = "uni.sdk";
+                String sdk = getProject().getProperty(prop);
+                if (sdk == null) {
+                    sdk = sdks[0].getPath();
+                    getProject().setProperty(prop, sdk);
+                }
+                System.out.println("Using SDK=" + sdk);
             }
         }
     }
