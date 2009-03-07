@@ -3465,8 +3465,16 @@ int sigar_os_sys_info_get(sigar_t *sigar,
     }
     else if (version.dwMajorVersion == 6) {
         if (version.sigar_wProductType == VER_NT_WORKSTATION) {
-            vendor_name = "Windows Vista";
-            vendor_version = "Vista";
+            if (version.dwMinorVersion == 0) {
+                vendor_name = "Windows Vista";
+                vendor_version = "Vista";
+                code_name = "Longhorn";
+            }
+            else {
+                vendor_name = "Windows 7";
+                vendor_version = "7";
+                code_name = "Vienna";
+            }
         }
         else {
             vendor_name = "Windows 2008";
