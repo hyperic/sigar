@@ -3295,6 +3295,9 @@ int sigar_os_sys_info_get(sigar_t *sigar,
           case 5:
             codename = "Leopard";
             break;
+          case 6:
+            codename = "Snow Leopard";
+            break;
           default:
             codename = "Unknown";
             break;
