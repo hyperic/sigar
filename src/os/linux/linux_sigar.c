@@ -1848,6 +1848,34 @@ static int proc_net_walker(sigar_net_connection_walker_t *walker,
    while(*p && (*p != c)) p++; \
    SKIP_WHILE(p, c)
 
+typedef struct {
+    FILE *fp;
+    int (*close)(FILE *);
+} xproc_t;
+
+static FILE *xproc_open(const char *command, xproc_t *xproc)
+{
+    struct stat sb;
+    if (stat(command, &sb) == 0) {
+        if (sb.st_mode & S_IXUSR) {
+            /* executable script for testing large
+             * conn table where we can sleep() to better
+             * simulate /proc/net/tcp behavior
+             */
+            xproc->fp = popen(command, "r");
+            xproc->close = pclose;
+        }
+        else {
+            xproc->fp = fopen(command, "r");
+            xproc->close = fclose;
+        }
+        return xproc->fp;
+    }
+    else {
+        return NULL;
+    }
+}
+
 static int proc_net_read(sigar_net_connection_walker_t *walker,
                          const char *fname,
                          int type)
@@ -1857,13 +1885,14 @@ static int proc_net_read(sigar_net_connection_walker_t *walker,
     sigar_t *sigar = walker->sigar;
     char *ptr = sigar->proc_net;
     int flags = walker->flags;
+    xproc_t xproc = { NULL, fclose };
 
     if (ptr) {
         snprintf(buffer, sizeof(buffer),
                  "%s/%s", ptr,
                  fname + sizeof(PROC_FS_ROOT)-1);
 
-        if ((fp = fopen(buffer, "r"))) {
+        if ((fp = xproc_open(buffer, &xproc))) {
             if (SIGAR_LOG_IS_DEBUG(sigar)) {
                 sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
                                  "[proc_net] using %s",
@@ -1955,12 +1984,12 @@ static int proc_net_read(sigar_net_connection_walker_t *walker,
 
         more = walker->add_connection(walker, &conn);
         if (more != SIGAR_OK) {
-            fclose(fp);
+            xproc.close(fp);
             return SIGAR_OK;
         }
     }
 
-    fclose(fp);
+    xproc.close(fp);
 
     return SIGAR_OK;
 }
