@@ -981,6 +981,16 @@ SIGAR_DECLARE(int) sigar_who_list_destroy(sigar_t *sigar,
     return SIGAR_OK;
 }
 
+#ifdef DARWIN
+#include <AvailabilityMacros.h>
+#endif
+#ifdef MAC_OS_X_VERSION_10_5
+#  if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_5
+#    define SIGAR_NO_UTMP
+#  endif
+/* else 10.4 and earlier or compiled with -mmacosx-version-min=10.3 */
+#endif
+
 #if defined(__sun)
 #  include <utmpx.h>
 #  define SIGAR_UTMP_FILE _UTMPX_FILE
@@ -1014,7 +1024,7 @@ static char *getpass(const char *prompt)
 
     return (char *)&password;
 }
-#else
+#elif !defined(SIGAR_NO_UTMP)
 #  include <utmp.h>
 #  ifdef UTMP_FILE
 #    define SIGAR_UTMP_FILE UTMP_FILE
@@ -1099,6 +1109,9 @@ static int sigar_who_utmpx(sigar_t *sigar,
 }
 #endif
 
+#if defined(SIGAR_NO_UTMP) && defined(SIGAR_HAS_UTMPX)
+#define sigar_who_utmp sigar_who_utmpx
+#else
 static int sigar_who_utmp(sigar_t *sigar,
                           sigar_who_list_t *wholist)
 {
@@ -1144,7 +1157,7 @@ static int sigar_who_utmp(sigar_t *sigar,
 
     return SIGAR_OK;
 }
-
+#endif /* SIGAR_NO_UTMP */
 #endif /* NETWARE */
 
 #if defined(WIN32)
