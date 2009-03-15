@@ -398,6 +398,28 @@ static VALUE rb_sigar_net_route_list(VALUE obj)
     return RETVAL;
 }
 
+static VALUE rb_sigar_proc_list(VALUE obj)
+{
+    int status;
+    sigar_t *sigar = rb_sigar_get(obj);
+    sigar_proc_list_t list;
+    VALUE RETVAL;
+    unsigned long i;
+
+    status = sigar_proc_list_get(sigar, &list);
+
+    if (status != SIGAR_OK) {
+        RB_SIGAR_CROAK;
+    }
+
+    RETVAL = rb_sigar_new_intlist(&list.data[0],
+                                  list.number);
+
+    sigar_proc_list_destroy(sigar, &list);
+
+    return RETVAL;
+}
+
 static VALUE rb_sigar_proc_args(VALUE obj, VALUE pid)
 {
     int status;
@@ -507,6 +529,7 @@ void Init_rbsigar(void)
     rb_define_method(rclass, "net_stat_port", rb_sigar_net_stat_port, 3);
     rb_define_method(rclass, "net_route_list", rb_sigar_net_route_list, 0);
     rb_define_method(rclass, "who_list", rb_sigar_who_list, 0);
+    rb_define_method(rclass, "proc_list", rb_sigar_proc_list, 0);
     rb_define_method(rclass, "proc_args", rb_sigar_proc_args, 1);
     rb_define_method(rclass, "proc_env", rb_sigar_proc_env, 1);
 
