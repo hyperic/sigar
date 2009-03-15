@@ -2350,7 +2350,7 @@ sub generate_class {
     if ($func->{num_args} == 1) {
         my $arg_type;
         if ($func->{is_proc}) {
-            $arg_type = 'NUM2UINT';
+            $arg_type = 'OBJ2PID';
         }
         else {
             $arg_type = 'StringValuePtr';

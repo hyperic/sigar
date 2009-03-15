@@ -10,5 +10,5 @@ end
 sigar = Sigar.new
 
 ARGV.each do |pid|
-  output(sigar, pid.to_i)
+  output(sigar, pid)
 end

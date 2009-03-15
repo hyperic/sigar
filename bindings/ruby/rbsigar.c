@@ -21,9 +21,11 @@
 #include "sigar.h"
 #include "sigar_fileinfo.h"
 #include "sigar_format.h"
+#include "sigar_ptql.h"
 
-#define RB_SIGAR_CROAK rb_raise(rb_eArgError, "%s", sigar_strerror(sigar, status))
-#define NUM2PID NUM2UINT
+#define RB_SIGAR_RAISE(msg) rb_raise(rb_eArgError, "%s", msg)
+#define RB_SIGAR_CROAK RB_SIGAR_RAISE(sigar_strerror(sigar, status))
+#define OBJ2PID(pid) rb_sigar_pid_get(sigar, pid)
 
 #ifndef RSTRING_PTR
 #define RSTRING_PTR(s) RSTRING(s)->ptr
@@ -38,6 +40,50 @@ static sigar_t *rb_sigar_get(VALUE obj)
     sigar_t *sigar;
     Data_Get_Struct(obj, sigar_t, sigar);
     return sigar;
+}
+
+#define sigar_isdigit(c) \
+    (isdigit(((unsigned char)(c))))
+
+static sigar_pid_t rb_sigar_pid_get(sigar_t *sigar, VALUE obj)
+{
+    if (TYPE(obj) == T_STRING) {
+        char *pid = StringValuePtr(obj);
+
+        if (sigar_isdigit(*pid)) {
+            obj = rb_str2inum(obj, 10);
+            /* fallthru */
+        }
+        else if ((RSTRING_LEN(obj) == 2) &&
+                 (*pid == '$') && (*(pid + 1) == '$'))
+        {
+            return sigar_pid_get(sigar);
+        }
+        else {
+            /* XXX cache queries */
+            sigar_ptql_query_t *query;
+            sigar_ptql_error_t error;
+            int status =
+                sigar_ptql_query_create(&query, (char *)pid, &error);
+
+            if (status == SIGAR_OK) {
+                sigar_pid_t qpid;
+
+                status = sigar_ptql_query_find_process(sigar, query, &qpid);
+                sigar_ptql_query_destroy(query);
+                if (status == SIGAR_OK) {
+                    return qpid;
+                }
+                else {
+                    RB_SIGAR_RAISE(sigar_strerror(sigar, status));
+                }
+            }
+            else {
+                RB_SIGAR_RAISE(error.message);
+            }
+        }
+    }
+    return NUM2UINT(obj);
 }
 
 static void rb_sigar_free(void *obj)
@@ -359,7 +405,7 @@ static VALUE rb_sigar_proc_args(VALUE obj, VALUE pid)
     sigar_proc_args_t args;
     VALUE RETVAL;
 
-    status = sigar_proc_args_get(sigar, NUM2PID(pid), &args);
+    status = sigar_proc_args_get(sigar, OBJ2PID(pid), &args);
 
     if (status != SIGAR_OK) {
         RB_SIGAR_CROAK;
@@ -393,7 +439,7 @@ static VALUE rb_sigar_proc_env(VALUE obj, VALUE pid)
     procenv.env_getter = rb_sigar_env_getall;
     procenv.data = &RETVAL;
 
-    status = sigar_proc_env_get(sigar, NUM2PID(pid), &procenv);
+    status = sigar_proc_env_get(sigar, OBJ2PID(pid), &procenv);
     if (status != SIGAR_OK) {
         RB_SIGAR_CROAK;
     }
