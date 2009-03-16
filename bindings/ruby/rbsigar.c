@@ -398,18 +398,37 @@ static VALUE rb_sigar_net_route_list(VALUE obj)
     return RETVAL;
 }
 
-static VALUE rb_sigar_proc_list(VALUE obj)
+static VALUE rb_sigar_proc_list(int argc, VALUE *argv, VALUE obj)
 {
     int status;
     sigar_t *sigar = rb_sigar_get(obj);
     sigar_proc_list_t list;
     VALUE RETVAL;
-    unsigned long i;
+    VALUE vptql;
 
-    status = sigar_proc_list_get(sigar, &list);
+    rb_scan_args(argc, argv, "01", &vptql);
+    if (NIL_P(vptql)) {
+        status = sigar_proc_list_get(sigar, &list);
 
-    if (status != SIGAR_OK) {
-        RB_SIGAR_CROAK;
+        if (status != SIGAR_OK) {
+            RB_SIGAR_CROAK;
+        }
+    }
+    else {
+        sigar_ptql_query_t *query;
+        sigar_ptql_error_t error;
+        char *ptql = StringValuePtr(vptql);
+
+        status = sigar_ptql_query_create(&query, ptql, &error);
+
+        if (status != SIGAR_OK) {
+            RB_SIGAR_RAISE(error.message);
+        }
+        status = sigar_ptql_query_find(sigar, query, &list);
+        sigar_ptql_query_destroy(query);
+        if (status != SIGAR_OK) {
+            RB_SIGAR_RAISE(sigar_strerror(sigar, status));
+        }
     }
 
     RETVAL = rb_sigar_new_intlist(&list.data[0],
@@ -529,7 +548,7 @@ void Init_rbsigar(void)
     rb_define_method(rclass, "net_stat_port", rb_sigar_net_stat_port, 3);
     rb_define_method(rclass, "net_route_list", rb_sigar_net_route_list, 0);
     rb_define_method(rclass, "who_list", rb_sigar_who_list, 0);
-    rb_define_method(rclass, "proc_list", rb_sigar_proc_list, 0);
+    rb_define_method(rclass, "proc_list", rb_sigar_proc_list, -1);
     rb_define_method(rclass, "proc_args", rb_sigar_proc_args, 1);
     rb_define_method(rclass, "proc_env", rb_sigar_proc_env, 1);
 
