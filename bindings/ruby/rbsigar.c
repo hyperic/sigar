@@ -17,6 +17,7 @@
  */
 
 #include <ruby.h>
+#include <regex.h>
 #include <errno.h>
 #include "sigar.h"
 #include "sigar_fileinfo.h"
@@ -40,6 +41,28 @@ static sigar_t *rb_sigar_get(VALUE obj)
     sigar_t *sigar;
     Data_Get_Struct(obj, sigar_t, sigar);
     return sigar;
+}
+
+static int rbsigar_ptql_re_impl(void *data,
+                                char *haystack, char *needle)
+{
+    struct re_pattern_buffer *regex;
+    int len = strlen(haystack);
+    int retval;
+    const char *err;
+
+    regex = ALLOC(struct re_pattern_buffer);
+    MEMZERO((char *)regex, struct re_pattern_buffer, 1);
+    /* XXX cache */
+    if ((err = re_compile_pattern(needle, strlen(needle), regex))) {
+        re_free_pattern(regex);
+        rb_raise(rb_eRegexpError, "%s", err);
+        return 0;
+    }
+
+    retval = re_match(regex, haystack, len, 0, NULL);
+    re_free_pattern(regex);
+    return retval > 0;
 }
 
 #define sigar_isdigit(c) \
@@ -69,7 +92,9 @@ static sigar_pid_t rb_sigar_pid_get(sigar_t *sigar, VALUE obj)
             if (status == SIGAR_OK) {
                 sigar_pid_t qpid;
 
+                sigar_ptql_re_impl_set(sigar, NULL, rbsigar_ptql_re_impl);
                 status = sigar_ptql_query_find_process(sigar, query, &qpid);
+                sigar_ptql_re_impl_set(sigar, NULL, NULL);
                 sigar_ptql_query_destroy(query);
                 if (status == SIGAR_OK) {
                     return qpid;
@@ -424,7 +449,9 @@ static VALUE rb_sigar_proc_list(int argc, VALUE *argv, VALUE obj)
         if (status != SIGAR_OK) {
             RB_SIGAR_RAISE(error.message);
         }
+        sigar_ptql_re_impl_set(sigar, NULL, rbsigar_ptql_re_impl);
         status = sigar_ptql_query_find(sigar, query, &list);
+        sigar_ptql_re_impl_set(sigar, NULL, NULL);
         sigar_ptql_query_destroy(query);
         if (status != SIGAR_OK) {
             RB_SIGAR_RAISE(sigar_strerror(sigar, status));
