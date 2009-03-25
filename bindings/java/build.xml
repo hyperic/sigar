@@ -290,12 +290,6 @@
     <condition property="jni.libset.libs" value="odm,cfg,perfstat,pthreads">
       <isset property="aix"/>
     </condition>
-
-    <copy toDir="${sigar-bin}/lib">
-      <fileset dir="lib">
-        <include name="pdh.dll"/>
-      </fileset>
-    </copy>
   </target>
 
   <target name="copy-includes">
