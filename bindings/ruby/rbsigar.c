@@ -17,6 +17,7 @@
  */
 
 #include <ruby.h>
+#include <version.h>
 #include <regex.h>
 #include <errno.h>
 #include "sigar.h"
@@ -34,6 +35,12 @@
 
 #ifndef RSTRING_LEN
 #define RSTRING_LEN(s) RSTRING(s)->len
+#endif
+
+#if (RUBY_VERSION_MAJOR >= 1) && ((RUBY_VERSION_MINOR == 8) && (RUBY_VERSION_TEENY >= 6))
+#  define RB_REGEX_ERROR rb_eRegexpError
+#else
+#  define RB_REGEX_ERROR rb_eArgError
 #endif
 
 static sigar_t *rb_sigar_get(VALUE obj)
@@ -56,7 +63,7 @@ static int rbsigar_ptql_re_impl(void *data,
     /* XXX cache */
     if ((err = re_compile_pattern(needle, strlen(needle), regex))) {
         re_free_pattern(regex);
-        rb_raise(rb_eRegexpError, "%s", err);
+        rb_raise(RB_REGEX_ERROR, "%s", err);
         return 0;
     }
 
