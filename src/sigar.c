@@ -1823,18 +1823,22 @@ sigar_net_interface_config_primary_get(sigar_t *sigar,
 
         if ((status != SIGAR_OK) ||
             (ifconfig->flags & SIGAR_IFF_LOOPBACK) ||
-            !ifconfig->hwaddr.addr.in ||   /* no mac address */
-            strchr(iflist.data[i], ':'))  /* alias */
+            !ifconfig->hwaddr.addr.in)   /* no mac address */
         {
             continue;
         }
 
         if (!possible_config.flags) {
-            /* save for later for use if we're not connected to the net */
+            /* save for later for use if we're not connected to the net
+             * or all interfaces are aliases (e.g. solaris zone)
+             */
             memcpy(&possible_config, ifconfig, sizeof(*ifconfig));
         }
         if (!ifconfig->address.addr.in) {
             continue; /* no ip address */
+        }
+        if (strchr(iflist.data[i], ':')) {
+            continue; /* alias */
         }
 
         found = 1;
