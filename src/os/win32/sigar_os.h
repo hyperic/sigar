@@ -56,12 +56,9 @@
                                         lpw, -1, (LPSTR)lpa, chars, \
                                         NULL, NULL))
 
-#ifdef SIGAR_USING_MSC6
 /* iptypes.h from vc7, not available in vc6 */
-#include "msvc_iptypes.h"
-#else
+/* copy from PSDK if using vc6 */
 #include "iptypes.h"
-#endif
 
 /* from wtsapi32.h not in vs6.0 */
 typedef enum {
