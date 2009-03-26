@@ -17,8 +17,12 @@
  */
 
 #include <ruby.h>
-#include <version.h>
-#include <regex.h>
+#ifdef RB_RUBY_19
+#include <ruby/re.h>
+#else
+#include <re.h>
+#endif
+
 #include <errno.h>
 #include "sigar.h"
 #include "sigar_fileinfo.h"
@@ -37,7 +41,7 @@
 #define RSTRING_LEN(s) RSTRING(s)->len
 #endif
 
-#if (RUBY_VERSION_MAJOR >= 1) && ((RUBY_VERSION_MINOR == 8) && (RUBY_VERSION_TEENY >= 6))
+#ifdef RB_HAS_RE_ERROR
 #  define RB_REGEX_ERROR rb_eRegexpError
 #else
 #  define RB_REGEX_ERROR rb_eArgError
@@ -53,6 +57,10 @@ static sigar_t *rb_sigar_get(VALUE obj)
 static int rbsigar_ptql_re_impl(void *data,
                                 char *haystack, char *needle)
 {
+#ifdef RB_RUBY_19
+    /* XXX no more regex.h */
+    return 0;
+#else
     struct re_pattern_buffer *regex;
     int len = strlen(haystack);
     int retval;
@@ -70,6 +78,7 @@ static int rbsigar_ptql_re_impl(void *data,
     retval = re_match(regex, haystack, len, 0, NULL);
     re_free_pattern(regex);
     return retval > 0;
+#endif
 }
 
 #define sigar_isdigit(c) \
