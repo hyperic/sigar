@@ -251,6 +251,11 @@ public class ArchLoader {
 
     public String findJarPath(String libName)
         throws ArchLoaderException {
+        return findJarPath(libName, true);
+    }
+
+    private String findJarPath(String libName, boolean isRequired)
+        throws ArchLoaderException {
         /*
          * native libraries should be installed along side
          * ${this.name}.jar, try to find where ${this.name}.jar
@@ -280,8 +285,13 @@ public class ArchLoader {
         }
 
         if (url == null) {
-            throw new ArchLoaderException("Unable to find " +
-                                          getJarName());
+            if (isRequired) {
+                throw new ArchLoaderException("Unable to find " +
+                                              getJarName());
+            }
+            else {
+                return null;
+            }
         }
         
         path = url.getFile();
@@ -385,11 +395,11 @@ public class ArchLoader {
                 if (path.equals("-")) {
                     return; //assume library is already loaded
                 }
-                findJarPath(null); //check for versioned .jar
+                findJarPath(null, false); //check for versioned .jar
                 findNativeLibrary(path, libName);
             }
             else {
-                if (findJarPath(libName) == null) {
+                if (findJarPath(libName, false) == null) {
                     findInJavaLibraryPath(libName);
                 }
             }
