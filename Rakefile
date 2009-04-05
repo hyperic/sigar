@@ -5,7 +5,7 @@ require 'rake/gempackagetask'
 Dir.chdir(File.dirname(__FILE__))
 
 props = {}
-File.open("bindings/java/version.properties").each { |line|
+File.open("version.properties").each { |line|
   next if line =~ /^#/
   line.chomp!
   line.strip!
@@ -29,10 +29,9 @@ spec = Gem::Specification.new do |s|
   s.has_rdoc = false
   s.extensions = 'bindings/ruby/extconf.rb'
   s.files =
-    %w(COPYING EXCEPTIONS README Rakefile) +
+    %w(COPYING EXCEPTIONS README Rakefile version.properties) +
     %w(bindings/SigarWrapper.pm) +
     Dir.glob("bindings/ruby/**/*") +
-    Dir.glob("bindings/java/version.properties") +
     Dir.glob("include/*.h") +
     Dir.glob("src/**/*.[ch]")
 end
