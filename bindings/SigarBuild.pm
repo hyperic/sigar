@@ -4,6 +4,7 @@ use strict;
 use Exporter;
 use File::Basename qw(basename);
 use File::Copy qw(copy);
+use File::Spec ();
 
 use vars qw(@ISA @EXPORT);
 @ISA = qw(Exporter);
@@ -106,6 +107,7 @@ sub inline_src {
     my $stdout = @_ ? 0 : 1;
     my $flags = shift || flags();
     my $src = $flags->{src};
+    my $dir = $flags->{build_dir} || $ARGV[0];
     my(@files);
     #unlink symlinks incase of nfs shared dir...
     for my $file (grep { -l } <*.c>) {
@@ -116,7 +118,10 @@ sub inline_src {
         #sigar.c -> libsigar.c else
         #sigar.o and perl Sigar.o clash on case insensitive filesystems
         $cf = 'libsigar.c' if $cf eq 'sigar.c';
-
+        if ($dir) {
+            $cf = join '/', $dir, $cf;
+            $file = File::Spec->rel2abs($file);
+        }
         push @files, $cf;
         if ($flags->{is_win32}) {
             copy($file, $cf);
