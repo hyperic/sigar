@@ -1,6 +1,7 @@
 package SigarBuild;
 
 use strict;
+use Config;
 use Exporter;
 use File::Basename qw(basename);
 use File::Copy qw(copy);
@@ -10,6 +11,57 @@ use POSIX ();
 use vars qw(@ISA @EXPORT);
 @ISA = qw(Exporter);
 @EXPORT = qw(cppflags ldflags libs os src inline_src);
+
+sub archname {
+    my $os = lc $^O;
+    my $vers = $Config{osvers};
+    my $arch = $Config{archname};
+
+    if ($os =~ /win32/) {
+        return 'x86-winnt';
+    }
+    elsif ($os =~ /linux/) {
+	if ($arch =~ /_64/) {
+	    return 'amd64-linux';
+	}
+	else {
+	    return 'x86-linux';
+	}
+    }
+    elsif ($os =~ /hpux/) {
+        if ($vers =~ /11\./) {
+            return 'pa-hpux-11';
+        }
+    }
+    elsif ($os =~ /aix/) {
+        return 'ppc-aix-5';
+    }
+    elsif ($os =~ /solaris/) {
+        if ($arch =~ /sun4/) {
+            return 'sparc-solaris';
+        }
+        elsif ($arch =~ /.86/) {
+            return 'x86-solaris';
+        }
+    }
+    elsif ($os =~ /darwin/) {
+        return 'universal-macosx';
+    }
+    elsif ($os =~ /freebsd/) { 
+        if ($arch =~ /.86/) { 
+            if($vers =~ /6\../ ) { 
+                return 'x86-freebsd-6'; 
+            }
+        } 
+        elsif ($arch =~ /amd64/) { 
+            if ($vers =~ /6\../ ) { 
+                return 'amd64-freebsd-6'; 
+            } 
+        } 
+    } 
+
+    return '';
+}
 
 sub flags {
     my $os = lc $^O;
