@@ -5,6 +5,7 @@ use Exporter;
 use File::Basename qw(basename);
 use File::Copy qw(copy);
 use File::Spec ();
+use POSIX ();
 
 use vars qw(@ISA @EXPORT);
 @ISA = qw(Exporter);
@@ -136,6 +137,75 @@ sub inline_src {
     else {
         return @files;
     }
+}
+
+sub scm_revision {
+    my $rev;
+    $rev = `git rev-parse --short HEAD`;
+    if ($rev) {
+        chomp $rev;
+    }
+    else {
+        $rev = "exported";
+    }
+    return $rev;
+}
+
+sub build_date {
+    return POSIX::strftime("%m/%d/%Y %I:%M %p", localtime);
+}
+
+sub version_properties {
+    my $props = {};
+    my $file = $_[0] || 'version.properties';
+    open my $fh, $file or die "open $file: $!";
+    while (<$fh>) {
+        chomp;
+        my($key,$val) = split '=';
+        next unless $key and defined $val;
+        $props->{$key} = $val;
+    }
+    close $fh;
+
+    $props->{'scm.revision'} = scm_revision();
+
+    $props->{'build.date'} = build_date();
+
+    $props->{'version'} =
+        join '.', map $props->{"version.$_"}, qw(major minor maint);
+
+    $props->{'version.build'} = $ENV{BUILD_NUMBER} || '0';
+
+    $props->{'version.string'} =
+        join '.', $props->{'version'}, $props->{'version.build'};
+
+    return $props;
+}
+
+sub version_file {
+    my($source, $dest) = @_;
+    my $props = version_properties();
+    my(%filters);
+    while (my($key,$val) = each %$props) {
+        $key = uc $key;
+        $key =~ s/\./_/;
+        $filters{$key} = $val;
+    }
+    my $re = join '|', keys %filters;
+    open my $in, $source or die "open $source: $!";
+    my $out;
+    if ($dest) {
+        open $out, '>', $dest or die "open $dest: $!";
+    }
+    else {
+        $out = \*STDOUT;
+    }
+    while (<$in>) {
+        s/\@\@($re)\@\@/$filters{$1}/go;
+        print $out $_;
+    }
+    close $in;
+    close $out if $dest;
 }
 
 1;
