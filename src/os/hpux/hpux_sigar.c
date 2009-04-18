@@ -16,10 +16,6 @@
  * USA.
  */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
 #include "sigar.h"
 #include "sigar_private.h"
 #include "sigar_util.h"
@@ -419,12 +415,8 @@ int sigar_proc_fd_get(sigar_t *sigar, sigar_pid_t pid,
                       sigar_proc_fd_t *procfd)
 {
     struct pst_status status;
-    int idx, i, n;
-#ifdef HAVE_STRUCT_PST_FILEINFO2
+    int idx=0, n;
     struct pst_fileinfo2 psf[16];
-#else
-    struct pst_fileinfo psf[16];
-#endif
 
     procfd->total = 0;
 
@@ -433,28 +425,13 @@ int sigar_proc_fd_get(sigar_t *sigar, sigar_pid_t pid,
     }
 
     /* HPUX 11.31 removed the deprecated pstat_getfile call */
-#ifdef HAVE_STRUCT_PST_FILEINFO2
-    idx = status.pst_idx;
-
     while ((n = pstat_getfile2(psf, sizeof(psf[0]),
                                sizeof(psf)/sizeof(psf[0]),
                                idx, pid)) > 0)
     {
         procfd->total += n;
-        idx = psf[n-1].psf_fd;
+        idx = psf[n-1].psf_fd + 1;
     }
-#else
-    /* man pstat_getfile for index splaination */
-    idx = (status.pst_idx << 16) | (0 & 0xffff);
-
-    while ((n = pstat_getfile(psf, sizeof(psf[0]),
-                              sizeof(psf)/sizeof(psf[0]),
-                              idx)) > 0)
-    {
-        procfd->total += n;
-        idx = psf[n-1].psf_idx + 1;
-    }
-#endif
 
     if (n == -1) {
         return errno;
