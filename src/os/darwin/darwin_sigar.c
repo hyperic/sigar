@@ -1905,7 +1905,7 @@ int sigar_thread_cpu_get(sigar_t *sigar,
                          sigar_uint64_t id,
                          sigar_thread_cpu_t *cpu)
 {
-#ifdef DARWIN
+#if defined(DARWIN)
     mach_port_t self = mach_thread_self();
     thread_basic_info_data_t info;
     mach_msg_type_number_t count = THREAD_BASIC_INFO_COUNT;
@@ -1922,6 +1922,8 @@ int sigar_thread_cpu_get(sigar_t *sigar,
     cpu->user  = tval2nsec(info.user_time);
     cpu->sys   = tval2nsec(info.system_time);
     cpu->total = cpu->user + cpu->sys;
+#elif defined(__NetBSD__)
+    return SIGAR_ENOTIMPL; /* http://tinyurl.com/chbvln */
 #else
     /* XXX this is not per-thread, it is for the whole-process.
      * just want to use for the shell time command at the moment.
