@@ -387,9 +387,19 @@ int sigar_os_proc_args_get(sigar_t *sigar, sigar_pid_t pid,
 #ifdef PSTAT_GETCOMMANDLINE
     char buf[1024]; /* kernel limit */
 
+# ifdef pstat_getcommandline /* 11i v2 + */
     if (pstat_getcommandline(buf, sizeof(buf), sizeof(buf[0]), pid) == -1) {
         return errno;
     }
+# else
+    union pstun pu;
+
+    pu.pst_command = buf;
+    if (pstat(PSTAT_GETCOMMANDLINE, pu, sizeof(buf), sizeof(buf[0]), pid) == -1) {
+        return errno;
+    }
+# endif /* pstat_getcommandline */
+
     args = buf;
 #else
     struct pst_status status;
