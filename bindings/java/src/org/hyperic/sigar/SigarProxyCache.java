@@ -123,7 +123,7 @@ public class SigarProxyCache
      * The java.lang.reflect.InvocationHandler used by the Proxy.
      * This method handles caching of all Sigar type objects.
      */
-    public Object invoke(Object proxy, Method method, Object[] args)
+    public synchronized Object invoke(Object proxy, Method method, Object[] args)
         throws SigarException, SigarNotImplementedException {
 
         SigarCacheObject cacheVal = null;
