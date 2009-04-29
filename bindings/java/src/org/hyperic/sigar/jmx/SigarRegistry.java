@@ -19,8 +19,6 @@
 package org.hyperic.sigar.jmx;
 
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.Map;
 
 import javax.management.AttributeNotFoundException;
 import javax.management.MBeanConstructorInfo;
@@ -64,8 +62,6 @@ import org.hyperic.sigar.SigarException;
 public class SigarRegistry extends AbstractMBean {
 
     private static final String MBEAN_TYPE = "SigarRegistry";
-
-    private static final Map VERSION_ATTRS = new LinkedHashMap();
 
     private static final MBeanInfo MBEAN_INFO;
 
@@ -116,11 +112,7 @@ public class SigarRegistry extends AbstractMBean {
      * @see javax.management.DynamicMBean#getAttribute(java.lang.String)
      */
     public Object getAttribute(String attr) throws AttributeNotFoundException {
-        Object obj = VERSION_ATTRS.get(attr);
-        if (obj == null) {
-            throw new AttributeNotFoundException(attr);
-        }
-        return obj;
+        throw new AttributeNotFoundException(attr);
     }
 
     /* (non-Javadoc)
