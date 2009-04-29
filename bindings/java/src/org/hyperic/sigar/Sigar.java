@@ -48,7 +48,7 @@ public class Sigar implements SigarProxy {
      * The Sigar java version.
      */
     public static final String VERSION_STRING =
-        SigarVersion.VERSION_STRING;
+        Version.VERSION_STRING;
 
     /**
      * The Sigar native version.
@@ -59,7 +59,7 @@ public class Sigar implements SigarProxy {
      * The scm (svn) revision from which sigar.jar was built.
      */
     public static final String SCM_REVISION =
-        SigarVersion.SCM_REVISION;
+        Version.SCM_REVISION;
 
     /**
      * The scm (svn) revision from which the sigar native binary was built.
@@ -70,7 +70,7 @@ public class Sigar implements SigarProxy {
      * The date on which sigar.jar was built.
      */
     public static final String BUILD_DATE =
-        SigarVersion.BUILD_DATE;
+        Version.BUILD_DATE;
 
     /**
      * The date on which the sigar native binary was built.
