@@ -172,5 +172,7 @@ public interface SigarProxy {
 
     public NetInfo getNetInfo() throws SigarException;
 
+    public SigarVersion getSigarVersion();
+
     public String getFQDN() throws SigarException;
 }

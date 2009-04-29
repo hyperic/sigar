@@ -959,6 +959,10 @@ public class Sigar implements SigarProxy {
      */
     public native String getFQDN() throws SigarException;
 
+    public SigarVersion getSigarVersion() {
+        return new SigarVersion();
+    }
+
     /**
      * Enabling logging in the native Sigar code.
      * This method will hook log4j into the Sigar
