@@ -21,9 +21,7 @@ package org.hyperic.sigar.jmx;
 import java.util.ArrayList;
 
 import javax.management.AttributeNotFoundException;
-import javax.management.MBeanConstructorInfo;
 import javax.management.MBeanInfo;
-import javax.management.MBeanParameterInfo;
 import javax.management.MBeanServer;
 import javax.management.ObjectInstance;
 import javax.management.ObjectName;
@@ -31,7 +29,6 @@ import javax.management.ObjectName;
 import org.hyperic.sigar.CpuInfo;
 import org.hyperic.sigar.FileSystem;
 import org.hyperic.sigar.NetInterfaceConfig;
-import org.hyperic.sigar.Sigar;
 import org.hyperic.sigar.SigarException;
 import org.hyperic.sigar.SigarProxy;
 
@@ -66,15 +63,7 @@ public class SigarRegistry extends AbstractMBean {
 
     private static final MBeanInfo MBEAN_INFO;
 
-    private static final MBeanConstructorInfo MBEAN_CONSTR_DEFAULT;
-
     static {
-        MBEAN_CONSTR_DEFAULT = new MBeanConstructorInfo(
-                SigarRegistry.class.getName(),
-                "Creates a new instance of this class. Will create the Sigar "
-                        + "instance this class uses when constructing other MBeans",
-                new MBeanParameterInfo[0]);
-
         MBEAN_INFO = new MBeanInfo(
                 SigarRegistry.class.getName(),
                 "Sigar MBean registry. Provides a central point for creation "
@@ -82,7 +71,7 @@ public class SigarRegistry extends AbstractMBean {
                         + "this instance will automatically be cleaned up when this "
                         + "instance is deregistered from the MBean server.",
                 null /*new MBeanAttributeInfo[0] */,
-                new MBeanConstructorInfo[] { MBEAN_CONSTR_DEFAULT },
+                null /*new MBeanConstructorInfo[0]*/,
                 null /*new MBeanOperationInfo[0] */, 
                 null /*new MBeanNotificationInfo[0]*/);
     }
