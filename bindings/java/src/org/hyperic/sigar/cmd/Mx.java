@@ -79,18 +79,38 @@ public class Mx extends SigarCommandBase {
         }
     }
 
+    private void jconsole() {
+        String pid = String.valueOf(this.sigar.getPid());
+        String[] argv = { "jconsole", pid };
+        println("exec(jconsole, " + pid + ")");
+        try {
+            Process p = Runtime.getRuntime().exec(argv);
+            p.waitFor();
+            println("jconsole exited");
+        } catch (Exception e) {
+            println(e.getMessage());
+        }        
+    }
+
     public void output(String[] args) throws SigarException {
         MBeanServer server = getMBeanServer();
         register(server);
-        boolean hasQuery = args.length != 0;
-        try {
-            String query;
-            if (hasQuery) {
-                query = args[0];
+        boolean hasQuery = false;
+        boolean launchJconsole = false;
+        String query = "sigar:*";
+
+        for (int i=0; i<args.length; i++) {
+            String arg = args[i];
+            if (arg.equals("-jconsole")) {
+                launchJconsole = true;
             }
             else {
-                query = "sigar:*";
+                query = arg;
+                hasQuery = true;
             }
+        }
+
+        try {
             Set beans =
                 server.queryNames(new ObjectName(query), null);
             println(beans.size() + " MBeans are registered...");
@@ -111,6 +131,9 @@ public class Mx extends SigarCommandBase {
             }
         } catch (Exception e) {
             throw new SigarException(e.getMessage());
+        }
+        if (launchJconsole) {
+            jconsole();
         }
     }
 
