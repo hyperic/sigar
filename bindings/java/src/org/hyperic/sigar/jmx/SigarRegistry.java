@@ -19,12 +19,10 @@
 package org.hyperic.sigar.jmx;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 import javax.management.AttributeNotFoundException;
-import javax.management.MBeanAttributeInfo;
 import javax.management.MBeanConstructorInfo;
 import javax.management.MBeanInfo;
 import javax.management.MBeanParameterInfo;
@@ -37,7 +35,6 @@ import org.hyperic.sigar.FileSystem;
 import org.hyperic.sigar.NetInterfaceConfig;
 import org.hyperic.sigar.Sigar;
 import org.hyperic.sigar.SigarException;
-import org.hyperic.sigar.SigarLoader;
 
 /**
  * <p>Registry of all Sigar MBeans. Can be used as a convenient way to invoke 
@@ -87,7 +84,7 @@ public class SigarRegistry extends AbstractMBean {
                         + "and destruction of Sigar MBeans. Any Sigar MBean created via "
                         + "this instance will automatically be cleaned up when this "
                         + "instance is deregistered from the MBean server.",
-                getAttributeInfo(),
+                null /*new MBeanAttributeInfo[0] */,
                 new MBeanConstructorInfo[] { MBEAN_CONSTR_DEFAULT },
                 null /*new MBeanOperationInfo[0] */, 
                 null /*new MBeanNotificationInfo[0]*/);
@@ -96,33 +93,6 @@ public class SigarRegistry extends AbstractMBean {
     private final String objectName;
 
     private final ArrayList managedBeans;
-
-    private static MBeanAttributeInfo[] getAttributeInfo() {
-        VERSION_ATTRS.put("JarVersion", Sigar.VERSION_STRING);
-        VERSION_ATTRS.put("NativeVersion", Sigar.NATIVE_VERSION_STRING);
-        VERSION_ATTRS.put("JarBuildDate", Sigar.BUILD_DATE);
-        VERSION_ATTRS.put("NativeBuildDate", Sigar.NATIVE_BUILD_DATE);
-        VERSION_ATTRS.put("JarSourceRevision", Sigar.SCM_REVISION);
-        VERSION_ATTRS.put("NativeSourceRevision", Sigar.NATIVE_SCM_REVISION);
-        VERSION_ATTRS.put("NativeLibraryName", SigarLoader.getNativeLibraryName());
-
-        MBeanAttributeInfo[] attrs = new MBeanAttributeInfo[VERSION_ATTRS.size()];
-        int i=0;
-        for (Iterator it=VERSION_ATTRS.entrySet().iterator();
-             it.hasNext();)
-        {
-            Map.Entry entry = (Map.Entry)it.next();
-            String name = (String)entry.getKey();
-            attrs[i++] =
-                new MBeanAttributeInfo(name,
-                                       entry.getValue().getClass().getName(),
-                                       name,
-                                       true,   // isReadable
-                                       false,  // isWritable
-                                       false); // isIs
-        }
-        return attrs;
-    }
 
     /**
      * Creates a new instance of this class. Will create the Sigar instance this 
@@ -277,6 +247,8 @@ public class SigarRegistry extends AbstractMBean {
         registerMBean(new SigarLoadAverage(sigarImpl));
         //global process stats
         registerMBean(new ReflectedMBean(sigarImpl, "ProcStat"));
+        //sigar version
+        registerMBean(new ReflectedMBean(sigarImpl, "SigarVersion"));
     }
 
     /**
