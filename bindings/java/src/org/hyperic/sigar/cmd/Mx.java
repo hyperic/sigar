@@ -71,7 +71,7 @@ public class Mx extends SigarCommandBase {
         SigarRegistry registry = new SigarRegistry(this.proxy);
         try {
             server.registerMBean(registry, null);
-            SigarProcess proc = new SigarProcess();
+            SigarProcess proc = new SigarProcess(this.sigar);
             server.registerMBean(proc, new ObjectName(proc.getObjectName()));
             isRegistered = true;
         } catch (Exception e) {
