@@ -22,6 +22,7 @@ import java.util.ArrayList;
 
 import javax.management.AttributeNotFoundException;
 import javax.management.MBeanInfo;
+import javax.management.MBeanRegistration;
 import javax.management.MBeanServer;
 import javax.management.ObjectInstance;
 import javax.management.ObjectName;
@@ -57,7 +58,7 @@ import org.hyperic.sigar.SigarProxy;
  * @author Bjoern Martin
  * @since 1.5
  */
-public class SigarRegistry extends AbstractMBean {
+public class SigarRegistry extends AbstractMBean implements MBeanRegistration {
 
     private static final String MBEAN_TYPE = "SigarRegistry";
 
@@ -79,6 +80,7 @@ public class SigarRegistry extends AbstractMBean {
     private final String objectName;
 
     private final ArrayList managedBeans;
+    private MBeanServer mbeanServer;
 
     public SigarRegistry(SigarProxy sigar) {
         super(sigar);
@@ -117,6 +119,11 @@ public class SigarRegistry extends AbstractMBean {
     // -------
     // Implementation of the MBeanRegistration interface
     // -------
+    public ObjectName preRegister(MBeanServer server, ObjectName name)
+        throws Exception {
+        this.mbeanServer = server;                                                                            
+        return new ObjectName(getObjectName());                                                               
+    }
 
     /**
      * Registers the default set of Sigar MBeans. Before doing so, a super call 
@@ -126,8 +133,6 @@ public class SigarRegistry extends AbstractMBean {
      */
     public void postRegister(Boolean success) {
         ReflectedMBean mbean;
-
-        super.postRegister(success);
 
         if (!success.booleanValue())
             return;
@@ -239,8 +244,9 @@ public class SigarRegistry extends AbstractMBean {
                 }
             }
         }
+    }
 
-        // do the super call
-        super.preDeregister();
+    public void postDeregister() {
+        this.mbeanServer = null;                                                                              
     }
 }

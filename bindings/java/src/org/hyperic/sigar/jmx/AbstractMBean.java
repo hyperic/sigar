@@ -24,8 +24,6 @@ import javax.management.AttributeNotFoundException;
 import javax.management.DynamicMBean;
 import javax.management.MBeanException;
 import javax.management.MBeanRegistration;
-import javax.management.MBeanServer;
-import javax.management.ObjectName;
 import javax.management.ReflectionException;
 
 import org.hyperic.sigar.Sigar;
@@ -43,7 +41,7 @@ import org.hyperic.sigar.SigarProxy;
  * @author Bjoern Martin
  * @since 1.5
  */
-public abstract class AbstractMBean implements DynamicMBean, MBeanRegistration {
+public abstract class AbstractMBean implements DynamicMBean {
 
     public static final String MBEAN_DOMAIN = SigarInvokerJMX.DOMAIN_NAME;
     public static final String MBEAN_ATTR_TYPE = SigarInvokerJMX.PROP_TYPE;
@@ -57,16 +55,6 @@ public abstract class AbstractMBean implements DynamicMBean, MBeanRegistration {
      * @see AbstractMBean#AbstractMBean(Sigar, short)
      */
     protected final SigarProxy sigar;
-
-    /**
-     * The MBean server this MBean is registered to. Set during the MBean's 
-     * registration to the MBean server and unset to <code>null</code> when
-     * the deregistration finished.
-     * 
-     * @see #preRegister(MBeanServer, ObjectName)
-     * @see #postDeregister()
-     */
-    protected MBeanServer mbeanServer;
 
     /**
      * <p>Creates a new instance of this class. The SigarProxy instance is stored (and 
@@ -143,59 +131,6 @@ public abstract class AbstractMBean implements DynamicMBean, MBeanRegistration {
             }
         }
         return result;
-    }
-
-    // -------
-    // Implementation of the MBeanRegistration interface
-    // -------
-
-    /**
-     * <p>Returns <code>new ObjectName(this.getObjectName())</code> to guarantee 
-     * a reliable and reproducable object name.</p>
-     * 
-     * <p><b>Note:</b> Make sure any subclass does a super call to this method, 
-     * otherwise the implementation might be broken.</p>
-     * 
-     * @see MBeanRegistration#preRegister(MBeanServer, ObjectName)
-     */
-    public ObjectName preRegister(MBeanServer server, ObjectName name)
-            throws Exception {
-        this.mbeanServer = server;
-        return new ObjectName(getObjectName());
-    }
-
-    /**
-     * Empty implementation, allowing subclasses to ignore the interface.
-     * 
-     * <p><b>Note:</b> Make sure any subclass does a super call to this method, 
-     * otherwise the implementation might be broken.</p>
-     * 
-     * @see MBeanRegistration#postRegister(Boolean)
-     */
-    public void postRegister(Boolean success) {
-    }
-
-    /**
-     * Empty implementation, allowing subclasses to ignore the interface.
-     * 
-     * <p><b>Note:</b> Make sure any subclass does a super call to this method, 
-     * otherwise the implementation might be broken.</p>
-     * 
-     * @see MBeanRegistration#preDeregister()
-     */
-    public void preDeregister() throws Exception {
-    }
-
-    /**
-     * Empty implementation, allowing subclasses to ignore the interface.
-     * 
-     * <p><b>Note:</b> Make sure any subclass does a super call to this method, 
-     * otherwise the implementation might be broken.</p>
-     * 
-     * @see MBeanRegistration#postDeregister()
-     */
-    public void postDeregister() {
-        this.mbeanServer = null;
     }
 
     public void setAttribute(Attribute attr) throws AttributeNotFoundException {
