@@ -74,19 +74,12 @@ public class SigarRegistry extends AbstractMBean {
 
     private static final MBeanConstructorInfo MBEAN_CONSTR_DEFAULT;
 
-//    private static final MBeanOperationInfo MBEAN_OPER_LISTPROCESSES;
-
     static {
         MBEAN_CONSTR_DEFAULT = new MBeanConstructorInfo(
                 SigarRegistry.class.getName(),
                 "Creates a new instance of this class. Will create the Sigar "
                         + "instance this class uses when constructing other MBeans",
                 new MBeanParameterInfo[0]);
-//        MBEAN_OPER_LISTPROCESSES = new MBeanOperationInfo("listProcesses",
-//                "Executes a query returning the process IDs of all processes " +
-//                "found on the system.",
-//                null /* new MBeanParameterInfo[0] */,
-//                String.class.getName(), MBeanOperationInfo.INFO);
 
         MBEAN_INFO = new MBeanInfo(
                 SigarRegistry.class.getName(),
@@ -149,28 +142,6 @@ public class SigarRegistry extends AbstractMBean {
         return this.objectName;
     }
 
-/*  public String listProcesses() {
-        try {
-            final long start = System.currentTimeMillis();
-            long[] ids = sigar.getProcList();
-            StringBuffer procNames = new StringBuffer();
-            for (int i = 0; i < ids.length; i++) {
-                try {
-                    procNames.append(ids[i] + ":" + sigar.getProcExe(ids[i]).getName()).append('\n');
-                } catch (SigarException e) {
-                    procNames.append(ids[i] + ":" + e.getMessage()).append('\n');
-                }
-            }
-            
-            final long end = System.currentTimeMillis();
-            procNames.append("-- Took " + (end-start) + "ms");
-            return procNames.toString();
-
-        } catch (SigarException e) {
-            throw unexpectedError("ProcList", e);
-        }
-    }
-*/
     /* (non-Javadoc)
      * @see javax.management.DynamicMBean#getAttribute(java.lang.String)
      */
