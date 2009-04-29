@@ -87,23 +87,14 @@ public class SigarRegistry extends AbstractMBean {
         this.managedBeans = new ArrayList();
     }
 
-    /* (non-Javadoc)
-     * @see AbstractMBean#getObjectName()
-     */
     public String getObjectName() {
         return this.objectName;
     }
 
-    /* (non-Javadoc)
-     * @see javax.management.DynamicMBean#getAttribute(java.lang.String)
-     */
     public Object getAttribute(String attr) throws AttributeNotFoundException {
         throw new AttributeNotFoundException(attr);
     }
 
-    /* (non-Javadoc)
-     * @see javax.management.DynamicMBean#getMBeanInfo()
-     */
     public MBeanInfo getMBeanInfo() {
         return MBEAN_INFO;
     }
