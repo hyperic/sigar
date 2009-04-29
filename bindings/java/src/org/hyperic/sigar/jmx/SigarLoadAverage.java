@@ -29,6 +29,7 @@ import javax.management.ReflectionException;
 import org.hyperic.sigar.Sigar;
 import org.hyperic.sigar.SigarException;
 import org.hyperic.sigar.SigarNotImplementedException;
+import org.hyperic.sigar.SigarProxy;
 
 /**
  * Sigar JMX MBean implementation for the <code>LoadAverage</code> information
@@ -123,16 +124,6 @@ public class SigarLoadAverage extends AbstractMBean {
     private boolean notImplemented;
 
     /**
-     * Creates a new instance, using a new Sigar instance to fetch the data.
-     * 
-     * @throws IllegalArgumentException
-     *      If an unexpected Sigar error occurs.
-     */
-    public SigarLoadAverage() throws IllegalArgumentException {
-        this(new Sigar());
-    }
-
-    /**
      * Creates a new instance, using the Sigar instance specified to fetch the 
      * data.
      * 
@@ -142,8 +133,8 @@ public class SigarLoadAverage extends AbstractMBean {
      * @throws IllegalArgumentException
      *             If an unexpected Sigar error occurs
      */
-    public SigarLoadAverage(Sigar sigar) throws IllegalArgumentException {
-        super(sigar, CACHED_30SEC);
+    public SigarLoadAverage(SigarProxy sigar) throws IllegalArgumentException {
+        super(sigar);
 
         // all fine
         this.objectName = MBEAN_DOMAIN + ":" + MBEAN_ATTR_TYPE
@@ -164,7 +155,7 @@ public class SigarLoadAverage extends AbstractMBean {
      */
     public double getLastMinute() {
         try {
-            return sigarImpl.getLoadAverage()[0];
+            return this.sigar.getLoadAverage()[0];
             
         } catch (SigarNotImplementedException e) {
             return NOT_IMPLEMENTED_LOAD_VALUE;
@@ -181,7 +172,7 @@ public class SigarLoadAverage extends AbstractMBean {
      */
     public double getLastFiveMinutes() {
         try {
-            return sigarImpl.getLoadAverage()[1];
+            return this.sigar.getLoadAverage()[1];
             
         } catch (SigarNotImplementedException e) {
             return NOT_IMPLEMENTED_LOAD_VALUE;
@@ -197,7 +188,7 @@ public class SigarLoadAverage extends AbstractMBean {
      */
     public double getLast15Minutes() {
         try {
-            return sigarImpl.getLoadAverage()[2];
+            return this.sigar.getLoadAverage()[2];
             
         } catch (SigarNotImplementedException e) {
             return NOT_IMPLEMENTED_LOAD_VALUE;

@@ -31,7 +31,6 @@ import javax.management.ReflectionException;
 import org.hyperic.sigar.Sigar;
 import org.hyperic.sigar.SigarException;
 import org.hyperic.sigar.SigarProxy;
-import org.hyperic.sigar.SigarProxyCache;
 
 /**
  * Base class for all Sigar JMX MBeans. Provides a skeleton which handles
@@ -48,21 +47,6 @@ public abstract class AbstractMBean implements DynamicMBean, MBeanRegistration {
 
     public static final String MBEAN_DOMAIN = SigarInvokerJMX.DOMAIN_NAME;
     public static final String MBEAN_ATTR_TYPE = SigarInvokerJMX.PROP_TYPE;
-
-    protected static final short CACHED_30SEC = 0;
-
-    protected static final short CACHED_5SEC = 1;
-
-    protected static final short CACHED_500MS = 2;
-
-    protected static final short CACHELESS = 3;
-
-    protected static final short DEFAULT = CACHED_30SEC;
-
-    /**
-     * The Sigar implementation to be used to fetch information from the system.
-     */
-    protected final Sigar sigarImpl;
 
     /**
      * The Sigar proxy cache to be used in case the data does not have to be 
@@ -85,59 +69,13 @@ public abstract class AbstractMBean implements DynamicMBean, MBeanRegistration {
     protected MBeanServer mbeanServer;
 
     /**
-     * <p>Creates a new instance of this class. The Sigar instance is stored (and 
-     * accessible) via the {@link #sigarImpl} member. A second instance is 
-     * stored within the {@link #sigar} member which is either {@link #sigarImpl}
-     * or an instance of {@link SigarProxyCache} with the expiration time set to 
-     * whatever the <code>cacheMode</code> parameter specifies.</p>
+     * <p>Creates a new instance of this class. The SigarProxy instance is stored (and 
+     * accessible) via the {@link #sigar} member.
      * 
-     * <p>The following cache modes exist:</p>
-     * 
-     * <table border = "1">
-     * <tr><td><b>Constant</b></td><td><b>Description</b></td></tr>
-     * <tr><td>{@link #CACHELESS}</td><td>No cached instance, {@link #sigar} 
-     *         <code>==</code> {@link #sigarImpl}.</td></tr>
-     * <tr><td>{@link #CACHED_500MS}</td><td>500 millisecond cache, for high 
-     *         frequency queries on raw data such as reading out CPU timers each 
-     *         second. Avoids reading out multiple data sets when all attributes of 
-     *         an MBean are queried in short sequence.</td></tr>
-     * <tr><td>{@link #CACHED_5SEC}</td><td>5 second cache, for high frequency 
-     *         queries on calculated data such as CPU percentages.</td></tr>
-     * <tr><td>{@link #CACHED_30SEC}</td><td>30 second cache, for normal queries 
-     *         or data readouts such as CPU model / vendor. This is the default if 
-     *         nothing (<code>0</code>) is specified.</td></tr>
-     * <tr><td>{@link #DEFAULT}</td><td>Same as {@link #CACHED_30SEC}.</td></tr>
-     * </table>
-     * 
-     * <p><b>Note:</b> Only make use of the cacheless or half second mode if you 
-     * know what you are doing. They may have impact on system performance if 
-     * used excessively.</p>
-     * 
-     * @param sigar The Sigar impl to use. Must not be <code>null</code>
-     * @param cacheMode The cache mode to use for {@link #sigar} or {@link #CACHELESS}
-     *         if no separate, cached instance is to be maintained.
+     * @param sigar The SigarProxy instance to use. Must not be <code>null</code>
      */
-    protected AbstractMBean(Sigar sigar, short cacheMode) {
-        // store Sigar
-        this.sigarImpl = sigar;
-
-        // create a cached instance as well
-        if (cacheMode == CACHELESS) {
-            // no cached version
-            this.sigar = this.sigarImpl;
-
-        } else if (cacheMode == CACHED_500MS) {
-            // 500ms cached version (for 1/sec queries)
-            this.sigar = SigarProxyCache.newInstance(this.sigarImpl, 500);
-
-        } else if (cacheMode == CACHED_5SEC) {
-            // 5sec cached version (for avg'd queries)
-            this.sigar = SigarProxyCache.newInstance(this.sigarImpl, 5000);
-
-        } else /* if (cacheMode == CACHED_30SEC) */{
-            // 30sec (default) cached version (for info and long term queries)
-            this.sigar = SigarProxyCache.newInstance(this.sigarImpl, 30000);
-        }
+    protected AbstractMBean(SigarProxy sigar) {
+        this.sigar = sigar;
     }
 
     /**

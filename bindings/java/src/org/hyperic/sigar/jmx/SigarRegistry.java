@@ -33,6 +33,7 @@ import org.hyperic.sigar.FileSystem;
 import org.hyperic.sigar.NetInterfaceConfig;
 import org.hyperic.sigar.Sigar;
 import org.hyperic.sigar.SigarException;
+import org.hyperic.sigar.SigarProxy;
 
 /**
  * <p>Registry of all Sigar MBeans. Can be used as a convenient way to invoke 
@@ -90,12 +91,8 @@ public class SigarRegistry extends AbstractMBean {
 
     private final ArrayList managedBeans;
 
-    /**
-     * Creates a new instance of this class. Will create the Sigar instance this 
-     * class uses when constructing other MBeans.
-     */
-    public SigarRegistry() {
-        super(new Sigar(), CACHELESS);
+    public SigarRegistry(SigarProxy sigar) {
+        super(sigar);
         this.objectName = MBEAN_DOMAIN + ":" + MBEAN_ATTR_TYPE
                 + "=" + MBEAN_TYPE;
         this.managedBeans = new ArrayList();
@@ -166,26 +163,26 @@ public class SigarRegistry extends AbstractMBean {
         for (int i=0; i<info.length; i++) {
             String idx = String.valueOf(i);
             mbean =
-                new ReflectedMBean(sigarImpl, "CpuCore", idx);
+                new ReflectedMBean(this.sigar, "CpuCore", idx);
             mbean.setType("CpuList");
             registerMBean(mbean);
             mbean =
-                new ReflectedMBean(sigarImpl, "CpuCoreUsage", idx);
+                new ReflectedMBean(this.sigar, "CpuCoreUsage", idx);
             mbean.setType("CpuPercList");
             registerMBean(mbean);
         }
 
-        mbean = new ReflectedMBean(sigarImpl, "Cpu");
+        mbean = new ReflectedMBean(this.sigar, "Cpu");
         mbean.putAttributes(info[0]);
         registerMBean(mbean);
 
-        mbean = new ReflectedMBean(sigarImpl, "CpuUsage");
+        mbean = new ReflectedMBean(this.sigar, "CpuUsage");
         mbean.setType("CpuPerc");
         registerMBean(mbean);
 
         //FileSystem beans
         try {
-            FileSystem[] fslist = sigarImpl.getFileSystemList();
+            FileSystem[] fslist = this.sigar.getFileSystemList();
             for (int i=0; i<fslist.length; i++) {
                 FileSystem fs = fslist[i];
                 if (fs.getType() != FileSystem.TYPE_LOCAL_DISK) {
@@ -193,7 +190,7 @@ public class SigarRegistry extends AbstractMBean {
                 }
                 String name = fs.getDirName();
                 mbean =
-                    new ReflectedMBean(sigarImpl, "FileSystem", name);
+                    new ReflectedMBean(this.sigar, "FileSystem", name);
                 mbean.setType(mbean.getType() + "Usage");
                 mbean.putAttributes(fs);
                 registerMBean(mbean);
@@ -204,18 +201,18 @@ public class SigarRegistry extends AbstractMBean {
 
         //NetInterface beans
         try {
-            String[] ifnames = sigarImpl.getNetInterfaceList();
+            String[] ifnames = this.sigar.getNetInterfaceList();
             for (int i=0; i<ifnames.length; i++) {
                 String name = ifnames[i];
                 NetInterfaceConfig ifconfig =
                     this.sigar.getNetInterfaceConfig(name);
                 try {
-                    sigarImpl.getNetInterfaceStat(name);
+                    this.sigar.getNetInterfaceStat(name);
                 } catch (SigarException e) {
                     continue;
                 }
                 mbean =
-                    new ReflectedMBean(sigarImpl, "NetInterface", name);
+                    new ReflectedMBean(this.sigar, "NetInterface", name);
                 mbean.setType(mbean.getType() + "Stat");
                 mbean.putAttributes(ifconfig);
                 registerMBean(mbean);
@@ -225,22 +222,22 @@ public class SigarRegistry extends AbstractMBean {
         }
 
         //network info bean
-        mbean = new ReflectedMBean(sigarImpl, "NetInfo");
+        mbean = new ReflectedMBean(this.sigar, "NetInfo");
         try {
-            mbean.putAttribute("FQDN", sigarImpl.getFQDN());
+            mbean.putAttribute("FQDN", this.sigar.getFQDN());
         } catch (SigarException e) {
         }
         registerMBean(mbean);
         //physical memory bean
-        registerMBean(new ReflectedMBean(sigarImpl, "Mem"));
+        registerMBean(new ReflectedMBean(this.sigar, "Mem"));
         //swap memory bean
-        registerMBean(new ReflectedMBean(sigarImpl, "Swap"));
+        registerMBean(new ReflectedMBean(this.sigar, "Swap"));
         //load average bean
-        registerMBean(new SigarLoadAverage(sigarImpl));
+        registerMBean(new SigarLoadAverage(this.sigar));
         //global process stats
-        registerMBean(new ReflectedMBean(sigarImpl, "ProcStat"));
+        registerMBean(new ReflectedMBean(this.sigar, "ProcStat"));
         //sigar version
-        registerMBean(new ReflectedMBean(sigarImpl, "SigarVersion"));
+        registerMBean(new ReflectedMBean(this.sigar, "SigarVersion"));
     }
 
     /**
