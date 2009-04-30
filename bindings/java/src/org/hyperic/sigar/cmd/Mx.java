@@ -32,7 +32,7 @@ import org.hyperic.sigar.jmx.SigarProcess;
 
 public class Mx extends SigarCommandBase {
 
-    private boolean isRegistered;
+    private ObjectName registryName;
 
     public Mx(Shell shell) {
         super(shell);
@@ -64,16 +64,18 @@ public class Mx extends SigarCommandBase {
     }
 
     private void register(MBeanServer server) throws SigarException {
-        if (isRegistered) {
+        if (this.registryName != null) {
             return;
         }
 
         try {
             String name = org.hyperic.sigar.jmx.SigarRegistry.class.getName();
-            server.createMBean(name, null);
+            this.registryName = server.createMBean(name, null).getObjectName();
             SigarProcess proc = new SigarProcess(this.sigar);
-            server.registerMBean(proc, new ObjectName(proc.getObjectName()));
-            isRegistered = true;
+            ObjectName pname = new ObjectName(proc.getObjectName());
+            if (!server.isRegistered(pname)) {
+                server.registerMBean(proc, pname);
+            }
         } catch (Exception e) {
             e.printStackTrace();
             throw new SigarException(e.getMessage());
@@ -134,7 +136,14 @@ public class Mx extends SigarCommandBase {
             throw new SigarException(e.getMessage());
         }
         if (launchJconsole) {
+            flush();
             jconsole();
+            try { //test unregisterMBean
+                server.unregisterMBean(this.registryName);
+                this.registryName = null;
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
 
