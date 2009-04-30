@@ -20,8 +20,6 @@ package org.hyperic.sigar.jmx;
 
 import java.util.ArrayList;
 
-import javax.management.AttributeNotFoundException;
-import javax.management.MBeanInfo;
 import javax.management.MBeanRegistration;
 import javax.management.MBeanServer;
 import javax.management.ObjectInstance;
@@ -58,47 +56,27 @@ import org.hyperic.sigar.SigarProxy;
  * @author Bjoern Martin
  * @since 1.5
  */
-public class SigarRegistry extends AbstractMBean implements MBeanRegistration {
+public class SigarRegistry implements MBeanRegistration, SigarRegistryMBean {
+    public static final String MBEAN_DOMAIN = SigarInvokerJMX.DOMAIN_NAME;
+    public static final String MBEAN_ATTR_TYPE = SigarInvokerJMX.PROP_TYPE;
 
     private static final String MBEAN_TYPE = "SigarRegistry";
 
-    private static final MBeanInfo MBEAN_INFO;
-
-    static {
-        MBEAN_INFO = new MBeanInfo(
-                SigarRegistry.class.getName(),
-                "Sigar MBean registry. Provides a central point for creation "
-                        + "and destruction of Sigar MBeans. Any Sigar MBean created via "
-                        + "this instance will automatically be cleaned up when this "
-                        + "instance is deregistered from the MBean server.",
-                null /*new MBeanAttributeInfo[0] */,
-                null /*new MBeanConstructorInfo[0]*/,
-                null /*new MBeanOperationInfo[0] */, 
-                null /*new MBeanNotificationInfo[0]*/);
-    }
-
+    private SigarProxy sigar;
     private final String objectName;
 
     private final ArrayList managedBeans;
     private MBeanServer mbeanServer;
 
     public SigarRegistry(SigarProxy sigar) {
-        super(sigar);
-        this.objectName = MBEAN_DOMAIN + ":" + MBEAN_ATTR_TYPE
-                + "=" + MBEAN_TYPE;
+        this.sigar = sigar;
+        this.objectName =
+            MBEAN_DOMAIN + ":" + MBEAN_ATTR_TYPE + "=" + MBEAN_TYPE;
         this.managedBeans = new ArrayList();
     }
 
     public String getObjectName() {
         return this.objectName;
-    }
-
-    public Object getAttribute(String attr) throws AttributeNotFoundException {
-        throw new AttributeNotFoundException(attr);
-    }
-
-    public MBeanInfo getMBeanInfo() {
-        return MBEAN_INFO;
     }
 
     private void registerMBean(AbstractMBean mbean) {
@@ -142,7 +120,7 @@ public class SigarRegistry extends AbstractMBean implements MBeanRegistration {
         try {
             info = sigar.getCpuInfoList();            
         } catch (SigarException e) {
-            throw unexpectedError("CpuInfoList", e);            
+            info = new CpuInfo[0]; //XXX log
         }
 
         for (int i=0; i<info.length; i++) {
@@ -181,7 +159,7 @@ public class SigarRegistry extends AbstractMBean implements MBeanRegistration {
                 registerMBean(mbean);
             }
         } catch (SigarException e) {
-            throw unexpectedError("FileSystemList", e);
+            //XXX log
         }
 
         //NetInterface beans
@@ -203,7 +181,7 @@ public class SigarRegistry extends AbstractMBean implements MBeanRegistration {
                 registerMBean(mbean);
             }
         } catch (SigarException e) {
-            throw unexpectedError("NetInterfaceList", e);
+            //XXX log
         }
 
         //network info bean
