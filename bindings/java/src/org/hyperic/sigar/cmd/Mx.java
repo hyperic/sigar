@@ -29,7 +29,6 @@ import javax.management.ObjectName;
 
 import org.hyperic.sigar.SigarException;
 import org.hyperic.sigar.jmx.SigarProcess;
-import org.hyperic.sigar.jmx.SigarRegistry;
 
 public class Mx extends SigarCommandBase {
 
@@ -68,13 +67,15 @@ public class Mx extends SigarCommandBase {
         if (isRegistered) {
             return;
         }
-        SigarRegistry registry = new SigarRegistry(this.proxy);
+
         try {
-            server.registerMBean(registry, null);
+            String name = org.hyperic.sigar.jmx.SigarRegistry.class.getName();
+            server.createMBean(name, null);
             SigarProcess proc = new SigarProcess(this.sigar);
             server.registerMBean(proc, new ObjectName(proc.getObjectName()));
             isRegistered = true;
         } catch (Exception e) {
+            e.printStackTrace();
             throw new SigarException(e.getMessage());
         }
     }

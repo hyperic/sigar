@@ -28,8 +28,10 @@ import javax.management.ObjectName;
 import org.hyperic.sigar.CpuInfo;
 import org.hyperic.sigar.FileSystem;
 import org.hyperic.sigar.NetInterfaceConfig;
+import org.hyperic.sigar.Sigar;
 import org.hyperic.sigar.SigarException;
 import org.hyperic.sigar.SigarProxy;
+import org.hyperic.sigar.SigarProxyCache;
 
 /**
  * <p>Registry of all Sigar MBeans. Can be used as a convenient way to invoke 
@@ -61,18 +63,26 @@ public class SigarRegistry implements MBeanRegistration, SigarRegistryMBean {
     public static final String MBEAN_ATTR_TYPE = SigarInvokerJMX.PROP_TYPE;
 
     private static final String MBEAN_TYPE = "SigarRegistry";
+    private static final int CACHE_EXPIRE = 60 * 1000;
 
+    private Sigar sigarImpl;
     private SigarProxy sigar;
-    private final String objectName;
+    private String objectName;
 
-    private final ArrayList managedBeans;
+    private ArrayList managedBeans;
     private MBeanServer mbeanServer;
 
+    public SigarRegistry() {}
+
     public SigarRegistry(SigarProxy sigar) {
+        init(sigar);
+    }
+
+    private void init(SigarProxy sigar) {
         this.sigar = sigar;
         this.objectName =
             MBEAN_DOMAIN + ":" + MBEAN_ATTR_TYPE + "=" + MBEAN_TYPE;
-        this.managedBeans = new ArrayList();
+        this.managedBeans = new ArrayList();        
     }
 
     public String getObjectName() {
@@ -99,15 +109,24 @@ public class SigarRegistry implements MBeanRegistration, SigarRegistryMBean {
     // -------
     public ObjectName preRegister(MBeanServer server, ObjectName name)
         throws Exception {
-        this.mbeanServer = server;                                                                            
-        return new ObjectName(getObjectName());                                                               
+
+        //no args constructor support
+        if (this.sigar == null) {
+            this.sigarImpl = new Sigar();
+            init(SigarProxyCache.newInstance(this.sigarImpl, CACHE_EXPIRE));
+        }
+
+        this.mbeanServer = server;
+        if (name == null) {
+            return new ObjectName(getObjectName());                                                               
+        }
+        else {
+            return name;
+        }
     }
 
     /**
-     * Registers the default set of Sigar MBeans. Before doing so, a super call 
-     * is made to satisfy {@link AbstractMBean}.
-     * 
-     * @see AbstractMBean#postRegister(Boolean)
+     * Registers the default set of Sigar MBeans.
      */
     public void postRegister(Boolean success) {
         ReflectedMBean mbean;
@@ -205,7 +224,7 @@ public class SigarRegistry implements MBeanRegistration, SigarRegistryMBean {
 
     /**
      * Deregisters all Sigar MBeans that were created and registered using this 
-     * instance. After doing so, a super call is made to satisfy {@link AbstractMBean}.
+     * instance.
      * @throws Exception 
      * 
      * @see AbstractMBean#preDeregister()
@@ -225,6 +244,11 @@ public class SigarRegistry implements MBeanRegistration, SigarRegistryMBean {
     }
 
     public void postDeregister() {
-        this.mbeanServer = null;                                                                              
+        this.mbeanServer = null;
+        if (this.sigarImpl != null) {
+            this.sigarImpl.close();
+            this.sigarImpl = null;
+            this.sigar = null;
+        }
     }
 }
