@@ -443,6 +443,7 @@ USA.
 
       <!-- AIX -->
       <compiler name="xlc_r" if="aix">
+        <compilerarg value="-q64" if="jni.arch64"/>
         <defineset>
           <define name="${jni.define.name}_AIX"/>
           <define name="_ALL_SOURCE"/>
@@ -452,6 +453,7 @@ USA.
       </compiler>
 
       <linker name="xlc_r" if="aix">
+        <linkerarg value="-b64" if="jni.arch64"/>
         <libset if="jni.libset.libs"
                 dir="${jni.libset.dir}"
                 libs="${jni.libset.libs}"/>
