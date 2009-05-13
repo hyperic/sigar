@@ -66,6 +66,6 @@ struct sigar_t {
 
 #define HAVE_STRERROR_R
 
-#define SIGAR_EPERM_KMEM (SIGAR_OS_START_ERROR+1)
+#define SIGAR_EPERM_KMEM (SIGAR_OS_START_ERROR+EACCES)
 
 #endif /* SIGAR_OS_H */
