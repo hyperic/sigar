@@ -29,11 +29,10 @@ import javax.management.ObjectName;
 
 import org.hyperic.sigar.SigarException;
 import org.hyperic.sigar.jmx.SigarProcess;
-import org.hyperic.sigar.jmx.SigarRegistry;
 
 public class Mx extends SigarCommandBase {
 
-    private boolean isRegistered;
+    private ObjectName registryName;
 
     public Mx(Shell shell) {
         super(shell);
@@ -65,32 +64,56 @@ public class Mx extends SigarCommandBase {
     }
 
     private void register(MBeanServer server) throws SigarException {
-        if (isRegistered) {
+        if (this.registryName != null) {
             return;
         }
-        SigarRegistry registry = new SigarRegistry();
+
         try {
-            server.registerMBean(registry, null);
-            SigarProcess proc = new SigarProcess();
-            server.registerMBean(proc, new ObjectName(proc.getObjectName()));
-            isRegistered = true;
+            String name = org.hyperic.sigar.jmx.SigarRegistry.class.getName();
+            this.registryName = server.createMBean(name, null).getObjectName();
+            SigarProcess proc = new SigarProcess(this.sigar);
+            ObjectName pname = new ObjectName(proc.getObjectName());
+            if (!server.isRegistered(pname)) {
+                server.registerMBean(proc, pname);
+            }
         } catch (Exception e) {
+            e.printStackTrace();
             throw new SigarException(e.getMessage());
         }
+    }
+
+    private void jconsole() {
+        String pid = String.valueOf(this.sigar.getPid());
+        String[] argv = { "jconsole", pid };
+        println("exec(jconsole, " + pid + ")");
+        try {
+            Process p = Runtime.getRuntime().exec(argv);
+            p.waitFor();
+            println("jconsole exited");
+        } catch (Exception e) {
+            println(e.getMessage());
+        }        
     }
 
     public void output(String[] args) throws SigarException {
         MBeanServer server = getMBeanServer();
         register(server);
-        boolean hasQuery = args.length != 0;
-        try {
-            String query;
-            if (hasQuery) {
-                query = args[0];
+        boolean hasQuery = false;
+        boolean launchJconsole = false;
+        String query = "sigar:*";
+
+        for (int i=0; i<args.length; i++) {
+            String arg = args[i];
+            if (arg.equals("-jconsole")) {
+                launchJconsole = true;
             }
             else {
-                query = "sigar:*";
+                query = arg;
+                hasQuery = true;
             }
+        }
+
+        try {
             Set beans =
                 server.queryNames(new ObjectName(query), null);
             println(beans.size() + " MBeans are registered...");
@@ -111,6 +134,16 @@ public class Mx extends SigarCommandBase {
             }
         } catch (Exception e) {
             throw new SigarException(e.getMessage());
+        }
+        if (launchJconsole) {
+            flush();
+            jconsole();
+            try { //test unregisterMBean
+                server.unregisterMBean(this.registryName);
+                this.registryName = null;
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
 

@@ -18,13 +18,16 @@
 
 package org.hyperic.sigar.jmx;
 
+import java.lang.reflect.InvocationHandler;
 import java.util.Map;
 import java.util.StringTokenizer;
 
+import org.hyperic.sigar.Sigar;
 import org.hyperic.sigar.SigarException;
 import org.hyperic.sigar.SigarInvoker;
 import org.hyperic.sigar.SigarNotImplementedException;
 import org.hyperic.sigar.SigarProxy;
+import org.hyperic.sigar.SigarProxyCache;
 import org.hyperic.sigar.util.ReferenceMap;
 
 /**
@@ -60,6 +63,10 @@ public class SigarInvokerJMX extends SigarInvoker {
                                               String name) {
 
         SigarInvokerJMX invoker;
+
+        if (!(proxy instanceof InvocationHandler) && (proxy instanceof Sigar)) {
+            proxy = SigarProxyCache.newInstance((Sigar)proxy);
+        }
 
         int ix = name.indexOf(":");
         if (ix > 0) {

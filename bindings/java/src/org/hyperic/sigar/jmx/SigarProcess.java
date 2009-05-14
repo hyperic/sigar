@@ -40,16 +40,18 @@ public class SigarProcess implements SigarProcessMBean {
     private long pid = -1;
 
     public SigarProcess() {
-        this(new Sigar());
-    }
-
-    public SigarProcess(Sigar sigar) {
-        this.sigarImpl = sigar;
+        this.sigarImpl = new Sigar();
         this.sigar = SigarProxyCache.newInstance(sigarImpl);
     }
 
+    public SigarProcess(SigarProxy sigar) {
+        this.sigar = sigar;
+    }
+
     public void close() {
-        this.sigarImpl.close();
+        if (this.sigarImpl != null) {
+            this.sigarImpl.close();
+        }
     }
 
     private RuntimeException unexpectedError(String type,

@@ -184,7 +184,7 @@
 
     <antcall target="version-file">
        <param name="version.file"
-              value="src/org/hyperic/sigar/SigarVersion.java"/>
+              value="src/org/hyperic/sigar/Version.java"/>
     </antcall>
 
     <antcall target="version-file">

@@ -19,15 +19,8 @@
 package org.hyperic.sigar.jmx;
 
 import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.Map;
 
-import javax.management.AttributeNotFoundException;
-import javax.management.MBeanAttributeInfo;
-import javax.management.MBeanConstructorInfo;
-import javax.management.MBeanInfo;
-import javax.management.MBeanParameterInfo;
+import javax.management.MBeanRegistration;
 import javax.management.MBeanServer;
 import javax.management.ObjectInstance;
 import javax.management.ObjectName;
@@ -37,7 +30,8 @@ import org.hyperic.sigar.FileSystem;
 import org.hyperic.sigar.NetInterfaceConfig;
 import org.hyperic.sigar.Sigar;
 import org.hyperic.sigar.SigarException;
-import org.hyperic.sigar.SigarLoader;
+import org.hyperic.sigar.SigarProxy;
+import org.hyperic.sigar.SigarProxyCache;
 
 /**
  * <p>Registry of all Sigar MBeans. Can be used as a convenient way to invoke 
@@ -64,129 +58,35 @@ import org.hyperic.sigar.SigarLoader;
  * @author Bjoern Martin
  * @since 1.5
  */
-public class SigarRegistry extends AbstractMBean {
+public class SigarRegistry implements MBeanRegistration, SigarRegistryMBean {
+    public static final String MBEAN_DOMAIN = SigarInvokerJMX.DOMAIN_NAME;
+    public static final String MBEAN_ATTR_TYPE = SigarInvokerJMX.PROP_TYPE;
 
     private static final String MBEAN_TYPE = "SigarRegistry";
+    private static final int CACHE_EXPIRE = 60 * 1000;
 
-    private static final Map VERSION_ATTRS = new LinkedHashMap();
+    private Sigar sigarImpl;
+    private SigarProxy sigar;
+    private String objectName;
 
-    private static final MBeanInfo MBEAN_INFO;
+    private ArrayList managedBeans;
+    private MBeanServer mbeanServer;
 
-    private static final MBeanConstructorInfo MBEAN_CONSTR_DEFAULT;
+    public SigarRegistry() {}
 
-//    private static final MBeanOperationInfo MBEAN_OPER_LISTPROCESSES;
-
-    static {
-        MBEAN_CONSTR_DEFAULT = new MBeanConstructorInfo(
-                SigarRegistry.class.getName(),
-                "Creates a new instance of this class. Will create the Sigar "
-                        + "instance this class uses when constructing other MBeans",
-                new MBeanParameterInfo[0]);
-//        MBEAN_OPER_LISTPROCESSES = new MBeanOperationInfo("listProcesses",
-//                "Executes a query returning the process IDs of all processes " +
-//                "found on the system.",
-//                null /* new MBeanParameterInfo[0] */,
-//                String.class.getName(), MBeanOperationInfo.INFO);
-
-        MBEAN_INFO = new MBeanInfo(
-                SigarRegistry.class.getName(),
-                "Sigar MBean registry. Provides a central point for creation "
-                        + "and destruction of Sigar MBeans. Any Sigar MBean created via "
-                        + "this instance will automatically be cleaned up when this "
-                        + "instance is deregistered from the MBean server.",
-                getAttributeInfo(),
-                new MBeanConstructorInfo[] { MBEAN_CONSTR_DEFAULT },
-                null /*new MBeanOperationInfo[0] */, 
-                null /*new MBeanNotificationInfo[0]*/);
+    public SigarRegistry(SigarProxy sigar) {
+        init(sigar);
     }
 
-    private final String objectName;
-
-    private final ArrayList managedBeans;
-
-    private static MBeanAttributeInfo[] getAttributeInfo() {
-        VERSION_ATTRS.put("JarVersion", Sigar.VERSION_STRING);
-        VERSION_ATTRS.put("NativeVersion", Sigar.NATIVE_VERSION_STRING);
-        VERSION_ATTRS.put("JarBuildDate", Sigar.BUILD_DATE);
-        VERSION_ATTRS.put("NativeBuildDate", Sigar.NATIVE_BUILD_DATE);
-        VERSION_ATTRS.put("JarSourceRevision", Sigar.SCM_REVISION);
-        VERSION_ATTRS.put("NativeSourceRevision", Sigar.NATIVE_SCM_REVISION);
-        VERSION_ATTRS.put("NativeLibraryName", SigarLoader.getNativeLibraryName());
-
-        MBeanAttributeInfo[] attrs = new MBeanAttributeInfo[VERSION_ATTRS.size()];
-        int i=0;
-        for (Iterator it=VERSION_ATTRS.entrySet().iterator();
-             it.hasNext();)
-        {
-            Map.Entry entry = (Map.Entry)it.next();
-            String name = (String)entry.getKey();
-            attrs[i++] =
-                new MBeanAttributeInfo(name,
-                                       entry.getValue().getClass().getName(),
-                                       name,
-                                       true,   // isReadable
-                                       false,  // isWritable
-                                       false); // isIs
-        }
-        return attrs;
+    private void init(SigarProxy sigar) {
+        this.sigar = sigar;
+        this.objectName =
+            MBEAN_DOMAIN + ":" + MBEAN_ATTR_TYPE + "=" + MBEAN_TYPE;
+        this.managedBeans = new ArrayList();        
     }
 
-    /**
-     * Creates a new instance of this class. Will create the Sigar instance this 
-     * class uses when constructing other MBeans.
-     */
-    public SigarRegistry() {
-        super(new Sigar(), CACHELESS);
-        this.objectName = MBEAN_DOMAIN + ":" + MBEAN_ATTR_TYPE
-                + "=" + MBEAN_TYPE;
-        this.managedBeans = new ArrayList();
-    }
-
-    /* (non-Javadoc)
-     * @see AbstractMBean#getObjectName()
-     */
     public String getObjectName() {
         return this.objectName;
-    }
-
-/*  public String listProcesses() {
-        try {
-            final long start = System.currentTimeMillis();
-            long[] ids = sigar.getProcList();
-            StringBuffer procNames = new StringBuffer();
-            for (int i = 0; i < ids.length; i++) {
-                try {
-                    procNames.append(ids[i] + ":" + sigar.getProcExe(ids[i]).getName()).append('\n');
-                } catch (SigarException e) {
-                    procNames.append(ids[i] + ":" + e.getMessage()).append('\n');
-                }
-            }
-            
-            final long end = System.currentTimeMillis();
-            procNames.append("-- Took " + (end-start) + "ms");
-            return procNames.toString();
-
-        } catch (SigarException e) {
-            throw unexpectedError("ProcList", e);
-        }
-    }
-*/
-    /* (non-Javadoc)
-     * @see javax.management.DynamicMBean#getAttribute(java.lang.String)
-     */
-    public Object getAttribute(String attr) throws AttributeNotFoundException {
-        Object obj = VERSION_ATTRS.get(attr);
-        if (obj == null) {
-            throw new AttributeNotFoundException(attr);
-        }
-        return obj;
-    }
-
-    /* (non-Javadoc)
-     * @see javax.management.DynamicMBean#getMBeanInfo()
-     */
-    public MBeanInfo getMBeanInfo() {
-        return MBEAN_INFO;
     }
 
     private void registerMBean(AbstractMBean mbean) {
@@ -207,17 +107,29 @@ public class SigarRegistry extends AbstractMBean {
     // -------
     // Implementation of the MBeanRegistration interface
     // -------
+    public ObjectName preRegister(MBeanServer server, ObjectName name)
+        throws Exception {
+
+        //no args constructor support
+        if (this.sigar == null) {
+            this.sigarImpl = new Sigar();
+            init(SigarProxyCache.newInstance(this.sigarImpl, CACHE_EXPIRE));
+        }
+
+        this.mbeanServer = server;
+        if (name == null) {
+            return new ObjectName(getObjectName());                                                               
+        }
+        else {
+            return name;
+        }
+    }
 
     /**
-     * Registers the default set of Sigar MBeans. Before doing so, a super call 
-     * is made to satisfy {@link AbstractMBean}.
-     * 
-     * @see AbstractMBean#postRegister(Boolean)
+     * Registers the default set of Sigar MBeans.
      */
     public void postRegister(Boolean success) {
         ReflectedMBean mbean;
-
-        super.postRegister(success);
 
         if (!success.booleanValue())
             return;
@@ -227,32 +139,32 @@ public class SigarRegistry extends AbstractMBean {
         try {
             info = sigar.getCpuInfoList();            
         } catch (SigarException e) {
-            throw unexpectedError("CpuInfoList", e);            
+            info = new CpuInfo[0]; //XXX log
         }
 
         for (int i=0; i<info.length; i++) {
             String idx = String.valueOf(i);
             mbean =
-                new ReflectedMBean(sigarImpl, "CpuCore", idx);
+                new ReflectedMBean(this.sigar, "CpuCore", idx);
             mbean.setType("CpuList");
             registerMBean(mbean);
             mbean =
-                new ReflectedMBean(sigarImpl, "CpuCoreUsage", idx);
+                new ReflectedMBean(this.sigar, "CpuCoreUsage", idx);
             mbean.setType("CpuPercList");
             registerMBean(mbean);
         }
 
-        mbean = new ReflectedMBean(sigarImpl, "Cpu");
+        mbean = new ReflectedMBean(this.sigar, "Cpu");
         mbean.putAttributes(info[0]);
         registerMBean(mbean);
 
-        mbean = new ReflectedMBean(sigarImpl, "CpuUsage");
+        mbean = new ReflectedMBean(this.sigar, "CpuUsage");
         mbean.setType("CpuPerc");
         registerMBean(mbean);
 
         //FileSystem beans
         try {
-            FileSystem[] fslist = sigarImpl.getFileSystemList();
+            FileSystem[] fslist = this.sigar.getFileSystemList();
             for (int i=0; i<fslist.length; i++) {
                 FileSystem fs = fslist[i];
                 if (fs.getType() != FileSystem.TYPE_LOCAL_DISK) {
@@ -260,57 +172,59 @@ public class SigarRegistry extends AbstractMBean {
                 }
                 String name = fs.getDirName();
                 mbean =
-                    new ReflectedMBean(sigarImpl, "FileSystem", name);
+                    new ReflectedMBean(this.sigar, "FileSystem", name);
                 mbean.setType(mbean.getType() + "Usage");
                 mbean.putAttributes(fs);
                 registerMBean(mbean);
             }
         } catch (SigarException e) {
-            throw unexpectedError("FileSystemList", e);
+            //XXX log
         }
 
         //NetInterface beans
         try {
-            String[] ifnames = sigarImpl.getNetInterfaceList();
+            String[] ifnames = this.sigar.getNetInterfaceList();
             for (int i=0; i<ifnames.length; i++) {
                 String name = ifnames[i];
                 NetInterfaceConfig ifconfig =
                     this.sigar.getNetInterfaceConfig(name);
                 try {
-                    sigarImpl.getNetInterfaceStat(name);
+                    this.sigar.getNetInterfaceStat(name);
                 } catch (SigarException e) {
                     continue;
                 }
                 mbean =
-                    new ReflectedMBean(sigarImpl, "NetInterface", name);
+                    new ReflectedMBean(this.sigar, "NetInterface", name);
                 mbean.setType(mbean.getType() + "Stat");
                 mbean.putAttributes(ifconfig);
                 registerMBean(mbean);
             }
         } catch (SigarException e) {
-            throw unexpectedError("NetInterfaceList", e);
+            //XXX log
         }
 
         //network info bean
-        mbean = new ReflectedMBean(sigarImpl, "NetInfo");
+        mbean = new ReflectedMBean(this.sigar, "NetInfo");
         try {
-            mbean.putAttribute("FQDN", sigarImpl.getFQDN());
+            mbean.putAttribute("FQDN", this.sigar.getFQDN());
         } catch (SigarException e) {
         }
         registerMBean(mbean);
         //physical memory bean
-        registerMBean(new ReflectedMBean(sigarImpl, "Mem"));
+        registerMBean(new ReflectedMBean(this.sigar, "Mem"));
         //swap memory bean
-        registerMBean(new ReflectedMBean(sigarImpl, "Swap"));
+        registerMBean(new ReflectedMBean(this.sigar, "Swap"));
         //load average bean
-        registerMBean(new SigarLoadAverage(sigarImpl));
+        registerMBean(new SigarLoadAverage(this.sigar));
         //global process stats
-        registerMBean(new ReflectedMBean(sigarImpl, "ProcStat"));
+        registerMBean(new ReflectedMBean(this.sigar, "ProcStat"));
+        //sigar version
+        registerMBean(new ReflectedMBean(this.sigar, "SigarVersion"));
     }
 
     /**
      * Deregisters all Sigar MBeans that were created and registered using this 
-     * instance. After doing so, a super call is made to satisfy {@link AbstractMBean}.
+     * instance.
      * @throws Exception 
      * 
      * @see AbstractMBean#preDeregister()
@@ -327,8 +241,14 @@ public class SigarRegistry extends AbstractMBean {
                 }
             }
         }
+    }
 
-        // do the super call
-        super.preDeregister();
+    public void postDeregister() {
+        this.mbeanServer = null;
+        if (this.sigarImpl != null) {
+            this.sigarImpl.close();
+            this.sigarImpl = null;
+            this.sigar = null;
+        }
     }
 }

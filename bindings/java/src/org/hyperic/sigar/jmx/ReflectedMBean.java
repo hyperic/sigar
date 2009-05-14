@@ -29,7 +29,7 @@ import javax.management.MBeanException;
 import javax.management.MBeanInfo;
 import javax.management.ReflectionException;
 
-import org.hyperic.sigar.Sigar;
+import org.hyperic.sigar.SigarProxy;
 
 public class ReflectedMBean extends AbstractMBean {
 
@@ -96,15 +96,15 @@ public class ReflectedMBean extends AbstractMBean {
         }
     }
 
-    protected ReflectedMBean(Sigar sigar, String type) {
-        super(sigar, CACHED_5SEC);
+    protected ReflectedMBean(SigarProxy sigar, String type) {
+        super(sigar);
         this.type = type;
         this.name =
             MBEAN_DOMAIN + ":" +
             MBEAN_ATTR_TYPE + "=" + getType();
     }
 
-    protected ReflectedMBean(Sigar sigar, String type, String arg) {
+    protected ReflectedMBean(SigarProxy sigar, String type, String arg) {
         this(sigar, type);
         this.name += ",Name=" + encode(arg);
     }

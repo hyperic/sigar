@@ -73,10 +73,10 @@ public class TestMx extends SigarTestCase {
             return;
         }
 
-        SigarRegistry rgy = new SigarRegistry();
+        SigarRegistry rgy = new SigarRegistry(getSigar());
         ObjectName name = new ObjectName(rgy.getObjectName());
         if (!server.isRegistered(name)) {
-            server.registerMBean(new SigarRegistry(), name);
+            server.registerMBean(rgy, name);
         }
         Set beans =
             server.queryNames(new ObjectName("sigar:*"), null);
