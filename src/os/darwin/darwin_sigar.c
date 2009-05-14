@@ -783,6 +783,52 @@ int sigar_cpu_get(sigar_t *sigar, sigar_cpu_t *cpu)
     return SIGAR_OK;
 }
 
+#if defined(__FreeBSD__) && (__FreeBSD_version >= 700000)
+#define HAVE_KERN_CP_TIMES /* kern.cp_times came later than 7.0, not sure exactly when */
+static int sigar_cp_times_get(sigar_t *sigar, sigar_cpu_list_t *cpulist)
+{
+    int maxcpu, status;
+    size_t len = sizeof(maxcpu), size;
+    long *times;
+
+    if (sysctlbyname("kern.smp.maxcpus", &maxcpu, &len, NULL, 0) == -1) {
+        return errno;
+    }
+
+    size = sizeof(long) * maxcpu * CPUSTATES;
+    times = malloc(size);
+    if (sysctlbyname("kern.cp_times", times, &size, NULL, 0) == -1) {
+        status = errno;
+    }
+    else {
+        int i, maxid = (size / CPUSTATES / sizeof(long));
+        long *cp_time = times;
+        status = SIGAR_OK;
+
+        for (i=0; i<maxid; i++) {
+            sigar_cpu_t *cpu;
+
+            SIGAR_CPU_LIST_GROW(cpulist);
+
+            cpu = &cpulist->data[cpulist->number++];
+            cpu->user = SIGAR_TICK2MSEC(cp_time[CP_USER]);
+            cpu->nice = SIGAR_TICK2MSEC(cp_time[CP_NICE]);
+            cpu->sys  = SIGAR_TICK2MSEC(cp_time[CP_SYS]);
+            cpu->idle = SIGAR_TICK2MSEC(cp_time[CP_IDLE]);
+            cpu->wait = 0; /*N/A*/
+            cpu->irq = SIGAR_TICK2MSEC(cp_time[CP_INTR]);
+            cpu->soft_irq = 0; /*N/A*/
+            cpu->stolen = 0; /*N/A*/
+            cpu->total = cpu->user + cpu->nice + cpu->sys + cpu->idle + cpu->irq;
+            cp_time += CPUSTATES;
+        }
+    }
+
+    free(times);
+    return status;
+}
+#endif
+
 int sigar_cpu_list_get(sigar_t *sigar, sigar_cpu_list_t *cpulist)
 {
 #ifdef DARWIN
@@ -830,7 +876,12 @@ int sigar_cpu_list_get(sigar_t *sigar, sigar_cpu_list_t *cpulist)
 
     sigar_cpu_list_create(cpulist);
 
-    /* XXX howto multi cpu in freebsd?
+#ifdef HAVE_KERN_CP_TIMES
+    if ((status = sigar_cp_times_get(sigar, cpulist)) == SIGAR_OK) {
+        return SIGAR_OK;
+    }
+#endif
+    /* XXX no multi cpu in freebsd < 7.0, howbout others?
      * for now just report all metrics on the 1st cpu
      * 0's for the rest
      */
@@ -1854,7 +1905,7 @@ int sigar_thread_cpu_get(sigar_t *sigar,
                          sigar_uint64_t id,
                          sigar_thread_cpu_t *cpu)
 {
-#ifdef DARWIN
+#if defined(DARWIN)
     mach_port_t self = mach_thread_self();
     thread_basic_info_data_t info;
     mach_msg_type_number_t count = THREAD_BASIC_INFO_COUNT;
@@ -1871,6 +1922,8 @@ int sigar_thread_cpu_get(sigar_t *sigar,
     cpu->user  = tval2nsec(info.user_time);
     cpu->sys   = tval2nsec(info.system_time);
     cpu->total = cpu->user + cpu->sys;
+#elif defined(__NetBSD__)
+    return SIGAR_ENOTIMPL; /* http://tinyurl.com/chbvln */
 #else
     /* XXX this is not per-thread, it is for the whole-process.
      * just want to use for the shell time command at the moment.
