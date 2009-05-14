@@ -25,8 +25,6 @@
 #include <procinfo.h>
 #include <sys/resource.h>
 
-#include "libperfstat.h"
-
 enum {
     KOFFSET_LOADAVG,
     KOFFSET_VAR,
@@ -46,50 +44,12 @@ typedef struct {
 
 typedef int (*proc_fd_func_t) (sigar_t *, sigar_pid_t, sigar_proc_fd_t *);
 
-typedef int (*perfstat_cpu_total_func_t)(perfstat_cpu_total_t *);
-
-typedef int (*perfstat_cpu_func_t)(perfstat_id_t *,
-                                   perfstat_cpu_t *,
-                                   int);
-
-typedef int (*perfstat_swap_func_t)(perfstat_id_t *,
-                                    perfstat_pagingspace_t *,
-                                    int);
-
-typedef int (*perfstat_mem_func_t)(perfstat_memory_total_t *);
-
-typedef int (*perfstat_disk_func_t)(perfstat_id_t *,
-                                    perfstat_disk_t *,
-                                    int);
-
-typedef int (*perfstat_ifstat_func_t)(perfstat_id_t *,
-                                      perfstat_netinterface_t *);
-
-typedef int (*perfstat_protocol_func_t)(perfstat_id_t *,
-                                        perfstat_protocol_t *,
-                                        int);
-
-typedef int (*thread_rusage_func_t)(struct rusage *, int);
-
 struct sigar_t {
     SIGAR_T_BASE;
     int kmem;
-    int dmem;
     /* offsets for seeking on kmem */
     long koffsets[KOFFSET_MAX];
     proc_fd_func_t getprocfd;
-    struct {
-        int avail;
-        perfstat_cpu_func_t cpu;
-        perfstat_cpu_total_func_t cpu_total;
-        perfstat_swap_func_t swap;
-        perfstat_mem_func_t mem;
-        perfstat_disk_func_t disk;
-        perfstat_ifstat_func_t ifstat;
-        perfstat_protocol_func_t protocol;
-        thread_rusage_func_t thread_rusage;
-        void *handle;
-    } perfstat;
     int pagesize;
     swaps_t swaps;
     time_t last_getprocs;
@@ -106,6 +66,6 @@ struct sigar_t {
 
 #define HAVE_STRERROR_R
 
-#define SIGAR_EPERM_KMEM (SIGAR_OS_START_ERROR+1)
+#define SIGAR_EPERM_KMEM (SIGAR_OS_START_ERROR+EACCES)
 
 #endif /* SIGAR_OS_H */
