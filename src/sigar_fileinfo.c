@@ -61,6 +61,40 @@
 #  endif
 #endif
 
+#include "sigar.h"
+
+#ifndef WIN32
+#include <sys/statvfs.h>
+#include <errno.h>
+
+#define SIGAR_FS_BLOCKS_TO_BYTES(val, bsize) ((val * bsize) >> 1)
+
+int sigar_statvfs(sigar_t *sigar,
+                  const char *dirname,
+                  sigar_file_system_usage_t *fsusage)
+{
+    struct statvfs buf;
+    sigar_uint64_t val, bsize;
+
+    if (statvfs(dirname, &buf) != 0) {
+        return errno;
+    }
+
+    bsize = buf.f_frsize / 512;
+    val = buf.f_blocks;
+    fsusage->total = SIGAR_FS_BLOCKS_TO_BYTES(val, bsize);
+    val = buf.f_bfree;
+    fsusage->free  = SIGAR_FS_BLOCKS_TO_BYTES(val, bsize);
+    val = buf.f_bavail;
+    fsusage->avail = SIGAR_FS_BLOCKS_TO_BYTES(val, bsize);
+    fsusage->used  = fsusage->total - fsusage->free;
+    fsusage->files = buf.f_files;
+    fsusage->free_files = buf.f_ffree;
+
+    return SIGAR_OK;
+}
+#endif
+
 /*
  * whittled down version of apr/file_info/{unix,win32}/filestat.c
  * to fillin sigar_fileattrs_t

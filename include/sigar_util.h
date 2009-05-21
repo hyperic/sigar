@@ -120,6 +120,10 @@ int sigar_procfs_args_get(sigar_t *sigar, sigar_pid_t pid,
 
 int sigar_mem_calc_ram(sigar_t *sigar, sigar_mem_t *mem);
 
+int sigar_statvfs(sigar_t *sigar,
+                  const char *dirname,
+                  sigar_file_system_usage_t *fsusage);
+
 double sigar_file_system_usage_calc_used(sigar_t *sigar,
                                          sigar_file_system_usage_t *fs);
 
