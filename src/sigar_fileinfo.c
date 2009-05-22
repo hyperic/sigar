@@ -64,7 +64,13 @@
 #include "sigar.h"
 
 #ifndef WIN32
-#include <sys/statvfs.h>
+#if defined(__FreeBSD__) || defined(__OpenBSD__)
+# include <sys/param.h>
+# include <sys/mount.h>
+#else
+# include <sys/statvfs.h>
+# define HAVE_STATVFS
+#endif
 #include <errno.h>
 
 #define SIGAR_FS_BLOCKS_TO_BYTES(val, bsize) ((val * bsize) >> 1)
@@ -73,21 +79,30 @@ int sigar_statvfs(sigar_t *sigar,
                   const char *dirname,
                   sigar_file_system_usage_t *fsusage)
 {
-    struct statvfs buf;
     sigar_uint64_t val, bsize;
+#ifdef HAVE_STATVFS
+    struct statvfs buf;
     int status =
-#if defined(__sun) && !defined(_LP64)
+# if defined(__sun) && !defined(_LP64)
         /* http://bugs.opensolaris.org/view_bug.do?bug_id=4462986 */
         statvfs(dirname, (void *)&buf);
-#else
+# else
         statvfs(dirname, &buf);
+# endif
+#else
+    struct statfs buf;
+    int status = statfs(dirname, &buf);
 #endif
 
     if (status != 0) {
         return errno;
     }
 
+#ifdef HAVE_STATVFS
     bsize = buf.f_frsize / 512;
+#else
+    bsize = buf.f_bsize / 512;
+#endif
     val = buf.f_blocks;
     fsusage->total = SIGAR_FS_BLOCKS_TO_BYTES(val, bsize);
     val = buf.f_bfree;
