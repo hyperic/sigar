@@ -75,8 +75,15 @@ int sigar_statvfs(sigar_t *sigar,
 {
     struct statvfs buf;
     sigar_uint64_t val, bsize;
+    int status =
+#if defined(__sun) && !defined(_LP64)
+        /* http://bugs.opensolaris.org/view_bug.do?bug_id=4462986 */
+        statvfs(dirname, (void *)&buf);
+#else
+        statvfs(dirname, &buf);
+#endif
 
-    if (statvfs(dirname, &buf) != 0) {
+    if (status != 0) {
         return errno;
     }
 
