@@ -461,7 +461,7 @@ int sigar_mem_get(sigar_t *sigar, sigar_mem_t *mem)
     }
 
 	mem->free = vmstat.free_count;
-	mem->free =* sigar->pagesize;
+	mem->free *= sigar->pagesize;
 #elif defined(__FreeBSD__)
     if ((status = sigar_vmstat(sigar, &vmstat)) == SIGAR_OK) {
         mem->free = vmstat.v_free_count;
