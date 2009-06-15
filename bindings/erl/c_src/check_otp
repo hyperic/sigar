@@ -1,0 +1,17 @@
+#!/bin/bash
+#copied from jungerl
+if [ "$1" == "-root" -o "$1" == "" ]; then
+    erl -noinput -eval 'io:format("~s~n", [code:root_dir()]), halt(0).'
+fi
+
+if [ "$1" == "-ei" -o "$1" == "" ]; then
+    erl -noinput -eval \
+        'case code:lib_dir("erl_interface") of
+            {error, bad_name} ->
+                io:format("not found~n", []),
+                halt(1);
+            LibDir ->
+                io:format("~s~n", [LibDir]),
+                halt(0)
+        end.'
+fi
