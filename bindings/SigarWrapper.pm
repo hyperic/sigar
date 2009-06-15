@@ -1625,6 +1625,13 @@ $comment
 EOF
 }
 
+sub erl_warning_comment {
+    my $self = shift;
+    my $comment = $self->warning_comment;
+    $comment =~ s/^/% /mg;
+    "$comment\n";
+}
+
 sub generate {
     my($lang, $dir) = @_ ? @_ : @ARGV;
 
@@ -1689,7 +1696,9 @@ sub uptodate {
     return 1;
 }
 
-my(%warning_comment) = map { $_ => \&c_warning_comment } qw(c h java);
+my(%warning_comment) =
+    ((map { $_ => \&c_warning_comment } qw(c h java)),
+     (map { $_ => \&erl_warning_comment } qw(erl hrl)));
 
 sub create {
     my($self, $file) = @_;
@@ -2773,6 +2782,168 @@ sub finish {
             print $cfh ";$nl";
         }
     }
+
+    $self->SUPER::finish;
+}
+
+package SigarWrapper::Erlang;
+
+use vars qw(@ISA);
+@ISA = qw(SigarWrapper);
+
+my %field_types = (
+    Long   => "esigar_encode_ulonglong",
+    Double => "esigar_encode_double",
+    Int    => "esigar_encode_long",
+    Char   => "esigar_encode_char",
+    String => "esigar_encode_string",
+    NetAddress => "esigar_encode_netaddr",
+);
+
+my $c_file = 'priv/gen/sigar_drv_gen.c';
+my $h_file = 'priv/gen/sigar.hrl';
+my $g_file = 'priv/gen/sigar_gen.hrl';
+
+sub sources {
+    return $c_file;
+}
+
+sub start {
+    my $self = shift;
+    $self->SUPER::start;
+    $self->{cfh} = $self->create($c_file);
+    $self->{hfh} = $self->create($h_file);
+    $self->{gfh} = $self->create($g_file);
+}
+
+sub generate_class {
+    my($self, $func) = @_;
+
+    my $cfh = $self->{cfh};
+    my $cname = $func->{cname};
+    my $parse_args = "";
+    my $vars = "";
+    my $args = 'sigar';
+
+    if ($func->{num_args} == 1) {
+        if ($func->{is_proc}) {
+            $parse_args = 'pid = esigar_pid_get(sigar, bytes);';
+            $vars = "long $func->{arg};\n";
+        }
+        else {
+            $parse_args .= 'name = bytes;';
+            $vars = "char *$func->{arg};\n";
+        }
+        $args .= ", $func->{arg}";
+    }
+
+    my $encoder = "esigar_encode_$cname";
+    my $n = scalar @{ $func->{fields} };
+
+    print $cfh <<EOF;
+static void $encoder(ei_x_buff *x,
+                     $func->{sigar_type} *$cname)
+{
+    ei_x_encode_list_header(x, $n);
+EOF
+
+    for my $field (@{ $func->{fields} }) {
+        my $name = $field->{name};
+        my $type = $field_types{ $field->{type} };
+
+        print $cfh qq{    $type(x, "$name", $cname->$name);\n};
+    }
+
+    print $cfh "    ei_x_encode_empty_list(x);\n}\n\n";
+
+    print $cfh <<EOF if $func->{has_get};
+static int e$func->{sigar_function}(ErlDrvPort port, sigar_t *sigar, char *bytes)
+{
+    int status;
+    ei_x_buff x;
+    $func->{sigar_type} $cname;
+    $vars
+    $parse_args
+
+    ESIGAR_NEW(&x);
+    if ((status = $func->{sigar_function}($args, &$cname)) == SIGAR_OK) {
+        ESIGAR_OK(&x);
+
+        $encoder(&x, &$cname);
+
+        ESIGAR_SEND(port, &x);
+    }
+    else {
+        ESIGAR_ERROR(&x, sigar, status);
+    }
+    return status;
+}
+EOF
+}
+
+my(@nongens) =
+    qw{net_interface_list net_route_list net_connection_list
+       file_system_list cpu_info_list who_list
+       loadavg};
+
+sub finish {
+    my $self = shift;
+
+    my $mappings = $self->get_mappings;
+    my $cfh = $self->{cfh};
+    my $hfh = $self->{hfh};
+    my $gfh = $self->{gfh};
+    my $ncmd = 1;
+
+    for my $ngen (@nongens) {
+        my $cmd = uc $ngen;
+        print $cfh "#define ESIGAR_$cmd $ncmd\n";
+        print $hfh "-define($cmd, $ncmd).\n";
+        $ncmd++;
+    }
+
+    for my $func (@$mappings) {
+        next unless $func->{has_get};
+        my $name = $func->{cname};
+        my $cmd = uc $name;
+        my $nargs = 1 + $func->{num_args};
+        print $cfh "#define ESIGAR_$cmd $ncmd\n";
+        print $hfh "-define($cmd, $ncmd).\n";
+        print $hfh "-export([$name/$nargs]).\n";
+        $ncmd++;
+    }
+
+    print $cfh <<EOF;
+
+static int esigar_dispatch(ErlDrvPort port, sigar_t *sigar, int cmd, char *bytes) {
+    switch (cmd) {
+EOF
+    for my $func (@$mappings) {
+        next unless $func->{has_get};
+        my $name = $func->{cname};
+        my $cmd = uc $name;
+        my $arg = "";
+        if ($func->{num_args}) {
+            $arg = ", Arg";
+        }
+
+        print $gfh <<EOF;
+$name({sigar, S}$arg) ->
+    do_command(S, ?$cmd$arg).
+
+EOF
+        print $cfh <<EOF
+        case ESIGAR_$cmd:
+          return e$func->{sigar_function}(port, sigar, bytes);
+EOF
+    }
+    print $cfh <<EOF;
+     default:
+     esigar_notimpl(port, sigar, cmd);
+     return SIGAR_ENOTIMPL;
+    }
+}
+EOF
 
     $self->SUPER::finish;
 }
