@@ -39,6 +39,7 @@
 #include <mach/thread_info.h>
 #include <mach/vm_map.h>
 #include <mach/shared_memory_server.h>
+#include <mach-o/dyld.h>
 #define __OPENTRANSPORTPROVIDERS__
 #include <Gestalt.h>
 #include <CFString.h>
@@ -1885,10 +1886,36 @@ int sigar_proc_exe_get(sigar_t *sigar, sigar_pid_t pid,
 #endif
 }
 
+#ifdef DARWIN
+static int sigar_dlinfo_modules(sigar_t *sigar, sigar_proc_modules_t *procmods)
+{
+    uint32_t i, count = _dyld_image_count();
+
+    for (i=0; i<count; i++) {
+        int status;
+        const char *name =
+            _dyld_get_image_name(i);
+
+        if (name == NULL) {
+            continue;
+        }
+        status =
+            procmods->module_getter(procmods->data,
+                                    (char *)name, strlen(name));
+
+        if (status != SIGAR_OK) {
+            /* not an error; just stop iterating */
+            break;
+        }
+    }
+    return SIGAR_OK;
+}
+#endif /* DARWIN */
+
 int sigar_proc_modules_get(sigar_t *sigar, sigar_pid_t pid,
                            sigar_proc_modules_t *procmods)
 {
-#ifdef SIGAR_HAS_DLINFO_MODULES
+#if defined(SIGAR_HAS_DLINFO_MODULES) || defined(DARWIN)
     if (pid == sigar_pid_get(sigar)) {
         return sigar_dlinfo_modules(sigar, procmods);
     }
