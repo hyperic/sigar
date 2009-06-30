@@ -1145,6 +1145,65 @@ static int SIGAPI ptql_args_match(sigar_t *sigar,
 }
 
 typedef struct {
+    sigar_t *sigar;
+    ptql_branch_t *branch;
+    sigar_uint32_t ix;
+    int matched;
+} proc_modules_match_t;
+
+static int proc_modules_match(void *data, char *name, int len)
+{
+    proc_modules_match_t *matcher =
+        (proc_modules_match_t *)data;
+    ptql_branch_t *branch = matcher->branch;
+
+    if (branch->op_flags & PTQL_OP_FLAG_GLOB) { /* Modules.*.ct=libc */
+        matcher->matched =
+            ptql_str_match(matcher->sigar, branch, name);
+
+        if (matcher->matched) {
+            return !SIGAR_OK; /* stop iterating */
+        }
+    }
+    else {
+        if (matcher->ix++ == branch->data.ui32) { /* Modules.3.ct=libc */
+            matcher->matched =
+                ptql_str_match(matcher->sigar, branch, name);
+            return !SIGAR_OK; /* stop iterating */
+        }
+    }
+
+    return SIGAR_OK;
+}
+
+static int SIGAPI ptql_modules_match(sigar_t *sigar,
+                                     sigar_pid_t pid,
+                                     void *data)
+{
+    ptql_branch_t *branch =
+        (ptql_branch_t *)data;
+    int status;
+    sigar_proc_modules_t procmods;
+    proc_modules_match_t matcher;
+
+    matcher.sigar = sigar;
+    matcher.branch = branch;
+    matcher.ix = 0;
+    matcher.matched = 0;
+
+    procmods.module_getter = proc_modules_match;
+    procmods.data = &matcher;
+
+    status = sigar_proc_modules_get(sigar, pid, &procmods);
+
+    if (status != SIGAR_OK) {
+        return status;
+    }
+
+    return matcher.matched ? SIGAR_OK : !SIGAR_OK;
+}
+
+typedef struct {
     const char *key;
     int klen;
     char *val;
@@ -1316,6 +1375,10 @@ static ptql_lookup_t PTQL_Args[] = {
     { NULL, ptql_args_match, 0, 0, PTQL_VALUE_TYPE_ANY, ptql_args_branch_init }
 };
 
+static ptql_lookup_t PTQL_Modules[] = {
+    { NULL, ptql_modules_match, 0, 0, PTQL_VALUE_TYPE_ANY, ptql_args_branch_init }
+};
+
 static ptql_lookup_t PTQL_Env[] = {
     { NULL, ptql_env_match, 0, 0, PTQL_VALUE_TYPE_ANY, ptql_branch_init_any }
 };
@@ -1342,6 +1405,7 @@ static ptql_entry_t ptql_map[] = {
     { "State",    PTQL_State },
     { "Fd",       PTQL_Fd },
     { "Args",     PTQL_Args },
+    { "Modules",  PTQL_Modules },
     { "Env",      PTQL_Env },
     { "Port",     PTQL_Port },
     { "Pid",      PTQL_Pid },
