@@ -334,7 +334,7 @@ USA.
         <compilerarg value="-g" if="jni.debug"/>
         <compilerarg value="-Wall"/>
         <compilerarg value="-Werror" if="jni.werror"/>
-        <compilerarg value="-m64" if="jni.usem64"/>
+        <compilerarg value="${jni.gccm}" if="jni.gccm"/>
         <defineset>
           <define name="${jni.define.name}_LINUX"/>
           <define name="_REENTRANT"/>
@@ -349,7 +349,7 @@ USA.
         <libset if="jni.dmalloc"
                 dir="${jni.dmalloc}/lib"
                 libs="dmallocth"/>
-        <linkerarg value="-m64" if="jni.usem64"/>
+        <linkerarg value="${jni.gccm}" if="jni.gccm"/>
       </linker>
 
       <!-- Darwin -->
