@@ -2202,23 +2202,12 @@ int sigar_file_system_usage_get(sigar_t *sigar,
                                 const char *dirname,
                                 sigar_file_system_usage_t *fsusage)
 {
-    struct sigar_statfs buf;
-    sigar_uint64_t val, bsize;
+    int status = sigar_statvfs(sigar, dirname, fsusage);
 
-    if (sigar_statfs(dirname, &buf) < 0) {
-        return errno;
+    if (status != SIGAR_OK) {
+        return status;
     }
 
-    bsize = buf.f_bsize / 512;
-    val = buf.f_blocks;
-    fsusage->total = SIGAR_FS_BLOCKS_TO_BYTES(val, bsize);
-    val = buf.f_bfree;
-    fsusage->free  = SIGAR_FS_BLOCKS_TO_BYTES(val, bsize);
-    val = buf.f_bavail;
-    fsusage->avail = SIGAR_FS_BLOCKS_TO_BYTES(val, bsize);
-    fsusage->used  = fsusage->total - fsusage->free;
-    fsusage->files = buf.f_files;
-    fsusage->free_files = buf.f_ffree;
     fsusage->use_percent = sigar_file_system_usage_calc_used(sigar, fsusage);
 
 #if defined(__FreeBSD__)
