@@ -2193,7 +2193,21 @@ int sigar_disk_usage_get(sigar_t *sigar, const char *name,
     IOObjectRelease(parent);
 
     return SIGAR_OK;
+#elif defined(__FreeBSD__)
+    /* XXX incomplete */
+    struct sigar_statfs buf;
+
+    if (sigar_statfs(name, &buf) < 0) {
+        return errno;
+    }
+
+    SIGAR_DISK_STATS_INIT(disk);
+
+    disk->reads  = buf.f_syncreads + buf.f_asyncreads;
+    disk->writes = buf.f_syncwrites + buf.f_asyncwrites;
+    return SIGAR_OK;
 #else
+    SIGAR_DISK_STATS_INIT(disk);
     return SIGAR_ENOTIMPL;
 #endif
 }
@@ -2210,17 +2224,7 @@ int sigar_file_system_usage_get(sigar_t *sigar,
 
     fsusage->use_percent = sigar_file_system_usage_calc_used(sigar, fsusage);
 
-#if defined(__FreeBSD__)
-    fsusage->disk_reads  = buf.f_syncreads + buf.f_asyncreads;
-    fsusage->disk_writes = buf.f_syncwrites + buf.f_asyncwrites;
-    fsusage->disk_read_bytes  = SIGAR_FIELD_NOTIMPL;
-    fsusage->disk_write_bytes = SIGAR_FIELD_NOTIMPL;
-    fsusage->disk_queue       = SIGAR_FIELD_NOTIMPL;
-#elif defined(DARWIN)
     sigar_disk_usage_get(sigar, dirname, &fsusage->disk);
-#else
-    SIGAR_DISK_STATS_INIT(&fsusage->disk);
-#endif
 
     return SIGAR_OK;
 }
