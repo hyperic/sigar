@@ -630,33 +630,17 @@ int sigar_disk_usage_get(sigar_t *sigar, const char *name,
     return SIGAR_ENOTIMPL;
 }
 
-/* XXX this is exactly the same as linux and solaris is darn close */
-#include <sys/vfs.h>
-
-#define SIGAR_FS_BLOCKS_TO_BYTES(val, bsize) ((val * bsize) >> 1)
-
 int sigar_file_system_usage_get(sigar_t *sigar,
                                 const char *dirname,
                                 sigar_file_system_usage_t *fsusage)
 {
-    struct statfs buf;
     struct stat sb;
-    sigar_uint64_t val, bsize;
-    
-    if (statfs(dirname, &buf) != 0) {
-        return errno;
+    int status = sigar_statvfs(sigar, dirname, fsusage);
+
+    if (status != SIGAR_OK) {
+        return status;
     }
 
-    bsize = buf.f_bsize / 512;
-    val = buf.f_blocks;
-    fsusage->total = SIGAR_FS_BLOCKS_TO_BYTES(val, bsize);
-    val = buf.f_bfree;
-    fsusage->free  = SIGAR_FS_BLOCKS_TO_BYTES(val, bsize);
-    val = buf.f_bavail;
-    fsusage->avail = SIGAR_FS_BLOCKS_TO_BYTES(val, bsize);
-    fsusage->used  = fsusage->total - fsusage->free;
-    fsusage->files = buf.f_files;
-    fsusage->free_files = buf.f_ffree;
     fsusage->use_percent = sigar_file_system_usage_calc_used(sigar, fsusage);
 
     SIGAR_DISK_STATS_INIT(&fsusage->disk);
