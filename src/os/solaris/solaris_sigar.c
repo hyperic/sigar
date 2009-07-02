@@ -2038,8 +2038,6 @@ static int sigar_net_ifstat_get_any(sigar_t *sigar, const char *name,
         return ENOENT;
     }
 
-    SIGAR_ZERO(ifstat);
-
     data = (kstat_named_t *)ksp->ks_data;
 
     ifstat_kstat_common(ifstat, data, ksp->ks_ndata);
@@ -2080,6 +2078,7 @@ int sigar_net_interface_stat_get(sigar_t *sigar, const char *name,
         return sigar_net_ifstat_get_lo(sigar, name, ifstat);
     }
     else {
+        SIGAR_ZERO(ifstat);
         return sigar_net_ifstat_get_any(sigar, name, ifstat);
     }
 }
