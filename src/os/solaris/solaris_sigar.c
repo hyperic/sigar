@@ -118,8 +118,6 @@ int sigar_os_open(sigar_t **sig)
     sigar->koffsets.mempages[0] = -1;
     sigar->koffsets.syspages[0] = -1;
 
-    sigar_init_multi_kstats(sigar);
-
     if ((status = sigar_get_kstats(sigar)) != SIGAR_OK) {
         fprintf(stderr, "status=%d\n", status);
     } 
@@ -153,8 +151,6 @@ int sigar_os_open(sigar_t **sig)
 int sigar_os_close(sigar_t *sigar)
 {
     kstat_close(sigar->kc);
-
-    sigar_free_multi_kstats(sigar);
 
     if (sigar->ks.lcpu) {
         free(sigar->ks.cpu);
@@ -1923,207 +1919,6 @@ int sigar_net_route_list_get(sigar_t *sigar,
     return SIGAR_OK;
 }
 
-#define kHME(v) kSTAT_uint(v, hme)
-
-static int sigar_net_ifstat_get_hme(sigar_t *sigar, const char *name,
-                                    sigar_net_interface_stat_t *ifstat)
-{
-    kstat_ctl_t *kc = sigar->kc; 
-    kstat_t *ksp;
-    int status;
-
-    status = sigar_get_multi_kstats(sigar, &sigar->ks.hme,
-                                    name, &ksp);
-
-    if (status != SIGAR_OK) {
-        return status;
-    }
-
-    kstat_read(kc, ksp, NULL);
-    
-    sigar_koffsets_init_hme(sigar, ksp);
-
-    ifstat->rx_packets    = kHME(KSTAT_HME_RX_PACKETS);
-    ifstat->rx_bytes      = kHME(KSTAT_HME_RX_BYTES);
-    ifstat->rx_errors     = kHME(KSTAT_HME_RX_ERRORS);
-    ifstat->rx_dropped    = kHME(KSTAT_HME_RX_DROPPED); /*XXX*/
-    ifstat->rx_overruns   = kHME(KSTAT_HME_RX_OVERRUNS); /*XXX*/
-    ifstat->rx_frame      = kHME(KSTAT_HME_RX_FRAME);
-
-    ifstat->tx_packets    = kHME(KSTAT_HME_TX_PACKETS);
-    ifstat->tx_bytes      = kHME(KSTAT_HME_TX_BYTES);
-    ifstat->tx_errors     = kHME(KSTAT_HME_TX_ERRORS);
-    ifstat->tx_dropped    = kHME(KSTAT_HME_TX_DROPPED); /*XXX*/
-    ifstat->tx_overruns   = kHME(KSTAT_HME_TX_OVERRUNS); /*XXX*/
-    ifstat->tx_collisions = kHME(KSTAT_HME_TX_COLLISIONS);
-    ifstat->tx_carrier    = kHME(KSTAT_HME_TX_CARRIER);
-    ifstat->speed         = kHME(KSTAT_HME_SPEED);
-
-    return SIGAR_OK;
-}
-
-#define kDMFE(v) kSTAT_uint(v, dmfe)
-
-static int sigar_net_ifstat_get_dmfe(sigar_t *sigar, const char *name,
-                                    sigar_net_interface_stat_t *ifstat)
-{
-    kstat_ctl_t *kc = sigar->kc; 
-    kstat_t *ksp;
-    int status;
-
-    status = sigar_get_multi_kstats(sigar, &sigar->ks.dmfe,
-                                    name, &ksp);
-
-    if (status != SIGAR_OK) {
-        return status;
-    }
-
-    kstat_read(kc, ksp, NULL);
-    
-    sigar_koffsets_init_dmfe(sigar, ksp);
-
-    ifstat->rx_packets    = kDMFE(KSTAT_DMFE_RX_PACKETS);
-    ifstat->rx_bytes      = kDMFE(KSTAT_DMFE_RX_BYTES);
-    ifstat->rx_errors     = kDMFE(KSTAT_DMFE_RX_ERRORS);
-    ifstat->rx_dropped    = kDMFE(KSTAT_DMFE_RX_DROPPED); /*XXX*/
-    ifstat->rx_overruns   = kDMFE(KSTAT_DMFE_RX_OVERRUNS); /*XXX*/
-    ifstat->rx_frame      = kDMFE(KSTAT_DMFE_RX_FRAME);
-
-    ifstat->tx_packets    = kDMFE(KSTAT_DMFE_TX_PACKETS);
-    ifstat->tx_bytes      = kDMFE(KSTAT_DMFE_TX_BYTES);
-    ifstat->tx_errors     = kDMFE(KSTAT_DMFE_TX_ERRORS);
-    ifstat->tx_dropped    = kDMFE(KSTAT_DMFE_TX_DROPPED); /*XXX*/
-    ifstat->tx_overruns   = kDMFE(KSTAT_DMFE_TX_OVERRUNS); /*XXX*/
-    ifstat->tx_collisions = kDMFE(KSTAT_DMFE_TX_COLLISIONS);
-    ifstat->tx_carrier    = kDMFE(KSTAT_DMFE_TX_CARRIER);
-
-    ifstat->speed         = kDMFE(KSTAT_DMFE_SPEED);
-
-    return SIGAR_OK;
-}
-
-#define kGE(v) kSTAT_uint(v, ge)
-
-static int sigar_net_ifstat_get_ge(sigar_t *sigar, const char *name,
-                                   sigar_net_interface_stat_t *ifstat)
-{
-    kstat_ctl_t *kc = sigar->kc; 
-    kstat_t *ksp;
-    int status;
-
-    status = sigar_get_multi_kstats(sigar, &sigar->ks.ge,
-                                    name, &ksp);
-
-    if (status != SIGAR_OK) {
-        return status;
-    }
-
-    kstat_read(kc, ksp, NULL);
-    
-    sigar_koffsets_init_ge(sigar, ksp);
-
-    ifstat->rx_packets    = kGE(KSTAT_GE_RX_PACKETS);
-    ifstat->rx_bytes      = kGE(KSTAT_GE_RX_BYTES);
-    ifstat->rx_errors     = kGE(KSTAT_GE_RX_ERRORS);
-    ifstat->rx_dropped    = kGE(KSTAT_GE_RX_DROPPED); /*XXX*/
-    ifstat->rx_overruns   = kGE(KSTAT_GE_RX_OVERRUNS); /*XXX*/
-    ifstat->rx_frame      = kGE(KSTAT_GE_RX_FRAME);
-
-    ifstat->tx_packets    = kGE(KSTAT_GE_TX_PACKETS);
-    ifstat->tx_bytes      = kGE(KSTAT_GE_TX_BYTES);
-    ifstat->tx_errors     = kGE(KSTAT_GE_TX_ERRORS);
-    ifstat->tx_dropped    = kGE(KSTAT_GE_TX_DROPPED); /*XXX*/
-    ifstat->tx_overruns   = kGE(KSTAT_GE_TX_OVERRUNS); /*XXX*/
-    ifstat->tx_collisions = kGE(KSTAT_GE_TX_COLLISIONS);
-    ifstat->tx_carrier    = kGE(KSTAT_GE_TX_CARRIER);
-
-    ifstat->speed         = kGE(KSTAT_GE_SPEED);
-
-    return SIGAR_OK;
-}
-
-#define kERI(v) kSTAT_uint(v, eri)
-
-static int sigar_net_ifstat_get_eri(sigar_t *sigar, const char *name,
-                                    sigar_net_interface_stat_t *ifstat)
-{
-    kstat_ctl_t *kc = sigar->kc; 
-    kstat_t *ksp;
-    int status;
-
-    status = sigar_get_multi_kstats(sigar, &sigar->ks.eri,
-                                    name, &ksp);
-
-    if (status != SIGAR_OK) {
-        return status;
-    }
-
-    kstat_read(kc, ksp, NULL);
-    
-    sigar_koffsets_init_eri(sigar, ksp);
-
-    ifstat->rx_packets    = kERI(KSTAT_ERI_RX_PACKETS);
-    ifstat->rx_bytes      = kERI(KSTAT_ERI_RX_BYTES);
-    ifstat->rx_errors     = kERI(KSTAT_ERI_RX_ERRORS);
-    ifstat->rx_dropped    = kERI(KSTAT_ERI_RX_DROPPED); /*XXX*/
-    ifstat->rx_overruns   = kERI(KSTAT_ERI_RX_OVERRUNS); /*XXX*/
-    ifstat->rx_frame      = kERI(KSTAT_ERI_RX_FRAME);
-
-    ifstat->tx_packets    = kERI(KSTAT_ERI_TX_PACKETS);
-    ifstat->tx_bytes      = kERI(KSTAT_ERI_TX_BYTES);
-    ifstat->tx_errors     = kERI(KSTAT_ERI_TX_ERRORS);
-    ifstat->tx_dropped    = kERI(KSTAT_ERI_TX_DROPPED); /*XXX*/
-    ifstat->tx_overruns   = kERI(KSTAT_ERI_TX_OVERRUNS); /*XXX*/
-    ifstat->tx_collisions = kERI(KSTAT_ERI_TX_COLLISIONS);
-    ifstat->tx_carrier    = kERI(KSTAT_ERI_TX_CARRIER);
-
-    ifstat->speed         = kERI(KSTAT_ERI_SPEED);
-
-    return SIGAR_OK;
-}
-
-#define kLO(v) kSTAT_uint(v, lo)
-
-#define jLO aHO
-
-static int sigar_net_ifstat_get_lo(sigar_t *sigar, const char *name,
-                                   sigar_net_interface_stat_t *ifstat)
-{
-    kstat_ctl_t *kc = sigar->kc; 
-    kstat_t *ksp;
-    int status;
-
-    status = sigar_get_multi_kstats(sigar, &sigar->ks.lo,
-                                    name, &ksp);
-
-    if (status != SIGAR_OK) {
-        return status;
-    }
-
-    kstat_read(kc, ksp, NULL);
-    
-    sigar_koffsets_init_lo(sigar, ksp);
-
-    ifstat->rx_packets    = kLO(KSTAT_LO_RX_PACKETS);
-    ifstat->rx_bytes      = SIGAR_FIELD_NOTIMPL;
-    ifstat->rx_errors     = SIGAR_FIELD_NOTIMPL;
-    ifstat->rx_dropped    = SIGAR_FIELD_NOTIMPL;
-    ifstat->rx_overruns   = SIGAR_FIELD_NOTIMPL;
-    ifstat->rx_frame      = SIGAR_FIELD_NOTIMPL;
-
-    ifstat->tx_packets    = kLO(KSTAT_LO_TX_PACKETS);
-    ifstat->tx_bytes      = SIGAR_FIELD_NOTIMPL;
-    ifstat->tx_errors     = SIGAR_FIELD_NOTIMPL;
-    ifstat->tx_dropped    = SIGAR_FIELD_NOTIMPL;
-    ifstat->tx_overruns   = SIGAR_FIELD_NOTIMPL;
-    ifstat->tx_collisions = SIGAR_FIELD_NOTIMPL;
-    ifstat->tx_carrier    = SIGAR_FIELD_NOTIMPL;
-
-    ifstat->speed         = SIGAR_FIELD_NOTIMPL;
-
-    return SIGAR_OK;
-}
-
 static void ifstat_kstat_common(sigar_net_interface_stat_t *ifstat,
                                 kstat_named_t *data, int ndata)
 {
@@ -2148,7 +1943,12 @@ static void ifstat_kstat_common(sigar_net_interface_stat_t *ifstat,
             break;
           case 'i':
             if (strEQ(ptr, "ipackets")) {
-                ifstat->rx_packets = value;
+                if (ifstat->rx_packets == 0) {
+                    ifstat->rx_packets = value;
+                }
+            }
+            else if (strEQ(ptr, "ipackets64")) {
+                ifstat->rx_packets = data[i].value.ui64;
             }
             else if (strEQ(ptr, "ierrors")) {
                 ifstat->rx_errors = value;
@@ -2175,7 +1975,12 @@ static void ifstat_kstat_common(sigar_net_interface_stat_t *ifstat,
             break;
           case 'o':
             if (strEQ(ptr, "obytes")) {
-                ifstat->tx_bytes = value;
+                if (ifstat->tx_bytes == 0) {
+                    ifstat->tx_bytes = value;
+                }
+            }
+            else if (strEQ(ptr, "obytes64")) {
+                ifstat->tx_bytes = data[i].value.ui64;
             }
             else if (strEQ(ptr, "oerrors")) {
                 ifstat->tx_errors = value;
@@ -2184,7 +1989,12 @@ static void ifstat_kstat_common(sigar_net_interface_stat_t *ifstat,
                 ifstat->tx_overruns = value;
             }
             else if (strEQ(ptr, "opackets")) {
-                ifstat->tx_packets = value;
+                if (ifstat->tx_packets == 0) {
+                    ifstat->tx_packets = value;
+                }
+            }
+            else if (strEQ(ptr, "opackets64")) {
+                ifstat->tx_packets = data[i].value.ui64;
             }
             else if (strEQ(ptr, "toolong_errors")) {
                 ifstat->tx_overruns = value;
@@ -2192,7 +2002,12 @@ static void ifstat_kstat_common(sigar_net_interface_stat_t *ifstat,
             break;
           case 'r':
             if (strEQ(ptr, "rbytes")) {
-                ifstat->rx_bytes = value;
+                if (ifstat->rx_bytes == 0) {
+                    ifstat->rx_bytes = value;
+                }
+            }
+            else if (strEQ(ptr, "rbytes64")) {
+                ifstat->rx_bytes = data[i].value.ui64;
             }
             else if (strEQ(ptr, "rx_overflow")) {
                 ifstat->rx_overruns = value;
@@ -2223,8 +2038,6 @@ static int sigar_net_ifstat_get_any(sigar_t *sigar, const char *name,
         return ENOENT;
     }
 
-    SIGAR_ZERO(ifstat);
-
     data = (kstat_named_t *)ksp->ks_data;
 
     ifstat_kstat_common(ifstat, data, ksp->ks_ndata);
@@ -2232,42 +2045,42 @@ static int sigar_net_ifstat_get_any(sigar_t *sigar, const char *name,
     return SIGAR_OK;
 }
 
+/* loopback interface only has rx/tx packets */
+static int sigar_net_ifstat_get_lo(sigar_t *sigar, const char *name,
+                                   sigar_net_interface_stat_t *ifstat)
+{
+    ifstat->rx_packets    = 0;
+    ifstat->rx_bytes      = SIGAR_FIELD_NOTIMPL;
+    ifstat->rx_errors     = SIGAR_FIELD_NOTIMPL;
+    ifstat->rx_dropped    = SIGAR_FIELD_NOTIMPL;
+    ifstat->rx_overruns   = SIGAR_FIELD_NOTIMPL;
+    ifstat->rx_frame      = SIGAR_FIELD_NOTIMPL;
+
+    ifstat->tx_packets    = 0;
+    ifstat->tx_bytes      = SIGAR_FIELD_NOTIMPL;
+    ifstat->tx_errors     = SIGAR_FIELD_NOTIMPL;
+    ifstat->tx_dropped    = SIGAR_FIELD_NOTIMPL;
+    ifstat->tx_overruns   = SIGAR_FIELD_NOTIMPL;
+    ifstat->tx_collisions = SIGAR_FIELD_NOTIMPL;
+    ifstat->tx_carrier    = SIGAR_FIELD_NOTIMPL;
+
+    ifstat->speed         = SIGAR_FIELD_NOTIMPL;
+
+    return sigar_net_ifstat_get_any(sigar, name, ifstat);
+}
+
 int sigar_net_interface_stat_get(sigar_t *sigar, const char *name,
                                  sigar_net_interface_stat_t *ifstat)
 {
     ifstat->speed = SIGAR_FIELD_NOTIMPL;
 
-    switch (*name) {
-      case 'd':
-        if (strnEQ(name, "dmfe", 4)) {
-            return sigar_net_ifstat_get_dmfe(sigar, name, ifstat);
-        }
-        break;
-      case 'e':
-        if (strnEQ(name, "eri", 3)) {
-            return sigar_net_ifstat_get_eri(sigar, name, ifstat);
-        }
-        break;
-      case 'g':
-        if (strnEQ(name, "ge", 2)) {
-            return sigar_net_ifstat_get_ge(sigar, name, ifstat);
-        }
-        break;
-      case 'h':
-        if (strnEQ(name, "hme", 3)) {
-            return sigar_net_ifstat_get_hme(sigar, name, ifstat);
-        }
-        break;
-      case 'l':
-        if (strnEQ(name, "lo", 2)) {
-            return sigar_net_ifstat_get_lo(sigar, name, ifstat);
-        }
-        break;
-      default:
-        break;
+    if (strnEQ(name, "lo", 2)) {
+        return sigar_net_ifstat_get_lo(sigar, name, ifstat);
     }
-    
-    return sigar_net_ifstat_get_any(sigar, name, ifstat);
+    else {
+        SIGAR_ZERO(ifstat);
+        return sigar_net_ifstat_get_any(sigar, name, ifstat);
+    }
 }
 
 #define TCPQ_SIZE(s) ((s) >= 0 ? (s) : 0)
