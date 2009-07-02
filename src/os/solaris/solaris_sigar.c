@@ -2148,7 +2148,12 @@ static void ifstat_kstat_common(sigar_net_interface_stat_t *ifstat,
             break;
           case 'i':
             if (strEQ(ptr, "ipackets")) {
-                ifstat->rx_packets = value;
+                if (ifstat->rx_packets == 0) {
+                    ifstat->rx_packets = value;
+                }
+            }
+            else if (strEQ(ptr, "ipackets64")) {
+                ifstat->rx_packets = data[i].value.ui64;
             }
             else if (strEQ(ptr, "ierrors")) {
                 ifstat->rx_errors = value;
@@ -2175,7 +2180,12 @@ static void ifstat_kstat_common(sigar_net_interface_stat_t *ifstat,
             break;
           case 'o':
             if (strEQ(ptr, "obytes")) {
-                ifstat->tx_bytes = value;
+                if (ifstat->tx_bytes == 0) {
+                    ifstat->tx_bytes = value;
+                }
+            }
+            else if (strEQ(ptr, "obytes64")) {
+                ifstat->tx_bytes = data[i].value.ui64;
             }
             else if (strEQ(ptr, "oerrors")) {
                 ifstat->tx_errors = value;
@@ -2184,7 +2194,12 @@ static void ifstat_kstat_common(sigar_net_interface_stat_t *ifstat,
                 ifstat->tx_overruns = value;
             }
             else if (strEQ(ptr, "opackets")) {
-                ifstat->tx_packets = value;
+                if (ifstat->tx_packets == 0) {
+                    ifstat->tx_packets = value;
+                }
+            }
+            else if (strEQ(ptr, "opackets64")) {
+                ifstat->tx_packets = data[i].value.ui64;
             }
             else if (strEQ(ptr, "toolong_errors")) {
                 ifstat->tx_overruns = value;
@@ -2192,7 +2207,12 @@ static void ifstat_kstat_common(sigar_net_interface_stat_t *ifstat,
             break;
           case 'r':
             if (strEQ(ptr, "rbytes")) {
-                ifstat->rx_bytes = value;
+                if (ifstat->rx_bytes == 0) {
+                    ifstat->rx_bytes = value;
+                }
+            }
+            else if (strEQ(ptr, "rbytes64")) {
+                ifstat->rx_bytes = data[i].value.ui64;
             }
             else if (strEQ(ptr, "rx_overflow")) {
                 ifstat->rx_overruns = value;
