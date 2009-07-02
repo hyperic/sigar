@@ -79,90 +79,6 @@ int sigar_proc_status_get(sigar_t *sigar, pstatus_t *pstatus, sigar_pid_t pid);
 #define CPU_ONLINE(n) \
     (p_online(n, P_STATUS) == P_ONLINE)
 
-/* loopback interface only has these two metrics */
-typedef enum {
-    KSTAT_LO_RX_PACKETS,
-    KSTAT_LO_TX_PACKETS,
-    KSTAT_LO_MAX
-} kstat_lo_off_e;
-
-/* hme, ge and dmfe network devices provide
- * the same metrics, but in some cases with
- * different names and in all cases, the
- * offsets are different.
- */
-typedef enum {
-    KSTAT_HME_RX_PACKETS,
-    KSTAT_HME_RX_BYTES,
-    KSTAT_HME_RX_ERRORS,
-    KSTAT_HME_RX_DROPPED,
-    KSTAT_HME_RX_OVERRUNS,
-    KSTAT_HME_RX_FRAME,
-    KSTAT_HME_TX_PACKETS,
-    KSTAT_HME_TX_BYTES,
-    KSTAT_HME_TX_ERRORS,
-    KSTAT_HME_TX_DROPPED,
-    KSTAT_HME_TX_OVERRUNS,
-    KSTAT_HME_TX_COLLISIONS,
-    KSTAT_HME_TX_CARRIER,
-    KSTAT_HME_SPEED,
-    KSTAT_HME_MAX
-} kstat_hme_off_e;
-
-typedef enum {
-    KSTAT_DMFE_RX_PACKETS,
-    KSTAT_DMFE_RX_BYTES,
-    KSTAT_DMFE_RX_ERRORS,
-    KSTAT_DMFE_RX_DROPPED,
-    KSTAT_DMFE_RX_OVERRUNS,
-    KSTAT_DMFE_RX_FRAME,
-    KSTAT_DMFE_TX_PACKETS,
-    KSTAT_DMFE_TX_BYTES,
-    KSTAT_DMFE_TX_ERRORS,
-    KSTAT_DMFE_TX_DROPPED,
-    KSTAT_DMFE_TX_OVERRUNS,
-    KSTAT_DMFE_TX_COLLISIONS,
-    KSTAT_DMFE_TX_CARRIER,
-    KSTAT_DMFE_SPEED,
-    KSTAT_DMFE_MAX
-} kstat_dmfe_off_e;
-
-typedef enum {
-    KSTAT_GE_RX_PACKETS,
-    KSTAT_GE_RX_BYTES,
-    KSTAT_GE_RX_ERRORS,
-    KSTAT_GE_RX_DROPPED,
-    KSTAT_GE_RX_OVERRUNS,
-    KSTAT_GE_RX_FRAME,
-    KSTAT_GE_TX_PACKETS,
-    KSTAT_GE_TX_BYTES,
-    KSTAT_GE_TX_ERRORS,
-    KSTAT_GE_TX_DROPPED,
-    KSTAT_GE_TX_OVERRUNS,
-    KSTAT_GE_TX_COLLISIONS,
-    KSTAT_GE_TX_CARRIER,
-    KSTAT_GE_SPEED,
-    KSTAT_GE_MAX
-} kstat_ge_off_e;
-
-typedef enum {
-    KSTAT_ERI_RX_PACKETS,
-    KSTAT_ERI_RX_BYTES,
-    KSTAT_ERI_RX_ERRORS,
-    KSTAT_ERI_RX_DROPPED,
-    KSTAT_ERI_RX_OVERRUNS,
-    KSTAT_ERI_RX_FRAME,
-    KSTAT_ERI_TX_PACKETS,
-    KSTAT_ERI_TX_BYTES,
-    KSTAT_ERI_TX_ERRORS,
-    KSTAT_ERI_TX_DROPPED,
-    KSTAT_ERI_TX_OVERRUNS,
-    KSTAT_ERI_TX_COLLISIONS,
-    KSTAT_ERI_TX_CARRIER,
-    KSTAT_ERI_SPEED,
-    KSTAT_ERI_MAX
-} kstat_eri_off_e;
-
 typedef enum {
     KSTAT_SYSTEM_BOOT_TIME,
     KSTAT_SYSTEM_LOADAVG_1,
@@ -184,11 +100,6 @@ typedef enum {
 } kstat_syspages_off_e;
 
 enum {
-    KSTAT_KEYS_lo,
-    KSTAT_KEYS_hme,
-    KSTAT_KEYS_dmfe,
-    KSTAT_KEYS_ge,
-    KSTAT_KEYS_eri,
     KSTAT_KEYS_system,
     KSTAT_KEYS_mempages,
     KSTAT_KEYS_syspages,
@@ -234,19 +145,9 @@ struct sigar_t {
         kstat_t *system;
         kstat_t *syspages;
         kstat_t *mempages;
-        kstat_list_t hme;
-        kstat_list_t dmfe;
-        kstat_list_t ge;
-        kstat_list_t eri;
-        kstat_list_t lo;
     } ks;
 
     struct {
-        int lo[KSTAT_LO_MAX];
-        int hme[KSTAT_HME_MAX];
-        int dmfe[KSTAT_DMFE_MAX];
-        int ge[KSTAT_GE_MAX];
-        int eri[KSTAT_ERI_MAX];
         int system[KSTAT_SYSTEM_MAX];
         int mempages[KSTAT_MEMPAGES_MAX];
         int syspages[KSTAT_SYSPAGES_MAX];
@@ -304,21 +205,6 @@ struct sigar_t {
 #define sigar_koffsets_init(sigar, ksp, type) \
     if (sigar->koffsets.type[0] == -1) \
         sigar_koffsets_lookup(ksp, sigar->koffsets.type, KSTAT_KEYS_##type)
-
-#define sigar_koffsets_init_lo(sigar, ksp) \
-    sigar_koffsets_init(sigar, ksp, lo)
-
-#define sigar_koffsets_init_hme(sigar, ksp) \
-    sigar_koffsets_init(sigar, ksp, hme)
-
-#define sigar_koffsets_init_dmfe(sigar, ksp) \
-    sigar_koffsets_init(sigar, ksp, dmfe)
-
-#define sigar_koffsets_init_ge(sigar, ksp) \
-    sigar_koffsets_init(sigar, ksp, ge)
-
-#define sigar_koffsets_init_eri(sigar, ksp) \
-    sigar_koffsets_init(sigar, ksp, eri)
 
 #define sigar_koffsets_init_system(sigar, ksp) \
     sigar_koffsets_init(sigar, ksp, system)
