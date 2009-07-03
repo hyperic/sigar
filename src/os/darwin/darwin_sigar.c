@@ -298,6 +298,7 @@ char *sigar_os_error_string(sigar_t *sigar, int err)
 /* ARG_MAX in FreeBSD 6.0 == 262144, which blows up the stack */
 #define SIGAR_ARG_MAX 65536
 
+#ifdef DARWIN
 static size_t sigar_argmax_get(sigar_t *sigar)
 {
 #ifdef KERN_ARGMAX
@@ -313,6 +314,7 @@ static size_t sigar_argmax_get(sigar_t *sigar)
 #endif
     return SIGAR_ARG_MAX;
 }
+#endif /* DARWIN */
 
 #if defined(DARWIN)
 static int sigar_vmstat(sigar_t *sigar, vm_statistics_data_t *vmstat)
