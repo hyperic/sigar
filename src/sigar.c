@@ -20,12 +20,15 @@
 #include <stdio.h>
 
 #ifndef WIN32
-#include <arpa/inet.h>
+#include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/time.h>
 #endif
 #if defined(__OpenBSD__) || defined(__FreeBSD__)
 #include <netinet/in.h>
+#endif
+#ifndef WIN32
+#include <arpa/inet.h>
 #endif
 
 #include "sigar.h"

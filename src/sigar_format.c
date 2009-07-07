@@ -28,6 +28,7 @@
 #include <stdio.h>
 
 #ifndef WIN32
+#include <netinet/in.h>
 #include <arpa/inet.h>
 #if defined(__OpenBSD__) || defined(__FreeBSD__) || defined(__NetBSD__) || defined(_AIX)
 #include <sys/socket.h>
@@ -291,11 +292,6 @@ SIGAR_DECLARE(int) sigar_uptime_string(sigar_t *sigar,
 
     return SIGAR_OK;
 }
-
-
-#ifndef WIN32
-#include <netinet/in.h>
-#endif
 
 /* threadsafe alternative to inet_ntoa (inet_ntop4 from apr) */
 int sigar_inet_ntoa(sigar_t *sigar,
