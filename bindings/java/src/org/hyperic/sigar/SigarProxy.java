@@ -158,6 +158,8 @@ public interface SigarProxy {
 
     public NetStat getNetStat() throws SigarException;
 
+    public String getNetServicesName(int protocol, long port);
+
     public Who[] getWhoList() throws SigarException;
 
     public Tcp getTcp() throws SigarException;
