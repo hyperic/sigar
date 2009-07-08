@@ -79,6 +79,7 @@ public class SigarTestRunner extends SigarCommandBase {
         TestUptime.class,
         TestVMware.class,
         TestWho.class,
+        TestHumidor.class
     };
 
     private static final Class[] WIN32_TESTS = {
