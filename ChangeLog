@@ -1,3 +1,63 @@
+2008-02-13  Doug MacEachern  <dougm@hyperic.com>
+
+	* 1.6.2 release
+
+2009-02-12  Doug MacEachern  <dougm@hyperic.com>
+
+	* (SIGAR-134) use UNICODE in EventLog wrapper
+
+2009-02-10  Doug MacEachern  <dougm@hyperic.com>
+
+	* (SIGAR-73) check for 'ocfs' in addition to 'ocfs2'
+
+2009-02-08  Doug MacEachern  <dougm@hyperic.com>
+
+	* (SIGAR-138) Recognize zfs as local filesystem type
+
+2009-02-06  Doug MacEachern  <dougm@hyperic.com>
+
+	* fix osx version on 64-bit platforms
+
+	* [SIGAR-133] use InputStream.skip (bytes) instead of Reader.skip (chars) in onChange
+
+	* [SIGAR-132] Fix possible memory leak in sigar_rpc_ping
+
+	* [SIGAR-129] fix possible integer overflow in time_now_millis
+
+	* [SIGAR-129] add another sanity check
+
+	* [SIGAR-129] prevent possible wrapping
+
+	* [SIGAR-129] prevent possible integer overflow
+
+	* [SIGAR-127] use KERN_ARGMAX for KERN_PROCARGS2 buffer size
+
+	* [SIGAR-126] /dev/kmem not usable in aix 6
+
+	* rid "warning: cast from pointer to integer of different size" on 64-bit builds
+
+	* [SIGAR-125] bring back /private/var/vm swap impl for osx 10.3
+
+	* [SIGAR-123] do not include global shared text+data region size
+
+	* [SIGAR-122] ARG_MAX undefined on glibc 2.8
+
+2008-09-13  Doug MacEachern  <dougm@hyperic.com>
+
+	* include ptql and log in dist headers
+
+	* dont include ant and mx4j jars in dist
+
+	* add cpu_perc typemap to bindings/perl
+
+2008-09-11  Doug MacEachern  <dougm@hyperic.com>
+
+	* [SIGAR-120] Support WoW registry reflection
+
+2008-09-08  Doug MacEachern  <dougm@hyperic.com>
+
+	* [SIGAR-119] Use 64-bit performance counter for uptime
+
 2008-09-06  Doug MacEachern  <dougm@hyperic.com>
 
         * 1.6 released, change summary:
