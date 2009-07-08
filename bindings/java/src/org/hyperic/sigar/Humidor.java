@@ -36,8 +36,13 @@ public class Humidor {
     private Object LOCK = new Object();
     private InvocationHandler _handler;
     private SigarProxy _sigar;
+    private Sigar _impl;
 
     private Humidor() {}
+
+    public Humidor(Sigar sigar) {
+        _impl = sigar;
+    }
 
     private static class MyHandler implements InvocationHandler {
         private SigarProxy _sigar;
@@ -63,8 +68,10 @@ public class Humidor {
     public SigarProxy getSigar() {
         synchronized(LOCK) {
             if (_sigar == null) {
-                Sigar s = new Sigar();
-                _handler = new MyHandler(s);
+                if (_impl == null) {
+                    _impl = new Sigar();
+                }
+                _handler = new MyHandler(_impl);
                 _sigar = (SigarProxy)
                     Proxy.newProxyInstance(Humidor.class.getClassLoader(),
                                            new Class[] { SigarProxy.class },
