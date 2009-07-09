@@ -2,6 +2,14 @@
 
 	* 1.6.3 release
 
+2009-07-08  Doug MacEachern  <dougm@hyperic.com>
+
+	* (SIGAR-130) Use pstat(PSTAT_GETCOMMANDLINE,...) on HP-UX < 11iv2
+
+	* (SIGAR-130) Use pstat_getcommandline on HP-UX 11iv2+
+
+	* (SIGAR-131) switch to pst_fileinfo2 on all HPUX flavors
+
 2009-07-08  Jon Travis  <jtravis@p00p.org>
 
 	* (SIGAR-150) Wrapper class to synchronize Sigar method invocation
