@@ -1,3 +1,73 @@
+2008-07-13  Doug MacEachern  <dougm@hyperic.com>
+
+	* 1.6.3 release
+
+2009-07-08  Jon Travis  <jtravis@p00p.org>
+
+	* (SIGAR-150) Wrapper class to synchronize Sigar method invocation
+
+2009-07-07  Doug MacEachern  <dougm@hyperic.com>
+
+	* add getNetServicesName to SigarProxy interface
+
+2009-07-02  Doug MacEachern  <dougm@hyperic.com>
+
+	* (SIGAR-145) default to 'Irix mode' for proc_cpu.percent
+
+	* (SIGAR-144) Solaris net_interface_stat should use 64-bit kstats
+
+2009-07-01  Doug MacEachern  <dougm@hyperic.com>
+
+	* (SIGAR-148) statfs usage compiled with LFS flags
+
+2009-06-30  Doug MacEachern  <dougm@hyperic.com>
+
+	* (SIGAR-152) Add support for 31-bit s390 builds
+
+2009-06-17  Doug MacEachern  <dougm@hyperic.com>
+
+	* darwin sigar_dlinfo_modules impl
+
+2009-06-06  Doug MacEachern  <dougm@hyperic.com>
+
+	* (SIGAR-151) Add Modules support to PTQL
+
+2009-06-01  Kay Röpke  <kroepke@classdump.local>
+
+	* (SIGAR-149) fix Darwin side of SIGAR-47: integer multlipcation overflow on
+	32bit builds with more than 4GB available memory
+
+2009-05-24  Doug MacEachern  <dougm@hyperic.com>
+
+	* (SIGAR-142) loosen net_interface_list filters on MacOSX
+
+2009-05-15  Doug MacEachern  <dougm@hyperic.com>
+
+	* (SIGAR-150) make SigarProxyCached.invoke synchronized
+
+2009-05-13  Doug MacEachern  <dougm@hyperic.com>
+
+	* fix so SigarPermissionDeniedException is throw on open /dev/kmem EACCES
+
+	* add 64-bit compile/link flags for AIX
+
+	* require libperfstat on aix
+
+2009-04-25  Doug MacEachern  <dougm@hyperic.com>
+
+	* getrusage on NetBSD may not return monotonically increasing
+	values for CPU time.
+
+	* (SIGAR-39) Use kern.cp_times in cpu_list on FreeBSD 7.x+
+
+2009-03-27  Doug MacEachern  <dougm@hyperic.com>
+
+	* (SIGAR-141) sigar.jar location is not required to find native library
+
+2009-03-25  Doug MacEachern  <dougm@hyperic.com>
+
+	* (SIGAR-140) interface aliases are valid in sigar_net_interface_config_primary_get
+
 2008-02-13  Doug MacEachern  <dougm@hyperic.com>
 
 	* 1.6.2 release
