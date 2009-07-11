@@ -10,7 +10,7 @@ use POSIX ();
 
 use vars qw(@ISA @EXPORT);
 @ISA = qw(Exporter);
-@EXPORT = qw(cppflags ldflags libs os src inline_src);
+@EXPORT = qw(cppflags ldflags libs os src inline_src version_file);
 
 sub archname {
     my $os = lc $^O;
@@ -207,9 +207,18 @@ sub build_date {
     return POSIX::strftime("%m/%d/%Y %I:%M %p", localtime);
 }
 
+sub find_file {
+    my $file = shift;
+    for my $dir (qw(../.. .. .)) {
+        my $pfile = "$dir/$file";
+        return $pfile if -e $pfile;
+    }
+    return $file;
+}
+
 sub version_properties {
     my $props = {};
-    my $file = $_[0] || 'version.properties';
+    my $file = $_[0] || find_file('version.properties');
     open my $fh, $file or die "open $file: $!";
     while (<$fh>) {
         chomp;
@@ -236,6 +245,10 @@ sub version_properties {
 
 sub version_file {
     my($source, $dest) = @_;
+    unless ($source) {
+        $dest = 'sigar_version.c';
+        $source = find_file("src/$dest.in");
+    }
     my $props = version_properties();
     my(%filters);
     while (my($key,$val) = each %$props) {
