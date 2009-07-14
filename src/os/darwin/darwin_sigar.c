@@ -1866,6 +1866,8 @@ int sigar_proc_exe_get(sigar_t *sigar, sigar_pid_t pid,
         }
     }
 
+    sigar_kern_proc_args_destroy(&kargs);
+
     return SIGAR_OK;
 #else
     int len;
