@@ -424,7 +424,7 @@ sigar_iodev_t *sigar_iodev_get(sigar_t *sigar,
                                      "[iodev] inode stat(%s) failed",
                                      fsp->dir_name);
                 }
-                return NULL; /* cant cache w/o inode */
+                continue; /* cant cache w/o inode */
             }
 
             ent = sigar_cache_get(sigar->fsdev, SIGAR_FSDEV_ID(sb));
