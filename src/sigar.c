@@ -429,6 +429,11 @@ static int sigar_common_fs_type_get(sigar_file_system_t *fsp)
             fsp->type = SIGAR_FSTYPE_CDROM;
         }
         break;
+      case 'c':
+        if (strEQ(type, "cvfs")) {
+            fsp->type = SIGAR_FSTYPE_LOCAL_DISK;
+        }
+        break;
       case 'm':
         if (strEQ(type, "msdos") || strEQ(type, "minix")) {
             fsp->type = SIGAR_FSTYPE_LOCAL_DISK;
