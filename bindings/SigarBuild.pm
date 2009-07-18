@@ -244,13 +244,28 @@ sub version_properties {
 }
 
 sub version_file {
-    my($source, $dest) = @_;
+    local $_;
+    my($source, $dest, %filters);
+    my(@args) = @_ ? @_ : @ARGV;
+    for (@args) {
+        if (/=/) {
+            my($key,$val) = split '=', $_, 2;
+            $filters{$key} = $val;
+        }
+        else {
+            if ($source) {
+                $dest = $_;
+            }
+            else {
+                $source = $_;
+            }
+        }
+    }
     unless ($source) {
         $dest = 'sigar_version.c';
         $source = find_file("src/$dest.in");
     }
     my $props = version_properties();
-    my(%filters);
     while (my($key,$val) = each %$props) {
         $key = uc $key;
         $key =~ s/\./_/;
