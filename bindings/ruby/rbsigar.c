@@ -536,6 +536,9 @@ static VALUE rb_sigar_proc_env(VALUE obj, VALUE pid)
 #define RB_SIGAR_CONST_INT(name) \
     rb_define_const(rclass, #name, INT2FIX(SIGAR_##name))
 
+#define RB_SIGAR_DEFINE_CONST_STR(name, value) \
+    rb_define_const(rclass, name, rb_obj_freeze(rb_str_new2(value)))
+
 #define RB_SIGAR_CONST_STR(name) \
     rb_define_const(rclass, #name, rb_obj_freeze(rb_str_new2(SIGAR_##name)))
 
@@ -582,6 +585,14 @@ static void Init_rbsigar_constants(VALUE rclass)
     RB_SIGAR_CONST_STR(NULL_HWADDR);
 }
 
+static void Init_rbsigar_version(VALUE rclass)
+{
+    sigar_version_t *sv = sigar_version_get();
+    RB_SIGAR_DEFINE_CONST_STR("BUILD_DATE", sv->build_date);
+    RB_SIGAR_DEFINE_CONST_STR("SCM_REVISION", sv->scm_revision);
+    RB_SIGAR_DEFINE_CONST_STR("VERSION", sv->version);
+}
+
 void Init_rbsigar(void)
 {
     VALUE rclass = rb_define_class("Sigar", rb_cObject);
@@ -609,6 +620,7 @@ void Init_rbsigar(void)
                                rb_sigar_net_connection_state_to_s, 1);
 
     Init_rbsigar_constants(rclass);
+    Init_rbsigar_version(rclass);
 
     /* generated */
     rb_sigar_define_module_methods(rclass);
