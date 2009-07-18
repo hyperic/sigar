@@ -21,12 +21,12 @@ sub archname {
         return 'x86-winnt';
     }
     elsif ($os =~ /linux/) {
-	if ($arch =~ /_64/) {
-	    return 'amd64-linux';
-	}
-	else {
-	    return 'x86-linux';
-	}
+        if ($arch =~ /_64/) {
+            return 'amd64-linux';
+        }
+        else {
+            return 'x86-linux';
+        }
     }
     elsif ($os =~ /hpux/) {
         if ($vers =~ /11\./) {
@@ -47,18 +47,18 @@ sub archname {
     elsif ($os =~ /darwin/) {
         return 'universal-macosx';
     }
-    elsif ($os =~ /freebsd/) { 
-        if ($arch =~ /.86/) { 
-            if($vers =~ /6\../ ) { 
-                return 'x86-freebsd-6'; 
+    elsif ($os =~ /freebsd/) {
+        if ($arch =~ /.86/) {
+            if($vers =~ /6\../ ) {
+                return 'x86-freebsd-6';
             }
-        } 
-        elsif ($arch =~ /amd64/) { 
-            if ($vers =~ /6\../ ) { 
-                return 'amd64-freebsd-6'; 
-            } 
-        } 
-    } 
+        }
+        elsif ($arch =~ /amd64/) {
+            if ($vers =~ /6\../ ) {
+                return 'amd64-freebsd-6';
+            }
+        }
+    }
 
     return '';
 }
