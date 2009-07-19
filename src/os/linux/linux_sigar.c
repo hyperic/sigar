@@ -1159,7 +1159,7 @@ static int get_iostat_sys(sigar_t *sigar,
     int partition, status;
 
     if (!(*iodev = sigar_iodev_get(sigar, dirname))) {
-        return ENOENT;
+        return ENXIO;
     }
 
     name = fsdev = (*iodev)->name;
@@ -1211,7 +1211,7 @@ static int get_iostat_proc_dstat(sigar_t *sigar,
     SIGAR_DISK_STATS_INIT(device_usage);
 
     if (!(*iodev = sigar_iodev_get(sigar, dirname))) {
-        return ENOENT;
+        return ENXIO;
     }
 
     if (stat((*iodev)->name, &sb) < 0) {
@@ -1313,7 +1313,7 @@ static int get_iostat_procp(sigar_t *sigar,
     struct stat sb;
 
     if (!(*iodev = sigar_iodev_get(sigar, dirname))) {
-        return ENOENT;
+        return ENXIO;
     }
 
     if (stat((*iodev)->name, &sb) < 0) {
