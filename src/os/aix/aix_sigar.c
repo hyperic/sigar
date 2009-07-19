@@ -1247,7 +1247,7 @@ int sigar_disk_usage_get(sigar_t *sigar, const char *name,
     SIGAR_SSTRCPY(id.name, name);
 
     if (perfstat_disk(&id, &disk, sizeof(disk), 1) != 1) {
-        return ENOENT;
+        return ENXIO;
     }
 
     usage->reads = disk.rblks;
