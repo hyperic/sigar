@@ -1956,7 +1956,7 @@ SIGAR_DECLARE(int) sigar_disk_usage_get(sigar_t *sigar,
         }
     }
 
-    return ENOENT;
+    return ENXIO;
 }
 
 SIGAR_DECLARE(int)

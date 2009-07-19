@@ -2137,7 +2137,7 @@ int sigar_disk_usage_get(sigar_t *sigar, const char *name,
     SIGAR_DISK_STATS_INIT(disk);
 
     if (!iodev) {
-        return ESRCH;
+        return ENXIO;
     }
 
     /* "/dev/disk0s1" -> "disk0" */ /* XXX better way? */
