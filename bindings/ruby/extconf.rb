@@ -1,4 +1,5 @@
 require 'mkmf'
+require 'rbconfig'
 
 extension_name = 'rbsigar'
 
@@ -84,8 +85,13 @@ unless is_win32
 end
 
 system('perl -Mlib=.. -MSigarWrapper -e generate Ruby .')
+libname = extension_name + '.' + CONFIG['DLEXT']
+system('perl -Mlib=.. -MSigarBuild -e version_file ' +
+       'ARCHNAME=' + RUBY_PLATFORM + ' ' +
+       'ARCHLIB=' + libname + ' ' +
+       'BINNAME=' + libname)
 
-$distcleanfiles = ['rbsigar_generated.rx']
+$distcleanfiles = ['rbsigar_generated.rx','sigar_version.c']
 #XXX seems mkmf forces basename on srcs
 #XXX should be linking against libsigar anyhow
 (Dir["../../src/*.c"] + Dir["#{osdir}/*.c"]).each do |file|

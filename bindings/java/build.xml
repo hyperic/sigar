@@ -4,7 +4,7 @@
 
 <project name="Sigar" default="build" basedir=".">
 
-  <property file="version.properties"/>
+  <property file="../../version.properties"/>
 
   <property name="sigar.version"
             value="${version.major}.${version.minor}.${version.maint}"/>
@@ -548,6 +548,7 @@
 
    <copy toDir="${dist.src}">
      <fileset dir="../..">
+       <include name="version.properties"/>
        <include name="include/*.h"/>
        <include name="src/**/*.h"/>
        <include name="src/**/*.c"/>
@@ -559,7 +560,6 @@
        <include name="bindings/java/**/*.h"/>
        <include name="bindings/java/**/*.pl"/>
        <include name="bindings/java/**/build.xml"/>
-       <include name="bindings/java/version.properties"/>
        <include name="bindings/java/.classpath"/>
        <include name="bindings/java/.project"/>
        <include name="bindings/java/.sigar_shellrc"/>

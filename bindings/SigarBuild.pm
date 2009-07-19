@@ -1,14 +1,67 @@
 package SigarBuild;
 
 use strict;
+use Config;
 use Exporter;
 use File::Basename qw(basename);
 use File::Copy qw(copy);
 use File::Spec ();
+use POSIX ();
 
 use vars qw(@ISA @EXPORT);
 @ISA = qw(Exporter);
-@EXPORT = qw(cppflags ldflags libs os src inline_src);
+@EXPORT = qw(cppflags ldflags libs os src inline_src version_file);
+
+sub archname {
+    my $os = lc $^O;
+    my $vers = $Config{osvers};
+    my $arch = $Config{archname};
+
+    if ($os =~ /win32/) {
+        return 'x86-winnt';
+    }
+    elsif ($os =~ /linux/) {
+        if ($arch =~ /_64/) {
+            return 'amd64-linux';
+        }
+        else {
+            return 'x86-linux';
+        }
+    }
+    elsif ($os =~ /hpux/) {
+        if ($vers =~ /11\./) {
+            return 'pa-hpux-11';
+        }
+    }
+    elsif ($os =~ /aix/) {
+        return 'ppc-aix-5';
+    }
+    elsif ($os =~ /solaris/) {
+        if ($arch =~ /sun4/) {
+            return 'sparc-solaris';
+        }
+        elsif ($arch =~ /.86/) {
+            return 'x86-solaris';
+        }
+    }
+    elsif ($os =~ /darwin/) {
+        return 'universal-macosx';
+    }
+    elsif ($os =~ /freebsd/) {
+        if ($arch =~ /.86/) {
+            if($vers =~ /6\../ ) {
+                return 'x86-freebsd-6';
+            }
+        }
+        elsif ($arch =~ /amd64/) {
+            if ($vers =~ /6\../ ) {
+                return 'amd64-freebsd-6';
+            }
+        }
+    }
+
+    return '';
+}
 
 sub flags {
     my $os = lc $^O;
@@ -136,6 +189,103 @@ sub inline_src {
     else {
         return @files;
     }
+}
+
+sub scm_revision {
+    my $rev;
+    $rev = `git rev-parse --short HEAD`;
+    if ($rev) {
+        chomp $rev;
+    }
+    else {
+        $rev = "exported";
+    }
+    return $rev;
+}
+
+sub build_date {
+    return POSIX::strftime("%m/%d/%Y %I:%M %p", localtime);
+}
+
+sub find_file {
+    my $file = shift;
+    for my $dir (qw(../.. .. .)) {
+        my $pfile = "$dir/$file";
+        return $pfile if -e $pfile;
+    }
+    return $file;
+}
+
+sub version_properties {
+    my $props = {};
+    my $file = $_[0] || find_file('version.properties');
+    open my $fh, $file or die "open $file: $!";
+    while (<$fh>) {
+        chomp;
+        my($key,$val) = split '=';
+        next unless $key and defined $val;
+        $props->{$key} = $val;
+    }
+    close $fh;
+
+    $props->{'scm.revision'} = scm_revision();
+
+    $props->{'build.date'} = build_date();
+
+    $props->{'version'} =
+        join '.', map $props->{"version.$_"}, qw(major minor maint);
+
+    $props->{'version.build'} = $ENV{BUILD_NUMBER} || '0';
+
+    $props->{'version.string'} =
+        join '.', $props->{'version'}, $props->{'version.build'};
+
+    return $props;
+}
+
+sub version_file {
+    local $_;
+    my($source, $dest, %filters);
+    my(@args) = @_ ? @_ : @ARGV;
+    for (@args) {
+        if (/=/) {
+            my($key,$val) = split '=', $_, 2;
+            $filters{$key} = $val;
+        }
+        else {
+            if ($source) {
+                $dest = $_;
+            }
+            else {
+                $source = $_;
+            }
+        }
+    }
+    unless ($source) {
+        $dest = 'sigar_version.c';
+        $source = find_file("src/$dest.in");
+    }
+    my $props = version_properties();
+    while (my($key,$val) = each %$props) {
+        $key = uc $key;
+        $key =~ s/\./_/;
+        $filters{$key} = $val;
+    }
+    my $re = join '|', keys %filters;
+    open my $in, $source or die "open $source: $!";
+    my $out;
+    if ($dest) {
+        open $out, '>', $dest or die "open $dest: $!";
+    }
+    else {
+        $out = \*STDOUT;
+    }
+    while (<$in>) {
+        s/\@\@($re)\@\@/$filters{$1}/go;
+        print $out $_;
+    }
+    close $in;
+    close $out if $dest;
 }
 
 1;
