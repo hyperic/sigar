@@ -2682,10 +2682,91 @@ int sigar_net_interface_list_get(sigar_t *sigar,
     return sigar_ifmsg_iter(sigar, &iter);
 }
 
+#include <ifaddrs.h>
+
+#define SIN6(s) ((struct sockaddr_in6 *)(s))
+
+/* in6_prefixlen derived from freebsd/sbin/ifconfig/af_inet6.c */
+static int sigar_in6_prefixlen(struct sockaddr *netmask)
+{
+    u_char *name = (u_char *)&SIN6(netmask)->sin6_addr;
+    int size = sizeof(SIN6(netmask)->sin6_addr);
+    int byte, bit, plen = 0;
+
+    for (byte = 0; byte < size; byte++, plen += 8) {
+        if (name[byte] != 0xff) {
+            break;
+        }
+    }
+    if (byte == size) {
+        return plen;
+    }
+    for (bit = 7; bit != 0; bit--, plen++) {
+        if (!(name[byte] & (1 << bit))) {
+            break;
+        }
+    }
+    for (; bit != 0; bit--) {
+        if (name[byte] & (1 << bit)) {
+            return 0;
+        }
+    }
+    byte++;
+    for (; byte < size; byte++) {
+        if (name[byte]) {
+            return 0;
+        }
+    }
+    return plen;
+}
+
 int sigar_net_interface_ipv6_config_get(sigar_t *sigar, const char *name,
                                         sigar_net_interface_config_t *ifconfig)
 {
-    return SIGAR_ENOTIMPL;
+    int status = SIGAR_ENOENT;
+    struct ifaddrs *addrs, *ifa;
+
+    if (getifaddrs(&addrs) != 0) {
+        return errno;
+    }
+
+    for (ifa=addrs; ifa; ifa=ifa->ifa_next) {
+        if (ifa->ifa_addr &&
+            (ifa->ifa_addr->sa_family == AF_INET6) &&
+            strEQ(ifa->ifa_name, name))
+        {
+            status = SIGAR_OK;
+            break;
+        }
+    }
+
+    if (status == SIGAR_OK) {
+        struct in6_addr *addr = &SIN6(ifa->ifa_addr)->sin6_addr;
+
+        sigar_net_address6_set(ifconfig->address6, addr);
+
+        ifconfig->prefix_length = sigar_in6_prefixlen(ifa->ifa_netmask);
+
+        if (IN6_IS_ADDR_LINKLOCAL(addr)) {
+            ifconfig->scope = SIGAR_IPV6_ADDR_LINKLOCAL;
+        }
+        else if (IN6_IS_ADDR_SITELOCAL(addr)) {
+            ifconfig->scope = SIGAR_IPV6_ADDR_SITELOCAL;
+        }
+        else if (IN6_IS_ADDR_V4COMPAT(addr)) {
+            ifconfig->scope = SIGAR_IPV6_ADDR_COMPATv4;
+        }
+        else if (IN6_IS_ADDR_LOOPBACK(addr)) {
+            ifconfig->scope = SIGAR_IPV6_ADDR_LOOPBACK;
+        }
+        else {
+            ifconfig->scope = SIGAR_IPV6_ADDR_ANY;
+        }
+    }
+
+    freeifaddrs(addrs);
+
+    return status;
 }
 
 int sigar_net_interface_config_get(sigar_t *sigar, const char *name,
