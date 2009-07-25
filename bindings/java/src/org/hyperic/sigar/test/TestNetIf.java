@@ -18,6 +18,9 @@
 
 package org.hyperic.sigar.test;
 
+import java.net.InetAddress;
+import java.net.Inet6Address;
+
 import org.hyperic.sigar.Sigar;
 import org.hyperic.sigar.SigarException;
 import org.hyperic.sigar.SigarNotImplementedException;
@@ -43,6 +46,14 @@ public class TestNetIf extends SigarTestCase {
 
             assertTrueTrace("Address", ifconfig.getAddress());
             assertTrueTrace("Netmask", ifconfig.getNetmask());
+
+            if (ifconfig.getPrefixLength() != 0) {
+                assertTrueTrace("Address6", ifconfig.getAddress6());
+                InetAddress in6 =
+                    InetAddress.getByName(ifconfig.getAddress6());
+                assertTrue(in6 instanceof Inet6Address);
+                traceln("Link=" + in6.isLinkLocalAddress());
+            }
 
             if (!getStats) {
                 continue;
