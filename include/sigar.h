@@ -587,6 +587,15 @@ SIGAR_DECLARE(int) sigar_net_route_list_destroy(sigar_t *sigar,
 
 #define SIGAR_NULL_HWADDR "00:00:00:00:00:00"
 
+/* scope values from linux-2.6/include/net/ipv6.h */
+#define SIGAR_IPV6_ADDR_ANY        0x0000
+#define SIGAR_IPV6_ADDR_UNICAST    0x0001
+#define SIGAR_IPV6_ADDR_MULTICAST  0x0002
+#define SIGAR_IPV6_ADDR_LOOPBACK   0x0010
+#define SIGAR_IPV6_ADDR_LINKLOCAL  0x0020
+#define SIGAR_IPV6_ADDR_SITELOCAL  0x0040
+#define SIGAR_IPV6_ADDR_COMPATv4   0x0080
+
 typedef struct {
     char name[16];
     char type[64];
