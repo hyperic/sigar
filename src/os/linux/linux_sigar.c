@@ -2122,8 +2122,8 @@ int sigar_net_interface_ipv6_config_get(sigar_t *sigar, const char *name,
             addr6[i] = (unsigned char)hex2int(ptr, 2);
         }
 
-        ifconfig->prefix_length = prefix;
-        ifconfig->scope = scope;
+        ifconfig->prefix6_length = prefix;
+        ifconfig->scope6 = scope;
     }
 
     return status;

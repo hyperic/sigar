@@ -115,7 +115,7 @@ public class Ifconfig extends SigarCommandBase {
                 bcast +
                 "  Mask:" + ifconfig.getNetmask());
 
-        if (ifconfig.getPrefixLength() != 0) {
+        if (ifconfig.getPrefix6Length() != 0) {
             println("\t" +
                     "inet6 addr: " + ifconfig.getAddress6() + "/" +
                     ifconfig.getPrefix6Length() +

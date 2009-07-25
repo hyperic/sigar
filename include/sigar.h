@@ -645,8 +645,8 @@ typedef struct {
     sigar_net_address_t broadcast;
     sigar_net_address_t netmask;
     sigar_net_address_t address6;
-    int prefix_length;
-    int scope;
+    int prefix6_length;
+    int scope6;
     sigar_uint64_t
         flags,
         mtu,
