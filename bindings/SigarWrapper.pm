@@ -1044,11 +1044,11 @@ use vars qw(%classes %cmds);
          desc => '',
       },
       {
-         name => 'prefix_length', type => 'Int',
+         name => 'prefix6_length', type => 'Int',
          desc => '',
       },
       {
-         name => 'scope', type => 'Int',
+         name => 'scope6', type => 'Int',
          desc => '',
       },
       {

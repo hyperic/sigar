@@ -47,7 +47,7 @@ public class TestNetIf extends SigarTestCase {
             assertTrueTrace("Address", ifconfig.getAddress());
             assertTrueTrace("Netmask", ifconfig.getNetmask());
 
-            if (ifconfig.getPrefixLength() != 0) {
+            if (ifconfig.getPrefix6Length() != 0) {
                 assertTrueTrace("Address6", ifconfig.getAddress6());
                 InetAddress in6 =
                     InetAddress.getByName(ifconfig.getAddress6());

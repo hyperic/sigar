@@ -296,8 +296,8 @@ int sigar_net_interface_ipv6_config_get(sigar_t *sigar, const char *name,
 
 #define sigar_net_interface_ipv6_config_init(ifconfig) \
     ifconfig->address6.family = SIGAR_AF_INET6; \
-    ifconfig->prefix_length = 0; \
-    ifconfig->scope = 0
+    ifconfig->prefix6_length = 0; \
+    ifconfig->scope6 = 0
 
 int sigar_tcp_curr_estab(sigar_t *sigar, sigar_tcp_t *tcp);
 

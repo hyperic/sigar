@@ -2656,22 +2656,22 @@ int sigar_net_interface_ipv6_config_get(sigar_t *sigar, const char *name,
 
         sigar_net_address6_set(ifconfig->address6, addr);
 
-        ifconfig->prefix_length = sigar_in6_prefixlen(ifa->ifa_netmask);
+        ifconfig->prefix6_length = sigar_in6_prefixlen(ifa->ifa_netmask);
 
         if (IN6_IS_ADDR_LINKLOCAL(addr)) {
-            ifconfig->scope = SIGAR_IPV6_ADDR_LINKLOCAL;
+            ifconfig->scope6 = SIGAR_IPV6_ADDR_LINKLOCAL;
         }
         else if (IN6_IS_ADDR_SITELOCAL(addr)) {
-            ifconfig->scope = SIGAR_IPV6_ADDR_SITELOCAL;
+            ifconfig->scope6 = SIGAR_IPV6_ADDR_SITELOCAL;
         }
         else if (IN6_IS_ADDR_V4COMPAT(addr)) {
-            ifconfig->scope = SIGAR_IPV6_ADDR_COMPATv4;
+            ifconfig->scope6 = SIGAR_IPV6_ADDR_COMPATv4;
         }
         else if (IN6_IS_ADDR_LOOPBACK(addr)) {
-            ifconfig->scope = SIGAR_IPV6_ADDR_LOOPBACK;
+            ifconfig->scope6 = SIGAR_IPV6_ADDR_LOOPBACK;
         }
         else {
-            ifconfig->scope = SIGAR_IPV6_ADDR_ANY;
+            ifconfig->scope6 = SIGAR_IPV6_ADDR_ANY;
         }
     }
 
