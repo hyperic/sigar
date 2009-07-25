@@ -1040,6 +1040,18 @@ use vars qw(%classes %cmds);
          plat => '*'
       },
       {
+         name => 'address6', type => 'NetAddress',
+         desc => '',
+      },
+      {
+         name => 'prefix_length', type => 'Int',
+         desc => '',
+      },
+      {
+         name => 'scope', type => 'Int',
+         desc => '',
+      },
+      {
          name => 'destination', type => 'NetAddress',
          desc => '',
          plat => '*'
