@@ -2092,6 +2092,12 @@ static int sigar_net_connection_get(sigar_t *sigar,
     return status;
 }
 
+int sigar_net_interface_ipv6_config_get(sigar_t *sigar, const char *name,
+                                        sigar_net_interface_config_t *ifconfig)
+{
+    return SIGAR_ENOTIMPL;
+}
+
 #define SNMP_TCP_PREFIX "Tcp: "
 
 SIGAR_DECLARE(int)

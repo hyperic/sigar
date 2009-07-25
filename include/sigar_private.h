@@ -291,6 +291,14 @@ int sigar_net_connection_list_grow(sigar_net_connection_list_t *connlist);
     SIGAR_ZERO(&ifconfig->hwaddr.addr.mac); \
     ifconfig->hwaddr.family = SIGAR_AF_LINK
 
+int sigar_net_interface_ipv6_config_get(sigar_t *sigar, const char *name,
+                                        sigar_net_interface_config_t *ifconfig);
+
+#define sigar_net_interface_ipv6_config_init(ifconfig) \
+    ifconfig->address6.family = SIGAR_AF_INET6; \
+    ifconfig->prefix_length = 0; \
+    ifconfig->scope = 0
+
 int sigar_tcp_curr_estab(sigar_t *sigar, sigar_tcp_t *tcp);
 
 int sigar_who_list_create(sigar_who_list_t *wholist);

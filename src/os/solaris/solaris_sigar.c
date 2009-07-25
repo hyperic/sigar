@@ -2083,6 +2083,12 @@ int sigar_net_interface_stat_get(sigar_t *sigar, const char *name,
     }
 }
 
+int sigar_net_interface_ipv6_config_get(sigar_t *sigar, const char *name,
+                                        sigar_net_interface_config_t *ifconfig)
+{
+    return SIGAR_ENOTIMPL;
+}
+
 #define TCPQ_SIZE(s) ((s) >= 0 ? (s) : 0)
 
 static int tcp_connection_get(sigar_net_connection_walker_t *walker,
