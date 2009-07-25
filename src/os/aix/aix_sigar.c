@@ -1552,6 +1552,12 @@ int sigar_net_interface_stat_get(sigar_t *sigar,
     }
 }
 
+int sigar_net_interface_ipv6_config_get(sigar_t *sigar, const char *name,
+                                        sigar_net_interface_config_t *ifconfig)
+{
+    return SIGAR_ENOTIMPL;
+}
+
 #define IS_TCP_SERVER(state, flags) \
     ((flags & SIGAR_NETCONN_SERVER) && (state == TCPS_LISTEN))
 

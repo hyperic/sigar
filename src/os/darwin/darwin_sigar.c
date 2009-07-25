@@ -2682,6 +2682,12 @@ int sigar_net_interface_list_get(sigar_t *sigar,
     return sigar_ifmsg_iter(sigar, &iter);
 }
 
+int sigar_net_interface_ipv6_config_get(sigar_t *sigar, const char *name,
+                                        sigar_net_interface_config_t *ifconfig)
+{
+    return SIGAR_ENOTIMPL;
+}
+
 int sigar_net_interface_config_get(sigar_t *sigar, const char *name,
                                    sigar_net_interface_config_t *ifconfig)
 {
@@ -2770,6 +2776,9 @@ int sigar_net_interface_config_get(sigar_t *sigar, const char *name,
     /* XXX can we get a better description like win32? */
     SIGAR_SSTRCPY(ifconfig->description,
                   ifconfig->name);
+
+    sigar_net_interface_ipv6_config_init(ifconfig);
+    sigar_net_interface_ipv6_config_get(sigar, name, ifconfig);
 
     return SIGAR_OK;
 }
