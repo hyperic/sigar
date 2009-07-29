@@ -26,6 +26,7 @@
 #include <net/route.h>
 #include <sys/lwp.h>
 #include <sys/proc.h>
+#include <sys/sockio.h>
 #include <sys/swap.h>
 #include <sys/stat.h>
 #include <sys/systeminfo.h>
@@ -2158,7 +2159,25 @@ int sigar_net_interface_stat_get(sigar_t *sigar, const char *name,
 int sigar_net_interface_ipv6_config_get(sigar_t *sigar, const char *name,
                                         sigar_net_interface_config_t *ifconfig)
 {
-    return SIGAR_ENOTIMPL;
+    int sock;
+    struct lifreq lifr;
+
+    if ((sock = socket(AF_INET6, SOCK_DGRAM, 0)) < 0) {
+        return errno;
+    }
+
+    SIGAR_SSTRCPY(lifr.lifr_name, name);
+
+    if (ioctl(sock, SIOCGLIFADDR, &lifr) == 0) {
+        struct in6_addr *addr = SIGAR_SIN6_ADDR(&lifr.lifr_addr);
+
+        sigar_net_address6_set(ifconfig->address6, addr);
+        sigar_net_interface_scope6_set(ifconfig, addr);
+        ifconfig->prefix6_length = lifr.lifr_addrlen;
+    }
+
+    close(sock);
+    return SIGAR_OK;
 }
 
 #define TCPQ_SIZE(s) ((s) >= 0 ? (s) : 0)
