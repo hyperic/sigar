@@ -2321,8 +2321,9 @@ static VALUE $ruby_class;
 
 static VALUE rb_sigar_$cname($proto)
 {
+    SIGAR_GET;
+
     int status;
-    sigar_t *sigar = rb_sigar_get(obj);
     $func->{sigar_type} *RETVAL  = malloc(sizeof(*RETVAL));
 
     if ((status = $func->{sigar_function}($args, RETVAL)) != SIGAR_OK) {
