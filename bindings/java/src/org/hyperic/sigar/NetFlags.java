@@ -155,6 +155,13 @@ public class NetFlags {
      */
     public static native String getIfFlagsString(long flags);
 
+    /**
+     * @param network interface ipv6 address scope.
+     * @return String representation of ipv6 address scope.
+     * @see org.hyperic.sigar.NetInterfaceConfig#getScope6
+     */
+    public static native String getScopeString(int scope);
+
     public static boolean isAnyAddress(String address) {
         return
             (address == null) ||
