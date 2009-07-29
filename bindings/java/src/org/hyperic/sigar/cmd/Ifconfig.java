@@ -118,8 +118,8 @@ public class Ifconfig extends SigarCommandBase {
         if (ifconfig.getPrefixLength() != 0) {
             println("\t" +
                     "inet6 addr: " + ifconfig.getAddress6() + "/" +
-                    ifconfig.getPrefixLength() +
-                    " Scope:" + ifconfig.getScope());
+                    ifconfig.getPrefix6Length() +
+                    " Scope:" + NetFlags.getScopeString(ifconfig.getScope6()));
         }
 
         println("\t" +
