@@ -353,7 +353,26 @@ SIGAR_DECLARE(int) sigar_net_address_equals(sigar_net_address_t *addr1,
     }
 }
 
-#if !defined(WIN32) && !defined(NETWARE) && !defined(__hpux)
+#if defined(WIN32)
+static char *sigar_inet_ntop(int af, const void *src, char *dst, int cnt)
+{
+    struct sockaddr_in6 sa; /* note only using this for AF_INET6 */
+
+    memset(&sa, '\0', sizeof(sa));
+    sa.sin6_family = af;
+    memcpy(&sa.sin6_addr, src, sizeof(sa.sin6_addr));
+
+    if (getnameinfo((struct sockaddr *)&sa, sizeof(sa),
+                    dst, cnt, NULL, 0, NI_NUMERICHOST))
+    {
+        return NULL;
+    }
+    else {
+        return dst;
+    }
+}
+#define sigar_inet_ntop_errno GetLastError()
+#elif !defined(NETWARE) && !defined(__hpux)
 #define sigar_inet_ntop inet_ntop
 #define sigar_inet_ntop_errno errno
 #else
@@ -365,6 +384,7 @@ SIGAR_DECLARE(int) sigar_net_address_to_string(sigar_t *sigar,
                                                sigar_net_address_t *address,
                                                char *addr_str)
 {
+    *addr_str = '\0';
     switch (address->family) {
       case SIGAR_AF_INET6:
         if (sigar_inet_ntop(AF_INET6, (const void *)&address->addr.in6,

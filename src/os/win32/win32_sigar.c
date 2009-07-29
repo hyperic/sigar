@@ -21,6 +21,7 @@
 #include "sigar_pdh.h"
 #include "sigar_os.h"
 #include "sigar_util.h"
+#include "sigar_format.h"
 #include <shellapi.h>
 
 #define USING_WIDE_S(s) (s)->using_wide
@@ -2219,12 +2220,11 @@ static int sigar_get_adapter_info(sigar_t *sigar,
 }
 
 static int sigar_get_adapters_addresses(sigar_t *sigar,
+                                        ULONG family, ULONG flags,
                                         PIP_ADAPTER_ADDRESSES *addrs)
 {
     ULONG size = sigar->ifconf_len;
     ULONG rc;
-    ULONG flags = 
-        GAA_FLAG_SKIP_DNS_SERVER|GAA_FLAG_SKIP_MULTICAST;
 
     DLLMOD_INIT(iphlpapi, FALSE);
 
@@ -2233,7 +2233,7 @@ static int sigar_get_adapters_addresses(sigar_t *sigar,
     }
 
     *addrs = (PIP_ADAPTER_ADDRESSES)sigar->ifconf_buf;
-    rc = sigar_GetAdaptersAddresses(AF_UNSPEC,
+    rc = sigar_GetAdaptersAddresses(family,
                                     flags,
                                     NULL,
                                     *addrs,
@@ -2249,7 +2249,7 @@ static int sigar_get_adapters_addresses(sigar_t *sigar,
                                     sigar->ifconf_len);
 
         *addrs = (PIP_ADAPTER_ADDRESSES)sigar->ifconf_buf;
-        rc = sigar_GetAdaptersAddresses(AF_UNSPEC,
+        rc = sigar_GetAdaptersAddresses(family,
                                         flags,
                                         NULL,
                                         *addrs,
@@ -2637,6 +2637,42 @@ sigar_net_interface_list_get(sigar_t *sigar,
     return SIGAR_OK;
 }
 
+static int sigar_net_interface_ipv6_config_find(sigar_t *sigar, int index,
+                                                sigar_net_interface_config_t *ifconfig)
+{
+    int status;
+    PIP_ADAPTER_ADDRESSES aa, addrs;
+    ULONG flags = GAA_FLAG_INCLUDE_PREFIX;
+
+    status = sigar_get_adapters_addresses(sigar, AF_UNSPEC, flags, &aa);
+
+    if (status != SIGAR_OK) {
+        return status;
+    }
+
+    for (addrs = aa; addrs; addrs = addrs->Next) {
+        PIP_ADAPTER_UNICAST_ADDRESS addr;
+        if (addrs->IfIndex != index) {
+            continue;
+        }
+        for (addr = addrs->FirstUnicastAddress; addr; addr = addr->Next) {
+            struct sockaddr *sa = addr->Address.lpSockaddr;
+
+            if (sa->sa_family == AF_INET6) {
+                struct in6_addr *inet6 = SIGAR_SIN6_ADDR(sa);
+
+                sigar_net_address6_set(ifconfig->address6, inet6);
+                sigar_net_interface_scope6_set(ifconfig, inet6);
+                if (addrs->FirstPrefix) {
+                    ifconfig->prefix6_length = addrs->FirstPrefix->PrefixLength;
+                }
+                return SIGAR_OK;
+            }
+        }
+    }
+    return SIGAR_ENOENT;
+}
+
 SIGAR_DECLARE(int)
 sigar_net_interface_config_get(sigar_t *sigar,
                                const char *name,
@@ -2716,6 +2752,9 @@ sigar_net_interface_config_get(sigar_t *sigar,
         SIGAR_SSTRCPY(ifconfig->type,
                       SIGAR_NIC_ETHERNET);
     }
+
+    sigar_net_interface_ipv6_config_init(ifconfig);
+    sigar_net_interface_ipv6_config_find(sigar, ifr->dwIndex, ifconfig);
 
     return SIGAR_OK;
 }

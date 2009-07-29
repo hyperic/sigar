@@ -291,6 +291,30 @@ int sigar_net_connection_list_grow(sigar_net_connection_list_t *connlist);
     SIGAR_ZERO(&ifconfig->hwaddr.addr.mac); \
     ifconfig->hwaddr.family = SIGAR_AF_LINK
 
+int sigar_net_interface_ipv6_config_get(sigar_t *sigar, const char *name,
+                                        sigar_net_interface_config_t *ifconfig);
+
+#define sigar_net_interface_ipv6_config_init(ifconfig) \
+    ifconfig->address6.family = SIGAR_AF_INET6; \
+    ifconfig->prefix6_length = 0; \
+    ifconfig->scope6 = 0
+
+#define SIGAR_SIN6(s) ((struct sockaddr_in6 *)(s))
+
+#define SIGAR_SIN6_ADDR(s) &SIGAR_SIN6(s)->sin6_addr
+
+#define sigar_net_interface_scope6_set(ifconfig, addr) \
+    if (IN6_IS_ADDR_LINKLOCAL(addr)) \
+        ifconfig->scope6 = SIGAR_IPV6_ADDR_LINKLOCAL; \
+    else if (IN6_IS_ADDR_SITELOCAL(addr)) \
+        ifconfig->scope6 = SIGAR_IPV6_ADDR_SITELOCAL; \
+    else if (IN6_IS_ADDR_V4COMPAT(addr)) \
+        ifconfig->scope6 = SIGAR_IPV6_ADDR_COMPATv4; \
+    else if (IN6_IS_ADDR_LOOPBACK(addr)) \
+        ifconfig->scope6 = SIGAR_IPV6_ADDR_LOOPBACK; \
+    else \
+        ifconfig->scope6 = SIGAR_IPV6_ADDR_ANY
+
 int sigar_tcp_curr_estab(sigar_t *sigar, sigar_tcp_t *tcp);
 
 int sigar_who_list_create(sigar_who_list_t *wholist);

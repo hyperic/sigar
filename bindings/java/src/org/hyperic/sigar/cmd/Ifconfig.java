@@ -117,6 +117,13 @@ public class Ifconfig extends SigarCommandBase {
                 bcast +
                 "  Mask:" + ifconfig.getNetmask());
 
+        if (ifconfig.getPrefix6Length() != 0) {
+            println("\t" +
+                    "inet6 addr: " + ifconfig.getAddress6() + "/" +
+                    ifconfig.getPrefix6Length() +
+                    " Scope:" + ifconfig.getScope6());
+        }
+
         println("\t" +
                 NetFlags.getIfFlagsString(flags) +
                 " MTU:" + ifconfig.getMtu() +

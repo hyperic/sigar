@@ -2092,6 +2092,45 @@ static int sigar_net_connection_get(sigar_t *sigar,
     return status;
 }
 
+int sigar_net_interface_ipv6_config_get(sigar_t *sigar, const char *name,
+                                        sigar_net_interface_config_t *ifconfig)
+{
+    FILE *fp;
+    char addr[32+1], ifname[8+1];
+    int status = SIGAR_ENOENT;
+    int idx, prefix, scope, flags;
+
+    if (!(fp = fopen(PROC_FS_ROOT "net/if_inet6", "r"))) {
+        return errno;
+    }
+
+    while (fscanf(fp, "%32s %02x %02x %02x %02x %8s\n",
+                  addr, &idx, &prefix, &scope, &flags, ifname) != EOF)
+    {
+        if (strEQ(name, ifname)) {
+            status = SIGAR_OK;
+            break;
+        }
+    }
+
+    fclose(fp);
+
+    if (status == SIGAR_OK) {
+        int i=0;
+        unsigned char *addr6 = (unsigned char *)&(ifconfig->address6.addr.in6);
+        char *ptr = addr;
+
+        for (i=0; i<16; i++, ptr+=2) {
+            addr6[i] = (unsigned char)hex2int(ptr, 2);
+        }
+
+        ifconfig->prefix6_length = prefix;
+        ifconfig->scope6 = scope;
+    }
+
+    return status;
+}
+
 #define SNMP_TCP_PREFIX "Tcp: "
 
 SIGAR_DECLARE(int)
