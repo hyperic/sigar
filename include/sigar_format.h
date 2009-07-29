@@ -47,8 +47,9 @@ SIGAR_DECLARE(int) sigar_net_address_to_string(sigar_t *sigar,
                                                sigar_net_address_t *address,
                                                char *addr_str);
 
-SIGAR_DECLARE(sigar_uint32_t) sigar_net_address_hash(sigar_net_address_t *address);
+SIGAR_DECLARE(const char *)sigar_net_scope_to_string(int type);
 
+SIGAR_DECLARE(sigar_uint32_t) sigar_net_address_hash(sigar_net_address_t *address);
 
 SIGAR_DECLARE(const char *)sigar_net_connection_type_get(int type);
 
