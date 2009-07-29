@@ -50,7 +50,7 @@ iflist.each do |ifname|
 
   if ifconfig.prefix6_length != 0
     puts "\t" + "inet6 addr: " + ifconfig.address6 + "/" +
-      ifconfig.prefix6_length.to_s + " Scope:" + ifconfig.scope6.to_s
+      ifconfig.prefix6_length.to_s + " Scope:" + Sigar.net_scope_to_s(ifconfig.scope6)
   end
 
   puts "\t" +
