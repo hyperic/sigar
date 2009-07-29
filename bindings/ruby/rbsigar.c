@@ -197,6 +197,11 @@ static VALUE rb_sigar_net_address_to_string(sigar_net_address_t *address)
     return rb_str_new2(addr_str);
 }
 
+static VALUE rb_sigar_net_scope_to_s(VALUE rclass, VALUE type)
+{
+    return rb_str_new2(sigar_net_scope_to_string(NUM2INT(type)));
+}
+
 #define rb_sigar_net_address_to_s(a) rb_sigar_net_address_to_string(&a) 
 
 static VALUE rb_sigar_new_list(char *data, unsigned long number,
@@ -751,6 +756,8 @@ void Init_rbsigar(void)
     rb_define_singleton_method(rclass, "format_size", rb_sigar_format_size, 1);
     rb_define_singleton_method(rclass, "net_interface_flags_to_s",
                                rb_sigar_net_interface_flags_to_s, 1);
+    rb_define_singleton_method(rclass, "net_scope_to_s",
+                               rb_sigar_net_scope_to_s, 1);
     rb_define_singleton_method(rclass, "net_connection_type_to_s",
                                rb_sigar_net_connection_type_to_s, 1);
     rb_define_singleton_method(rclass, "net_connection_state_to_s",
