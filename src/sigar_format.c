@@ -406,6 +406,24 @@ SIGAR_DECLARE(int) sigar_net_address_to_string(sigar_t *sigar,
     }
 }
 
+SIGAR_DECLARE(const char *)sigar_net_scope_to_string(int type)
+{
+    switch (type) {
+    case SIGAR_IPV6_ADDR_ANY:
+        return "Global";
+    case SIGAR_IPV6_ADDR_LOOPBACK:
+        return "Host";
+    case SIGAR_IPV6_ADDR_LINKLOCAL:
+        return "Link";
+    case SIGAR_IPV6_ADDR_SITELOCAL:
+        return "Site";
+    case SIGAR_IPV6_ADDR_COMPATv4:
+        return "Compat";
+    default:
+        return "Unknown";
+    }
+}
+
 SIGAR_DECLARE(sigar_uint32_t) sigar_net_address_hash(sigar_net_address_t *address)
 {
     sigar_uint32_t hash = 0;
