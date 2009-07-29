@@ -882,6 +882,13 @@ JNIEXPORT jstring SIGAR_JNI(NetFlags_getIfFlagsString)
     return JENV->NewStringUTF(env, buf);
 }
 
+JNIEXPORT jstring SIGAR_JNI(NetFlags_getScopeString)
+(JNIEnv *env, jclass cls, jint scope)
+{
+    const char *buf = sigar_net_scope_to_string(scope);
+    return JENV->NewStringUTF(env, buf);
+}
+
 JNIEXPORT jobjectArray SIGAR_JNIx(getNetConnectionList)
 (JNIEnv *env, jobject sigar_obj, jint flags)
 {
