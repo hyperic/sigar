@@ -26,12 +26,15 @@
 #include <errno.h>
 #include "sigar.h"
 #include "sigar_fileinfo.h"
+#include "sigar_log.h"
 #include "sigar_format.h"
 #include "sigar_ptql.h"
+#include "sigar_private.h"
+#include "sigar_util.h"
 
 #define RB_SIGAR_RAISE(msg) rb_raise(rb_eArgError, "%s", msg)
 #define RB_SIGAR_CROAK RB_SIGAR_RAISE(sigar_strerror(sigar, status))
-#define OBJ2PID(pid) rb_sigar_pid_get(sigar, pid)
+#define OBJ2PID(pid) rb_sigar_pid_get(rbsigar, pid)
 
 #ifndef RSTRING_PTR
 #define RSTRING_PTR(s) RSTRING(s)->ptr
@@ -47,11 +50,23 @@
 #  define RB_REGEX_ERROR rb_eArgError
 #endif
 
-static sigar_t *rb_sigar_get(VALUE obj)
-{
+#define SIGAR \
+    sigar_t *sigar = rbsigar->sigar;
+
+#define SIGAR_GET \
+    rb_sigar_t *rbsigar = rb_sigar_get(obj); \
+    SIGAR;
+
+typedef struct {
     sigar_t *sigar;
-    Data_Get_Struct(obj, sigar_t, sigar);
-    return sigar;
+    VALUE logger;
+} rb_sigar_t;
+
+static rb_sigar_t *rb_sigar_get(VALUE obj)
+{
+    rb_sigar_t *rbsigar;
+    Data_Get_Struct(obj, rb_sigar_t, rbsigar);
+    return rbsigar;
 }
 
 static int rbsigar_ptql_re_impl(void *data,
@@ -84,8 +99,10 @@ static int rbsigar_ptql_re_impl(void *data,
 #define sigar_isdigit(c) \
     (isdigit(((unsigned char)(c))))
 
-static sigar_pid_t rb_sigar_pid_get(sigar_t *sigar, VALUE obj)
+static sigar_pid_t rb_sigar_pid_get(rb_sigar_t *rbsigar, VALUE obj)
 {
+    SIGAR;
+
     if (TYPE(obj) == T_STRING) {
         char *pid = StringValuePtr(obj);
 
@@ -129,19 +146,26 @@ static sigar_pid_t rb_sigar_pid_get(sigar_t *sigar, VALUE obj)
 
 static void rb_sigar_free(void *obj)
 {
-    free(obj);
+    xfree(obj);
 }
 
-static void rb_sigar_close(void *obj)
+static void rb_sigar_close(rb_sigar_t *rbsigar)
 {
-    sigar_close((sigar_t *)obj);
+    sigar_close(rbsigar->sigar);
+    rb_sigar_free(rbsigar);
+}
+
+static void rb_sigar_mark(rb_sigar_t *rbsigar)
+{
+    rb_gc_mark(rbsigar->logger);
 }
 
 static VALUE rb_sigar_new(VALUE module)
 {
-    sigar_t *sigar;
-    sigar_open(&sigar);
-    return Data_Wrap_Struct(module, 0, rb_sigar_close, sigar);
+    rb_sigar_t *rbsigar;
+    rbsigar = ALLOC(rb_sigar_t);
+    sigar_open(&(rbsigar->sigar));
+    return Data_Wrap_Struct(module, rb_sigar_mark, rb_sigar_close, rbsigar);
 }
 
 static VALUE rb_sigar_format_size(VALUE rclass, VALUE size)
@@ -217,8 +241,9 @@ static VALUE rb_sigar_new_intlist(int *data, int number)
 
 static VALUE rb_sigar_net_interface_list(VALUE obj)
 {
+    SIGAR_GET;
+
     int status;
-    sigar_t *sigar = rb_sigar_get(obj);
     sigar_net_interface_list_t iflist;
     VALUE RETVAL;
 
@@ -258,9 +283,10 @@ static VALUE rb_cSigarNetStat;
 
 static VALUE rb_sigar_net_stat_get(VALUE obj, VALUE flags, VALUE bytes, int port)
 {
+    SIGAR_GET;
+
     int status;
     int has_port = (port != -1);
-    sigar_t *sigar = rb_sigar_get(obj);
     sigar_net_stat_t *RETVAL = malloc(sizeof(*RETVAL));
     sigar_net_address_t address;
 
@@ -306,9 +332,9 @@ static VALUE rb_cSigarNetConnection;
 
 static VALUE rb_sigar_net_connection_list(VALUE obj, VALUE flags)
 {
+    SIGAR_GET;
+
     int status;
-    unsigned int i;
-    sigar_t *sigar = rb_sigar_get(obj);
     sigar_net_connection_list_t connlist;
     VALUE RETVAL;
 
@@ -330,7 +356,8 @@ static VALUE rb_sigar_net_connection_list(VALUE obj, VALUE flags)
 
 static VALUE rb_sigar_net_services_name(VALUE obj, VALUE protocol, VALUE port)
 {
-    sigar_t *sigar = rb_sigar_get(obj);
+    SIGAR_GET;
+
     char *name;
 
     if ((name = sigar_net_services_name_get(sigar, NUM2UINT(protocol), NUM2UINT(port)))) {
@@ -345,8 +372,9 @@ static VALUE rb_cSigarCpuInfo;
 
 static VALUE rb_sigar_cpu_info_list(VALUE obj)
 {
+    SIGAR_GET;
+
     int status;
-    sigar_t *sigar = rb_sigar_get(obj);
     sigar_cpu_info_list_t cpu_infos;
     VALUE RETVAL;
 
@@ -371,8 +399,9 @@ static VALUE rb_cSigarFileSystem;
 
 static VALUE rb_sigar_file_system_list(VALUE obj)
 {
+    SIGAR_GET;
+
     int status;
-    sigar_t *sigar = rb_sigar_get(obj);
     sigar_file_system_list_t fslist;
     VALUE RETVAL;
 
@@ -395,8 +424,9 @@ static VALUE rb_cSigarWho;
 
 static VALUE rb_sigar_who_list(VALUE obj)
 {
+    SIGAR_GET;
+
     int status;
-    sigar_t *sigar = rb_sigar_get(obj);
     sigar_who_list_t list;
     VALUE RETVAL;
 
@@ -419,8 +449,9 @@ static VALUE rb_cSigarNetRoute;
 
 static VALUE rb_sigar_net_route_list(VALUE obj)
 {
+    SIGAR_GET;
+
     int status;
-    sigar_t *sigar = rb_sigar_get(obj);
     sigar_net_route_list_t list;
     VALUE RETVAL;
 
@@ -441,8 +472,9 @@ static VALUE rb_sigar_net_route_list(VALUE obj)
 
 static VALUE rb_sigar_proc_list(int argc, VALUE *argv, VALUE obj)
 {
+    SIGAR_GET;
+
     int status;
-    sigar_t *sigar = rb_sigar_get(obj);
     sigar_proc_list_t list;
     VALUE RETVAL;
     VALUE vptql;
@@ -484,8 +516,9 @@ static VALUE rb_sigar_proc_list(int argc, VALUE *argv, VALUE obj)
 
 static VALUE rb_sigar_proc_args(VALUE obj, VALUE pid)
 {
+    SIGAR_GET;
+
     int status;
-    sigar_t *sigar = rb_sigar_get(obj);
     sigar_proc_args_t args;
     VALUE RETVAL;
 
@@ -514,8 +547,9 @@ static int rb_sigar_env_getall(void *data,
 
 static VALUE rb_sigar_proc_env(VALUE obj, VALUE pid)
 {
+    SIGAR_GET;
+
     int status;
-    sigar_t *sigar = rb_sigar_get(obj);
     sigar_proc_env_t procenv;
     VALUE RETVAL = rb_hash_new();
 
@@ -530,6 +564,96 @@ static VALUE rb_sigar_proc_env(VALUE obj, VALUE pid)
 
     return RETVAL;
 }
+
+VALUE rb = Qnil;
+
+static const char *logger_consts[] = {
+    "FATAL", /* SIGAR_LOG_FATAL */
+    "ERROR", /* SIGAR_LOG_ERROR */
+    "WARN",  /* SIGAR_LOG_WARN */
+    "INFO",  /* SIGAR_LOG_INFO */
+    "DEBUG", /* SIGAR_LOG_DEBUG */
+    "DEBUG", /* SIGAR_LOG_TRACE */
+};
+
+static void rb_sigar_logger_impl(sigar_t *sigar, void *data,
+                            int level, char *message)
+{
+    rb_sigar_t *rbsigar = ((rb_sigar_t*)data);
+    VALUE logger = rbsigar->logger;
+
+    /* XXX: cost of this, better way? */
+    VALUE logger_const = rb_const_get(rb_cObject, rb_intern("Logger"));
+    VALUE logger_level = rb_const_get(logger_const, 
+                                          rb_intern(logger_consts[level]));
+    VALUE msg = rb_str_new2(message);
+
+    rb_funcall(logger, rb_intern ("add"), 2, logger_level, msg);
+
+    return;
+}
+
+static void rb_sigar_proc_impl(sigar_t *sigar, void *data,
+                            int level, char *message)
+{
+    rb_sigar_t *rbsigar = ((rb_sigar_t*)data);
+    VALUE logger = rbsigar->logger;
+
+    rb_funcall(logger, rb_intern("call"), 2, INT2FIX(level), rb_str_new2(message));
+
+    return;
+}
+
+static VALUE rb_sigar_logger(VALUE obj)
+{
+  rb_sigar_t *rbsigar = rb_sigar_get(obj);
+
+  return rbsigar->logger;
+}
+
+static VALUE rb_sigar_set_logger(VALUE obj, VALUE logger)
+{
+    SIGAR_GET;
+
+    if (rb_obj_is_kind_of(logger, rb_cProc) || 
+        rb_respond_to(logger, rb_intern("call"))) {
+
+        sigar_log_impl_set(sigar, rbsigar, rb_sigar_proc_impl);
+        rbsigar->logger = logger;
+
+        return obj;
+    } 
+
+    /* Have to load Logger to test for it properly */
+    rb_require("logger");
+    if (rb_obj_is_kind_of(logger, rb_path2class("Logger"))) {
+        sigar_log_impl_set(sigar, rbsigar, rb_sigar_logger_impl);
+        rbsigar->logger = logger;
+    }
+    else {
+        rb_raise(rb_eArgError, 
+                 "value is not a proc object or subclass of Logger");
+    }
+
+    return obj;
+}
+
+static VALUE rb_sigar_log_level(VALUE obj)
+{
+    SIGAR_GET;
+
+    return INT2FIX(sigar_log_level_get(sigar));
+}
+
+static VALUE rb_sigar_set_log_level(VALUE obj, VALUE level)
+{
+    SIGAR_GET;
+
+    sigar_log_level_set(sigar, NUM2INT(level));
+
+    return obj;
+}
+
 
 #include "./rbsigar_generated.rx"
 
@@ -583,6 +707,13 @@ static void Init_rbsigar_constants(VALUE rclass)
     RB_SIGAR_CONST_INT(RTF_HOST);
 
     RB_SIGAR_CONST_STR(NULL_HWADDR);
+
+    RB_SIGAR_CONST_INT(LOG_FATAL);
+    RB_SIGAR_CONST_INT(LOG_ERROR);
+    RB_SIGAR_CONST_INT(LOG_WARN);
+    RB_SIGAR_CONST_INT(LOG_INFO);
+    RB_SIGAR_CONST_INT(LOG_DEBUG);
+    RB_SIGAR_CONST_INT(LOG_TRACE);
 }
 
 static void Init_rbsigar_version(VALUE rclass)
@@ -596,6 +727,12 @@ static void Init_rbsigar_version(VALUE rclass)
 void Init_rbsigar(void)
 {
     VALUE rclass = rb_define_class("Sigar", rb_cObject);
+
+    rb_define_method(rclass, "logger", rb_sigar_logger, 0);
+    rb_define_method(rclass, "logger=", rb_sigar_set_logger, 1);
+
+    rb_define_method(rclass, "log_level", rb_sigar_log_level, 0);
+    rb_define_method(rclass, "log_level=", rb_sigar_set_log_level, 1);
 
     rb_define_method(rclass, "cpu_info_list", rb_sigar_cpu_info_list, 0);
     rb_define_method(rclass, "file_system_list", rb_sigar_file_system_list, 0);
