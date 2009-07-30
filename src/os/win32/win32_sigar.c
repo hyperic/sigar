@@ -2754,6 +2754,9 @@ sigar_net_interface_list_get(sigar_t *sigar,
 static int sigar_net_interface_ipv6_config_find(sigar_t *sigar, int index,
                                                 sigar_net_interface_config_t *ifconfig)
 {
+#ifdef SIGAR_USING_MSC6
+    return SIGAR_ENOTIMPL;
+#else
     int status;
     PIP_ADAPTER_ADDRESSES aa, addrs;
     ULONG flags = GAA_FLAG_INCLUDE_PREFIX;
@@ -2785,6 +2788,7 @@ static int sigar_net_interface_ipv6_config_find(sigar_t *sigar, int index,
         }
     }
     return SIGAR_ENOENT;
+#endif
 }
 
 SIGAR_DECLARE(int)
