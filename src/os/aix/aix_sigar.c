@@ -71,6 +71,10 @@
 
 #include <sys/ldr.h>
 
+/* for net_interface_config ipv6 */
+#include <sys/ioctl.h>
+#include <netinet/in6_var.h>
+
 /* not defined in aix 4.3 */
 #ifndef SBITS
 #define SBITS 16
@@ -1555,7 +1559,29 @@ int sigar_net_interface_stat_get(sigar_t *sigar,
 int sigar_net_interface_ipv6_config_get(sigar_t *sigar, const char *name,
                                         sigar_net_interface_config_t *ifconfig)
 {
-    return SIGAR_ENOTIMPL;
+    int sock;
+    struct in6_ifreq ifr;
+
+    if ((sock = socket(AF_INET6, SOCK_DGRAM, 0)) < 0) {
+        return errno;
+    }
+
+    SIGAR_SSTRCPY(ifr.ifr_name, name);
+
+    if (ioctl(sock, SIOCGIFADDR6, &ifr) == 0) {
+        struct in6_addr *addr = SIGAR_SIN6_ADDR(&ifr.ifr_Addr);
+
+        sigar_net_address6_set(ifconfig->address6, addr);
+        sigar_net_interface_scope6_set(ifconfig, addr);
+
+        if (ioctl(sock, SIOCGIFNETMASK6, &ifr) == 0) {
+            addr = SIGAR_SIN6_ADDR(&ifr.ifr_Addr);
+            ifconfig->prefix6_length = SIGAR_SIN6(&ifr.ifr_Addr)->sin6_len; /*XXX*/
+        }
+    }
+
+    close(sock);
+    return SIGAR_OK;
 }
 
 #define IS_TCP_SERVER(state, flags) \
