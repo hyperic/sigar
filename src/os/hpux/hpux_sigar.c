@@ -21,10 +21,12 @@
 #include "sigar_util.h"
 #include "sigar_os.h"
 
+#include <net/if.h>
 #include <sys/dk.h>
 #ifndef __ia64__
 #include <sys/lwp.h>
 #endif
+#include <sys/ioctl.h>
 #include <sys/stat.h>
 #include <errno.h>
 
@@ -875,7 +877,29 @@ int sigar_net_interface_stat_get(sigar_t *sigar, const char *name,
 int sigar_net_interface_ipv6_config_get(sigar_t *sigar, const char *name,
                                         sigar_net_interface_config_t *ifconfig)
 {
-    return SIGAR_ENOTIMPL;
+    int sock;
+    struct if_laddrreq iflr;
+
+    if ((sock = socket(AF_INET6, SOCK_DGRAM, 0)) < 0) {
+        return errno;
+    }
+
+    SIGAR_SSTRCPY(iflr.iflr_name, name);
+
+    if (ioctl(sock, SIOCGLIFADDR, &iflr) == 0) {
+        struct in6_addr *addr = SIGAR_SIN6_ADDR(&iflr.iflr_addr);
+
+        sigar_net_address6_set(ifconfig->address6, addr);
+        sigar_net_interface_scope6_set(ifconfig, addr);
+
+        if (ioctl(sock, SIOCGLIFNETMASK, &iflr) == 0) {
+            addr = SIGAR_SIN6_ADDR(&iflr.iflr_addr);
+            ifconfig->prefix6_length = 10; /*XXX*/
+        }
+    }
+
+    close(sock);
+    return SIGAR_OK;
 }
 
 static int net_conn_get_udp_listen(sigar_net_connection_walker_t *walker)
