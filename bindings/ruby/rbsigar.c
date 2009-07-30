@@ -29,8 +29,6 @@
 #include "sigar_log.h"
 #include "sigar_format.h"
 #include "sigar_ptql.h"
-#include "sigar_private.h"
-#include "sigar_util.h"
 
 #define RB_SIGAR_RAISE(msg) rb_raise(rb_eArgError, "%s", msg)
 #define RB_SIGAR_CROAK RB_SIGAR_RAISE(sigar_strerror(sigar, status))
