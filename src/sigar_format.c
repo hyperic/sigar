@@ -353,7 +353,10 @@ SIGAR_DECLARE(int) sigar_net_address_equals(sigar_net_address_t *addr1,
     }
 }
 
-#if defined(WIN32)
+#if defined(SIGAR_USING_MSC6)
+#define sigar_inet_ntop(af, src, dst, size) NULL
+#define sigar_inet_ntop_errno SIGAR_ENOTIMPL
+#elif defined(WIN32)
 static char *sigar_inet_ntop(int af, const void *src, char *dst, int cnt)
 {
     struct sockaddr_in6 sa; /* note only using this for AF_INET6 */
