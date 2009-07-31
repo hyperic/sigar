@@ -3150,7 +3150,7 @@ int sigar_nfs_server_v3_get(sigar_t *sigar,
     return SIGAR_OK;
 }
 
-#if defined(__FreeBSD__)
+#if defined(__FreeBSD__) && /*XXX*/ (__FreeBSD_version < 800000)
 
 #define _KERNEL
 #include <sys/file.h>
