@@ -23,7 +23,7 @@
 
 #include <sys/param.h>
 #include <sys/mount.h>
-#ifdef DARWIN
+#if !(defined(__FreeBSD__) && (__FreeBSD_version >= 800000))
 #include <nfs/rpcv2.h>
 #endif
 #include <nfs/nfsproto.h>
