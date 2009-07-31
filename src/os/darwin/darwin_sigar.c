@@ -2381,7 +2381,11 @@ int sigar_net_route_list_get(sigar_t *sigar,
     if (sysctl(mib, NMIB(mib), NULL, &needed, NULL, 0) < 0) {
         return errno;
     }
-
+#if __FreeBSD_version >= 800000
+    if (needed == 0) {
+        return SIGAR_ENOTIMPL; /*XXX hoping this is an 8.0beta bug*/
+    }
+#endif
     buf = malloc(needed);
 
     if (sysctl(mib, NMIB(mib), buf, &needed, NULL, 0) < 0) {
