@@ -23,7 +23,9 @@
 
 #include <sys/param.h>
 #include <sys/mount.h>
+#ifdef DARWIN
 #include <nfs/rpcv2.h>
+#endif
 #include <nfs/nfsproto.h>
 
 #ifdef DARWIN
