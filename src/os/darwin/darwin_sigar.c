@@ -23,7 +23,9 @@
 
 #include <sys/param.h>
 #include <sys/mount.h>
+#ifdef DARWIN
 #include <nfs/rpcv2.h>
+#endif
 #include <nfs/nfsproto.h>
 
 #ifdef DARWIN
@@ -2379,7 +2381,11 @@ int sigar_net_route_list_get(sigar_t *sigar,
     if (sysctl(mib, NMIB(mib), NULL, &needed, NULL, 0) < 0) {
         return errno;
     }
-
+#if __FreeBSD_version >= 800000
+    if (needed == 0) {
+        return SIGAR_ENOTIMPL; /*XXX hoping this is an 8.0beta bug*/
+    }
+#endif
     buf = malloc(needed);
 
     if (sysctl(mib, NMIB(mib), buf, &needed, NULL, 0) < 0) {
@@ -3221,7 +3227,7 @@ int sigar_nfs_server_v3_get(sigar_t *sigar,
     return SIGAR_OK;
 }
 
-#if defined(__FreeBSD__)
+#if defined(__FreeBSD__) && /*XXX*/ (__FreeBSD_version < 800000)
 
 #define _KERNEL
 #include <sys/file.h>
