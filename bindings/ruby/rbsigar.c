@@ -49,11 +49,11 @@
 #endif
 
 #define SIGAR \
-    sigar_t *sigar = rbsigar->sigar;
+    sigar_t *sigar = rbsigar->sigar
 
 #define SIGAR_GET \
     rb_sigar_t *rbsigar = rb_sigar_get(obj); \
-    SIGAR;
+    SIGAR
 
 typedef struct {
     sigar_t *sigar;
