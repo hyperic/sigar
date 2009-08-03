@@ -23,6 +23,7 @@
 
 #include <inet/ip.h>
 #include <inet/tcp.h>
+#include <net/if.h>
 #include <net/route.h>
 #include <sys/lwp.h>
 #include <sys/proc.h>
