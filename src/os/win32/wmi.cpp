@@ -24,6 +24,7 @@
 #include <objbase.h>
 #include <wbemidl.h>
 #include <comdef.h>
+#include "sigar.h"
 
 #pragma comment(lib, "wbemuuid.lib")
 
@@ -162,4 +163,32 @@ HRESULT WMI::GetProcExecutablePath(DWORD pid, TCHAR *value)
 HRESULT WMI::GetProcCommandLine(DWORD pid, TCHAR *value)
 {
     return GetProcStringProperty(pid, L"CommandLine", value, SIGAR_CMDLINE_MAX);
+}
+
+/* in peb.c */
+extern "C" int sigar_parse_proc_args(sigar_t *sigar, WCHAR *buf,
+                                     sigar_proc_args_t *procargs);
+
+extern "C" int sigar_proc_args_wmi_get(sigar_t *sigar, sigar_pid_t pid,
+                                       sigar_proc_args_t *procargs)
+{
+    int status;
+    TCHAR buf[SIGAR_CMDLINE_MAX];
+    WMI *wmi = new WMI();
+
+    if (FAILED(wmi->Open())) {
+        return GetLastError();
+    }
+
+    if (FAILED(wmi->GetProcCommandLine(pid, buf))) {
+        status = GetLastError();
+    }
+    else {
+        status = sigar_parse_proc_args(sigar, buf, procargs);
+    }
+
+    wmi->Close();
+    delete wmi;
+
+    return status;
 }
