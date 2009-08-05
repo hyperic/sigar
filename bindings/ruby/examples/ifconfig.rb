@@ -8,6 +8,10 @@ iflist.each do |ifname|
   flags = ifconfig.flags
   encap = ifconfig.type
 
+  if (flags & Sigar::IFF_UP) == 0
+    next
+  end
+
   hwaddr = ifconfig.hwaddr
   if hwaddr == Sigar::NULL_HWADDR
     hwaddr = ""
@@ -29,8 +33,11 @@ iflist.each do |ifname|
     bcast = ""
   end
 
-  puts "\t" + "inet addr:" + ifconfig.address +
-    ptp + bcast + " Mask:" + ifconfig.netmask
+  address = ifconfig.address
+  if address != "0.0.0.0"
+    puts "\t" + "inet addr:" + address +
+      ptp + bcast + " Mask:" + ifconfig.netmask
+  end
 
   if ifconfig.prefix6_length != 0
     puts "\t" + "inet6 addr: " + ifconfig.address6 + "/" +
@@ -63,11 +70,13 @@ iflist.each do |ifname|
     rx_bytes = ifstat.rx_bytes
     tx_bytes = ifstat.tx_bytes
 
-    print "\t" +
+    puts "\t" +
       "RX bytes:" + rx_bytes.to_s +
       " (" + Sigar.format_size(rx_bytes) + ")" +
       "  " +
       "TX bytes:" + tx_bytes.to_s +
-      " (" + Sigar.format_size(tx_bytes) + ")" + "\n";
+      " (" + Sigar.format_size(tx_bytes) + ")" + "\n"
   end
+
+  puts "\n"
 end
