@@ -173,6 +173,10 @@ typedef enum {
     SC_STATUS_PROCESS_INFO = 0
 } SC_STATUS_TYPE;
 
+#ifndef ERROR_DATATYPE_MISMATCH
+#define ERROR_DATATYPE_MISMATCH 1629L
+#endif
+
 #endif /* _MSC_VER */
 
 #include <iprtrmib.h>

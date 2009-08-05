@@ -22,8 +22,8 @@
 
 #include <windows.h>
 #include <objbase.h>
-#include <wbemidl.h>
 #include <comdef.h>
+#include <wbemidl.h>
 #include "sigar.h"
 
 #pragma comment(lib, "wbemuuid.lib")
