@@ -192,3 +192,33 @@ extern "C" int sigar_proc_args_wmi_get(sigar_t *sigar, sigar_pid_t pid,
 
     return status;
 }
+
+extern "C" int sigar_proc_exe_wmi_get(sigar_t *sigar, sigar_pid_t pid,
+                                      sigar_proc_exe_t *procexe)
+{
+    int status;
+    TCHAR buf[MAX_PATH+1];
+    WMI *wmi = new WMI();
+
+    if (FAILED(wmi->Open())) {
+        return GetLastError();
+    }
+
+    procexe->name[0] = '\0';
+
+    if (FAILED(wmi->GetProcExecutablePath(pid, buf))) {
+        status = GetLastError();
+    }
+    else {
+        status = SIGAR_OK;
+        /* SIGAR_W2A(buf, procexe->name, sizeof(procexe->name)); */
+        WideCharToMultiByte(CP_ACP, 0, buf, -1,
+                            (LPSTR)procexe->name, sizeof(procexe->name),
+                            NULL, NULL);
+    }
+
+    wmi->Close();
+    delete wmi;
+
+    return status;
+}
