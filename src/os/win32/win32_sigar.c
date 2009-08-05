@@ -1443,6 +1443,11 @@ static int sigar_remote_proc_args_get(sigar_t *sigar, sigar_pid_t pid,
 
     CloseHandle(proc);
 
+    if (status == ERROR_DATATYPE_MISMATCH) {
+        /* we are 32-bit, pid process is 64-bit */
+        status = sigar_proc_args_wmi_get(sigar, pid, procargs);
+    }
+
     return status;
 }
 
