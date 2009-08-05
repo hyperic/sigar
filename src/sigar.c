@@ -1550,6 +1550,7 @@ int sigar_net_interface_config_get(sigar_t *sigar, const char *name,
 #ifdef __linux__
         int is_mcast = flags & IFF_MULTICAST;
         int is_slave = flags & IFF_SLAVE;
+        int is_master = flags & IFF_MASTER;
         /*
          * XXX: should just define SIGAR_IFF_*
          * and test IFF_* bits on given platform.
@@ -1557,12 +1558,15 @@ int sigar_net_interface_config_get(sigar_t *sigar, const char *name,
          * for the flags we care about.
          *
          */
-        flags &= ~(IFF_MULTICAST|IFF_SLAVE);
+        flags &= ~(IFF_MULTICAST|IFF_SLAVE|IFF_MASTER);
         if (is_mcast) {
             flags |= SIGAR_IFF_MULTICAST;
         }
         if (is_slave) {
             flags |= SIGAR_IFF_SLAVE;
+        }
+        if (is_master) {
+            flags |= SIGAR_IFF_MASTER;
         }
 #endif
         ifconfig->flags = flags;

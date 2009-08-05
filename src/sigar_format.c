@@ -553,6 +553,12 @@ SIGAR_DECLARE(char *) sigar_net_interface_flags_to_string(sigar_uint64_t flags, 
     if (flags & SIGAR_IFF_MULTICAST) {
         strcat(buf, "MULTICAST ");
     }
+    if (flags & SIGAR_IFF_SLAVE) {
+        strcat(buf, "SLAVE ");
+    }
+    if (flags & SIGAR_IFF_MASTER) {
+        strcat(buf, "MASTER ");
+    }
 
     return buf;
 }
