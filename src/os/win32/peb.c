@@ -55,7 +55,8 @@ static int sigar_pbi_get(sigar_t *sigar, HANDLE proc, PEB *peb)
     }
 
     if (!pbi.PebBaseAddress) {
-        return !SIGAR_OK;
+        /* likely we are 32-bit, pid process is 64-bit */
+        return ERROR_DATATYPE_MISMATCH;
     }
 
     size = sizeof(*peb);
