@@ -1608,6 +1608,12 @@ SIGAR_DECLARE(int) sigar_proc_exe_get(sigar_t *sigar, sigar_pid_t pid,
     }
 
     status = sigar_proc_exe_peb_get(sigar, proc, procexe);
+    if (status == ERROR_DATATYPE_MISMATCH) {
+        /* we are 32-bit, pid process is 64-bit */
+        procexe->cwd[0] = '\0'; /* XXX where else can we try? */
+        status = sigar_proc_exe_wmi_get(sigar, pid, procexe);
+    }
+
     if (procexe->cwd[0] != '\0') {
         /* strip trailing '\' */
         int len = strlen(procexe->cwd);
