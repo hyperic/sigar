@@ -173,6 +173,10 @@ typedef enum {
     SC_STATUS_PROCESS_INFO = 0
 } SC_STATUS_TYPE;
 
+#ifndef ERROR_DATATYPE_MISMATCH
+#define ERROR_DATATYPE_MISMATCH 1629L
+#endif
+
 #endif /* _MSC_VER */
 
 #include <iprtrmib.h>
@@ -570,6 +574,12 @@ int sigar_proc_args_peb_get(sigar_t *sigar, HANDLE proc,
 
 int sigar_proc_env_peb_get(sigar_t *sigar, HANDLE proc,
                            WCHAR *env, DWORD envlen);
+
+int sigar_proc_args_wmi_get(sigar_t *sigar, sigar_pid_t pid,
+                            sigar_proc_args_t *procargs);
+
+int sigar_proc_exe_wmi_get(sigar_t *sigar, sigar_pid_t pid,
+                           sigar_proc_exe_t *procexe);
 
 int sigar_parse_proc_args(sigar_t *sigar, WCHAR *buf,
                           sigar_proc_args_t *procargs);
