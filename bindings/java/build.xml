@@ -259,6 +259,7 @@
       <include name="src/*.c"/>
       <exclude name="src/sigar_main.c"/>
       <include name="src/os/${jni.src}/*.c"/>
+      <include name="src/os/${jni.src}/*.cpp"/>
       <include name="bindings/java/src/jni/*.c"/>
       <include name="bindings/java/src/${win32.jni}/*.cpp"/>
       <include name="bindings/java/src/${win32.jni}/*.c"/>
