@@ -19,3 +19,5 @@ kstats.c
 procfs.c
 peb.c
 dlpi.c
+*.cpp
+rbsigar.so.manifest

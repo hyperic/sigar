@@ -1,6 +1,7 @@
 Makefile
 *.bs
 *.c
+*.cpp
 *.o
 *.old
 Sigar_generated.xs
