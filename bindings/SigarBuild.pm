@@ -123,7 +123,7 @@ sub flags {
         push @cppflags, '-U_FILE_OFFSET_BITS';
     }
 
-    my(@src) = (<../../src/*.c>, <../../src/os/$os/*.c>);
+    my(@src) = (<../../src/*.c>, <../../src/os/$os/*.c>, <../../src/os/$os/*.cpp>);
 
     return {
         is_win32 => $is_win32,

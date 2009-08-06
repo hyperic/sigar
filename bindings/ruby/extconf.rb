@@ -94,7 +94,7 @@ system('perl -Mlib=.. -MSigarBuild -e version_file ' +
 $distcleanfiles = ['rbsigar_generated.rx','sigar_version.c']
 #XXX seems mkmf forces basename on srcs
 #XXX should be linking against libsigar anyhow
-(Dir["../../src/*.c"] + Dir["#{osdir}/*.c"]).each do |file|
+(Dir["../../src/*.c"] + Dir["#{osdir}/*.c"] + Dir["#{osdir}/*.cpp"]).each do |file|
   cf = File.basename(file)
   print file + ' -> ' + cf + "\n"
   if is_win32
