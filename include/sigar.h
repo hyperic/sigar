@@ -585,6 +585,7 @@ SIGAR_DECLARE(int) sigar_net_route_list_destroy(sigar_t *sigar,
 #define SIGAR_IFF_MULTICAST   0x800
 #define SIGAR_IFF_SLAVE       0x1000
 #define SIGAR_IFF_MASTER      0x2000
+#define SIGAR_IFF_DYNAMIC     0x4000
 
 #define SIGAR_NULL_HWADDR "00:00:00:00:00:00"
 
