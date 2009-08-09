@@ -2487,7 +2487,11 @@ static int sigar_ifmsg_init(sigar_t *sigar)
     return SIGAR_OK;
 }
 
-static int has_ifaddr(char *name)
+/**
+ * @param name name of the interface
+ * @param name_len length of name (w/o \0)
+ */
+static int has_ifaddr(char *name, size_t name_len)
 {
     int sock, status;
     struct ifreq ifr;
@@ -2495,7 +2499,8 @@ static int has_ifaddr(char *name)
     if ((sock = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
         return errno;
     }
-    SIGAR_SSTRCPY(ifr.ifr_name, name);
+    strncpy(ifr.ift_name, name, MIN(sizeof(ifr.ift_name) - 1, name_len));
+    ifr.ift_name[MIN(sizeof(ifr.ift_name) - 1, name_len)] = '\0';
     if (ioctl(sock, SIOCGIFADDR, &ifr) == 0) {
         status = SIGAR_OK;
     }
@@ -2545,7 +2550,7 @@ static int sigar_ifmsg_iter(sigar_t *sigar, ifmsg_iter_t *iter)
         switch (iter->type) {
           case IFMSG_ITER_LIST:
             if (sdl->sdl_type == IFT_OTHER) {
-                if (has_ifaddr(sdl->sdl_data) != SIGAR_OK) {
+                if (has_ifaddr(sdl->sdl_data, sdl->sdl_nlen) != SIGAR_OK) {
                     break;
                 }
             }
@@ -2566,7 +2571,7 @@ static int sigar_ifmsg_iter(sigar_t *sigar, ifmsg_iter_t *iter)
             break;
 
           case IFMSG_ITER_GET:
-            if (strEQ(iter->name, sdl->sdl_data)) {
+            if (strlen(iter->name) == sdl->sdl_nlen && 0 == memcmp(iter->name, sdl->sdl_data, sdl->sdl_nlen)) {
                 iter->data.ifm = ifm;
                 return SIGAR_OK;
             }
