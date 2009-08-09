@@ -613,6 +613,7 @@ typedef struct {
         flags,
         mtu,
         metric;
+    int tx_queue_len;
 } sigar_net_interface_config_t;
 
 SIGAR_DECLARE(int)

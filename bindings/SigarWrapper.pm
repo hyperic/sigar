@@ -1081,6 +1081,11 @@ use vars qw(%classes %cmds);
          desc => '',
          plat => 'DFL'
       },
+      {
+         name => 'tx_queue_len', type => 'Int',
+         desc => '',
+         plat => 'L'
+      },
     ],
     NetInterfaceStat => [
       {
