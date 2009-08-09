@@ -1,0 +1,22 @@
+#include "sigar.h"
+
+static sigar_version_t sigar_version = {
+    __DATE__,
+    "@SCM_REVISION@",
+    "@PACKAGE_STRING@",
+    "@build@",
+    "@build_os@",
+    "@build_cpu@",
+    "SIGAR-@PACKAGE_VERSION@, "
+    "SCM revision @SCM_REVISION@, "
+    "built "__DATE__" as @build_cpu@",
+    @VERSION_MAJOR@,
+    @VERSION_MINOR@,
+    @VERSION_MAINT@,
+    @VERSION_BUILD@
+};
+
+SIGAR_DECLARE(sigar_version_t *) sigar_version_get(void)
+{
+    return &sigar_version;
+}
