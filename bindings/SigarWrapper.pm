@@ -936,6 +936,11 @@ use vars qw(%classes %cmds);
          plat => ''
       },
       {
+         name => 'default_interface', type => 'String',
+         desc => '',
+         plat => ''
+      },
+      {
          name => 'host_name', type => 'String',
          desc => '',
          plat => ''

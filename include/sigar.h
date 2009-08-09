@@ -527,6 +527,7 @@ typedef struct {
 
 typedef struct {
     char default_gateway[SIGAR_INET6_ADDRSTRLEN];
+    char default_interface[16];
     char host_name[SIGAR_MAXHOSTNAMELEN];
     char domain_name[SIGAR_MAXDOMAINNAMELEN];
     char primary_dns[SIGAR_INET6_ADDRSTRLEN];

@@ -1262,6 +1262,33 @@ static int sigar_get_default_gateway(sigar_t *sigar,
     return SIGAR_OK;
 }
 
+static int sigar_get_default_interface(sigar_t *sigar,
+                                     char *interface, int interfacelen)
+{
+    int status, i;
+    char *ifname;
+    sigar_net_route_list_t routelist;
+
+    status = sigar_net_route_list_get(sigar, &routelist);
+    if (status != SIGAR_OK) {
+        return status;
+    }
+
+    for (i=0; i<routelist.number; i++) {
+        if ((routelist.data[i].flags & SIGAR_RTF_GATEWAY) &&
+            (routelist.data[i].destination.addr.in == 0))
+        {
+            SIGAR_STRNCPY(interface, routelist.data[i].ifname, interfacelen);
+            break;
+        }
+    }
+
+    sigar_net_route_list_destroy(sigar, &routelist);
+
+    return SIGAR_OK;
+}
+
+
 int sigar_net_info_get(sigar_t *sigar,
                        sigar_net_info_t *netinfo)
 {
@@ -1317,6 +1344,8 @@ int sigar_net_info_get(sigar_t *sigar,
     }
 
     sigar_get_default_gateway(sigar, netinfo->default_gateway);
+    sigar_get_default_interface(sigar, netinfo->default_interface,
+                                sizeof(netinfo->default_interface));
 
     return SIGAR_OK;
 }
