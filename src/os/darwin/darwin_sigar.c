@@ -2499,8 +2499,8 @@ static int has_ifaddr(char *name, size_t name_len)
     if ((sock = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
         return errno;
     }
-    strncpy(ifr.ift_name, name, MIN(sizeof(ifr.ift_name) - 1, name_len));
-    ifr.ift_name[MIN(sizeof(ifr.ift_name) - 1, name_len)] = '\0';
+    strncpy(ifr.ifr_name, name, MIN(sizeof(ifr.ifr_name) - 1, name_len));
+    ifr.ifr_name[MIN(sizeof(ifr.ifr_name) - 1, name_len)] = '\0';
     if (ioctl(sock, SIOCGIFADDR, &ifr) == 0) {
         status = SIGAR_OK;
     }
