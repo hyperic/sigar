@@ -97,6 +97,11 @@ public class NetFlags {
 
     public final static int IFF_SLAVE = 0x1000;
 
+    /**
+     * Master of a load balancer
+     */
+    public static final int IFF_MASTER = 0x2000;
+
     public static final int RTF_UP = 0x1;
 
     public static final int RTF_GATEWAY = 0x2;
