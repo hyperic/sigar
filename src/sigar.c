@@ -1548,6 +1548,9 @@ int sigar_net_interface_config_get(sigar_t *sigar, const char *name,
     if (!ioctl(sock, SIOCGIFFLAGS, &ifr)) {
         sigar_uint64_t flags = ifr.ifr_flags;
 #ifdef __linux__
+# ifndef IFF_DYNAMIC
+#  define IFF_DYNAMIC 0x8000 /* not in 2.2 kernel */
+# endif /* IFF_DYNAMIC */
         int is_mcast = flags & IFF_MULTICAST;
         int is_slave = flags & IFF_SLAVE;
         int is_master = flags & IFF_MASTER;
