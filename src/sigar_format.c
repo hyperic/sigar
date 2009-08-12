@@ -559,6 +559,9 @@ SIGAR_DECLARE(char *) sigar_net_interface_flags_to_string(sigar_uint64_t flags, 
     if (flags & SIGAR_IFF_MASTER) {
         strcat(buf, "MASTER ");
     }
+    if (flags & SIGAR_IFF_DYNAMIC) {
+        strcat(buf, "DYNAMIC ");
+    }
 
     return buf;
 }

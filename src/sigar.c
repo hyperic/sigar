@@ -1551,6 +1551,7 @@ int sigar_net_interface_config_get(sigar_t *sigar, const char *name,
         int is_mcast = flags & IFF_MULTICAST;
         int is_slave = flags & IFF_SLAVE;
         int is_master = flags & IFF_MASTER;
+        int is_dynamic = flags & IFF_DYNAMIC;
         /*
          * XXX: should just define SIGAR_IFF_*
          * and test IFF_* bits on given platform.
@@ -1567,6 +1568,9 @@ int sigar_net_interface_config_get(sigar_t *sigar, const char *name,
         }
         if (is_master) {
             flags |= SIGAR_IFF_MASTER;
+        }
+        if (is_dynamic) {
+            flags |= SIGAR_IFF_DYNAMIC;
         }
 #endif
         ifconfig->flags = flags;
