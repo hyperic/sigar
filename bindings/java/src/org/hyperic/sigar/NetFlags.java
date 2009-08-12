@@ -102,6 +102,11 @@ public class NetFlags {
      */
     public static final int IFF_MASTER = 0x2000;
 
+    /**
+     * Dialup device with changing addresses
+     */
+    public static final int IFF_DYNAMIC = 0x4000;
+
     public static final int RTF_UP = 0x1;
 
     public static final int RTF_GATEWAY = 0x2;
