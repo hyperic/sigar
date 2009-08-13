@@ -71,7 +71,7 @@ sub flags {
         $os = $1;
         $is_win32 = 1;
         @cppflags = ('-DWIN32');
-        @libs = qw(kernel32 user32 advapi32 ws2_32 netapi32 shell32 pdh version);
+        @libs = qw(kernel32 user32 advapi32 ws2_32 netapi32 shell32 pdh version comsupp wbemuuid);
     }
     elsif ($os =~ /(linux)/) {
         $os = $1;
