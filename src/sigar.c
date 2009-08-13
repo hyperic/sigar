@@ -1647,7 +1647,18 @@ int sigar_net_interface_config_get(sigar_t *sigar, const char *name,
         ifconfig->metric = ifr.ifr_metric ? ifr.ifr_metric : 1;
     }
 
-    close(sock);    
+#if defined(SIOCGIFTXQLEN)
+    if (!ioctl(sock, SIOCGIFTXQLEN, &ifr)) {
+        ifconfig->tx_queue_len = ifr.ifr_qlen;
+    } 
+    else {
+        ifconfig->tx_queue_len = -1; /* net-tools behaviour */
+    }
+#else
+    ifconfig->tx_queue_len = -1;
+#endif
+
+    close(sock);
 
     /* XXX can we get a better description like win32? */
     SIGAR_SSTRCPY(ifconfig->description,

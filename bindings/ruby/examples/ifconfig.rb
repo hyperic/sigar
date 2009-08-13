@@ -65,7 +65,8 @@ iflist.each do |ifname|
         " overruns:" + ifstat.tx_overruns.to_s +
         " carrier:" + ifstat.tx_carrier.to_s
 
-    puts "\t" + "collisions:" + ifstat.tx_collisions.to_s
+    puts "\t" + "collisions:" + ifstat.tx_collisions.to_s +
+      " txqueuelen:" + ifconfig.tx_queue_len.to_s
 
     rx_bytes = ifstat.rx_bytes
     tx_bytes = ifstat.tx_bytes
