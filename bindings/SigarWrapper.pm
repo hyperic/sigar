@@ -462,44 +462,44 @@ use vars qw(%classes %cmds);
       {
          name => 'vendor', type => 'String',
          desc => 'CPU vendor id',
-         plat => 'AFLHSW'
+         plat => '*'
       },
       {
          name => 'model', type => 'String',
          desc => 'CPU model',
-         plat => 'AFLHSW'
+         plat => '*'
       },
       {
          name => 'mhz', type => 'Int',
          desc => 'Current CPU speed',
-         plat => 'AFHLSW'
+         plat => '*'
       },
       {
          name => 'mhz_max', type => 'Int',
          desc => 'Maximum CPU speed',
-         plat => 'L'
+         plat => 'DL'
       },
       {
          name => 'mhz_min', type => 'Int',
          desc => 'Maximum CPU speed',
-         plat => 'L'
+         plat => 'DL'
       },
       {
          name => 'cache_size', type => 'Long',
          desc => 'CPU cache size',
-         plat => 'AL'
+         plat => 'ADL'
       },
       {
-	  name => 'total_cores', type => 'Int',
-	  desc => 'Total CPU cores (logical)',
+         name => 'total_cores', type => 'Int',
+         desc => 'Total CPU cores (logical)',
       },
       {
-	  name => 'total_sockets', type => 'Int',
-	  desc => 'Total CPU sockets (physical)',
+         name => 'total_sockets', type => 'Int',
+         desc => 'Total CPU sockets (physical)',
       },
       {
-	  name => 'cores_per_socket', type => 'Int',
-	  desc => 'Number of CPU cores per CPU socket',
+         name => 'cores_per_socket', type => 'Int',
+         desc => 'Number of CPU cores per CPU socket',
       },
     ],
     Uptime => [
@@ -2070,8 +2070,8 @@ EOF
         my $member = $field->{member} || $name;
         my $desc = $field->{desc} || $name;
         (my $jname = $name) =~ s/_(\w)/\u$1/g;
-	my $getter = "get\u$jname";
-	$jname = jname($jname);
+        my $getter = "get\u$jname";
+        $jname = jname($jname);
         my $sig = qq("$field_types{$type}");
         my $set = "JENV->Set${type}Field";
         my $get = "JENV->Get${type}Field";
