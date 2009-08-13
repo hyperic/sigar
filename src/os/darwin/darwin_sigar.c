@@ -2236,7 +2236,6 @@ int sigar_file_system_usage_get(sigar_t *sigar,
 }
 
 #ifdef DARWIN
-#define CTL_HW_FREQ "hw.cpufrequency"
 #define CTL_HW_FREQ_MAX "hw.cpufrequency_max"
 #define CTL_HW_FREQ_MIN "hw.cpufrequency_min"
 #else
@@ -2259,24 +2258,17 @@ int sigar_cpu_info_list_get(sigar_t *sigar,
 
 #if defined(DARWIN)
     {
-        int mib[2];
-        mib[0] = CTL_HW;
-
-        mib[1] = HW_CPU_FREQ;
+        int mib[] = { CTL_HW, HW_CPU_FREQ };
         size = sizeof(mhz);
         if (sysctl(mib, NMIB(mib), &mhz, &size, NULL, 0) < 0) {
             mhz = SIGAR_FIELD_NOTIMPL;
         }
-        mib[1] = HW_CPU_FREQ_MAX;
-        size = sizeof(mhz_max);
-        if (sysctl(mib, NMIB(mib), &mhz_max, &size, NULL, 0) < 0) {
-            mhz_max = SIGAR_FIELD_NOTIMPL;
-        }
-        mib[1] = HW_CPU_FREQ_MIN;
-        size = sizeof(mhz_min);
-        if (sysctl(mib, NMIB(mib), &mhz_max, &size, NULL, 0) < 0) {
-            mhz_min = SIGAR_FIELD_NOTIMPL;
-        }
+    }
+    if (sysctlbyname(CTL_HW_FREQ_MAX, &mhz_max, &size, NULL, 0) < 0) {
+        mhz_max = SIGAR_FIELD_NOTIMPL;
+    }
+    if (sysctlbyname(CTL_HW_FREQ_MIN, &mhz_min, &size, NULL, 0) < 0) {
+        mhz_min = SIGAR_FIELD_NOTIMPL;
     }
 #elif defined(__FreeBSD__)
     if (sysctlbyname(CTL_HW_FREQ, &mhz, &size, NULL, 0) < 0) {
