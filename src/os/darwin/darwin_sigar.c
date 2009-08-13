@@ -2237,6 +2237,8 @@ int sigar_file_system_usage_get(sigar_t *sigar,
 
 #ifdef DARWIN
 #define CTL_HW_FREQ "hw.cpufrequency"
+#define CTL_HW_FREQ_MAX "hw.cpufrequency_max"
+#define CTL_HW_FREQ_MIN "hw.cpufrequency_min"
 #else
 /* XXX FreeBSD 5.x+ only? */ 
 #define CTL_HW_FREQ "machdep.tsc_freq"
@@ -2246,7 +2248,7 @@ int sigar_cpu_info_list_get(sigar_t *sigar,
                             sigar_cpu_info_list_t *cpu_infos)
 {
     int i;
-    unsigned int mhz;
+    unsigned int mhz, mhz_min, mhz_max;
     int cache_size=SIGAR_FIELD_NOTIMPL;
     size_t size;
     char model[128], vendor[128], *ptr;
@@ -2257,23 +2259,47 @@ int sigar_cpu_info_list_get(sigar_t *sigar,
 
 #if defined(DARWIN)
     {
-        int mib[] = { CTL_HW, HW_CPU_FREQ };
+        int mib[2];
+        mib[0] = CTL_HW;
+
+        mib[1] = HW_CPU_FREQ;
         size = sizeof(mhz);
         if (sysctl(mib, NMIB(mib), &mhz, &size, NULL, 0) < 0) {
             mhz = SIGAR_FIELD_NOTIMPL;
+        }
+        mib[1] = HW_CPU_FREQ_MAX;
+        size = sizeof(mhz_max);
+        if (sysctl(mib, NMIB(mib), &mhz_max, &size, NULL, 0) < 0) {
+            mhz_max = SIGAR_FIELD_NOTIMPL;
+        }
+        mib[1] = HW_CPU_FREQ_MIN;
+        size = sizeof(mhz_min);
+        if (sysctl(mib, NMIB(mib), &mhz_max, &size, NULL, 0) < 0) {
+            mhz_min = SIGAR_FIELD_NOTIMPL;
         }
     }
 #elif defined(__FreeBSD__)
     if (sysctlbyname(CTL_HW_FREQ, &mhz, &size, NULL, 0) < 0) {
         mhz = SIGAR_FIELD_NOTIMPL;
     }
+    /* TODO */
+    mhz_max = SIGAR_FIELD_NOTIMPL;
+    mhz_min = SIGAR_FIELD_NOTIMPL;
 #else
     /*XXX OpenBSD*/
     mhz = SIGAR_FIELD_NOTIMPL;
+    mhz_max = SIGAR_FIELD_NOTIMPL;
+    mhz_min = SIGAR_FIELD_NOTIMPL;
 #endif
 
     if (mhz != SIGAR_FIELD_NOTIMPL) {
         mhz /= 1000000;
+    }
+    if (mhz_max != SIGAR_FIELD_NOTIMPL) {
+        mhz_max /= 1000000;
+    }
+    if (mhz_min != SIGAR_FIELD_NOTIMPL) {
+        mhz_min /= 1000000;
     }
 
     size = sizeof(model);
@@ -2297,6 +2323,14 @@ int sigar_cpu_info_list_get(sigar_t *sigar,
         /* freebsd4 */
         mhz = sigar_cpu_mhz_from_model(model);
     }
+    /* XXX not sure */
+    if (mhz_max == SIGAR_FIELD_NOTIMPL) {
+        mhz_max = 0;
+    }
+    if (mhz_min == SIGAR_FIELD_NOTIMPL) {
+        mhz_min = 0;
+    }
+
 
 #ifdef DARWIN
     size = sizeof(vendor);
@@ -2351,6 +2385,8 @@ int sigar_cpu_info_list_get(sigar_t *sigar,
         sigar_cpu_model_adjust(sigar, info);
 
         info->mhz = mhz;
+        info->mhz_max = mhz_max;
+        info->mhz_min = mhz_min;
         info->cache_size = cache_size;
         info->total_cores = sigar->ncpu;
         info->cores_per_socket = sigar->lcpu;
