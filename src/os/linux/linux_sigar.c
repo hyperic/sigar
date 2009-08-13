@@ -1598,7 +1598,23 @@ static void get_cpuinfo_max_freq(sigar_cpu_info_t *cpu_info, int num)
         sigar_file2str(max_freq, max_freq, sizeof(max_freq)-1);
 
     if (status == SIGAR_OK) {
-        cpu_info->mhz = atoi(max_freq) / 1000;
+        cpu_info->mhz_max = atoi(max_freq) / 1000;
+    }
+}
+
+static void get_cpuinfo_min_freq(sigar_cpu_info_t *cpu_info, int num)
+{
+    int status;
+    char min_freq[PATH_MAX];
+    snprintf(min_freq, sizeof(min_freq),
+             "/sys/devices/system/cpu/cpu%d"
+             "/cpufreq/cpuinfo_min_freq", num);
+
+    status =
+        sigar_file2str(min_freq, min_freq, sizeof(min_freq)-1);
+
+    if (status == SIGAR_OK) {
+        cpu_info->mhz_min = atoi(min_freq) / 1000;
     }
 }
 
@@ -1624,6 +1640,7 @@ int sigar_cpu_info_list_get(sigar_t *sigar,
 
         info = &cpu_infos->data[cpu_infos->number];
         get_cpuinfo_max_freq(info, cpu_infos->number);
+        get_cpuinfo_min_freq(info, cpu_infos->number);
 
         info->total_cores = sigar->ncpu;
         info->cores_per_socket = sigar->lcpu;

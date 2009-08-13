@@ -188,6 +188,8 @@ typedef struct {
     char vendor[128];
     char model[128];
     int mhz;
+    int mhz_max;
+    int mhz_min;
     sigar_uint64_t cache_size;
     int total_sockets;
     int total_cores;

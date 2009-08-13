@@ -471,8 +471,18 @@ use vars qw(%classes %cmds);
       },
       {
          name => 'mhz', type => 'Int',
-         desc => 'CPU speed',
+         desc => 'Current CPU speed',
          plat => 'AFHLSW'
+      },
+      {
+         name => 'mhz_max', type => 'Int',
+         desc => 'Maximum CPU speed',
+         plat => 'L'
+      },
+      {
+         name => 'mhz_min', type => 'Int',
+         desc => 'Maximum CPU speed',
+         plat => 'L'
       },
       {
          name => 'cache_size', type => 'Long',
