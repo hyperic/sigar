@@ -936,7 +936,7 @@ use vars qw(%classes %cmds);
          plat => ''
       },
       {
-         name => 'default_interface', type => 'String',
+         name => 'default_gateway_interface', type => 'String',
          desc => '',
          plat => ''
       },
