@@ -2236,7 +2236,8 @@ int sigar_file_system_usage_get(sigar_t *sigar,
 }
 
 #ifdef DARWIN
-#define CTL_HW_FREQ "hw.cpufrequency"
+#define CTL_HW_FREQ_MAX "hw.cpufrequency_max"
+#define CTL_HW_FREQ_MIN "hw.cpufrequency_min"
 #else
 /* XXX FreeBSD 5.x+ only? */ 
 #define CTL_HW_FREQ "machdep.tsc_freq"
@@ -2246,7 +2247,7 @@ int sigar_cpu_info_list_get(sigar_t *sigar,
                             sigar_cpu_info_list_t *cpu_infos)
 {
     int i;
-    unsigned int mhz;
+    unsigned int mhz, mhz_min, mhz_max;
     int cache_size=SIGAR_FIELD_NOTIMPL;
     size_t size;
     char model[128], vendor[128], *ptr;
@@ -2263,17 +2264,34 @@ int sigar_cpu_info_list_get(sigar_t *sigar,
             mhz = SIGAR_FIELD_NOTIMPL;
         }
     }
+    if (sysctlbyname(CTL_HW_FREQ_MAX, &mhz_max, &size, NULL, 0) < 0) {
+        mhz_max = SIGAR_FIELD_NOTIMPL;
+    }
+    if (sysctlbyname(CTL_HW_FREQ_MIN, &mhz_min, &size, NULL, 0) < 0) {
+        mhz_min = SIGAR_FIELD_NOTIMPL;
+    }
 #elif defined(__FreeBSD__)
     if (sysctlbyname(CTL_HW_FREQ, &mhz, &size, NULL, 0) < 0) {
         mhz = SIGAR_FIELD_NOTIMPL;
     }
+    /* TODO */
+    mhz_max = SIGAR_FIELD_NOTIMPL;
+    mhz_min = SIGAR_FIELD_NOTIMPL;
 #else
     /*XXX OpenBSD*/
     mhz = SIGAR_FIELD_NOTIMPL;
+    mhz_max = SIGAR_FIELD_NOTIMPL;
+    mhz_min = SIGAR_FIELD_NOTIMPL;
 #endif
 
     if (mhz != SIGAR_FIELD_NOTIMPL) {
         mhz /= 1000000;
+    }
+    if (mhz_max != SIGAR_FIELD_NOTIMPL) {
+        mhz_max /= 1000000;
+    }
+    if (mhz_min != SIGAR_FIELD_NOTIMPL) {
+        mhz_min /= 1000000;
     }
 
     size = sizeof(model);
@@ -2297,6 +2315,14 @@ int sigar_cpu_info_list_get(sigar_t *sigar,
         /* freebsd4 */
         mhz = sigar_cpu_mhz_from_model(model);
     }
+    /* XXX not sure */
+    if (mhz_max == SIGAR_FIELD_NOTIMPL) {
+        mhz_max = 0;
+    }
+    if (mhz_min == SIGAR_FIELD_NOTIMPL) {
+        mhz_min = 0;
+    }
+
 
 #ifdef DARWIN
     size = sizeof(vendor);
@@ -2351,6 +2377,8 @@ int sigar_cpu_info_list_get(sigar_t *sigar,
         sigar_cpu_model_adjust(sigar, info);
 
         info->mhz = mhz;
+        info->mhz_max = mhz_max;
+        info->mhz_min = mhz_min;
         info->cache_size = cache_size;
         info->total_cores = sigar->ncpu;
         info->cores_per_socket = sigar->lcpu;
@@ -2487,7 +2515,11 @@ static int sigar_ifmsg_init(sigar_t *sigar)
     return SIGAR_OK;
 }
 
-static int has_ifaddr(char *name)
+/**
+ * @param name name of the interface
+ * @param name_len length of name (w/o \0)
+ */
+static int has_ifaddr(char *name, size_t name_len)
 {
     int sock, status;
     struct ifreq ifr;
@@ -2495,7 +2527,8 @@ static int has_ifaddr(char *name)
     if ((sock = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
         return errno;
     }
-    SIGAR_SSTRCPY(ifr.ifr_name, name);
+    strncpy(ifr.ifr_name, name, MIN(sizeof(ifr.ifr_name) - 1, name_len));
+    ifr.ifr_name[MIN(sizeof(ifr.ifr_name) - 1, name_len)] = '\0';
     if (ioctl(sock, SIOCGIFADDR, &ifr) == 0) {
         status = SIGAR_OK;
     }
@@ -2545,7 +2578,7 @@ static int sigar_ifmsg_iter(sigar_t *sigar, ifmsg_iter_t *iter)
         switch (iter->type) {
           case IFMSG_ITER_LIST:
             if (sdl->sdl_type == IFT_OTHER) {
-                if (has_ifaddr(sdl->sdl_data) != SIGAR_OK) {
+                if (has_ifaddr(sdl->sdl_data, sdl->sdl_nlen) != SIGAR_OK) {
                     break;
                 }
             }
@@ -2566,7 +2599,7 @@ static int sigar_ifmsg_iter(sigar_t *sigar, ifmsg_iter_t *iter)
             break;
 
           case IFMSG_ITER_GET:
-            if (strEQ(iter->name, sdl->sdl_data)) {
+            if (strlen(iter->name) == sdl->sdl_nlen && 0 == memcmp(iter->name, sdl->sdl_data, sdl->sdl_nlen)) {
                 iter->data.ifm = ifm;
                 return SIGAR_OK;
             }

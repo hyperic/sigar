@@ -25,7 +25,7 @@ else {
     my $flags = SigarBuild::flags();
     my(@inline_src) = SigarBuild::inline_src($flags);
     push @clean_files, @inline_src;
-    my(@object) = ('Sigar.o', map { s/c$/o/; $_ } @inline_src);
+    my(@object) = ('Sigar.o', map { s/cp{0,2}$/o/; $_ } @inline_src);
     my(@libs) = map { "-l$_" }  @{$flags->{libs}};
 
     @mm_args = (

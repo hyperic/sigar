@@ -363,8 +363,30 @@ int sigar_get_iftype(const char *name, int *type, int *inst);
 #endif
 
 #define SIGAR_NIC_LOOPBACK "Local Loopback"
+#define SIGAR_NIC_UNSPEC   "UNSPEC"
+#define SIGAR_NIC_SLIP     "Serial Line IP"
+#define SIGAR_NIC_CSLIP    "VJ Serial Line IP"
+#define SIGAR_NIC_SLIP6    "6-bit Serial Line IP"
+#define SIGAR_NIC_CSLIP6   "VJ 6-bit Serial Line IP"
+#define SIGAR_NIC_ADAPTIVE "Adaptive Serial Line IP"
 #define SIGAR_NIC_ETHERNET "Ethernet"
+#define SIGAR_NIC_ASH      "Ash"
+#define SIGAR_NIC_FDDI     "Fiber Distributed Data Interface"
+#define SIGAR_NIC_HIPPI    "HIPPI"
+#define SIGAR_NIC_AX25     "AMPR AX.25"
+#define SIGAR_NIC_ROSE     "AMPR ROSE"
 #define SIGAR_NIC_NETROM   "AMPR NET/ROM"
+#define SIGAR_NIC_X25      "generic X.25"
+#define SIGAR_NIC_TUNNEL   "IPIP Tunnel"
+#define SIGAR_NIC_PPP      "Point-to-Point Protocol"
+#define SIGAR_NIC_HDLC     "(Cisco)-HDLC"
+#define SIGAR_NIC_LAPB     "LAPB"
+#define SIGAR_NIC_ARCNET   "ARCnet"
+#define SIGAR_NIC_DLCI     "Frame Relay DLCI"
+#define SIGAR_NIC_FRAD     "Frame Relay Access Device"
+#define SIGAR_NIC_SIT      "IPv6-in-IPv4"
+#define SIGAR_NIC_IRDA     "IrLAP"
+#define SIGAR_NIC_EC       "Econet"
 
 #ifndef WIN32
 #include <netdb.h>

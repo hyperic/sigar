@@ -1503,12 +1503,77 @@ static void get_interface_type(sigar_net_interface_config_t *ifconfig,
     char *type;
 
     switch (family) {
+      case ARPHRD_SLIP:
+        type = SIGAR_NIC_SLIP;
+        break;
+      case ARPHRD_CSLIP:
+        type = SIGAR_NIC_CSLIP;
+        break;
+      case ARPHRD_SLIP6:
+        type = SIGAR_NIC_SLIP6;
+        break;
+      case ARPHRD_CSLIP6:
+        type = SIGAR_NIC_CSLIP6;
+        break;
+      case ARPHRD_ADAPT:
+        type = SIGAR_NIC_ADAPTIVE;
+        break;
+      case ARPHRD_ETHER:
+        type = SIGAR_NIC_ETHERNET;
+        break;
+      case ARPHRD_ASH:
+        type = SIGAR_NIC_ASH;
+        break;
+      case ARPHRD_FDDI:
+        type = SIGAR_NIC_FDDI;
+        break;
+      case ARPHRD_HIPPI:
+        type = SIGAR_NIC_HIPPI;
+        break;
+      case ARPHRD_AX25:
+        type = SIGAR_NIC_AX25;
+        break;
+      case ARPHRD_ROSE:
+        type = SIGAR_NIC_ROSE;
+        break;
       case ARPHRD_NETROM:
         type = SIGAR_NIC_NETROM;
         break;
-        /* XXX more */
+      case ARPHRD_X25:
+        type = SIGAR_NIC_X25;
+        break;
+      case ARPHRD_TUNNEL:
+        type = SIGAR_NIC_TUNNEL;
+        break;
+      case ARPHRD_PPP:
+        type = SIGAR_NIC_PPP;
+        break;
+      case ARPHRD_CISCO:
+        type = SIGAR_NIC_HDLC;
+        break;
+      case ARPHRD_LAPB:
+        type = SIGAR_NIC_LAPB;
+        break;
+      case ARPHRD_ARCNET:
+        type = SIGAR_NIC_ARCNET;
+        break;
+      case ARPHRD_DLCI:
+        type = SIGAR_NIC_DLCI;
+        break;
+      case ARPHRD_FRAD:
+        type = SIGAR_NIC_FRAD;
+        break;
+      case ARPHRD_SIT:
+        type = SIGAR_NIC_SIT;
+        break;
+      case ARPHRD_IRDA:
+        type = SIGAR_NIC_IRDA;
+        break;
+      case ARPHRD_ECONET:
+        type = SIGAR_NIC_EC;
+        break;
       default:
-        type = SIGAR_NIC_ETHERNET;
+        type = SIGAR_NIC_UNSPEC;
         break;
     }
 
@@ -1552,9 +1617,13 @@ int sigar_net_interface_config_get(sigar_t *sigar, const char *name,
     if (!ioctl(sock, SIOCGIFFLAGS, &ifr)) {
         sigar_uint64_t flags = ifr.ifr_flags;
 #ifdef __linux__
+# ifndef IFF_DYNAMIC
+#  define IFF_DYNAMIC 0x8000 /* not in 2.2 kernel */
+# endif /* IFF_DYNAMIC */
         int is_mcast = flags & IFF_MULTICAST;
         int is_slave = flags & IFF_SLAVE;
         int is_master = flags & IFF_MASTER;
+        int is_dynamic = flags & IFF_DYNAMIC;
         /*
          * XXX: should just define SIGAR_IFF_*
          * and test IFF_* bits on given platform.
@@ -1571,6 +1640,9 @@ int sigar_net_interface_config_get(sigar_t *sigar, const char *name,
         }
         if (is_master) {
             flags |= SIGAR_IFF_MASTER;
+        }
+        if (is_dynamic) {
+            flags |= SIGAR_IFF_DYNAMIC;
         }
 #endif
         ifconfig->flags = flags;
@@ -1644,7 +1716,18 @@ int sigar_net_interface_config_get(sigar_t *sigar, const char *name,
         ifconfig->metric = ifr.ifr_metric ? ifr.ifr_metric : 1;
     }
 
-    close(sock);    
+#if defined(SIOCGIFTXQLEN)
+    if (!ioctl(sock, SIOCGIFTXQLEN, &ifr)) {
+        ifconfig->tx_queue_len = ifr.ifr_qlen;
+    } 
+    else {
+        ifconfig->tx_queue_len = -1; /* net-tools behaviour */
+    }
+#else
+    ifconfig->tx_queue_len = -1;
+#endif
+
+    close(sock);
 
     /* XXX can we get a better description like win32? */
     SIGAR_SSTRCPY(ifconfig->description,

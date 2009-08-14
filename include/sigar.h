@@ -188,6 +188,8 @@ typedef struct {
     char vendor[128];
     char model[128];
     int mhz;
+    int mhz_max;
+    int mhz_min;
     sigar_uint64_t cache_size;
     int total_sockets;
     int total_cores;
@@ -586,6 +588,7 @@ SIGAR_DECLARE(int) sigar_net_route_list_destroy(sigar_t *sigar,
 #define SIGAR_IFF_MULTICAST   0x800
 #define SIGAR_IFF_SLAVE       0x1000
 #define SIGAR_IFF_MASTER      0x2000
+#define SIGAR_IFF_DYNAMIC     0x4000
 
 #define SIGAR_NULL_HWADDR "00:00:00:00:00:00"
 
@@ -614,6 +617,7 @@ typedef struct {
         flags,
         mtu,
         metric;
+    int tx_queue_len;
 } sigar_net_interface_config_t;
 
 SIGAR_DECLARE(int)
