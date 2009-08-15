@@ -62,7 +62,8 @@ public class NetInfo extends SigarCommandBase {
                 info.getDomainName());
 
         println("default gateway......." +
-                info.getDefaultGateway());
+                info.getDefaultGateway() +
+                " (" + info.getDefaultGatewayInterface() + ")");
 
         println("primary dns..........." +
                 info.getPrimaryDns());
