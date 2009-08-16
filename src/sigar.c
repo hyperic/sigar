@@ -1497,6 +1497,10 @@ static void hwaddr_arp_lookup(sigar_net_interface_config_t *ifconfig, int sock)
 
 #include <net/if_arp.h>
 
+#ifndef ARPHRD_CISCO /* not in 2.2 kernel headers */
+#define ARPHRD_CISCO 513 /* Cisco HDLC. */
+#endif
+
 static void get_interface_type(sigar_net_interface_config_t *ifconfig,
                                int family)
 {
