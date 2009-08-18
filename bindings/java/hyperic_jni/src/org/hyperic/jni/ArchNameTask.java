@@ -21,7 +21,6 @@ package org.hyperic.jni;
 import java.io.File;
 import java.io.FileFilter;
 import java.util.Arrays;
-import java.util.Comparator;
 
 import org.apache.tools.ant.Task;
 import org.apache.tools.ant.BuildException;
@@ -97,16 +96,11 @@ public class ArchNameTask extends Task {
                     }
                 });
             if (sdks != null) {
-                Arrays.sort(sdks, new Comparator() {
-                    public int compare(Object s1, Object s2) {
-                        return (int)(((File)s2).lastModified() -
-                                     ((File)s1).lastModified());
-                    }
-                });
+                Arrays.sort(sdks);
                 final String prop = "uni.sdk";
                 String sdk = getProject().getProperty(prop);
                 if (sdk == null) {
-                    sdk = sdks[0].getPath();
+                    sdk = sdks[sdks.length-1].getPath();
                     getProject().setProperty(prop, sdk);
                 }
                 System.out.println("Using SDK=" + sdk);
