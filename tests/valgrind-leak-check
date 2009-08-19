@@ -1,0 +1,25 @@
+#!/bin/sh
+
+if test x$VALGRIND = x; then
+	echo "\$VALGRIND isn't set, can't check for mem-leaks"
+	exit 1
+fi
+
+tempfoo=`basename $0`
+TEMPFILE=`mktemp -t ${tempfoo}` || exit 1
+function rm_tmpfile () {
+	cat $TEMPFILE
+	rm -f $TEMPFILE
+}
+trap rm_tmpfile ERR
+
+set -e
+DYLD_LIBRARY_PATH=../src/.libs/ \
+$VALGRIND --auto-run-dsymutil=yes --log-file=$TEMPFILE .libs/$1 
+
+# make the test fail, if this line isn't found
+grep "ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)" $TEMPFILE > /dev/null 
+grep "definitely lost: 0 bytes in 0 blocks." $TEMPFILE > /dev/null 
+
+rm -f $TEMPFILE
+
