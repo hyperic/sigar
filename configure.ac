@@ -129,12 +129,14 @@ if test "$WITH_LUA" != "no"; then
    PKG_CHECK_MODULES(LUA, lua5.1 >= 5.1, [
      AC_DEFINE([HAVE_LUA], [1], [liblua])
      AC_DEFINE([HAVE_LUA_H], [1], [lua.h])
-   ]) 
+   ],[WITH_LUA=no])
  ])
 
  AC_SUBST(LUA_CFLAGS)
  AC_SUBST(LUA_LIBS)
 fi
+
+AM_CONDITIONAL([BUILD_LUA],[test "$WITH_LUA" != "no"])
 
 AC_CONFIG_FILES([
 Makefile
