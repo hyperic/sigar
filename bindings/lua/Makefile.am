@@ -1,8 +1,12 @@
 INCLUDES=@INCLUDES@
 
-lib_LTLIBRARIES = sigar.la
+lib_LTLIBRARIES=
+TESTS=
 
-sigar_la_SOURCES  =\
+if BUILD_LUA
+lib_LTLIBRARIES += sigar.la
+
+sigar_la_SOURCES =\
 	sigar.c \
 	sigar-cpu.c \
 	sigar-disk.c \
@@ -19,6 +23,11 @@ sigar_la_CPPFLAGS = ${LUA_CFLAGS}
 sigar_la_LDFLAGS  = $(AM_LDFLAGS) -module -avoid-version
 sigar_la_LIBADD  = $(top_builddir)/src/libsigar.la
 
+TESTS += \
+	sigar-test.lua
+
+endif
+
 noinst_HEADERS = lua-sigar.h
 
 TESTS_ENVIRONMENT = \
@@ -27,5 +36,3 @@ TESTS_ENVIRONMENT = \
 	DYLD_LIBRARY_PATH="${top_builddir}/src/.libs/" \
 	lua 
 
-TESTS = \
-	sigar-test.lua
