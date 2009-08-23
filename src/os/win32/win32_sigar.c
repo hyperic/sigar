@@ -726,6 +726,8 @@ static PERF_INSTANCE_DEFINITION *get_cpu_instance(sigar_t *sigar,
     return PdhFirstInstance(object);
 }
 
+#define SPPI_MAX 128 /* XXX unhardcode; should move off this api anyhow */
+
 #define sigar_NtQuerySystemInformation \
    sigar->ntdll.query_sys_info.func
 
@@ -744,8 +746,7 @@ static int get_idle_cpu(sigar_t *sigar, sigar_cpu_t *cpu,
         DLLMOD_INIT(ntdll, FALSE);
         if (sigar_NtQuerySystemInformation) {
             DWORD retval, num;
-            /* XXX unhardcode 16 */
-            SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION info[16];
+            SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION info[SPPI_MAX];
             /* into the lungs of hell */
             sigar_NtQuerySystemInformation(SystemProcessorPerformanceInformation,
                                            &info, sizeof(info), &retval);
@@ -816,8 +817,7 @@ static int sigar_cpu_ntsys_get(sigar_t *sigar, sigar_cpu_t *cpu)
 {
     DWORD retval, num;
     int i;
-    /* XXX unhardcode 16 */
-    SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION info[16];
+    SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION info[SPPI_MAX];
     /* into the lungs of hell */
     sigar_NtQuerySystemInformation(SystemProcessorPerformanceInformation,
                                    &info, sizeof(info), &retval);
@@ -919,8 +919,7 @@ static int sigar_cpu_list_ntsys_get(sigar_t *sigar,
     int status, i, j;
     int core_rollup = sigar_cpu_core_rollup(sigar);
 
-    /* XXX unhardcode 16 */
-    SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION info[16];
+    SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION info[SPPI_MAX];
     /* into the lungs of hell */
     sigar_NtQuerySystemInformation(SystemProcessorPerformanceInformation,
                           &info, sizeof(info), &retval);
