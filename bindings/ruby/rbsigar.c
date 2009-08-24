@@ -657,6 +657,19 @@ static VALUE rb_sigar_set_log_level(VALUE obj, VALUE level)
     return obj;
 }
 
+static VALUE rb_sigar_fqdn(VALUE obj)
+{
+    SIGAR_GET;
+
+    char fqdn[SIGAR_FQDN_LEN];
+    int status;
+
+    if ((status = sigar_fqdn_get(sigar, fqdn, sizeof(fqdn))) != SIGAR_OK) {
+        RB_SIGAR_CROAK;
+    }
+
+    return rb_str_new2(fqdn);
+}
 
 #include "./rbsigar_generated.rx"
 
@@ -752,6 +765,7 @@ void Init_rbsigar(void)
     rb_define_method(rclass, "proc_list", rb_sigar_proc_list, -1);
     rb_define_method(rclass, "proc_args", rb_sigar_proc_args, 1);
     rb_define_method(rclass, "proc_env", rb_sigar_proc_env, 1);
+    rb_define_method(rclass, "fqdn", rb_sigar_fqdn, 0);
 
     rb_define_singleton_method(rclass, "new", rb_sigar_new, 0);
     rb_define_singleton_method(rclass, "format_size", rb_sigar_format_size, 1);
