@@ -1445,7 +1445,11 @@ static int sigar_remote_proc_args_get(sigar_t *sigar, sigar_pid_t pid,
     }
 
     /* likely we are 32-bit, pid process is 64-bit */
-    return sigar_proc_args_wmi_get(sigar, pid, procargs);
+    status = sigar_proc_args_wmi_get(sigar, pid, procargs);
+    if (status == ERROR_NOT_FOUND) {
+        status = SIGAR_NO_SUCH_PROCESS;
+    }
+    return status;
 }
 
 int sigar_os_proc_args_get(sigar_t *sigar, sigar_pid_t pid,
@@ -1609,6 +1613,9 @@ SIGAR_DECLARE(int) sigar_proc_exe_get(sigar_t *sigar, sigar_pid_t pid,
         /* likely we are 32-bit, pid process is 64-bit */
         /* procexe->cwd[0] = XXX where else can we try? */
         status = sigar_proc_exe_wmi_get(sigar, pid, procexe);
+        if (status == ERROR_NOT_FOUND) {
+            status = SIGAR_NO_SUCH_PROCESS;
+        }
     }
 
     if (procexe->cwd[0] != '\0') {
