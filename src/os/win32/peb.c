@@ -171,15 +171,16 @@ int sigar_proc_args_peb_get(sigar_t *sigar, HANDLE proc,
     }
 
     size = rtl_bufsize(buf, rtl.CommandLine);
+    if (size <= 0) {
+        return ERROR_DATATYPE_MISMATCH; /* fallback to wmi */
+    }
     memset(buf, '\0', sizeof(buf));
-            
-    if ((size > 0) &&
-        ReadProcessMemory(proc, rtl.CommandLine.Buffer, buf, size, NULL))
-    {
+
+    if (ReadProcessMemory(proc, rtl.CommandLine.Buffer, buf, size, NULL)) {
         return sigar_parse_proc_args(sigar, buf, procargs);
     }
     else {
-        return SIGAR_OK;
+        return GetLastError();
     }
 }
 
