@@ -99,6 +99,9 @@ int sigar_proc_exe_peb_get(sigar_t *sigar, HANDLE proc,
     RTL_USER_PROCESS_PARAMETERS rtl;
     DWORD size;
 
+    procexe->name[0] = '\0';
+    procexe->cwd[0] = '\0';
+
     if ((status = sigar_rtl_get(sigar, proc, &rtl)) != SIGAR_OK) {
         return status;
     }
@@ -111,9 +114,6 @@ int sigar_proc_exe_peb_get(sigar_t *sigar, HANDLE proc,
     {
         SIGAR_W2A(buf, procexe->name, sizeof(procexe->name));
     }
-    else {
-        procexe->name[0] = '\0';
-    }
 
     size = rtl_bufsize(buf, rtl.CurrentDirectoryName);
     memset(buf, '\0', sizeof(buf));
@@ -122,9 +122,6 @@ int sigar_proc_exe_peb_get(sigar_t *sigar, HANDLE proc,
         ReadProcessMemory(proc, rtl.CurrentDirectoryName.Buffer, buf, size, NULL))
     {
         SIGAR_W2A(buf, procexe->cwd, sizeof(procexe->cwd));
-    }
-    else {
-        procexe->cwd[0] = '\0';
     }
 
     return SIGAR_OK;
