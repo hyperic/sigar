@@ -42,15 +42,18 @@ class WMI {
     HRESULT GetProcStringProperty(DWORD pid, TCHAR *name, TCHAR *value, DWORD len);
     HRESULT GetProcExecutablePath(DWORD pid, TCHAR *value);
     HRESULT GetProcCommandLine(DWORD pid, TCHAR *value);
+    int GetLastError();
 
   private:
     IWbemServices *wbem;
+    HRESULT result;
     BSTR GetProcQuery(DWORD pid);
 };
 
 WMI::WMI()
 {
     wbem = NULL;
+    result = S_OK;
     CoInitializeEx(NULL, COINIT_MULTITHREADED);
 }
 
@@ -60,14 +63,31 @@ WMI::~WMI()
     CoUninitialize();
 }
 
+/* XXX must be a better way to map HRESULT */
+int WMI::GetLastError()
+{
+    switch (result) {
+      case S_OK:
+        return ERROR_SUCCESS;
+      case WBEM_E_NOT_FOUND:
+        return ERROR_NOT_FOUND;
+      case WBEM_E_ACCESS_DENIED:
+        return ERROR_ACCESS_DENIED;
+      case WBEM_E_NOT_SUPPORTED:
+        return SIGAR_ENOTIMPL;
+      default:
+        return ERROR_INVALID_FUNCTION;
+    }
+}
+
 HRESULT WMI::Open(LPCTSTR machine, LPCTSTR user, LPCTSTR pass)
 {
-    HRESULT result;
     IWbemLocator *locator;
     wchar_t path[MAX_PATH];
 
     if (wbem) {
-        return S_OK;
+        result = S_OK;
+        return result;
     }
 
     result =
@@ -116,6 +136,7 @@ void WMI::Close()
     if (wbem) {
         wbem->Release();
         wbem = NULL;
+        result = S_OK;
     }
 }
 
@@ -128,7 +149,6 @@ BSTR WMI::GetProcQuery(DWORD pid)
 
 HRESULT WMI::GetProcStringProperty(DWORD pid, TCHAR *name, TCHAR *value, DWORD len)
 {
-    HRESULT result;
     IWbemClassObject *obj;
     VARIANT var;
 
@@ -177,11 +197,11 @@ extern "C" int sigar_proc_args_wmi_get(sigar_t *sigar, sigar_pid_t pid,
     WMI *wmi = new WMI();
 
     if (FAILED(wmi->Open())) {
-        return GetLastError();
+        return wmi->GetLastError();
     }
 
     if (FAILED(wmi->GetProcCommandLine(pid, buf))) {
-        status = GetLastError();
+        status = wmi->GetLastError();
     }
     else {
         status = sigar_parse_proc_args(sigar, buf, procargs);
@@ -201,13 +221,13 @@ extern "C" int sigar_proc_exe_wmi_get(sigar_t *sigar, sigar_pid_t pid,
     WMI *wmi = new WMI();
 
     if (FAILED(wmi->Open())) {
-        return GetLastError();
+        return wmi->GetLastError();
     }
 
     procexe->name[0] = '\0';
 
     if (FAILED(wmi->GetProcExecutablePath(pid, buf))) {
-        status = GetLastError();
+        status = wmi->GetLastError();
     }
     else {
         status = SIGAR_OK;

@@ -1435,19 +1435,21 @@ static int sigar_remote_proc_args_get(sigar_t *sigar, sigar_pid_t pid,
     char cmdline[SIGAR_CMDLINE_MAX], *ptr = cmdline, *arg;
     HANDLE proc = open_process(pid);
 
-    if (!proc) {
-        return GetLastError();
+    if (proc) {
+        status = sigar_proc_args_peb_get(sigar, proc, procargs);
+
+        CloseHandle(proc);
+
+        if (status == SIGAR_OK) {
+            return status;
+        }
     }
 
-    status = sigar_proc_args_peb_get(sigar, proc, procargs);
-
-    CloseHandle(proc);
-
-    if (status == ERROR_DATATYPE_MISMATCH) {
-        /* we are 32-bit, pid process is 64-bit */
-        status = sigar_proc_args_wmi_get(sigar, pid, procargs);
+    /* likely we are 32-bit, pid process is 64-bit */
+    status = sigar_proc_args_wmi_get(sigar, pid, procargs);
+    if (status == ERROR_NOT_FOUND) {
+        status = SIGAR_NO_SUCH_PROCESS;
     }
-
     return status;
 }
 
@@ -1608,10 +1610,13 @@ SIGAR_DECLARE(int) sigar_proc_exe_get(sigar_t *sigar, sigar_pid_t pid,
     }
 
     status = sigar_proc_exe_peb_get(sigar, proc, procexe);
-    if (status == ERROR_DATATYPE_MISMATCH) {
-        /* we are 32-bit, pid process is 64-bit */
-        procexe->cwd[0] = '\0'; /* XXX where else can we try? */
+    if (procexe->name[0] == '\0') {
+        /* likely we are 32-bit, pid process is 64-bit */
+        /* procexe->cwd[0] = XXX where else can we try? */
         status = sigar_proc_exe_wmi_get(sigar, pid, procexe);
+        if (status == ERROR_NOT_FOUND) {
+            status = SIGAR_NO_SUCH_PROCESS;
+        }
     }
 
     if (procexe->cwd[0] != '\0') {
