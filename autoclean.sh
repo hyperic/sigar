@@ -39,6 +39,12 @@ rm -f INSTALL NEWS AUTHORS \
 && rm -f src/Makefile.in \
 && rm -f src/stamp-h1 \
 && rm -f src/stamp-h1.in \
+&& rm -f bindings/Makefile \
+&& rm -f bindings/Makefile.in \
+&& rm -f bindings/lua/Makefile \
+&& rm -f bindings/*/Makefile.in \
+&& rm -f tests/Makefile \
+&& rm -f tests/Makefile.in \
 && rm -f examples/Makefile \
 && rm -f examples/Makefile.in \
 && rm -f examples/*.o \
