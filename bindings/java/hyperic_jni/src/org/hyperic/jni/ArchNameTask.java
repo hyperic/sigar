@@ -97,13 +97,28 @@ public class ArchNameTask extends Task {
                 });
             if (sdks != null) {
                 Arrays.sort(sdks);
-                final String prop = "uni.sdk";
+                String prop = "uni.sdk";
                 String sdk = getProject().getProperty(prop);
+                String defaultMin = "10.3";
+
                 if (sdk == null) {
-                    sdk = sdks[sdks.length-1].getPath();
+                    int ix = sdks.length-1;
+                    sdk = sdks[ix].getPath();
+                    if ((sdk.indexOf("10.6") != -1) && (ix > 0)) {
+                        sdk = sdks[ix-1].getPath(); //downgrade due to 64-bit ppc issues XXX
+                        defaultMin = "10.5";
+                    }
                     getProject().setProperty(prop, sdk);
                 }
                 System.out.println("Using SDK=" + sdk);
+
+                prop = "osx.min";
+                String min = getProject().getProperty(prop);
+                if (min == null) {
+                    min = defaultMin;
+                    getProject().setProperty(prop, min);
+                }
+                System.out.println("Using -mmacosx-version-min=" + min);
             }
         }
     }
