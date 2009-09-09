@@ -25,7 +25,6 @@ USA.
   <property name="jni.src.java" value="src"/>
   <property name="jni.libprefix" value="java"/>
   <property name="jni.libversion" value=""/>
-  <property name="osx.min" value="-mmacosx-version-min=10.3"/>
 
   <property name="cpptasks.jar" location="lib/cpptasks.jar"/>
 
@@ -357,7 +356,7 @@ USA.
         <compilerarg value="${uni.sdk}"/>
         <compilerarg value="-arch"/>
         <compilerarg value="${uni.arch}"/>
-        <compilerarg value="${osx.min}"/>
+        <compilerarg value="-mmacosx-version-min=${osx.min}"/>
 
         <sysincludepath location="/Developer/Headers/FlatCarbon"/>
 
@@ -372,7 +371,7 @@ USA.
         <linkerarg value="-Wl,-syslibroot,${uni.sdk}"/>
         <linkerarg value="-arch"/>
         <linkerarg value="${uni.arch}"/>
-        <linkerarg value="${osx.min}"/>
+        <linkerarg value="-mmacosx-version-min=${osx.min}"/>
 
         <!-- for Gestalt() -->
         <linkerarg value="-framework"/>
