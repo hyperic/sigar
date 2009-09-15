@@ -2444,6 +2444,7 @@ int sigar_net_route_list_get(sigar_t *sigar,
         SIGAR_ZERO(route);
 
         route->flags = rtm->rtm_flags;
+        if_indextoname(rtm->rtm_index, route->ifname);
 
         for (bit=RTA_DST;
              bit && ((char *)sa < lim);
