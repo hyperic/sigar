@@ -549,6 +549,7 @@ int sigar_os_open(sigar_t **sigar_ptr)
     sigar->netif_mib_rows = NULL;
     sigar->netif_addr_rows = NULL;
     sigar->netif_adapters = NULL;
+    sigar->netif_names = NULL;
     sigar->pinfo.pid = -1;
     sigar->ws_version = 0;
     sigar->lcpu = -1;
@@ -596,6 +597,10 @@ int sigar_os_close(sigar_t *sigar)
 
     if (sigar->netif_adapters) {
         sigar_cache_destroy(sigar->netif_adapters);
+    }
+
+    if (sigar->netif_names) {
+        sigar_cache_destroy(sigar->netif_names);
     }
 
     free(sigar);
@@ -2473,6 +2478,10 @@ SIGAR_DECLARE(int) sigar_net_route_list_get(sigar_t *sigar,
         return GetLastError();
     }
 
+    if (!sigar->netif_names) {
+        sigar_net_interface_list_get(sigar, NULL);
+    }
+
     sigar_net_route_list_create(routelist);
     routelist->size = routelist->number = 0;
 
@@ -2480,6 +2489,7 @@ SIGAR_DECLARE(int) sigar_net_route_list_get(sigar_t *sigar,
 
     for (i=0; i<ipt->dwNumEntries; i++) {
         MIB_IPFORWARDROW *ipr = ipt->table + i;
+        sigar_cache_entry_t *entry;
 
         SIGAR_NET_ROUTE_LIST_GROW(routelist);
 
@@ -2502,6 +2512,11 @@ SIGAR_DECLARE(int) sigar_net_route_list_get(sigar_t *sigar,
             (ipr->dwForwardMask == 0))
         {
             route->flags |= SIGAR_RTF_GATEWAY;
+        }
+
+        entry = sigar_cache_get(sigar->netif_names, ipr->dwForwardIfIndex);
+        if (entry->value) {
+            SIGAR_SSTRCPY(route->ifname, (char *)entry->value);
         }
     }
 
@@ -2606,6 +2621,11 @@ sigar_net_interface_list_get(sigar_t *sigar,
             sigar_netif_cache_new(sigar);
     }
 
+    if (!sigar->netif_names) {
+        sigar->netif_names =
+            sigar_netif_cache_new(sigar);
+    }
+
     if ((status = sigar_get_if_table(sigar, &ift)) != SIGAR_OK) {
         return status;
     }
@@ -2647,6 +2667,12 @@ sigar_net_interface_list_get(sigar_t *sigar,
             entry->value = malloc(sizeof(*ifr));
         }
         memcpy(entry->value, ifr, sizeof(*ifr));
+
+        /* save dwIndex -> name mapping for use by route_list */
+        entry = sigar_cache_get(sigar->netif_names, ifr->dwIndex);
+        if (!entry->value) {
+            entry->value = sigar_strdup(name);
+        }
     }
 
     return SIGAR_OK;

@@ -547,6 +547,7 @@ struct sigar_t {
     sigar_cache_t *netif_adapters;
     sigar_cache_t *netif_mib_rows;
     sigar_cache_t *netif_addr_rows;
+    sigar_cache_t *netif_names; /* dwIndex -> net_interface_config.name */
 
     WORD ws_version;
     int ws_error;
