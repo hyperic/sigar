@@ -1850,13 +1850,8 @@ int sigar_net_route_list_get(sigar_t *sigar,
     char *data;
     int len, rc;
     struct opthdr *op;
-    size_t nread=0, size=sizeof(mib2_ipRouteEntry_t);
-
-    if (sigar->solaris_version >= 10) {
-        size += /* bincompat for new solaris 10 fields */
-            sizeof(DeviceName) +
-            sizeof(IpAddress);
-    }
+    size_t nread=0, size=0;
+    const char *size_from;
 
     sigar_net_route_list_create(routelist);
 
@@ -1864,8 +1859,31 @@ int sigar_net_route_list_get(sigar_t *sigar,
         mib2_ipRouteEntry_t *entry;
         char *end;
 
-        if (!((op->level == MIB2_IP) && (op->name == MIB2_IP_21))) {
+        if (op->level != MIB2_IP) {
             continue;
+        }
+
+        if (op->name == 0) {
+            /* we want to use this size for bincompat */
+            size = ((mib2_ip_t *)data)->ipRouteEntrySize;
+            continue;
+        }
+        else if (op->name != MIB2_IP_21) {
+            continue;
+        }
+
+        if (size == 0) {
+            size_from = "sizeof";
+            size = sizeof(*entry);
+        }
+        else {
+            size_from = "mib2_ip";
+        }
+
+        if (SIGAR_LOG_IS_DEBUG(sigar)) {
+            sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
+                             "[route_list] ipRouteEntrySize=%d (from %s)",
+                             size, size_from);
         }
 
         for (entry = (mib2_ipRouteEntry_t *)data, end = data + len;
