@@ -29,6 +29,7 @@ public class ArchNameTask extends Task {
 
     public void execute() throws BuildException {
         String osArch = System.getProperty("os.arch");
+        String osVers = System.getProperty("os.version");
 
         if (getProject().getProperty("jni.dmalloc") != null) {
             ArchName.useDmalloc = true;
@@ -110,7 +111,19 @@ public class ArchNameTask extends Task {
                     }
                     getProject().setProperty(prop, sdk);
                 }
+
+                String version = osVers.substring(0, 4);
+                int minorVers = Integer.parseInt(osVers.substring(3,4));
+                boolean usingLatestSDK = (sdk.indexOf(version) != -1);
+
                 System.out.println("Using SDK=" + sdk);
+                if ((minorVers >= 6) && ArchName.is64() && usingLatestSDK) {
+                    //64-bit 10.6 sdk does not support ppc64
+                    //switch from universal build to i386 only
+                    getProject().setProperty("jni.cc", "jni-cc");
+                    getProject().setProperty("uni.arch", "i386");
+                    System.out.println("Note: SDK version does not support ppc64");
+                }
 
                 prop = "osx.min";
                 String min = getProject().getProperty(prop);
