@@ -24,6 +24,7 @@ rm -f INSTALL NEWS AUTHORS \
 && rm -f src/*.la \
 && rm -f src/*.lo \
 && rm -f src/*.o \
+&& rm -f src/sigar_version_autoconf.c \
 && rm -f -r src/.libs \
 && rm -f -r src/.deps \
 && rm -f src/os/Makefile \
@@ -43,6 +44,10 @@ rm -f INSTALL NEWS AUTHORS \
 && rm -f bindings/Makefile.in \
 && rm -f bindings/lua/Makefile \
 && rm -f bindings/*/Makefile.in \
+&& rm -f -r bindings/*/.deps \
+&& rm -f include/Makefile \
+&& rm -f include/Makefile.in \
+&& rm -f -r tests/.deps \
 && rm -f tests/Makefile \
 && rm -f tests/Makefile.in \
 && rm -f examples/Makefile \
