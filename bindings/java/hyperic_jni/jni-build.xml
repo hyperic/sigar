@@ -275,6 +275,7 @@ USA.
       <!-- HPUX -->
       <compiler name="hp"  if="hpux">
         <compilerarg value="+Z"/>
+        <compilerarg value="+DD64" if="jni.arch64"/>
 
         <defineset>
           <define name="${jni.define.name}_HPUX"/>
