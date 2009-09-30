@@ -67,6 +67,9 @@ public class ArchName {
             }
             else {
                 arch = "pa";
+                if (is64()) {
+                    arch += "64";
+                }
             }
             if (version.indexOf("11") > -1) {
                 return arch + "-hpux-11";
