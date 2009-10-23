@@ -98,11 +98,11 @@ public class TestPdh extends SigarTestCase {
 
     public void testValidate() {
         Object[][] tests = {
-            { "\\Does Not\\Exist", new Integer(Pdh.NO_OBJECT) },
+            { "\\Does Not\\Exist", new Integer(Pdh.NO_OBJECT), new Integer(Pdh.BAD_COUNTERNAME) },
             { "Does Not Exist", new Integer(Pdh.BAD_COUNTERNAME) },
             { "\\System\\DoesNotExist", new Integer(Pdh.NO_COUNTER) },
             { "\\Processor(666)\\% User Time", new Integer(Pdh.NO_INSTANCE) },
-            { "\\System\\Threads", new Integer(Pdh.VALID_DATA) },
+            { "\\System\\Threads", new Integer(Pdh.VALID_DATA), new Integer(Pdh.BAD_COUNTERNAME) },
             //slow
             //{ "\\\\-\\System\\Threads", new Integer(Pdh.NO_MACHINE) },
         };
@@ -112,6 +112,13 @@ public class TestPdh extends SigarTestCase {
             int expect = ((Integer)tests[i][1]).intValue();
             int status = Pdh.validate(path);
             boolean expectedResult = (status == expect);
+
+            if (!expectedResult) {
+                if (tests[i].length == 3) {
+                    expect = ((Integer)tests[i][2]).intValue();
+                    expectedResult = (status == expect);
+                }
+            }
 
             if (!expectedResult) {
                 traceln("[validate] " + path + "-->" +
