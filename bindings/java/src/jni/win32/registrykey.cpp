@@ -115,6 +115,7 @@ JNIEXPORT jint SIGAR_JNI(win32_RegistryKey_RegLoadKey)
 #endif
 
 static DWORD RegOpenOpts[] = {
+    0,
     KEY_WOW64_32KEY,
     KEY_WOW64_64KEY
 };
