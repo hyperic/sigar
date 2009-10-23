@@ -3748,7 +3748,7 @@ int sigar_file_version_get(sigar_file_version_t *version,
     data = malloc(len);
  
     if (GetFileVersionInfo(name, handle, len, data)) {
-        if (VerQueryValue(data, "\\", &info, 0)) {
+        if (VerQueryValue(data, "\\", &info, &len)) {
             version->product_major = HIWORD(info->dwProductVersionMS);
             version->product_minor = LOWORD(info->dwProductVersionMS);
             version->product_build = HIWORD(info->dwProductVersionLS);
