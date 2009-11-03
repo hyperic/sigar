@@ -391,8 +391,8 @@ static int sigar_vmstat(sigar_t *sigar, struct vmmeter *vmstat)
     GET_VM_STATS(vm, v_wire_count, 0);
     GET_VM_STATS(vm, v_active_count, 0);
     GET_VM_STATS(vm, v_inactive_target, 0);
-    GET_VM_STATS(vm, v_inactive_count, 0);
-    GET_VM_STATS(vm, v_cache_count, 0);
+    GET_VM_STATS(vm, v_inactive_count, 1);
+    GET_VM_STATS(vm, v_cache_count, 1);
     GET_VM_STATS(vm, v_cache_min, 0);
     GET_VM_STATS(vm, v_cache_max, 0);
     GET_VM_STATS(vm, v_pageout_free_min, 0);
@@ -425,6 +425,7 @@ static int sigar_vmstat(sigar_t *sigar, struct uvmexp *vmstat)
 
 int sigar_mem_get(sigar_t *sigar, sigar_mem_t *mem)
 {
+    sigar_uint64_t kern = 0;
 #ifdef DARWIN
     vm_statistics_data_t vmstat;
     uint64_t mem_total;
@@ -469,6 +470,8 @@ int sigar_mem_get(sigar_t *sigar, sigar_mem_t *mem)
     mem->free *= sigar->pagesize;
 #elif defined(__FreeBSD__)
     if ((status = sigar_vmstat(sigar, &vmstat)) == SIGAR_OK) {
+        kern = vmstat.v_cache_count + vmstat.v_inactive_count;
+        kern *= sigar->pagesize;
         mem->free = vmstat.v_free_count;
         mem->free *= sigar->pagesize;
     }
@@ -481,8 +484,8 @@ int sigar_mem_get(sigar_t *sigar, sigar_mem_t *mem)
 
     mem->used = mem->total - mem->free;
 
-    mem->actual_free = mem->free;
-    mem->actual_used = mem->used;
+    mem->actual_free = mem->free + kern;
+    mem->actual_used = mem->used - kern;
 
     sigar_mem_calc_ram(sigar, mem);
 
