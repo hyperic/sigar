@@ -468,6 +468,8 @@ int sigar_mem_get(sigar_t *sigar, sigar_mem_t *mem)
 
     mem->free = vmstat.free_count;
     mem->free *= sigar->pagesize;
+    kern = vmstat.inactive_count;
+    kern *= sigar->pagesize;
 #elif defined(__FreeBSD__)
     if ((status = sigar_vmstat(sigar, &vmstat)) == SIGAR_OK) {
         kern = vmstat.v_cache_count + vmstat.v_inactive_count;
