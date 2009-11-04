@@ -949,7 +949,33 @@ int sigar_proc_fd_get(sigar_t *sigar, sigar_pid_t pid,
 int sigar_proc_exe_get(sigar_t *sigar, sigar_pid_t pid,
                        sigar_proc_exe_t *procexe)
 {
-    return SIGAR_ENOTIMPL;
+    int len;
+    char buffer[8192];
+    struct procsinfo pinfo;
+
+    pinfo.pi_pid = pid;
+
+    if (getargs(&pinfo, sizeof(pinfo),
+                buffer, sizeof(buffer)) != 0)
+    {
+        return errno;
+    }
+    /* XXX argv[0] might be relative */
+    len = strlen(buffer);
+    SIGAR_SSTRCPY(procexe->name, buffer);
+
+    (void)SIGAR_PROC_FILENAME(buffer, pid, "/cwd");
+
+    if ((len = readlink(buffer, procexe->cwd,
+                        sizeof(procexe->cwd)-1)) < 0)
+    {
+        return errno;
+    }
+    procexe->cwd[len] = '\0';
+
+    procexe->root[0] = '\0';
+
+    return SIGAR_OK;
 }
 
 static int sigar_proc_modules_local_get(sigar_t *sigar,
