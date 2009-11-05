@@ -136,8 +136,7 @@ static void get_cpu_metrics(sigar_t *sigar,
 
     cpu->idle = SIGAR_TICK2MSEC(cpu_time[CP_IDLE]);
 
-    cpu->wait = SIGAR_TICK2MSEC(cpu_time[CP_WAIT] +
-                                cpu_time[CP_SWAIT] +
+    cpu->wait = SIGAR_TICK2MSEC(cpu_time[CP_SWAIT] +
                                 cpu_time[CP_BLOCK]);
     
     cpu->irq = SIGAR_TICK2MSEC(cpu_time[CP_INTR]);
