@@ -179,10 +179,13 @@ public class EventLogRecord {
     public String toString()
     {
         return
-        "[" + new Date(getTimeGenerated() * 1000) + "] " +
         "[" + getEventTypeString() + "] " +
+        "[" + new Date(getTimeGenerated() * 1000) + "] " +
         "[" + getSource() + "] " +
         "[" + getCategoryString() + "] " +
+        "[" + getEventId() + "] " +
+        "[" + getUser() + "] " +
+        "[" + getComputerName() + "] " +
         getMessage();
     }
 }
