@@ -192,7 +192,7 @@ public class EventLogRecord {
         "[" + new Date(getTimeGenerated() * 1000) + "] " +
         "[" + getSource() + "] " +
         "[" + getCategoryString() + "] " +
-        "[" + getEventId() + "] " +
+        "[" + (getEventId() & 0xFFFF) + "] " +
         "[" + getUserString() + "] " +
         "[" + getComputerName() + "] " +
         getMessage();
