@@ -31,7 +31,9 @@ public class EventLogRecord {
     long eventId;
 
     short eventType;
+    short category;
 
+    String categoryString;
     String source;
     String computerName;
     String user;
@@ -113,6 +115,29 @@ public class EventLogRecord {
     }
 
     /**
+     * Get the category for this event.
+     * The meaning of this value depends on the event source.
+     */
+    public short getCategory() {
+        return this.category;
+    }
+
+    /**
+     * Get the formatted string for the category.
+     */
+    public String getCategoryString() {
+        if (this.categoryString != null) {
+            return this.categoryString.trim();
+        }
+        if (this.category == 0) {
+            return "None";
+        }
+        else {
+            return "(" + this.category + ")";
+        }
+    }
+
+    /**
      * Get the application which triggered the event
      */
     public String getSource() {
@@ -157,6 +182,7 @@ public class EventLogRecord {
         "[" + new Date(getTimeGenerated() * 1000) + "] " +
         "[" + getEventTypeString() + "] " +
         "[" + getSource() + "] " +
+        "[" + getCategoryString() + "] " +
         getMessage();
     }
 }
