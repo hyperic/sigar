@@ -351,7 +351,7 @@ JNIEXPORT jobject SIGAR_JNI(win32_EventLog_readlog)
 
     /* Increment up to the machine name. */
     machineName = (LPWSTR)((LPBYTE)pevlr + sizeof(EVENTLOGRECORD) +
-                           wcslen(source) + 1);
+                           (wcslen(source) + 1) * sizeof(WCHAR));
     UNICODE_SetStringField("computerName", machineName);
 
     /* Get user id info */
