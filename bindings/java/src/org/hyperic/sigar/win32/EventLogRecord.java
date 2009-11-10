@@ -25,6 +25,8 @@ import java.util.Date;
  */
 public class EventLogRecord {
 
+    private static final String NA = "N/A";
+
     long recordNumber;
     long timeGenerated; 
     long timeWritten;
@@ -158,7 +160,14 @@ public class EventLogRecord {
     public String getUser() {
         return this.user;
     }
-    
+
+    private String getUserString() {
+        if (this.user == null) {
+            return NA;
+        }
+        return this.user;
+    }
+
     /**
      * Get the message for the event.
      */
@@ -179,10 +188,13 @@ public class EventLogRecord {
     public String toString()
     {
         return
-        "[" + new Date(getTimeGenerated() * 1000) + "] " +
         "[" + getEventTypeString() + "] " +
+        "[" + new Date(getTimeGenerated() * 1000) + "] " +
         "[" + getSource() + "] " +
         "[" + getCategoryString() + "] " +
+        "[" + (getEventId() & 0xFFFF) + "] " +
+        "[" + getUserString() + "] " +
+        "[" + getComputerName() + "] " +
         getMessage();
     }
 }
