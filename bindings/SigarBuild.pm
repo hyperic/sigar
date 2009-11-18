@@ -70,7 +70,7 @@ sub flags {
     if ($os =~ /(win32)/) {
         $os = $1;
         $is_win32 = 1;
-        @cppflags = ('-DWIN32');
+        @cppflags = ('-DWIN32', '-D_CRT_SECURE_NO_DEPRECATE');
         @libs = qw(kernel32 user32 advapi32 ws2_32 netapi32 shell32 pdh version comsupp wbemuuid);
     }
     elsif ($os =~ /(linux)/) {
