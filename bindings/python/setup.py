@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 
 from distutils.core import setup, Extension
-from os import system, mkdir, path
-import sys, commands
+from os import system, mkdir, path, popen
+import sys
 
 build = 'build'
 options = {'perl':'perl'}
@@ -21,7 +21,7 @@ def parse_args():
             options['perl'] = value
 
 def sbuild(cmd):
-    return commands.getoutput(options['perl'] + ' -Mlib=.. -MSigarBuild -e ' + cmd)
+    return popen(options['perl'] + ' -Mlib=.. -MSigarBuild -e ' + cmd).readline()
 
 def sargs(cmd):
     res = sbuild(cmd)
