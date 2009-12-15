@@ -548,6 +548,21 @@ static int rb_sigar_env_getall(void *data,
     return SIGAR_OK;
 }
 
+static VALUE rb_sigar_proc_port(VALUE obj, VALUE protocol, VALUE port)
+{
+    SIGAR_GET;
+
+    int status;
+    sigar_pid_t RETVAL;
+
+    status = sigar_proc_port_get(sigar, NUM2INT(protocol), NUM2LL(port), &RETVAL);
+    if (status != SIGAR_OK) {
+        RB_SIGAR_CROAK;
+    }
+
+    return rb_int2inum(RETVAL);
+}
+
 static VALUE rb_sigar_proc_env(VALUE obj, VALUE pid)
 {
     SIGAR_GET;
@@ -765,6 +780,7 @@ void Init_rbsigar(void)
     rb_define_method(rclass, "proc_list", rb_sigar_proc_list, -1);
     rb_define_method(rclass, "proc_args", rb_sigar_proc_args, 1);
     rb_define_method(rclass, "proc_env", rb_sigar_proc_env, 1);
+    rb_define_method(rclass, "proc_port", rb_sigar_proc_port, 2);
     rb_define_method(rclass, "fqdn", rb_sigar_fqdn, 0);
 
     rb_define_singleton_method(rclass, "new", rb_sigar_new, 0);
