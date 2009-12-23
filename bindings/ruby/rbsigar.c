@@ -242,6 +242,18 @@ static VALUE rb_sigar_new_intlist(int *data, int number)
     return av;
 }
 
+static VALUE rb_sigar_new_doublelist(double *data, int number)
+{
+    int i;
+    VALUE av = rb_ary_new2(number);
+
+    for (i=0; i<number; i++) {
+        rb_ary_push(av, rb_float_new(data[i]));
+    }
+
+    return av;
+}
+
 static VALUE rb_sigar_net_interface_list(VALUE obj)
 {
     SIGAR_GET;
@@ -394,6 +406,21 @@ static VALUE rb_sigar_cpu_info_list(VALUE obj)
     sigar_cpu_info_list_destroy(sigar, &cpu_infos);
 
     return RETVAL;
+}
+
+static VALUE rb_sigar_loadavg(VALUE obj)
+{
+    SIGAR_GET;
+
+    int status;
+    sigar_loadavg_t loadavg;
+
+    status = sigar_loadavg_get(sigar, &loadavg);
+    if (status != SIGAR_OK) {
+        RB_SIGAR_CROAK;
+    }
+
+    return rb_sigar_new_doublelist(&loadavg.loadavg[0], 3);
 }
 
 static VALUE rb_cSigarCpuPerc;
@@ -793,6 +820,7 @@ void Init_rbsigar(void)
 
     rb_define_method(rclass, "cpu_info_list", rb_sigar_cpu_info_list, 0);
     rb_define_method(rclass, "cpu_list", rb_sigar_cpu_list, 0);
+    rb_define_method(rclass, "loadavg", rb_sigar_loadavg, 0);
     rb_define_method(rclass, "file_system_list", rb_sigar_file_system_list, 0);
     rb_define_method(rclass, "net_connection_list", rb_sigar_net_connection_list, 1);
     rb_define_method(rclass, "net_interface_list", rb_sigar_net_interface_list, 0);
