@@ -688,6 +688,29 @@ static VALUE rb_sigar_fqdn(VALUE obj)
 
 #include "./rbsigar_generated.rx"
 
+static VALUE rb_sigar_cpu_list(VALUE obj)
+{
+    SIGAR_GET;
+
+    int status;
+    sigar_cpu_list_t cpus;
+    VALUE RETVAL;
+
+    status = sigar_cpu_list_get(sigar, &cpus);
+    if (status != SIGAR_OK) {
+        RB_SIGAR_CROAK;
+    }
+
+    RETVAL = rb_sigar_new_list((char *)&cpus.data[0],
+                               cpus.number,
+                               sizeof(*cpus.data),
+                               rb_cSigarCpu);
+
+    sigar_cpu_list_destroy(sigar, &cpus);
+
+    return RETVAL;
+}
+
 #define RB_SIGAR_CONST_INT(name) \
     rb_define_const(rclass, #name, INT2FIX(SIGAR_##name))
 
@@ -769,6 +792,7 @@ void Init_rbsigar(void)
     rb_define_method(rclass, "log_level=", rb_sigar_set_log_level, 1);
 
     rb_define_method(rclass, "cpu_info_list", rb_sigar_cpu_info_list, 0);
+    rb_define_method(rclass, "cpu_list", rb_sigar_cpu_list, 0);
     rb_define_method(rclass, "file_system_list", rb_sigar_file_system_list, 0);
     rb_define_method(rclass, "net_connection_list", rb_sigar_net_connection_list, 1);
     rb_define_method(rclass, "net_interface_list", rb_sigar_net_interface_list, 0);
