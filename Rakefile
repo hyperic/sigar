@@ -1,5 +1,6 @@
 require 'rubygems'
 require 'rake/gempackagetask'
+require 'rake/testtask'
 
 #so we can: ssh host rake -f $hudson_workspace/sigar/Rakefile
 Dir.chdir(File.dirname(__FILE__))
@@ -40,6 +41,8 @@ Rake::GemPackageTask.new(spec) do |pkg|
   pkg.gem_spec = spec
 end
 
+task :default => :test
+
 task :make_spec do
   File.open("#{GEM}.gemspec", "w") do |file|
     file.puts spec.to_ruby
@@ -54,15 +57,24 @@ end
 desc 'Build sigar extension'
 task :build do
   in_ext();
-  unless system("ruby extconf.rb")
-    STDERR.puts "Failed to configure"
-    break
+  unless File.exists? "Makefile"
+    unless system("ruby extconf.rb")
+      STDERR.puts "Failed to configure"
+      break
+    end
   end
   unless system(MAKE)
     STDERR.puts 'Failed to ' + MAKE
     break
   end
 end
+
+Rake::TestTask.new do |t|
+  in_ext()
+  t.pattern = 'test/*_test.rb'
+end
+
+task :test => [:build]
 
 desc 'Clean sigar extension'
 task :clean do
