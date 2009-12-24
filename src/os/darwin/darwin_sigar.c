@@ -40,7 +40,14 @@
 #include <mach/thread_act.h>
 #include <mach/thread_info.h>
 #include <mach/vm_map.h>
-#include <mach/shared_memory_server.h>
+#if !defined(HAVE_SHARED_REGION_H) && defined(__MAC_10_5) /* see Availability.h */
+#  define HAVE_SHARED_REGION_H /* suckit autoconf */
+#endif
+#ifdef HAVE_SHARED_REGION_H
+#include <mach/shared_region.h> /* does not exist in 10.4 SDK */
+#else
+#include <mach/shared_memory_server.h> /* deprecated in Leopard */
+#endif
 #include <mach-o/dyld.h>
 #define __OPENTRANSPORTPROVIDERS__
 #include <Gestalt.h>
@@ -1061,9 +1068,47 @@ static int sigar_get_pinfo(sigar_t *sigar, sigar_pid_t pid)
     return SIGAR_OK;
 }
 
-#ifdef DARWIN
-#define GLOBAL_SHARED_SIZE (SHARED_TEXT_REGION_SIZE + SHARED_DATA_REGION_SIZE)
+#if defined(SHARED_TEXT_REGION_SIZE) && defined(SHARED_DATA_REGION_SIZE)
+#  define GLOBAL_SHARED_SIZE (SHARED_TEXT_REGION_SIZE + SHARED_DATA_REGION_SIZE) /* 10.4 SDK */
 #endif
+
+#if defined(DARWIN) && defined(DARWIN_HAS_LIBPROC_H) && !defined(GLOBAL_SHARED_SIZE)
+/* get the CPU type of the process for the given pid */
+static int sigar_proc_cpu_type(sigar_t *sigar, sigar_pid_t pid, cpu_type_t *type)
+{
+    int status;
+    int mib[CTL_MAXNAME];
+    size_t len, miblen = NMIB(mib);
+
+    status = sysctlnametomib("sysctl.proc_cputype", mib, &miblen);
+    if (status != SIGAR_OK) {
+        return status;
+    }
+
+    mib[miblen] = pid;
+    len = sizeof(*type);
+    return sysctl(mib, miblen + 1, type, &len, NULL, 0);
+}
+
+/* shared memory region size for the given cpu_type_t */
+static mach_vm_size_t sigar_shared_region_size(cpu_type_t type)
+{
+    switch (type) {
+      case CPU_TYPE_ARM:
+        return SHARED_REGION_SIZE_ARM;
+      case CPU_TYPE_POWERPC:
+        return SHARED_REGION_SIZE_PPC;
+      case CPU_TYPE_POWERPC64:
+	return SHARED_REGION_SIZE_PPC64;
+      case CPU_TYPE_I386:
+        return SHARED_REGION_SIZE_I386;
+      case CPU_TYPE_X86_64:
+        return SHARED_REGION_SIZE_X86_64;
+      default:
+        return SHARED_REGION_SIZE_I386; /* assume 32-bit x86|ppc */
+    }
+}
+#endif /* DARWIN */
 
 int sigar_proc_mem_get(sigar_t *sigar, sigar_pid_t pid,
                        sigar_proc_mem_t *procmem)
@@ -1092,10 +1137,23 @@ int sigar_proc_mem_get(sigar_t *sigar, sigar_pid_t pid,
 
             sz = sigar->proc_pidinfo(pid, PROC_PIDREGIONINFO, 0, &pri, sizeof(pri));
             if (sz == sizeof(pri)) {
-                if ((pri.pri_share_mode == SM_EMPTY) &&
-                    (procmem->size > GLOBAL_SHARED_SIZE))
-                {
-                    procmem->size -= GLOBAL_SHARED_SIZE; /* SIGAR-123 */
+                if (pri.pri_share_mode == SM_EMPTY) {
+                    mach_vm_size_t shared_size;
+#ifdef GLOBAL_SHARED_SIZE
+                    shared_size = GLOBAL_SHARED_SIZE; /* 10.4 SDK */
+#else
+                    cpu_type_t cpu_type;
+
+                    if (sigar_proc_cpu_type(sigar, pid, &cpu_type) == SIGAR_OK) {
+                        shared_size = sigar_shared_region_size(cpu_type);
+                    }
+                    else {
+                        shared_size = SHARED_REGION_SIZE_I386; /* assume 32-bit x86|ppc */
+                    }
+#endif
+                    if (procmem->size > shared_size) {
+                        procmem->size -= shared_size; /* SIGAR-123 */
+                    }
                 }
             }
             return SIGAR_OK;
