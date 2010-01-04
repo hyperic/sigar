@@ -358,6 +358,13 @@ static sigar_psapi_t sigar_kernel = {
     { NULL, NULL }
 };
 
+static sigar_mpr_t sigar_mpr = {
+    "mpr.dll",
+    NULL,
+    { "WNetGetConnectionA", NULL },
+    { NULL, NULL }
+};
+
 #define DLLMOD_COPY(name) \
     memcpy(&(sigar->##name), &sigar_##name, sizeof(sigar_##name))
 
@@ -539,6 +546,7 @@ int sigar_os_open(sigar_t **sigar_ptr)
     DLLMOD_COPY(psapi);
     DLLMOD_COPY(winsta);
     DLLMOD_COPY(kernel);
+    DLLMOD_COPY(mpr);
 
     sigar->log_level = -1; /* else below segfaults */
     /* XXX init early for use by javasigar.c */
@@ -576,6 +584,7 @@ int sigar_os_close(sigar_t *sigar)
     DLLMOD_FREE(psapi);
     DLLMOD_FREE(winsta);
     DLLMOD_FREE(kernel);
+    DLLMOD_FREE(mpr);
 
     if (sigar->perfbuf) {
         free(sigar->perfbuf);
@@ -1770,6 +1779,9 @@ static void get_fs_options(char *opts, int osize, long flags)
 #endif
 }
 
+#define sigar_WNetGetConnection \
+    sigar->mpr.get_net_connection.func
+
 SIGAR_DECLARE(int) sigar_file_system_list_get(sigar_t *sigar,
                                               sigar_file_system_list_t *fslist)
 {
@@ -1777,6 +1789,8 @@ SIGAR_DECLARE(int) sigar_file_system_list_get(sigar_t *sigar,
     char *ptr = name;
     /* XXX: hmm, Find{First,Next}Volume not available in my sdk */
     DWORD len = GetLogicalDriveStringsA(sizeof(name), name);
+
+    DLLMOD_INIT(mpr, TRUE);
 
     if (len == 0) {
         return GetLastError();
@@ -1830,6 +1844,14 @@ SIGAR_DECLARE(int) sigar_file_system_list_get(sigar_t *sigar,
         fsp->type = type;
         SIGAR_SSTRCPY(fsp->dir_name, ptr);
         SIGAR_SSTRCPY(fsp->dev_name, ptr);
+
+        if ((drive_type == DRIVE_REMOTE) && sigar_WNetGetConnection) {
+            DWORD len = sizeof(fsp->dev_name);
+            char drive[3] = {'\0', ':', '\0'}; /* e.g. "X:" w/o trailing "\" */
+            drive[0] = fsp->dir_name[0];
+            sigar_WNetGetConnection(drive, fsp->dev_name, &len);
+            /* ignoring failure, leaving dev_name as dir_name */
+        }
 
         /* we set fsp->type, just looking up sigar.c:fstype_names[type] */
         sigar_fs_type_get(fsp);
