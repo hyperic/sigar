@@ -717,7 +717,11 @@ int sigar_cpu_info_list_get(sigar_t *sigar,
         SIGAR_SSTRCPY(info->vendor, "HP"); /*XXX*/
         SIGAR_SSTRCPY(info->model, "PA RISC"); /*XXX*/
 #endif
+#ifdef PSP_MAX_CACHE_LEVELS /* 11.31+; see SIGAR-196 */
+        info->mhz = proc.psp_cpu_frequency / 1000000;
+#else
         info->mhz = sigar->ticks * proc.psp_iticksperclktick / 1000000;
+#endif
         info->cache_size = SIGAR_FIELD_NOTIMPL; /*XXX*/
     }
 
