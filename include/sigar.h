@@ -847,6 +847,26 @@ sigar_net_listen_address_get(sigar_t *sigar,
                              sigar_net_address_t *address);
 
 typedef struct {
+    char ifname[16];
+    char type[64];
+    sigar_net_address_t hwaddr;
+    sigar_net_address_t address;
+    sigar_uint64_t flags;
+} sigar_arp_t;
+
+typedef struct {
+    unsigned long number;
+    unsigned long size;
+    sigar_arp_t *data;
+} sigar_arp_list_t;
+
+SIGAR_DECLARE(int) sigar_arp_list_get(sigar_t *sigar,
+                                      sigar_arp_list_t *arplist);
+
+SIGAR_DECLARE(int) sigar_arp_list_destroy(sigar_t *sigar,
+                                          sigar_arp_list_t *arplist);
+
+typedef struct {
     char user[32];
     char device[32];
     char host[256];

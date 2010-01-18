@@ -168,6 +168,8 @@
 
 #define SIGAR_NET_CONNLIST_MAX 20
 
+#define SIGAR_ARP_LIST_MAX 12
+
 #define SIGAR_WHO_LIST_MAX 12
 
 int sigar_os_open(sigar_t **sigar);
@@ -316,6 +318,15 @@ int sigar_net_interface_ipv6_config_get(sigar_t *sigar, const char *name,
         ifconfig->scope6 = SIGAR_IPV6_ADDR_ANY
 
 int sigar_tcp_curr_estab(sigar_t *sigar, sigar_tcp_t *tcp);
+
+int sigar_arp_list_create(sigar_arp_list_t *arplist);
+
+int sigar_arp_list_grow(sigar_arp_list_t *arplist);
+
+#define SIGAR_ARP_LIST_GROW(arplist) \
+    if (arplist->number >= arplist->size) { \
+        sigar_arp_list_grow(arplist); \
+    }
 
 int sigar_who_list_create(sigar_who_list_t *wholist);
 
