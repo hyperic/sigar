@@ -3191,6 +3191,13 @@ SIGAR_DECLARE(int) sigar_proc_port_get(sigar_t *sigar,
     return ENOENT;
 }
 
+SIGAR_DECLARE(int) sigar_arp_list_get(sigar_t *sigar,
+                                      sigar_arp_list_t *arplist)
+{
+    return SIGAR_ENOTIMPL;
+}
+
+
 #include <lm.h>
 
 static int sigar_who_net_sessions(sigar_t *sigar,

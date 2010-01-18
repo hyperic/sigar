@@ -580,6 +580,12 @@ int sigar_nfs_server_v3_get(sigar_t *sigar,
     return SIGAR_ENOTIMPL;
 }
 
+int sigar_arp_list_get(sigar_t *sigar,
+                       sigar_arp_list_t *arplist)
+{
+    return SIGAR_ENOTIMPL;
+}
+
 int sigar_proc_port_get(sigar_t *sigar, int protocol,
                         unsigned long port, sigar_pid_t *pid)
 {

@@ -2452,6 +2452,12 @@ int sigar_nfs_server_v3_get(sigar_t *sigar,
     return sigar_nfs_get(sigar, "rfsproccnt_v3", nfs_v3_names, (char *)nfs);
 }
 
+int sigar_arp_list_get(sigar_t *sigar,
+                       sigar_arp_list_t *arplist)
+{
+    return SIGAR_ENOTIMPL;
+}
+
 static int find_port(sigar_t *sigar, struct ps_prochandle *phandle,
                      sigar_pid_t pid, unsigned long port)
 {

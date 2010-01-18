@@ -3324,6 +3324,12 @@ int sigar_nfs_server_v3_get(sigar_t *sigar,
     return SIGAR_OK;
 }
 
+int sigar_arp_list_get(sigar_t *sigar,
+                       sigar_arp_list_t *arplist)
+{
+    return SIGAR_ENOTIMPL;
+}
+
 #if defined(__FreeBSD__) && /*XXX*/ (__FreeBSD_version < 800000)
 
 #define _KERNEL

@@ -1921,6 +1921,12 @@ int sigar_nfs_server_v3_get(sigar_t *sigar,
     return SIGAR_OK;
 }
 
+int sigar_arp_list_get(sigar_t *sigar,
+                       sigar_arp_list_t *arplist)
+{
+    return SIGAR_ENOTIMPL;
+}
+
 /* derived from pidentd's k_aix432.c */
 int sigar_proc_port_get(sigar_t *sigar, int protocol,
                         unsigned long port, sigar_pid_t *pidp)
