@@ -737,6 +737,37 @@ static int sigar_get_mib_info(sigar_t *sigar,
     return get_mib_info(sigar->mib, parms);
 }
 
+/* wrapper around get_physical_stat() */
+static int sigar_get_physical_stat(sigar_t *sigar, int *count)
+{
+    int status;
+    unsigned int len;
+    struct nmparms parms;
+
+    len = sizeof(*count);
+    parms.objid = ID_ifNumber;
+    parms.buffer = count;
+    parms.len = &len;
+
+    if ((status = sigar_get_mib_info(sigar, &parms)) != SIGAR_OK) {
+        return status;
+    }
+
+    len = sizeof(nmapi_phystat) * *count;
+
+    if (sigar->ifconf_len < len) {
+        sigar->ifconf_buf = realloc(sigar->ifconf_buf, len);
+        sigar->ifconf_len = len;
+    }
+
+    if (get_physical_stat(sigar->ifconf_buf, &len) < 0) {
+        return errno;
+    }
+    else {
+        return SIGAR_OK;
+    }
+}
+
 int sigar_net_route_list_get(sigar_t *sigar,
                              sigar_net_route_list_t *routelist)
 {
@@ -805,29 +836,11 @@ static int get_mib_ifstat(sigar_t *sigar,
                           const char *name,
                           mib_ifEntry *mib)
 {
-    int status, count, i;
-    unsigned int len;
+    int i, status, count;
     nmapi_phystat *stat;
-    struct nmparms parms;
 
-    len = sizeof(count);
-    parms.objid = ID_ifNumber;
-    parms.buffer = &count;
-    parms.len = &len;
-
-    if ((status = sigar_get_mib_info(sigar, &parms)) != SIGAR_OK) {
+    if ((status = sigar_get_physical_stat(sigar, &count) != SIGAR_OK)) {
         return status;
-    }
-
-    len = sizeof(nmapi_phystat) * count;
-
-    if (sigar->ifconf_len < len) {
-        sigar->ifconf_buf = realloc(sigar->ifconf_buf, len);
-        sigar->ifconf_len = len;
-    }
-
-    if (get_physical_stat(sigar->ifconf_buf, &len) < 0) {
-        return errno;
     }
 
     for (i=0, stat = (nmapi_phystat *)sigar->ifconf_buf;
