@@ -956,6 +956,36 @@ int sigar_tcp_curr_estab(sigar_t *sigar, sigar_tcp_t *tcp)
     return sigar_net_connection_walk(&walker);
 }
 
+int sigar_arp_list_create(sigar_arp_list_t *arplist)
+{
+    arplist->number = 0;
+    arplist->size = SIGAR_ARP_LIST_MAX;
+    arplist->data = malloc(sizeof(*(arplist->data)) *
+                           arplist->size);
+    return SIGAR_OK;
+}
+
+int sigar_arp_list_grow(sigar_arp_list_t *arplist)
+{
+    arplist->data = realloc(arplist->data,
+                            sizeof(*(arplist->data)) *
+                            (arplist->size + SIGAR_ARP_LIST_MAX));
+    arplist->size += SIGAR_ARP_LIST_MAX;
+
+    return SIGAR_OK;
+}
+
+SIGAR_DECLARE(int) sigar_arp_list_destroy(sigar_t *sigar,
+                                          sigar_arp_list_t *arplist)
+{
+    if (arplist->size) {
+        free(arplist->data);
+        arplist->number = arplist->size = 0;
+    }
+
+    return SIGAR_OK;
+}
+
 int sigar_who_list_create(sigar_who_list_t *wholist)
 {
     wholist->number = 0;
