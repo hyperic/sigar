@@ -808,6 +808,9 @@ public class Sigar implements SigarProxy {
         return netstat;
     }
 
+    public native Arp[] getArpList()
+        throws SigarException;
+
     public native Who[] getWhoList()
         throws SigarException;
 

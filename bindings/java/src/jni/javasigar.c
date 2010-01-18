@@ -1045,6 +1045,37 @@ JNIEXPORT jstring SIGAR_JNI(NetConnection_getStateString)
                               sigar_net_connection_state_get(state));
 }
 
+JNIEXPORT jobjectArray SIGAR_JNIx(getArpList)
+(JNIEnv *env, jobject sigar_obj)
+{
+    int status;
+    unsigned int i;
+    sigar_arp_list_t arplist;
+    jobjectArray arparray;
+    jclass cls = SIGAR_FIND_CLASS("Arp");
+    dSIGAR(NULL);
+
+    if ((status = sigar_arp_list_get(sigar, &arplist)) != SIGAR_OK) {
+        sigar_throw_error(env, jsigar, status);
+        return NULL;
+    }
+
+    JAVA_SIGAR_INIT_FIELDS_ARP(cls);
+
+    arparray = JENV->NewObjectArray(env, arplist.number, cls, 0);
+
+    for (i=0; i<arplist.number; i++) {
+        jobject info_obj = JENV->AllocObject(env, cls);
+        JAVA_SIGAR_SET_FIELDS_ARP(cls, info_obj,
+                                  arplist.data[i]);
+        JENV->SetObjectArrayElement(env, arparray, i, info_obj);
+    }
+
+    sigar_arp_list_destroy(sigar, &arplist);
+
+    return arparray;
+}
+
 JNIEXPORT jobjectArray SIGAR_JNIx(getWhoList)
 (JNIEnv *env, jobject sigar_obj)
 {
