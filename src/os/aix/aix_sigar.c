@@ -75,6 +75,9 @@
 #include <sys/ioctl.h>
 #include <netinet/in6_var.h>
 
+/* for getkerninfo */
+#include <sys/kinfo.h>
+
 /* not defined in aix 4.3 */
 #ifndef SBITS
 #define SBITS 16
@@ -1494,11 +1497,94 @@ int sigar_cpu_info_list_get(sigar_t *sigar,
 
     return SIGAR_OK;
 }
+/* XXX net_route_list copy-n-pasted from darwin_sigar.c; only diff is getkerninfo instead of sysctl */
+#define rt_s_addr(sa) ((struct sockaddr_in *)(sa))->sin_addr.s_addr
+
+#ifndef SA_SIZE
+#define SA_SIZE(sa)                                             \
+    (  (!(sa) || ((struct sockaddr *)(sa))->sa_len == 0) ?      \
+        sizeof(long)            :                               \
+        1 + ( (((struct sockaddr *)(sa))->sa_len - 1) | (sizeof(long) - 1) ) )
+#endif
 
 int sigar_net_route_list_get(sigar_t *sigar,
                              sigar_net_route_list_t *routelist)
 {
-    return SIGAR_ENOTIMPL;
+    size_t needed;
+    int bit;
+    char *buf, *next, *lim;
+    struct rt_msghdr *rtm;
+
+    needed = getkerninfo(KINFO_RT_DUMP, NULL, NULL, 0);
+    if (needed <= 0) {
+        return errno;
+    }
+
+    buf = malloc(needed);
+
+    if (getkerninfo(KINFO_RT_DUMP, buf, &needed, 0) < 0) {
+        return errno;
+    }
+
+    sigar_net_route_list_create(routelist);
+
+    lim = buf + needed;
+
+    for (next = buf; next < lim; next += rtm->rtm_msglen) {
+        struct sockaddr *sa;
+        sigar_net_route_t *route;
+        rtm = (struct rt_msghdr *)next;
+
+        if (rtm->rtm_type != RTM_GET) {
+            continue;
+        }
+
+        sa = (struct sockaddr *)(rtm + 1);
+
+        if (sa->sa_family != AF_INET) {
+            continue;
+        }
+
+        SIGAR_NET_ROUTE_LIST_GROW(routelist);
+        route = &routelist->data[routelist->number++];
+        SIGAR_ZERO(route);
+
+        route->flags = rtm->rtm_flags;
+        if_indextoname(rtm->rtm_index, route->ifname);
+
+        for (bit=RTA_DST;
+             bit && ((char *)sa < lim);
+             bit <<= 1)
+        {
+            if ((rtm->rtm_addrs & bit) == 0) {
+                continue;
+            }
+            switch (bit) {
+              case RTA_DST:
+                sigar_net_address_set(route->destination,
+                                      rt_s_addr(sa));
+                break;
+              case RTA_GATEWAY:
+                if (sa->sa_family == AF_INET) {
+                    sigar_net_address_set(route->gateway,
+                                          rt_s_addr(sa));
+                }
+                break;
+              case RTA_NETMASK:
+                sigar_net_address_set(route->mask,
+                                      rt_s_addr(sa));
+                break;
+              case RTA_IFA:
+                break;
+            }
+
+            sa = (struct sockaddr *)((char *)sa + SA_SIZE(sa));
+        }
+    }
+
+    free(buf);
+
+    return SIGAR_OK;
 }
 
 int sigar_net_interface_stat_get(sigar_t *sigar,
