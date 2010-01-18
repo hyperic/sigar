@@ -1,6 +1,6 @@
 # Example illustrating the use of the optional logger.
 
-require 'rbsigar'
+require 'sigar'
 require 'logger'
 
 sigar = Sigar.new

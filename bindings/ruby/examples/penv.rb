@@ -1,4 +1,4 @@
-require 'rbsigar'
+require 'sigar'
 
 def output(sigar, pid)
   env = sigar.proc_env(pid)

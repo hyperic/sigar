@@ -1,7 +1,7 @@
 require 'mkmf'
 require 'rbconfig'
 
-extension_name = 'rbsigar'
+extension_name = 'sigar'
 
 print 'Ruby platform=' + RUBY_PLATFORM + "\n"
 

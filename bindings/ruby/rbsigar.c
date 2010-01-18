@@ -815,7 +815,7 @@ static void Init_rbsigar_version(VALUE rclass)
     RB_SIGAR_DEFINE_CONST_STR("VERSION", sv->version);
 }
 
-void Init_rbsigar(void)
+void Init_sigar(void)
 {
     VALUE rclass = rb_define_class("Sigar", rb_cObject);
 

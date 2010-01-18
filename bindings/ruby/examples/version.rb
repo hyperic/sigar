@@ -1,4 +1,4 @@
-require 'rbsigar'
+require 'sigar'
 require 'rbconfig'
 
 puts "Sigar version......." + Sigar::VERSION

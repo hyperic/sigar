@@ -1,4 +1,4 @@
-require 'rbsigar'
+require 'sigar'
 
 def format_size(size)
   return Sigar.format_size(size * 1024)

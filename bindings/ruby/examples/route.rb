@@ -1,4 +1,4 @@
-require 'rbsigar'
+require 'sigar'
 
 def flags(flags)
   f = ""

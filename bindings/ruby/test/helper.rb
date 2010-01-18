@@ -1,5 +1,5 @@
 require 'test/unit'
-require 'rbsigar'
+require 'sigar'
 
 module Test::Unit::Assertions
   def assert_gt_eq_zero(value, message)

@@ -1,4 +1,4 @@
-require 'rbsigar'
+require 'sigar'
 
 def format_time(who)
   return Time.at(who.time).strftime("%b %e %H:%M")

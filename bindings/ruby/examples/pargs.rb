@@ -1,4 +1,4 @@
-require 'rbsigar'
+require 'sigar'
 
 def output(sigar, pid)
   args = sigar.proc_args(pid)

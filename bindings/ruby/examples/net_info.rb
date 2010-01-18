@@ -1,6 +1,6 @@
 # Example illustrating the collecting of network information.
 
-require 'rbsigar'
+require 'sigar'
 
 sigar = Sigar.new
 

@@ -1,4 +1,4 @@
-require 'rbsigar'
+require 'sigar'
 require 'socket'
 
 #XXX this example is incomplete wrt:
