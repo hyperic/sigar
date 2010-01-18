@@ -72,11 +72,12 @@ task :build do
 end
 
 Rake::TestTask.new do |t|
-  in_ext()
   t.pattern = 'test/*_test.rb'
 end
 
-task :test => [:build]
+task :test => [:build] do
+  in_ext()
+end
 
 desc 'Clean sigar extension'
 task :clean do
