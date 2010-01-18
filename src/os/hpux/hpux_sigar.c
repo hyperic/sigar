@@ -768,6 +768,32 @@ static int sigar_get_physical_stat(sigar_t *sigar, int *count)
     }
 }
 
+#define SIGAR_IF_NAMESIZE 16
+/* hpux if_indextoname() does not work as advertised in 11.11 */
+static int sigar_if_indextoname(sigar_t *sigar,
+                                char *name,
+                                int index)
+{
+    int i, status, count;
+    nmapi_phystat *stat;
+
+    if ((status = sigar_get_physical_stat(sigar, &count) != SIGAR_OK)) {
+        return status;
+    }
+
+    for (i=0, stat = (nmapi_phystat *)sigar->ifconf_buf;
+         i<count;
+         i++, stat++)
+    {
+        if (stat->if_entry.ifIndex == index) {
+            strncpy(name, stat->nm_device, SIGAR_IF_NAMESIZE);
+            return SIGAR_OK;
+        }
+    }
+
+    return ENXIO;
+}
+
 int sigar_net_route_list_get(sigar_t *sigar,
                              sigar_net_route_list_t *routelist)
 {
@@ -818,6 +844,8 @@ int sigar_net_route_list_get(sigar_t *sigar,
 
         sigar_net_address_set(route->gateway,
                               ent->NextHop);
+
+        sigar_if_indextoname(sigar, route->ifname, ent->IfIndex);
 
         route->flags = SIGAR_RTF_UP;
         if ((ent->Dest == 0) &&
