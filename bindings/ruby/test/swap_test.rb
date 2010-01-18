@@ -1,5 +1,5 @@
-require 'test/unit'
-require 'rbsigar'
+$LOAD_PATH.unshift File.dirname(__FILE__)
+require 'helper'
 
 class SwapTest < Test::Unit::TestCase
 
