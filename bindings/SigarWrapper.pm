@@ -28,7 +28,7 @@ my %has_name_arg = map { $_, 1 } qw(FileSystemUsage DiskUsage
 my %proc_no_arg = map { $_, 1 } qw(stat);
 
 my %get_not_impl = map { $_, 1 } qw(net_address net_route net_connection net_stat cpu_perc
-                                    who cpu_info file_system); #list funcs only
+                                    arp who cpu_info file_system); #list funcs only
 
 sub supported_platforms {
     my $p = shift;
@@ -1397,6 +1397,33 @@ use vars qw(%classes %cmds);
       },
       {
          name => 'vendor_code_name', type => 'String',
+         desc => '',
+         plat => '*'
+      },
+    ],
+    Arp => [
+      {
+         name => 'ifname', type => 'String',
+         desc => '',
+         plat => '*'
+      },
+      {
+         name => 'hwaddr', type => 'NetAddress',
+         desc => '',
+         plat => '*'
+      },
+      {
+         name => 'type', type => 'String',
+         desc => '',
+         plat => '*'
+      },
+      {
+         name => 'address', type => 'NetAddress',
+         desc => '',
+         plat => '*'
+      },
+      {
+         name => 'flags', type => 'Long',
          desc => '',
          plat => '*'
       },
@@ -2864,7 +2891,7 @@ EOF
 
 my(@nongens) =
     qw{net_interface_list net_route_list net_connection_list
-       file_system_list cpu_info_list who_list
+       file_system_list cpu_info_list arp_list who_list
        loadavg};
 
 sub finish {
