@@ -1226,7 +1226,58 @@ int sigar_nfs_server_v3_get(sigar_t *sigar,
 int sigar_arp_list_get(sigar_t *sigar,
                        sigar_arp_list_t *arplist)
 {
-    return SIGAR_ENOTIMPL;
+    int status, count, i;
+    unsigned int len;
+    struct nmparms parms;
+    mib_ipNetToMediaEnt *entries;
+    sigar_arp_t *arp;
+
+    len = sizeof(count);
+    parms.objid = ID_ipNetToMediaTableNum;
+    parms.buffer = &count;
+    parms.len = &len;
+
+    if ((status = sigar_get_mib_info(sigar, &parms)) != SIGAR_OK) {
+        return status;
+    }
+
+    len = count * sizeof(*entries);
+    entries = malloc(len);
+
+    parms.objid = ID_ipNetToMediaTable;
+    parms.buffer = entries;
+    parms.len = &len;
+
+    if ((status = sigar_get_mib_info(sigar, &parms)) != SIGAR_OK) {
+        free(entries);
+        return status;
+    }
+
+    sigar_arp_list_create(arplist);
+
+    for (i=0; i<count; i++) {
+        mib_ipNetToMediaEnt *ent = &entries[i];
+
+        SIGAR_ARP_LIST_GROW(arplist);
+
+        arp = &arplist->data[arplist->number++];
+
+        sigar_net_address_set(arp->address,
+                              ent->NetAddr);
+
+        sigar_net_address_mac_set(arp->hwaddr,
+                                  ent->PhysAddr.o_bytes,
+                                  ent->PhysAddr.o_length);
+
+        sigar_if_indextoname(sigar, arp->ifname, ent->IfIndex);
+
+        SIGAR_SSTRCPY(arp->type, "ether"); /*XXX*/
+        arp->flags = 0; /*XXX*/
+    }
+
+    free(entries);
+
+    return SIGAR_OK;
 }
 
 int sigar_proc_port_get(sigar_t *sigar, int protocol,
