@@ -79,6 +79,7 @@ public class Shell extends ShellBase {
     }
 
     public void registerCommands() throws ShellCommandInitException {
+        registerCommandHandler("arp", new Arp(this));
         registerCommandHandler("df", new Df(this));
         registerCommandHandler("du", new Du(this));
         registerCommandHandler("ls", new Ls(this));
