@@ -87,6 +87,7 @@
 #include <net/if_types.h>
 #include <net/route.h>
 #include <netinet/in.h>
+#include <netinet/if_ether.h>
 
 #include <dirent.h>
 #include <errno.h>
@@ -3324,10 +3325,77 @@ int sigar_nfs_server_v3_get(sigar_t *sigar,
     return SIGAR_OK;
 }
 
+static char *get_hw_type(int type)
+{
+    switch (type) {
+    case IFT_ETHER:
+        return "ether";
+    case IFT_ISO88025:
+        return "tr";
+    case IFT_FDDI:
+        return "fddi";
+    case IFT_ATM:
+        return "atm";
+    case IFT_L2VLAN:
+        return "vlan";
+    case IFT_IEEE1394:
+        return "firewire";
+    case IFT_BRIDGE:
+        return "bridge";
+    default:
+        return "unknown";
+    }
+}
+
 int sigar_arp_list_get(sigar_t *sigar,
                        sigar_arp_list_t *arplist)
 {
-    return SIGAR_ENOTIMPL;
+    size_t needed;
+    char *lim, *buf, *next;
+    struct rt_msghdr *rtm;
+    struct sockaddr_inarp *sin;
+    struct sockaddr_dl *sdl;
+    int mib[] = { CTL_NET, PF_ROUTE, 0, AF_INET, NET_RT_FLAGS, RTF_LLINFO };
+
+    if (sysctl(mib, NMIB(mib), NULL, &needed, NULL, 0) < 0) {
+        return errno;
+    }
+
+    if (needed == 0) { /* empty cache */
+        return 0;
+    }
+
+    buf = malloc(needed);
+
+    if (sysctl(mib, NMIB(mib), buf, &needed, NULL, 0) < 0) {
+        free(buf);
+        return errno;
+    }
+
+    sigar_arp_list_create(arplist);
+
+    lim = buf + needed;
+    for (next = buf; next < lim; next += rtm->rtm_msglen) {
+        sigar_arp_t *arp;
+
+        SIGAR_ARP_LIST_GROW(arplist);
+        arp = &arplist->data[arplist->number++];
+
+        rtm = (struct rt_msghdr *)next;
+        sin = (struct sockaddr_inarp *)(rtm + 1);
+        sdl = (struct sockaddr_dl *)((char *)sin + SA_SIZE(sin));
+
+        sigar_net_address_set(arp->address, sin->sin_addr.s_addr);
+        sigar_net_address_mac_set(arp->hwaddr, LLADDR(sdl), sdl->sdl_alen);
+        if_indextoname(sdl->sdl_index, arp->ifname);
+        arp->flags = rtm->rtm_flags;
+
+        SIGAR_SSTRCPY(arp->type, get_hw_type(sdl->sdl_type));
+    }
+
+    free(buf);
+
+    return SIGAR_OK;
 }
 
 #if defined(__FreeBSD__) && /*XXX*/ (__FreeBSD_version < 800000)
