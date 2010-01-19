@@ -2455,7 +2455,74 @@ int sigar_nfs_server_v3_get(sigar_t *sigar,
 int sigar_arp_list_get(sigar_t *sigar,
                        sigar_arp_list_t *arplist)
 {
-    return SIGAR_ENOTIMPL;
+    char *data;
+    int len, rc;
+    struct opthdr *op;
+    size_t nread=0, size=0;
+    const char *size_from;
+
+    sigar_arp_list_create(arplist);
+
+    while ((rc = get_mib2(&sigar->mib2, &op, &data, &len)) == GET_MIB2_OK) {
+        mib2_ipNetToMediaEntry_t *entry;
+        char *end;
+
+        if (op->level != MIB2_IP) {
+            continue;
+        }
+
+        if (op->name == 0) {
+            /* we want to use this size for bincompat */
+            size = ((mib2_ip_t *)data)->ipNetToMediaEntrySize;
+            continue;
+        }
+        else if (op->name != MIB2_IP_MEDIA) {
+            continue;
+        }
+
+        if (size == 0) {
+            size_from = "sizeof";
+            size = sizeof(*entry);
+        }
+        else {
+            size_from = "mib2_ip";
+        }
+
+        if (SIGAR_LOG_IS_DEBUG(sigar)) {
+            sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
+                             "[arp_list] ipNetToMediaEntrySize=%d (from %s)",
+                             size, size_from);
+        }
+
+        for (entry = (mib2_ipNetToMediaEntry_t *)data, end = data + len;
+             (char *)entry < end;
+             nread+=size, entry = (mib2_ipNetToMediaEntry_t *)((char *)data+nread))
+        {
+            sigar_arp_t *arp;
+
+            SIGAR_ARP_LIST_GROW(arplist);
+            arp = &arplist->data[arplist->number++];
+
+            sigar_net_address_set(arp->address,
+                                  entry->ipNetToMediaNetAddress);
+
+            sigar_net_address_mac_set(arp->hwaddr,
+                                      entry->ipNetToMediaPhysAddress.o_bytes,
+                                      entry->ipNetToMediaPhysAddress.o_length);
+
+            SIGAR_SSTRCPY(arp->ifname, entry->ipNetToMediaIfIndex.o_bytes);
+
+            arp->flags = entry->ipNetToMediaInfo.ntm_flags;
+            SIGAR_SSTRCPY(arp->type, "ether"); /*XXX*/
+        }
+    }
+
+    if (rc != GET_MIB2_EOD) {
+        close_mib2(&sigar->mib2);
+        return SIGAR_EMIB2;
+    }
+
+    return SIGAR_OK;
 }
 
 static int find_port(sigar_t *sigar, struct ps_prochandle *phandle,
