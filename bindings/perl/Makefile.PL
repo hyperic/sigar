@@ -41,7 +41,7 @@ SigarWrapper::generate(Perl => '.');
 my $ccname = $Config{ccname};
 
 my $define = {
-    gcc => '-Wall -Werror',
+    gcc => '-Wall',
     cc_r => '-qhalt=w',
 }->{$ccname} || '';
 

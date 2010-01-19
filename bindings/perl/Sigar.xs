@@ -52,6 +52,7 @@ typedef sigar_disk_usage_t * Sigar__DiskUsage;
 typedef sigar_proc_stat_t * Sigar__ProcStat;
 typedef sigar_net_route_t * Sigar__NetRoute;
 typedef sigar_net_interface_stat_t * Sigar__NetInterfaceStat;
+typedef sigar_arp_t * Sigar__Arp;
 typedef sigar_who_t * Sigar__Who;
 typedef sigar_thread_cpu_t * Sigar__ThreadCpu;
 typedef sigar_resource_limit_t * Sigar__ResourceLimit;
@@ -506,6 +507,31 @@ net_connection_list(sigar, flags)
                            "Sigar::NetConnection");
 
     sigar_net_connection_list_destroy(sigar, &conn_list);
+
+    OUTPUT:
+    RETVAL
+
+SV *
+arp_list(sigar)
+    Sigar sigar
+
+    PREINIT:
+    sigar_arp_list_t arp_list;
+    int status;
+
+    CODE:
+    status = sigar_arp_list_get(sigar, &arp_list);
+
+    if (status != SIGAR_OK) {
+        SIGAR_CROAK(sigar, "arp_list");
+    }
+
+    RETVAL = convert_2svav((char *)&arp_list.data[0],
+                           arp_list.number,
+                           sizeof(*arp_list.data),
+                           "Sigar::Arp");
+
+    sigar_arp_list_destroy(sigar, &arp_list);
 
     OUTPUT:
     RETVAL
