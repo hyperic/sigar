@@ -2317,10 +2317,135 @@ int sigar_nfs_server_v3_get(sigar_t *sigar,
                             (sigar_nfs_v3_t *)nfs);
 }
 
+#include <net/if_arp.h>
+
+static char *get_hw_type(int type)
+{
+    switch (type) {
+    case ARPHRD_AX25:
+        return "ax25";
+    case ARPHRD_ECONET:
+        return "ec";
+    case ARPHRD_ETHER:
+        return "ether";
+    case ARPHRD_FDDI:
+        return "fddi";
+    case ARPHRD_DLCI:
+        return "dlci";
+    case ARPHRD_FRAD:
+        return "frad";
+    case ARPHRD_HDLC:
+        return "hdlc";
+    case ARPHRD_LAPB:
+        return "lapb";
+    case ARPHRD_HIPPI:
+        return "hippi";
+    case ARPHRD_IRDA:
+        return "irda";
+    case ARPHRD_LOOPBACK:
+        return "loop";
+    case ARPHRD_NETROM:
+        return "netrom";
+    case ARPHRD_PPP:
+        return "ppp";
+    case ARPHRD_ROSE:
+        return "rose";
+    case ARPHRD_SIT:
+        return "sit";
+    case ARPHRD_SLIP:
+        return "slip";
+    case ARPHRD_CSLIP:
+        return "cslip";
+    case ARPHRD_SLIP6:
+        return "slip6";
+    case ARPHRD_CSLIP6:
+        return "cslip6";
+    case ARPHRD_ADAPT:
+        return "adaptive";
+    case ARPHRD_IEEE802:
+        return "tr";
+    case ARPHRD_IEEE802_TR:
+        return "tr";
+    case ARPHRD_TUNNEL:
+        return "tunnel";
+    case ARPHRD_X25:
+        return "x25";
+    default:
+        return "unknown";
+    }
+}
+
 int sigar_arp_list_get(sigar_t *sigar,
                        sigar_arp_list_t *arplist)
 {
-    return SIGAR_ENOTIMPL;
+    FILE *fp;
+    char buffer[1024];
+    char net_addr[128], hwaddr[128], mask_addr[128];
+    int flags, type, status;
+    sigar_arp_t *arp;
+
+    arplist->size = arplist->number = 0;
+
+    if (!(fp = fopen(PROC_FS_ROOT "net/arp", "r"))) {
+        return errno;
+    }
+
+    sigar_arp_list_create(arplist);
+
+    (void)fgets(buffer, sizeof(buffer), fp); /* skip header */
+    while (fgets(buffer, sizeof(buffer), fp)) {
+        int num;
+
+        SIGAR_ARP_LIST_GROW(arplist);
+        arp = &arplist->data[arplist->number++];
+
+        /* XXX rid sscanf */
+        num = sscanf(buffer, "%128s 0x%x 0x%x %128s %128s %16s",
+                     net_addr, &type, &flags,
+                     hwaddr, mask_addr, arp->ifname);
+
+        if (num < 6) {
+            --arplist->number;
+            continue;
+        }
+
+        arp->flags = flags;
+        status = inet_pton(AF_INET, net_addr, &arp->address.addr);
+        if (status > 0) {
+            arp->address.family = SIGAR_AF_INET;
+        }
+        else if ((status = inet_pton(AF_INET6, net_addr, &arp->address.addr)) > 0) {
+            arp->address.family = SIGAR_AF_INET6;
+        }
+        else {
+            sigar_log_printf(sigar, SIGAR_LOG_WARN,
+                             "[arp] failed to parse address='%s' (%s)\n", net_addr,
+                             ((status == 0) ? "Invalid format" : sigar_strerror(sigar, errno)));
+            --arplist->number;
+            continue;
+        }
+
+        num = sscanf(hwaddr, "%02hhx:%02hhx:%02hhx:%02hhx:%02hhx:%02hhx",
+                     &arp->hwaddr.addr.mac[0],
+                     &arp->hwaddr.addr.mac[1],
+                     &arp->hwaddr.addr.mac[2],
+                     &arp->hwaddr.addr.mac[3],
+                     &arp->hwaddr.addr.mac[4],
+                     &arp->hwaddr.addr.mac[5]);
+        if (num < 6) {
+            sigar_log_printf(sigar, SIGAR_LOG_WARN,
+                             "[arp] failed to parse hwaddr='%s' (%s)\n", hwaddr);
+            --arplist->number;
+            continue;
+        }
+        arp->hwaddr.family = SIGAR_AF_LINK;
+
+        SIGAR_SSTRCPY(arp->type, get_hw_type(type));
+    }
+
+    fclose(fp);
+
+    return SIGAR_OK;
 }
 
 int sigar_proc_port_get(sigar_t *sigar, int protocol,
