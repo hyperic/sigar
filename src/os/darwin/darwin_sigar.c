@@ -3340,7 +3340,7 @@ static char *get_hw_type(int type)
         return "vlan";
     case IFT_IEEE1394:
         return "firewire";
-#ifdef IFT_BRIDGE:
+#ifdef IFT_BRIDGE
     case IFT_BRIDGE:
         return "bridge";
 #endif
