@@ -1886,7 +1886,7 @@ int sigar_net_route_list_get(sigar_t *sigar,
 
         for (entry = (mib2_ipRouteEntry_t *)data, end = data + len;
              (char *)entry < end;
-             entry = (mib2_ipRouteEntry_t *)((char *)data+nread), nread+=size)
+             nread+=size, entry = (mib2_ipRouteEntry_t *)((char *)data+nread))
         {
             sigar_net_route_t *route;
             int type = entry->ipRouteInfo.re_ire_type;
