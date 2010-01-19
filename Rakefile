@@ -33,10 +33,11 @@ spec = Gem::Specification.new do |s|
   s.extensions = 'bindings/ruby/extconf.rb'
   s.files =
     %w(COPYING EXCEPTIONS README Rakefile version.properties) +
-    %w(bindings/SigarWrapper.pm) +
+    %w(bindings/SigarWrapper.pm bindings/SigarBuild.pm) +
     Dir.glob("bindings/ruby/**/*") +
     Dir.glob("include/*.h") +
-    Dir.glob("src/**/*.[ch]")
+    Dir.glob("src/**/*.[ch]") +
+    Dir.glob("src/**/*.in")
 end
 
 Rake::GemPackageTask.new(spec) do |pkg|
@@ -98,5 +99,12 @@ task :examples => [:build] do
     cmd = "ruby #{file}"
     print cmd + "\n"
     system(cmd)
+  end
+end
+
+desc "create a gemspec file"
+task :make_spec do
+  File.open("#{GEM}.gemspec", "w") do |file|
+    file.puts spec.to_ruby
   end
 end
