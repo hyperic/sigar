@@ -450,6 +450,31 @@ static VALUE rb_sigar_file_system_list(VALUE obj)
     return RETVAL;
 }
 
+static VALUE rb_cSigarArp;
+
+static VALUE rb_sigar_arp_list(VALUE obj)
+{
+    SIGAR_GET;
+
+    int status;
+    sigar_arp_list_t list;
+    VALUE RETVAL;
+
+    status = sigar_arp_list_get(sigar, &list);
+    if (status != SIGAR_OK) {
+        RB_SIGAR_CROAK;
+    }
+
+    RETVAL = rb_sigar_new_list((char *)&list.data[0],
+                               list.number,
+                               sizeof(*list.data),
+                               rb_cSigarArp);
+
+    sigar_arp_list_destroy(sigar, &list);
+
+    return RETVAL;
+}
+
 static VALUE rb_cSigarWho;
 
 static VALUE rb_sigar_who_list(VALUE obj)
@@ -835,6 +860,7 @@ void Init_sigar(void)
     rb_define_method(rclass, "net_stat", rb_sigar_net_stat, 1);
     rb_define_method(rclass, "net_stat_port", rb_sigar_net_stat_port, 3);
     rb_define_method(rclass, "net_route_list", rb_sigar_net_route_list, 0);
+    rb_define_method(rclass, "arp_list", rb_sigar_arp_list, 0);
     rb_define_method(rclass, "who_list", rb_sigar_who_list, 0);
     rb_define_method(rclass, "proc_list", rb_sigar_proc_list, -1);
     rb_define_method(rclass, "proc_args", rb_sigar_proc_args, 1);
