@@ -192,6 +192,29 @@ static PyObject *pysigar_net_interface_list(PyObject *self, PyObject *args)
     return RETVAL;
 }
 
+static PyObject *pysigar_arp_list(PyObject *self, PyObject *args)
+{
+    int status;
+    sigar_t *sigar = PySIGAR;
+    sigar_arp_list_t arplist;
+    PyObject *RETVAL;
+
+    status = sigar_arp_list_get(sigar, &arplist);
+    if (status != SIGAR_OK) {
+        PySigar_Croak();
+        return NULL;
+    }
+
+    RETVAL = pysigar_new_list((char *)&arplist.data[0],
+                              arplist.number,
+                              sizeof(*arplist.data),
+                              &pysigar_PySigarArpType);
+
+    sigar_arp_list_destroy(sigar, &arplist);
+
+    return RETVAL;
+}
+
 static PyObject *pysigar_format_size(PyObject *self, PyObject *args)
 {
     char buffer[56];
@@ -209,6 +232,7 @@ static PyMethodDef pysigar_methods[] = {
     { "close", pysigar_close, METH_NOARGS, NULL },
     { "net_interface_list", pysigar_net_interface_list, METH_NOARGS, NULL },
     { "file_system_list", pysigar_file_system_list, METH_NOARGS, NULL },
+    { "arp_list", pysigar_arp_list, METH_NOARGS, NULL },
     PY_SIGAR_METHODS
     {NULL}
 };
