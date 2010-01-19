@@ -46,12 +46,6 @@ end
 
 task :default => :test
 
-task :make_spec do
-  File.open("#{GEM}.gemspec", "w") do |file|
-    file.puts spec.to_ruby
-  end
-end
-
 def in_ext()
   ext = 'bindings/ruby'
   Dir.chdir(ext) if File.directory? ext
