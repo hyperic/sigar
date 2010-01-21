@@ -109,6 +109,8 @@ static int get_koffsets(sigar_t *sigar)
         {"vmminfo", 0, 0, 0, 0, 0}, /* KOFFSET_VMINFO */
         {"cpuinfo", 0, 0, 0, 0, 0}, /* KOFFSET_CPUINFO */
         {"tcb", 0, 0, 0, 0, 0}, /* KOFFSET_TCB */
+        {"arptabsize", 0, 0, 0, 0, 0}, /* KOFFSET_ARPTABSIZE */
+        {"arptabp", 0, 0, 0, 0, 0}, /* KOFFSET_ARPTABP */
         {NULL, 0, 0, 0, 0, 0}
     };
 
@@ -1921,10 +1923,80 @@ int sigar_nfs_server_v3_get(sigar_t *sigar,
     return SIGAR_OK;
 }
 
+#include <net/if_arp.h>
+/*
+ * cannot find any related aix docs on reading the ARP table,
+ * this impl was gleaned from the above .h file and truss -f arp -an
+ */
 int sigar_arp_list_get(sigar_t *sigar,
                        sigar_arp_list_t *arplist)
 {
-    return SIGAR_ENOTIMPL;
+    int status = SIGAR_OK;
+    long arptabsize;
+    int i, size, retval;
+    struct arptab *arptabp;
+
+    size = sizeof(arptabsize);
+    retval = getkerninfo(KINFO_READ, &arptabsize, &size,
+                         sigar->koffsets[KOFFSET_ARPTABSIZE]);
+    if (retval != sizeof(arptabsize)) {
+        return errno;
+    }
+
+    size = sizeof(arptabp);
+    retval = getkerninfo(KINFO_READ, &arptabp, &size,
+                         sigar->koffsets[KOFFSET_ARPTABP]);
+    if (retval != sizeof(arptabp)) {
+        return errno;
+    }
+
+    sigar_arp_list_create(arplist);
+    status = SIGAR_OK;
+
+    for (i=0; i<arptabsize; i++) {
+        struct arptab ent;
+        struct ifnet ifp;
+        sigar_arp_t *arp;
+
+        size = sizeof(ent);
+        retval = getkerninfo(KINFO_READ, &ent, &size, arptabp + i);
+        if (retval != sizeof(ent)) {
+            status = errno;
+            break;
+        }
+
+        if (ent.at_flags == 0) {
+            continue; /* empty bucket */
+        }
+
+        size = sizeof(ifp);
+        retval = getkerninfo(KINFO_READ, &ifp, &size, ent.at_ifp);
+        if (retval != sizeof(ifp)) {
+            status = errno;
+            break;
+        }
+
+        SIGAR_ARP_LIST_GROW(arplist);
+        arp = &arplist->data[arplist->number++];
+
+        sigar_net_address_set(arp->address,
+                              ent.at_iaddr.s_addr);
+
+        sigar_net_address_mac_set(arp->hwaddr,
+                                  ent.hwaddr,
+                                  sizeof(arp->hwaddr.addr.mac));
+
+        if_indextoname(ifp.if_index, arp->ifname);
+
+        arp->flags = ent.at_flags;
+        SIGAR_SSTRCPY(arp->type, "ether"); /* XXX ifp.if_type */
+    }
+
+    if (status != SIGAR_OK) {
+        sigar_arp_list_destroy(sigar, arplist);
+    }
+
+    return status;
 }
 
 /* derived from pidentd's k_aix432.c */
