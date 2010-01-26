@@ -317,6 +317,7 @@ static sigar_iphlpapi_t sigar_iphlpapi = {
     { "GetNetworkParams", NULL },
     { "GetAdaptersInfo", NULL },
     { "GetAdaptersAddresses", NULL },
+    { "GetIpNetTable", NULL },
     { NULL, NULL }
 };
 
@@ -3191,12 +3192,69 @@ SIGAR_DECLARE(int) sigar_proc_port_get(sigar_t *sigar,
     return ENOENT;
 }
 
+#define sigar_GetIpNetTable \
+    sigar->iphlpapi.get_ipnet_table.func
+
 SIGAR_DECLARE(int) sigar_arp_list_get(sigar_t *sigar,
                                       sigar_arp_list_t *arplist)
 {
-    return SIGAR_ENOTIMPL;
-}
+    int status;
+    DWORD rc, size=0, i;
+    PMIB_IPNETTABLE ipnet;
 
+    DLLMOD_INIT(iphlpapi, FALSE);
+
+    if (!sigar_GetIpNetTable) {
+        return SIGAR_ENOTIMPL;
+    }
+
+    rc = sigar_GetIpNetTable(NULL, &size, FALSE);
+    if (rc != ERROR_INSUFFICIENT_BUFFER) {
+        return GetLastError();
+    }
+    ipnet = malloc(size);
+    rc = sigar_GetIpNetTable(ipnet, &size, FALSE);
+    if (rc) {
+        free(ipnet);
+        return GetLastError();
+    }
+
+    sigar_arp_list_create(arplist);
+
+    if (!sigar->netif_names) {
+        /* dwIndex -> name map */
+        sigar_net_interface_list_get(sigar, NULL);
+    }
+
+    for (i = 0; i < ipnet->dwNumEntries; i++) {
+        sigar_arp_t *arp;
+        PMIB_IPNETROW entry;
+        sigar_cache_entry_t *ifname;
+
+        entry = &ipnet->table[i];
+        SIGAR_ARP_LIST_GROW(arplist);
+        arp = &arplist->data[arplist->number++];
+
+        sigar_net_address_set(arp->address,
+                              entry->dwAddr);
+
+        sigar_net_address_mac_set(arp->hwaddr,
+                                  entry->bPhysAddr,
+                                  entry->dwPhysAddrLen);
+
+        ifname = sigar_cache_get(sigar->netif_names, entry->dwIndex);
+        if (ifname->value) {
+            SIGAR_SSTRCPY(arp->ifname, (char *)ifname->value);
+        }
+
+        arp->flags = 0; /*XXX*/
+        SIGAR_SSTRCPY(arp->type, "ether"); /*XXX*/
+    }
+
+    free(ipnet);
+
+    return SIGAR_OK;
+}
 
 #include <lm.h>
 
