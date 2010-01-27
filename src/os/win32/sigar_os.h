@@ -410,6 +410,10 @@ typedef BOOL (CALLBACK *advapi_query_service_status)(SC_HANDLE,
                                                      DWORD,
                                                      LPDWORD);
 
+typedef DWORD (CALLBACK *iphlpapi_get_ipnet_table)(PMIB_IPNETTABLE,
+                                                   PDWORD,
+                                                   BOOL);
+
 /* ntdll.dll */
 typedef DWORD (CALLBACK *ntdll_query_sys_info)(DWORD,
                                                PVOID,
@@ -485,6 +489,7 @@ typedef struct {
     SIGAR_DLLFUNC(iphlpapi, get_net_params);
     SIGAR_DLLFUNC(iphlpapi, get_adapters_info);
     SIGAR_DLLFUNC(iphlpapi, get_adapters_addrs);
+    SIGAR_DLLFUNC(iphlpapi, get_ipnet_table);
 
     sigar_dll_func_t end;
 } sigar_iphlpapi_t;
