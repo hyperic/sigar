@@ -305,6 +305,31 @@ static void esigar_cpu_info_list_get(ErlDrvPort port, sigar_t *sigar)
     ESIGAR_SEND(port, &x);
 }
 
+static void esigar_arp_list_get(ErlDrvPort port, sigar_t *sigar)
+{
+    int status;
+    ei_x_buff x;
+    sigar_arp_list_t list;
+
+    ei_x_new_with_version(&x);
+
+    if ((status = sigar_arp_list_get(sigar, &list) == SIGAR_OK)) {
+        ESIGAR_OK(&x);
+
+        esigar_to_list(&x,
+                       (char *)&list.data[0], list.number,
+                       sizeof(*list.data),
+                       (esigar_encoder_func_t)esigar_encode_arp);
+
+        sigar_arp_list_destroy(sigar, &list);
+    }
+    else {
+        ESIGAR_ERROR(&x, sigar, status);
+    }
+
+    ESIGAR_SEND(port, &x);
+}
+
 static void esigar_who_list_get(ErlDrvPort port, sigar_t *sigar)
 {
     int status;
@@ -353,6 +378,9 @@ static void outputv(ErlDrvData handle, ErlIOVec *ev) {
         break;
     case ESIGAR_CPU_INFO_LIST:
         esigar_cpu_info_list_get(port, sigar);
+        break;
+    case ESIGAR_ARP_LIST:
+        esigar_arp_list_get(port, sigar);
         break;
     case ESIGAR_WHO_LIST:
         esigar_who_list_get(port, sigar);

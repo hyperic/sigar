@@ -12,6 +12,7 @@
          net_route_list/1,
          file_system_list/1,
          cpu_info_list/1,
+         arp_list/1,
          who_list/1]).
 
 -define(NETCONN_CLIENT, 0x01).
@@ -50,6 +51,9 @@ file_system_list({sigar, S}) ->
 
 cpu_info_list({sigar, S}) ->
     do_command(S, ?CPU_INFO_LIST).
+
+arp_list({sigar, S}) ->
+    do_command(S, ?ARP_LIST).
 
 who_list({sigar, S}) ->
     do_command(S, ?WHO_LIST).
