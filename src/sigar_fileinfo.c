@@ -381,9 +381,14 @@ static int fileattrs_get(sigar_t *sigar,
         FILE_FLAG_BACKUP_SEMANTICS :
         FILE_ATTRIBUTE_NORMAL;
 
+    /**
+     * We need to set dwDesiredAccess to 0 to work in cases where GENERIC_READ can fail.
+     *
+     * see: http://msdn.microsoft.com/en-us/library/aa363858(VS.85).aspx
+     */
     handle = CreateFile(file,
-                        GENERIC_READ,
-                        FILE_SHARE_READ,
+                        0,
+                        0,
                         NULL,
                         OPEN_EXISTING,
                         flags,
