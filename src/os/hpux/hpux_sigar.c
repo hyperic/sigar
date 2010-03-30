@@ -559,7 +559,7 @@ int sigar_file_system_list_get(sigar_t *sigar,
     FILE *fp;
     sigar_file_system_t *fsp;
 
-    if (!(fp = setmntent(MNT_CHECKLIST, "r"))) {
+    if (!(fp = setmntent(MNT_MNTTAB, "r"))) {
         return errno;
     }
 
