@@ -254,6 +254,23 @@ JNIEXPORT jstring SIGAR_JNI(win32_Pdh_pdhGetDescription)
     return retval;
 }
 
+JNIEXPORT jlong SIGAR_JNI(win32_Pdh_pdhGetCounterType)
+(JNIEnv *env, jclass cur, jlong counter)
+{
+    HCOUNTER h_counter = (HCOUNTER)counter;
+    PDH_COUNTER_INFO info;
+    DWORD size = sizeof(info);
+    PDH_STATUS status;
+
+    status = PdhGetCounterInfo(h_counter, FALSE, &size, &info);
+    if (status != ERROR_SUCCESS) {
+        win32_throw_exception(env, get_error_message(status));
+        return -1;
+    }
+
+    return info.dwType;
+}
+
 JNIEXPORT jobjectArray SIGAR_JNI(win32_Pdh_pdhGetInstances)
 (JNIEnv *env, jclass cur, jstring cp)
 {

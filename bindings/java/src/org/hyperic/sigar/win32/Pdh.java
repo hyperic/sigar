@@ -63,6 +63,15 @@ public class Pdh extends Win32 {
     public static final String PERFLIB_KEY =
         "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Perflib";
 
+    //see winperf.h
+    public static final long PERF_TYPE_NUMBER  = 0x00000000; // a number (not a counter)
+
+    public static final long PERF_TYPE_COUNTER = 0x00000400; // an increasing numeric value
+
+    public static final long PERF_TYPE_TEXT    = 0x00000800; // a text field
+
+    public static final long PERF_TYPE_ZERO    = 0x00000C00; // displays a zero
+
     private long   query = -1l; // Handle to the query
     private String hostname = null;
     private static Map counters = null;
@@ -303,6 +312,16 @@ public class Pdh extends Win32 {
         }
     }
 
+    public long getCounterType(String path) throws Win32Exception {
+        long counter =
+            pdhAddCounter(this.query, translate(path));
+        try {
+            return pdhGetCounterType(counter);
+        } finally {
+            pdhRemoveCounter(counter);
+        }
+    }
+
     public static String[] getInstances(String path) throws Win32Exception {
         return pdhGetInstances(getCounterName(path));
     }
@@ -331,6 +350,8 @@ public class Pdh extends Win32 {
                                                    boolean fmt)
         throws Win32Exception;
     private static final native String pdhGetDescription(long counter)
+        throws Win32Exception;
+    private static final native long pdhGetCounterType(long counter)
         throws Win32Exception;
     private static final native String[] pdhGetInstances(String path)
         throws Win32Exception;

@@ -30,10 +30,15 @@ public class TestPdh extends SigarTestCase {
         super(name);
     }
 
+    private static boolean isCounter(long type) {
+        return (type & Pdh.PERF_TYPE_COUNTER) == Pdh.PERF_TYPE_COUNTER;
+    }
+
     private void getValue(String key) throws Exception {
         Pdh pdh = new Pdh();
 
         traceln(key + ": " + pdh.getDescription(key));
+        traceln("counter=" + isCounter(pdh.getCounterType(key)));
         assertGtEqZeroTrace("raw",
                             (long)pdh.getRawValue(key));
         assertGtEqZeroTrace("fmt",
