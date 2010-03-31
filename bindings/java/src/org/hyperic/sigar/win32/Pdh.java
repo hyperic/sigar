@@ -292,6 +292,17 @@ public class Pdh extends Win32 {
         }
     }
 
+    /* PdhCounterInfo.ExplainText */
+    public String getDescription(String path) throws Win32Exception {
+        long counter =
+            pdhAddCounter(this.query, translate(path));
+        try {
+            return pdhGetDescription(counter);
+        } finally {
+            pdhRemoveCounter(counter);
+        }
+    }
+
     public static String[] getInstances(String path) throws Win32Exception {
         return pdhGetInstances(getCounterName(path));
     }
@@ -318,6 +329,8 @@ public class Pdh extends Win32 {
     private static final native double pdhGetValue(long query, 
                                                    long counter,
                                                    boolean fmt)
+        throws Win32Exception;
+    private static final native String pdhGetDescription(long counter)
         throws Win32Exception;
     private static final native String[] pdhGetInstances(String path)
         throws Win32Exception;

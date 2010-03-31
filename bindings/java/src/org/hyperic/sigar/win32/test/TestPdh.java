@@ -33,7 +33,7 @@ public class TestPdh extends SigarTestCase {
     private void getValue(String key) throws Exception {
         Pdh pdh = new Pdh();
 
-        traceln(key);
+        traceln(key + ": " + pdh.getDescription(key));
         assertGtEqZeroTrace("raw",
                             (long)pdh.getRawValue(key));
         assertGtEqZeroTrace("fmt",
