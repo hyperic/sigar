@@ -322,8 +322,28 @@ public class Pdh extends Win32 {
         }
     }
 
+    private static final class InstanceIndex {
+        long index = 0;
+    }
+
     public static String[] getInstances(String path) throws Win32Exception {
-        return pdhGetInstances(getCounterName(path));
+        String[] instances = pdhGetInstances(getCounterName(path));
+
+        /* PdhEnumObjectItems() does not include the instance index */
+        HashMap names = new HashMap(instances.length);
+        for (int i=0; i<instances.length; i++) {
+            InstanceIndex ix = (InstanceIndex)names.get(instances[i]);
+            if (ix == null) {
+                ix = new InstanceIndex();
+                names.put(instances[i], ix);
+            }
+            else {
+                ix.index++;
+                instances[i] = instances[i] + "#" + ix.index;
+            }
+        }
+
+        return instances;
     }
 
     public static String[] getKeys(String path) throws Win32Exception {
