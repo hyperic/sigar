@@ -433,6 +433,9 @@ static int sigar_common_fs_type_get(sigar_file_system_t *fsp)
         if (strEQ(type, "cvfs")) {
             fsp->type = SIGAR_FSTYPE_LOCAL_DISK;
         }
+        else if (strEQ(type, "cifs")) {
+            fsp->type = SIGAR_FSTYPE_NETWORK;
+        }
         break;
       case 'm':
         if (strEQ(type, "msdos") || strEQ(type, "minix")) {
