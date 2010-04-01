@@ -1512,7 +1512,7 @@ int sigar_cpu_info_list_get(sigar_t *sigar,
 int sigar_net_route_list_get(sigar_t *sigar,
                              sigar_net_route_list_t *routelist)
 {
-    size_t needed;
+    int needed;
     int bit;
     char *buf, *next, *lim;
     struct rt_msghdr *rtm;
