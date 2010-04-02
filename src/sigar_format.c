@@ -166,7 +166,7 @@ char *sigar_strerror_get(int err, char *errbuf, int buflen)
                         FORMAT_MESSAGE_IGNORE_INSERTS,
                         NULL,
                         err,
-                        0, /* default language */
+                        MAKELANGID(LANG_ENGLISH, SUBLANG_DEFAULT), /* force english */
                         (LPTSTR)errbuf,
                         (DWORD)buflen,
                         NULL);
