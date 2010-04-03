@@ -14,6 +14,7 @@
   <property name="jni.define.name" value="SIGAR"/>
   <property name="sigar-bin" location="sigar-bin"/>
   <property name="sigar-bin-dir" location="${sigar-bin}"/>
+  <property name="jni.git" location="../../.git"/>
   <property name="jni.bin" location="${sigar-bin}"/>
   <property name="jni.source.dir" location="../.."/>
   <property name="jni.src.java" value="hyperic_jni/src"/>
@@ -116,7 +117,7 @@
     <replace file="${version.tofile}">
       <replacefilter token="@@BUILD_DATE@@" value="${BUILD_DATE}"/>
       <replacefilter token="@@VERSION_STRING@@" value="${sigar.version}.${version.build}"/>
-      <replacefilter token="@@SCM_REVISION@@" value="${sigar.scmrev}"/>
+      <replacefilter token="@@SCM_REVISION@@" value="${jni.scmrev}"/>
       <replacefilter token="@@ARCHNAME@@" value="${jni.libarch}"/>
       <replacefilter token="@@ARCHLIB@@" value="${jni.libname.full}"/>
       <replacefilter token="@@BINNAME@@" value="${jni.project.archname}"/>
@@ -128,59 +129,12 @@
     </replace>
   </target>
 
-  <target name="check-svn">
-    <condition property="svn.available">
-      <and>
-        <available file=".svn" type="dir"/>
-        <available file="svn" type="file">
-          <filepath>
-            <pathelement path="${env.PATH}"/>
-          </filepath>
-        </available>
-     </and>
-    </condition>
-  </target>
-
-  <target name="svn-revision" if="svn.available">
-    <exec executable="svnversion" dir="."
-          outputproperty="sigar.scmrev"
-          failifexecutionfails="false">
-      <arg value="."/>
-    </exec>
-    <echo message="SIGAR svn revision #${sigar.scmrev}"/>
-  </target>
-
-  <target name="check-git">
-    <condition property="git.available">
-      <and>
-        <available file="../../.git" type="dir"/>
-        <available file="git" type="file">
-          <filepath>
-            <pathelement path="${env.PATH}"/>
-          </filepath>
-        </available>
-     </and>
-    </condition>
-  </target>
-
-  <target name="git-revision" if="git.available">
-    <exec executable="git" dir="."
-          outputproperty="sigar.scmrev"
-          failifexecutionfails="false">
-      <arg value="rev-parse"/>
-      <arg value="--short"/>
-      <arg value="HEAD"/>
-    </exec>
-    <echo message="SIGAR git revision #${sigar.scmrev}"/>
-  </target>
-
-  <target name="sigar-version" depends="check-svn,svn-revision,check-git,git-revision">
+  <target name="sigar-version">
     <tstamp>
       <format property="BUILD_DATE" pattern="MM/dd/yyyy hh:mm aa"/>
     </tstamp>
 
-    <!-- in the case of release source builds -->
-    <property name="sigar.scmrev" value="exported"/>
+    <echo message="SIGAR git revision ${jni.scmrev}"/>
 
     <antcall target="version-file">
        <param name="version.file"
