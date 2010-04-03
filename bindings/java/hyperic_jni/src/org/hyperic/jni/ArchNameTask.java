@@ -18,8 +18,11 @@
 
 package org.hyperic.jni;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileFilter;
+import java.io.FileReader;
+import java.io.Reader;
 import java.util.Arrays;
 
 import org.apache.tools.ant.Task;
@@ -134,5 +137,50 @@ public class ArchNameTask extends Task {
                 System.out.println("Using -mmacosx-version-min=" + min);
             }
         }
+        getProject().setProperty("jni.scmrev", getSourceRevision());
+    }
+
+    //XXX source rev stuff should be in another task
+    private String readLine(String filename) {
+        Reader reader = null;
+        try {
+            reader = new FileReader(filename);
+            return new BufferedReader(reader).readLine();
+        } catch (Exception e) {
+        } finally {
+            if (reader != null) {
+                try { reader.close(); } catch (Exception e) {}
+            }
+        }
+        return null;
+    }
+
+    private String getSourceRevision() {
+        final String exported = "exported";
+        String sha1 = getGitSourceRevision();
+        if (sha1 == null) {
+            return exported;
+        }
+        else {
+            return sha1;
+        }
+    }
+
+    //same as: git rev-parse --short HEAD
+    //same as: (cd .git && cat HEAD | awk '{print $2}' | xargs cat | cut -b 1-7)
+    private String getGitSourceRevision() {
+        String git = getProject().getProperty("jni.git");
+        if (git == null) {
+            git = ".git";
+        }
+        if (new File(git).exists()) {
+            String head = readLine(git + "/HEAD");
+
+            if (head != null) {
+                String ref = head.substring(5).trim(); //'ref: '
+                return readLine(git + "/" + ref).substring(0, 7);
+            }
+        }
+        return null;
     }
 }
