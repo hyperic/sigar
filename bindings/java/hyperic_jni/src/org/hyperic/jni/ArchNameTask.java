@@ -177,8 +177,18 @@ public class ArchNameTask extends Task {
             String head = readLine(git + "/HEAD");
 
             if (head != null) {
-                String ref = head.substring(5).trim(); //'ref: '
-                return readLine(git + "/" + ref).substring(0, 7);
+                String sha1;
+                final String refp = "ref: ";
+                if (head.startsWith(refp)) {
+                    //branch
+                    String ref = head.substring(refp.length()).trim();
+                    sha1 = readLine(git + "/" + ref);
+                }
+                else {
+                    //git checkout -f origin/branch-name (no branch)
+                    sha1 = head;
+                }
+                return sha1.substring(0, 7);
             }
         }
         return null;
