@@ -489,6 +489,13 @@ int sigar_mem_get(sigar_t *sigar, sigar_mem_t *mem)
         return status;
     }
     mem->free = vmstat.free;
+    kern = vmstat.inactive;
+#  if defined(__OpenBSD__)
+    kern += vmstat.vnodepages + vmstat.vtextpages;
+# elif defined(__NetBSD__)
+    kern += vmstat.filepages + vmstat.execpages;
+#  endif
+    kern *= sigar->pagesize;
 #endif
 
     mem->used = mem->total - mem->free;
