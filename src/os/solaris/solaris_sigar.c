@@ -189,6 +189,7 @@ int sigar_mem_get(sigar_t *sigar, sigar_mem_t *mem)
 {
     kstat_ctl_t *kc = sigar->kc; 
     kstat_t *ksp;
+    sigar_uint64_t kern = 0;
 
     SIGAR_ZERO(mem);
 
@@ -213,8 +214,28 @@ int sigar_mem_get(sigar_t *sigar, sigar_mem_t *mem)
         sigar_koffsets_init_mempages(sigar, ksp);
     }
 
-    mem->actual_free = mem->free;
-    mem->actual_used = mem->used;
+    /* XXX mdb ::memstat cachelist/freelist not available to kstat, see: */
+    /* http://bugs.opensolaris.org/bugdatabase/view_bug.do?bug_id=6821980 */
+
+    /* ZFS ARC cache. see: http://opensolaris.org/jive/thread.jspa?messageID=393695 */
+    if ((ksp = kstat_lookup(sigar->kc, "zfs", 0, "arcstats")) &&
+        (kstat_read(sigar->kc, ksp, NULL) != -1))
+    {
+        kstat_named_t *kn;
+
+        if ((kn = (kstat_named_t *)kstat_data_lookup(ksp, "size"))) {
+            kern = kn->value.i64;
+        }
+        if ((kn = (kstat_named_t *)kstat_data_lookup(ksp, "c_min"))) {
+            /* c_min cannot be reclaimed they say */
+            if (kern > kn->value.i64) {
+                kern -= kn->value.i64;
+            }
+        }
+    }
+
+    mem->actual_free = mem->free + kern;
+    mem->actual_used = mem->used - kern;
 
     sigar_mem_calc_ram(sigar, mem);
 
