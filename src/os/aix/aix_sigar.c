@@ -243,18 +243,20 @@ int sigar_mem_get(sigar_t *sigar, sigar_mem_t *mem)
 {
     int status;
     perfstat_memory_total_t minfo;
+    sigar_uint64_t kern;
 
     if (sigar_perfstat_memory(&minfo) == 1) {
         mem->total = PAGESHIFT(minfo.real_total);
         mem->free  = PAGESHIFT(minfo.real_free);
+        kern = PAGESHIFT(minfo.numperm); /* number of pages in file cache */
     }
     else {
         return errno;
     }            
 
     mem->used = mem->total - mem->free;
-    mem->actual_used = mem->used;
-    mem->actual_free = mem->free;
+    mem->actual_used = mem->used - kern;
+    mem->actual_free = mem->free + kern;
     
     sigar_mem_calc_ram(sigar, mem);
 
