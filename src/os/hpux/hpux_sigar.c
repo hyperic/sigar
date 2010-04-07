@@ -77,7 +77,9 @@ char *sigar_os_error_string(sigar_t *sigar, int err)
 int sigar_mem_get(sigar_t *sigar, sigar_mem_t *mem)
 {
     struct pst_dynamic stats;
+    struct pst_vminfo vminfo;
     sigar_uint64_t pagesize = sigar->pstatic.page_size;
+    sigar_uint64_t kern;
 
     mem->total = sigar->pstatic.physical_memory * pagesize;
 
@@ -86,8 +88,12 @@ int sigar_mem_get(sigar_t *sigar, sigar_mem_t *mem)
     mem->free = stats.psd_free * pagesize;
     mem->used = mem->total - mem->free;
 
-    mem->actual_free = mem->free;
-    mem->actual_used = mem->used;
+    pstat_getvminfo(&vminfo, sizeof(vminfo), 1, 0);
+
+    /* "kernel dynamic memory" */
+    kern = vminfo.psv_kern_dynmem * pagesize;
+    mem->actual_free = mem->free + kern;
+    mem->actual_used = mem->used - kern;
 
     sigar_mem_calc_ram(sigar, mem);
 
