@@ -12,10 +12,6 @@ The following components are included without modification:
 Information: http://logging.apache.org/
 License: http://www.apache.org/licenses/LICENSE-2.0
 
-- junit -
-Information: http://www.junit.org/index.htm
-License: http://www.opensource.org/licenses/cpl.php
-
 The following components are included with modification:
 
 - cpptasks -

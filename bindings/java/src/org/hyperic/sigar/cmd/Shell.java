@@ -20,6 +20,7 @@ package org.hyperic.sigar.cmd;
 
 import java.io.IOException;
 import java.io.File;
+import java.lang.reflect.Constructor;
 
 import org.hyperic.sigar.Sigar;
 import org.hyperic.sigar.SigarException;
@@ -35,9 +36,6 @@ import org.hyperic.sigar.shell.ShellCommandExecException;
 import org.hyperic.sigar.shell.ShellCommandHandler;
 import org.hyperic.sigar.shell.ShellCommandInitException;
 import org.hyperic.sigar.shell.ShellCommandUsageException;
-
-import org.hyperic.sigar.test.SigarTestCase;
-import org.hyperic.sigar.test.SigarTestRunner;
 
 import org.hyperic.sigar.util.Getline;
 
@@ -112,12 +110,19 @@ public class Shell extends ShellBase {
         }
         try {
             //requires junit.jar
-            registerCommandHandler("test", new SigarTestRunner(this));
+            registerCommandHandler("test", "org.hyperic.sigar.test.SigarTestRunner");
         } catch (NoClassDefFoundError e) { }
+        catch (Exception e) { }
         try {
             //requires jre 1.5+ or mx4j
             registerCommandHandler("mx", new Mx(this));
         } catch (NoClassDefFoundError e) { }
+    }
+
+    private void registerCommandHandler(String name, String className) throws Exception {
+        Class cls = Class.forName(className);
+        Constructor con = cls.getConstructor(new Class[] { this.getClass() });
+        registerCommandHandler(name, (ShellCommandHandler)con.newInstance(new Object[] { this }));
     }
 
     public void processCommand(ShellCommandHandler handler, String args[])
@@ -201,7 +206,7 @@ public class Shell extends ShellBase {
         this.sigar.close();
         //avoid possible Class Not Found: junit/framework/TestCase
         if (System.getProperty("jni.dmalloc") != null) {
-            SigarTestCase.closeSigar(); //shutup dmalloc
+            //org.hyperic.sigar.test.SigarTestCase.closeSigar(); //shutup dmalloc
         }
         super.shutdown();
     }
