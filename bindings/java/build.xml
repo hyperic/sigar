@@ -56,7 +56,7 @@
   <path id="alljars">
      <path refid="libjars"/>
      <fileset dir="${sigar-bin}/lib" includes="${sigar.jar}"/>
-     <fileset dir="${env.ANT_HOME}/lib" includes="junit*.jar"/>
+     <fileset dir="${ant.library.dir}" includes="junit*.jar"/>
   </path>
 
   <target name="javadoc_check">
@@ -85,7 +85,7 @@
              doctitle="Sigar">
       <group title="Sigar" packages="org.hyperic.sigar" />
       <classpath refid="libjars"/>
-      <classpath><path path="${env.ANT_HOME}/lib/ant.jar"/></classpath> 
+      <classpath><path path="${ant.library.dir}/ant.jar"/></classpath>
      <bottom>Copyright &#169; ${copyright.year} <![CDATA[<a target="_top" href="http://www.hyperic.com/">Hyperic</a>]]>. All Rights Reserved.</bottom>
     </javadoc>
   </target>
