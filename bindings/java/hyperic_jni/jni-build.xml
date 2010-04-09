@@ -54,15 +54,6 @@ USA.
     <condition property="jni.javahome" value="${env.JAVA_HOME}">
       <isset property="env.JAVA_HOME"/>
     </condition>
-    <condition property="jni.javahome" value="${java.home}">
-      <not>
-        <isset property="jni.javahome"/>
-      </not>
-    </condition>
-
-    <echo>java.home=${jni.javahome}</echo>
-
-    <checksum file="${jni.javahome}/include/jni.h" property="jni.md5"/>
 
     <condition property="linux">
       <equals arg1="${os.name}" arg2="Linux"/>
@@ -179,6 +170,10 @@ USA.
     </taskdef>
 
     <libarch/>
+
+    <echo>java.home=${jni.javahome}</echo>
+
+    <checksum file="${jni.javahome}/include/jni.h" property="jni.md5"/>
 
     <property name="jni.project.archname"
               value="${project.name}-${jni.libarch}"/>

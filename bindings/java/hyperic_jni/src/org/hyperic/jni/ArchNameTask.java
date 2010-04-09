@@ -138,6 +138,17 @@ public class ArchNameTask extends Task {
             }
         }
         getProject().setProperty("jni.scmrev", getSourceRevision());
+
+        //jni.javahome required to find include/jni.h
+        String home = getProject().getProperty("jni.javahome");
+        if (home == null) {
+            home = System.getProperty("java.home");
+        }
+        File dir = new File(home);
+        if (!new File(dir, "include").exists()) {
+            dir = dir.getParentFile(); //was /jre
+        }
+        getProject().setProperty("jni.javahome", dir.getPath());
     }
 
     //XXX source rev stuff should be in another task
