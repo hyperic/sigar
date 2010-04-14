@@ -1493,7 +1493,8 @@ int sigar_os_proc_args_get(sigar_t *sigar, sigar_pid_t pid,
     }
 }
 
-static int sigar_proc_env_parse(UCHAR *ptr, sigar_proc_env_t *procenv)
+static int sigar_proc_env_parse(UCHAR *ptr, sigar_proc_env_t *procenv,
+                                int multi)
 {
     while (*ptr) {
         char *val;
@@ -1526,6 +1527,10 @@ static int sigar_proc_env_parse(UCHAR *ptr, sigar_proc_env_t *procenv)
             return status;
         }
 
+        if (!multi) {
+            break; /* caller only provided 1 key=val pair */
+        }
+
         ptr += klen + 1 + vlen + 1;
     }
 
@@ -1537,7 +1542,7 @@ static int sigar_local_proc_env_get(sigar_t *sigar, sigar_pid_t pid,
 {
     UCHAR *env = (UCHAR*)GetEnvironmentStrings();
 
-    sigar_proc_env_parse(env, procenv);
+    sigar_proc_env_parse(env, procenv, TRUE);
 
     FreeEnvironmentStrings(env);
 
@@ -1566,8 +1571,9 @@ static int sigar_remote_proc_env_get(sigar_t *sigar, sigar_pid_t pid,
 
         while ((size > 0) && (*ptr != L'\0')) {
             DWORD len = (wcslen((LPWSTR)ptr) + 1) * sizeof(WCHAR);
+            /* multi=FALSE so no need to: memset(ent, '\0', sizeof(ent)) */
             SIGAR_W2A((WCHAR *)ptr, ent, sizeof(ent));
-            if (sigar_proc_env_parse(ent, procenv) != SIGAR_OK) {
+            if (sigar_proc_env_parse(ent, procenv, FALSE) != SIGAR_OK) {
                 break;
             }
             size -= len;
