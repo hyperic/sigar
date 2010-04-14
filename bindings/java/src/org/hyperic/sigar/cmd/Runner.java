@@ -182,6 +182,13 @@ public class Runner {
                     }
                 }
             }
+
+            if (missingJars()) {
+                String home = System.getenv("ANT_HOME"); //check for junit.jar
+                if (home != null) {
+                    addJarDir(home + "/lib");
+                }
+            }
         }
 
         Class cmd = null;
