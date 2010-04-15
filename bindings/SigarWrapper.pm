@@ -2777,39 +2777,5 @@ sub finish {
     $self->SUPER::finish;
 }
 
-#XXX not currently supporting netware
-package SigarWrapper::Netware;
-
-use vars qw(@ISA);
-@ISA = qw(SigarWrapper);
-
-sub start {
-    my $self = shift;
-    $self->SUPER::start;
-    $self->{dfh} = $self->create('javasigar_generated.def');
-}
-
-sub finish {
-    my $self = shift;
-    my $fh = $self->{dfh};
-    for my $func (@{ $self->{nativefunc} }) {
-        #$fh->println($nativefunc) if $impl;
-    }
-    my $jsigar = "../../src/jni/javasigar.c";
-    my(%alias) = (x => 'Sigar');
-    open JSIGAR, $jsigar or die "open $jsigar: $!";
-    while (<JSIGAR>) {
-        next unless /SIGAR_JNI([a-z]?)\(([A-Za-z_]+)\)/;
-        my $class = "";
-        if ($1) {
-            $class = $alias{$1} . "_";
-        }
-        $fh->println("Java_org_hyperic_sigar_$class$2");
-    }
-    close JSIGAR;
-
-    $self->SUPER::finish;
-}
-
 1;
 __END__
