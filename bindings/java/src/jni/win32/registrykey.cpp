@@ -331,7 +331,10 @@ JNIEXPORT void SIGAR_JNI(win32_RegistryKey_RegQueryMultiStringValue)
                     env->NewString((const jchar *)ptr, len);
 
                 env->CallBooleanMethod(obj, id, jval);
-
+                if (env->ExceptionCheck()) {
+                    HeapFree(GetProcessHeap(), 0, value);
+                    return;
+                }
                 ptr += len + 1;
             }
         }

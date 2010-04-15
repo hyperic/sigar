@@ -294,6 +294,7 @@ JNIEXPORT jobject SIGAR_JNI(win32_EventLog_readlog)
     }
 
     obj = JENV->AllocObject(env, cls);
+    SIGAR_CHEX;
 
     id = JENV->GetFieldID(env, cls, "recordNumber", "J");
     JENV->SetLongField(env, obj, id, pevlr->RecordNumber);
@@ -310,9 +311,9 @@ JNIEXPORT jobject SIGAR_JNI(win32_EventLog_readlog)
     id = JENV->GetFieldID(env, cls, "eventType", "S");
     JENV->SetShortField(env, obj, id, pevlr->EventType);
 
-    if (!JENV->ExceptionOccurred(env)) { /* careful not to clear any existing exception */
+    if (!JENV->ExceptionCheck(env)) { /* careful not to clear any existing exception */
         id = JENV->GetFieldID(env, cls, "category", "S");
-        if (JENV->ExceptionOccurred(env)) {
+        if (JENV->ExceptionCheck(env)) {
             /* older version of sigar.jar being used with sigar.dll */
             JENV->ExceptionClear(env);
         }

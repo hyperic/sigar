@@ -33,6 +33,9 @@
 #define SIGAR_CLASS_SIG(name) \
     "L" SIGAR_PACKAGE name ";"
 
+/* CHeck EXception */
+#define SIGAR_CHEX if (JENV->ExceptionCheck(env)) return NULL
+
 typedef struct {
     JNIEnv *env;
     jobject obj;
