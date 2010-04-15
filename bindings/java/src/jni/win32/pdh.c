@@ -319,6 +319,10 @@ JNIEXPORT jobjectArray SIGAR_JNI(win32_Pdh_pdhGetInstances)
                                      JENV->FindClass(env, 
                                                      "java/lang/String"),
                                      JENV->NewStringUTF(env, ""));
+        if (JENV->ExceptionCheck(env)) {
+            free(instance_list_buf);
+            return NULL;
+        }
 
         /* Walk the return instance list, creating an array */
         for (cur_object = instance_list_buf, i = 0;
@@ -329,6 +333,10 @@ JNIEXPORT jobjectArray SIGAR_JNI(win32_Pdh_pdhGetInstances)
             jstring s =
                 JENV->NewString(env, (const jchar *)cur_object, len);
             JENV->SetObjectArrayElement(env, array, i, s);
+            if (JENV->ExceptionCheck(env)) {
+                free(instance_list_buf);
+                return NULL;
+            }
             cur_object += len + 1;
         }
     } else {
@@ -391,6 +399,10 @@ JNIEXPORT jobjectArray SIGAR_JNI(win32_Pdh_pdhGetKeys)
                                      JENV->FindClass(env, 
                                                      "java/lang/String"),
                                      JENV->NewStringUTF(env, ""));
+        if (JENV->ExceptionCheck(env)) {
+            free(instance_list_buf);
+            return NULL;
+        }
 
         /* Walk the return instance list, creating an array */
         for (cur_object = instance_list_buf, i = 0;
@@ -401,6 +413,10 @@ JNIEXPORT jobjectArray SIGAR_JNI(win32_Pdh_pdhGetKeys)
             jstring s =
                 JENV->NewString(env, (const jchar *)cur_object, len);
             JENV->SetObjectArrayElement(env, array, i, s);
+            if (JENV->ExceptionCheck(env)) {
+                free(instance_list_buf);
+                return NULL;
+            }
             cur_object += len + 1;
         }
     } else {
@@ -459,6 +475,10 @@ JNIEXPORT jobjectArray SIGAR_JNI(win32_Pdh_pdhGetObjects)
                                  JENV->FindClass(env, 
                                                  "java/lang/String"),
                                  JENV->NewStringUTF(env, ""));
+    if (JENV->ExceptionCheck(env)) {
+        free(list_buf);
+        return NULL;
+    }
 
     for (cur_object = list_buf, i = 0;
          *cur_object != 0;
@@ -468,6 +488,10 @@ JNIEXPORT jobjectArray SIGAR_JNI(win32_Pdh_pdhGetObjects)
         jstring s =
             JENV->NewString(env, (const jchar *)cur_object, len);
         JENV->SetObjectArrayElement(env, array, i, s);
+        if (JENV->ExceptionCheck(env)) {
+            free(list_buf);
+            return NULL;
+        }
         cur_object += len + 1;
     }
 

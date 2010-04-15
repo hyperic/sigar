@@ -269,7 +269,10 @@ JNIEXPORT jobjectArray SIGAR_JNI(win32_MetaBase_MetaBaseGetMultiStringValue)
             NewObjectArray(count,
                            env->FindClass("java/lang/String"),
                            env->NewString((const jchar *)"", 1));
-        
+        if (env->ExceptionCheck()) {
+            return NULL;
+        }
+
         // Walk the return instance list, creating an array
         for (szThisInstance = (TCHAR *)MyRecord.pbMDData, i = 0;
              *szThisInstance != 0;
@@ -278,6 +281,9 @@ JNIEXPORT jobjectArray SIGAR_JNI(win32_MetaBase_MetaBaseGetMultiStringValue)
             env->SetObjectArrayElement(ret,i,env->NewString(
                       (const jchar *)(LPCTSTR)szThisInstance,
                       lstrlen(szThisInstance)));
+            if (env->ExceptionCheck()) {
+                return NULL;
+            }
         }
         return ret;
     }
