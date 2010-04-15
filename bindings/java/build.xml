@@ -160,15 +160,6 @@
        <param name="version.file.srcdir"
               value="../.."/>
        <param name="version.file"
-              value="src/os/netware/sigar.def"/>
-       <param name="version.tofile"
-              value="${build}/src/sigar.def"/>
-    </antcall>
-
-    <antcall target="version-file">
-       <param name="version.file.srcdir"
-              value="../.."/>
-       <param name="version.file"
               value="src/os/darwin/Info.plist"/>
        <param name="version.tofile"
               value="${build}/src/Info.plist"/>
