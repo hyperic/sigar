@@ -2,7 +2,7 @@ INCLUDES = @INCLUDES@
 
 SIGAR_OS_SRCS = solaris_sigar.c get_mib2.c kstats.c procfs.c
 
-SIGAR_OS_HDRS = sigar_os.h get_mib2.h hmekstat.h
+SIGAR_OS_HDRS = sigar_os.h get_mib2.h
 
 if OS_SOLARIS
 noinst_LTLIBRARIES = libsigar_os.la
