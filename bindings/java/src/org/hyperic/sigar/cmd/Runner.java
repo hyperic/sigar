@@ -31,6 +31,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.net.URLClassLoader;
 import java.net.URL;
 
+import org.hyperic.sigar.Sigar;
 import org.hyperic.sigar.SigarLoader;
 
 public class Runner {
@@ -136,6 +137,21 @@ public class Runner {
         return !missingJars();
     }
 
+    private static String getenv(String key) {
+        try {
+            return System.getenv("ANT_HOME"); //check for junit.jar
+        } catch (Error e) {
+            /*1.4*/
+            Sigar sigar = new Sigar();
+            try {
+                return sigar.getProcEnv("$$", "ANT_HOME");
+            } catch (Exception se) {
+                return null;
+            }
+            finally { sigar.close(); }
+        }
+    }
+
     public static void main(String[] args) throws Exception {
         if (args.length < 1) {
             args = new String[] { "Shell" };
@@ -184,7 +200,7 @@ public class Runner {
             }
 
             if (missingJars()) {
-                String home = System.getenv("ANT_HOME"); //check for junit.jar
+                String home = getenv("ANT_HOME"); //check for junit.jar
                 if (home != null) {
                     addJarDir(home + "/lib");
                 }
