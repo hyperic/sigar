@@ -546,7 +546,8 @@ static int ptql_branch_list_destroy(ptql_branch_list_t *branches)
             }
 
             if (branch->lookup &&
-                (branch->lookup->type == PTQL_VALUE_TYPE_STR) &&
+                ((branch->lookup->type == PTQL_VALUE_TYPE_STR) ||
+                 (branch->lookup->type == PTQL_VALUE_TYPE_ANY)) &&
                 !(branch->op_flags & PTQL_OP_FLAG_REF))
             {
                 if (branch->value.str) {

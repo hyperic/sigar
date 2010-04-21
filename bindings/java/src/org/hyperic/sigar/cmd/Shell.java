@@ -204,9 +204,18 @@ public class Shell extends ShellBase {
 
     public void shutdown() {
         this.sigar.close();
-        //avoid possible Class Not Found: junit/framework/TestCase
-        if (System.getProperty("jni.dmalloc") != null) {
-            //org.hyperic.sigar.test.SigarTestCase.closeSigar(); //shutup dmalloc
+        //cleanup for dmalloc
+        //using reflection incase junit.jar is not present
+        try {
+            //SigarTestCase.closeSigar();
+            Class.forName("org.hyperic.sigar.test.SigarTestCase").
+                getMethod("closeSigar", new Class[0]).invoke(null, new Object[0]);
+        } catch (ClassNotFoundException e) {
+            //SigarTestCase.java not compiled w/o junit.jar
+        } catch (Exception e) {
+            e.printStackTrace();
+        } catch (NoClassDefFoundError e) {
+            //avoiding possible Class Not Found: junit/framework/TestCase
         }
         super.shutdown();
     }

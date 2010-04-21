@@ -153,6 +153,9 @@ int sigar_os_open(sigar_t **sig)
 int sigar_os_close(sigar_t *sigar)
 {
     kstat_close(sigar->kc);
+    if (sigar->mib2.sd != -1) {
+        close_mib2(&sigar->mib2);
+    }
 
     if (sigar->ks.lcpu) {
         free(sigar->ks.cpu);
@@ -903,7 +906,7 @@ int sigar_os_proc_args_get(sigar_t *sigar, sigar_pid_t pid,
     pinfo = sigar->pinfo;
 
     if (pinfo->pr_argc == 0) {
-        procargs->number = procargs->size = 0;
+        procargs->number = 0;
         return SIGAR_OK;
     }
     else if (pinfo->pr_dmodel != PR_MODEL_NATIVE) {
@@ -955,7 +958,6 @@ int sigar_os_proc_args_get(sigar_t *sigar, sigar_pid_t pid,
             if (argvp != argvb) {
                 free(argvp);
             }
-            sigar_proc_args_destroy(sigar, procargs);
             return errno;
         }
 

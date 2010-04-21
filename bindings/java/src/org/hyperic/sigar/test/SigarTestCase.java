@@ -27,7 +27,9 @@ import java.util.Properties;
 
 import junit.framework.TestCase;
 
+import org.hyperic.sigar.Humidor;
 import org.hyperic.sigar.Sigar;
+import org.hyperic.sigar.ptql.ProcessQueryFactory;
 
 //helper to add optional tracing.
 public abstract class SigarTestCase extends TestCase {
@@ -80,6 +82,8 @@ public abstract class SigarTestCase extends TestCase {
             sigar.close();
             sigar = null;
         }
+        ProcessQueryFactory.getInstance().clear();
+        Humidor.getInstance().close();
     }
 
     public Properties getProperties() {

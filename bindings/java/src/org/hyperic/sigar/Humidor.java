@@ -36,7 +36,7 @@ public class Humidor {
     private Object LOCK = new Object();
     private InvocationHandler _handler;
     private SigarProxy _sigar;
-    private Sigar _impl;
+    private Sigar _impl, _inst;
 
     private Humidor() {}
 
@@ -69,7 +69,7 @@ public class Humidor {
         synchronized(LOCK) {
             if (_sigar == null) {
                 if (_impl == null) {
-                    _impl = new Sigar();
+                    _inst = _impl = new Sigar();
                 }
                 _handler = new MyHandler(_impl);
                 _sigar = (SigarProxy)
@@ -83,5 +83,14 @@ public class Humidor {
 
     public static Humidor getInstance() {
         return INSTANCE;
+    }
+
+    //close the Sigar instance if getSigar() created it
+    public void close() {
+        if (_inst != null) {
+            _inst.close();
+            _impl = _inst = null;
+        }
+        _sigar = null;
     }
 }

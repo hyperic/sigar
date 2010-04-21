@@ -373,8 +373,13 @@ SIGAR_DECLARE(int) sigar_proc_args_get(sigar_t *sigar,
                                        sigar_pid_t pid,
                                        sigar_proc_args_t *procargs)
 {
+    int status;
     sigar_proc_args_create(procargs);
-    return sigar_os_proc_args_get(sigar, pid, procargs);
+    status = sigar_os_proc_args_get(sigar, pid, procargs);
+    if (status != SIGAR_OK) {
+        sigar_proc_args_destroy(sigar, procargs);
+    }
+    return status;
 }
 
 int sigar_file_system_list_create(sigar_file_system_list_t *fslist)
