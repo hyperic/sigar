@@ -54,6 +54,7 @@ public class TestProcTime extends SigarTestCase {
         double value = procTime.getPercent() * 100.0;
         traceln("Percent=" + value);
         assertTrue(value >= 0.0);
-        assertTrue(value <= 100.0);
+        int ncpu = sigar.getCpuList().length;
+        assertTrue(value <= (100.0 * ncpu)); //SIGAR-145 Irix mode
     }
 }
