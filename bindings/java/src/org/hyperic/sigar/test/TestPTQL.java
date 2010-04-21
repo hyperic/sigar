@@ -116,7 +116,16 @@ public class TestPTQL extends SigarTestCase {
 
     public TestPTQL(String name) {
         super(name);
+    }
+
+    protected void setUp() throws Exception {
+        super.setUp();
         this.qf = new ProcessQueryFactory();
+    }
+
+    protected void tearDown() throws Exception {
+        super.tearDown();
+        this.qf.clear();
     }
 
     private int runQuery(Sigar sigar, String qs)
@@ -174,7 +183,6 @@ public class TestPTQL extends SigarTestCase {
             assertTrue(qs,
                        runQuery(sigar, qs) >= 0);
         }
-        this.qf.clear();
     }
 
     public void testValidRegexQueries() throws Exception {
@@ -183,7 +191,6 @@ public class TestPTQL extends SigarTestCase {
             assertTrue(qs,
                        runQuery(getSigar(), qs) >= 0);
         }
-        this.qf.clear();
     }
 
     public void testMalformedQueries() throws Exception {
@@ -197,7 +204,6 @@ public class TestPTQL extends SigarTestCase {
                 assertTrue(qs + " Malformed", true);
             }
         }
-        this.qf.clear();
     }
 
     public void testSelf() throws Exception {
