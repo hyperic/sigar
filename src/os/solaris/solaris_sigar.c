@@ -953,7 +953,6 @@ int sigar_os_proc_args_get(sigar_t *sigar, sigar_pid_t pid,
             if (argvp != argvb) {
                 free(argvp);
             }
-            sigar_proc_args_destroy(sigar, procargs);
             return errno;
         }
 
