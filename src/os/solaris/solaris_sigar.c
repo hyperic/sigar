@@ -901,7 +901,7 @@ int sigar_os_proc_args_get(sigar_t *sigar, sigar_pid_t pid,
     pinfo = sigar->pinfo;
 
     if (pinfo->pr_argc == 0) {
-        procargs->number = procargs->size = 0;
+        procargs->number = 0;
         return SIGAR_OK;
     }
     else if (pinfo->pr_dmodel != PR_MODEL_NATIVE) {
