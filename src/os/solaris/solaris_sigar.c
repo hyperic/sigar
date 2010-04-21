@@ -151,6 +151,9 @@ int sigar_os_open(sigar_t **sig)
 int sigar_os_close(sigar_t *sigar)
 {
     kstat_close(sigar->kc);
+    if (sigar->mib2.sd != -1) {
+        close_mib2(&sigar->mib2);
+    }
 
     if (sigar->ks.lcpu) {
         free(sigar->ks.cpu);
