@@ -249,25 +249,41 @@ int sigar_swap_get(sigar_t *sigar, sigar_swap_t *swap)
 {
     kstat_t *ksp;
     kstat_named_t *kn;
-    struct anoninfo anon;
+    swaptbl_t *stab;
+    int num, i;
+    char path[PATH_MAX+1]; /* {un,re}used */
 
-    /* XXX vm/anon.h says:
-     * "The swap data can be aquired more efficiently through the
-     *  kstats interface."
-     * but cannot find anything that explains howto convert those numbers.
-     */
-
-    if (swapctl(SC_AINFO, &anon) == -1) {
+    /* see: man swapctl(2) */
+    if ((num = swapctl(SC_GETNSWP, NULL)) == -1) {
         return errno;
     }
 
-    swap->total = anon.ani_max;
-    swap->used  = anon.ani_resv;
-    swap->free  = anon.ani_max - anon.ani_resv;
+    stab = malloc(num * sizeof(stab->swt_ent[0]) + sizeof(*stab));
+
+    stab->swt_n = num;
+    for (i=0; i<num; i++) {
+        stab->swt_ent[i].ste_path = path;
+    }
+
+    if ((num = swapctl(SC_LIST, stab)) == -1) {
+        free(stab);
+        return errno;
+    }
+
+    num = num < stab->swt_n ? num : stab->swt_n;
+    swap->total = swap->free = 0;
+    for (i=0; i<num; i++) {
+        if (stab->swt_ent[i].ste_flags & ST_INDEL) {
+            continue; /* swap file is being deleted */
+        }
+        swap->total += stab->swt_ent[i].ste_pages;
+        swap->free  += stab->swt_ent[i].ste_free;
+    }
+    free(stab);
 
     swap->total <<= sigar->pagesize;
     swap->free  <<= sigar->pagesize;
-    swap->used  <<= sigar->pagesize;
+    swap->used  = swap->total - swap->free;
 
     if (sigar_kstat_update(sigar) == -1) {
         return errno;
