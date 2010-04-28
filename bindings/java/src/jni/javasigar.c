@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2004-2008 Hyperic, Inc.
+ * Copyright (c) 2009 SpringSource, Inc.
  * Copyright (c) 2010 VMware, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");

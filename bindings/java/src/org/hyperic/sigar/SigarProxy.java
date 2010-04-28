@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2007 Hyperic, Inc.
+ * Copyright (c) 2006-2007, 2009 Hyperic, Inc.
  * Copyright (c) 2009 SpringSource, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
