@@ -479,9 +479,8 @@
    <copy toDir="${dist}" overwrite="true">
      <fileset dir="../..">
        <include name="README"/>
-       <include name="COPYING"/>
-       <include name="LICENSES"/>
-       <include name="EXCEPTIONS"/>
+       <include name="LICENSE"/>
+       <include name="NOTICE"/>
        <include name="ChangeLog"/>
      </fileset>
    </copy>
