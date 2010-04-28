@@ -234,7 +234,7 @@ static PERF_OBJECT_TYPE *get_perf_object_inst(sigar_t *sigar,
 #define get_perf_object(sigar, counter_key, err) \
     get_perf_object_inst(sigar, counter_key, 1, err)
 
-static int get_swap_counters(sigar_t *sigar, sigar_swap_t *swap)
+static int get_mem_counters(sigar_t *sigar, sigar_swap_t *swap, sigar_mem_t *mem)
 {
     int status;
     PERF_OBJECT_TYPE *object =
@@ -258,10 +258,17 @@ static int get_swap_counters(sigar_t *sigar, sigar_swap_t *swap)
 
         switch (counter->CounterNameTitleIndex) {
           case 48: /* "Pages Output/sec" */
-            swap->page_out = *((DWORD *)(data + offset));
+            if (swap) swap->page_out = *((DWORD *)(data + offset));
             break;
+          case 76: /* "System Cache Resident Bytes" aka file cache */
+            if (mem) {
+                sigar_uint64_t kern = *((DWORD *)(data + offset));
+                mem->actual_free = mem->free + kern;
+                mem->actual_used = mem->used - kern;
+                return SIGAR_OK;
+            }
           case 822: /* "Pages Input/sec" */
-            swap->page_in = *((DWORD *)(data + offset));
+            if (swap) swap->page_in = *((DWORD *)(data + offset));
             break;
           default:
             continue;
@@ -657,6 +664,8 @@ SIGAR_DECLARE(int) sigar_mem_get(sigar_t *sigar, sigar_mem_t *mem)
 
     mem->actual_free = mem->free;
     mem->actual_used = mem->used;
+    /* set actual_{free,used} */
+    get_mem_counters(sigar, NULL, mem);
 
     sigar_mem_calc_ram(sigar, mem);
 
@@ -689,7 +698,7 @@ SIGAR_DECLARE(int) sigar_swap_get(sigar_t *sigar, sigar_swap_t *swap)
 
     swap->used = swap->total - swap->free;
 
-    if (get_swap_counters(sigar, swap) != SIGAR_OK) {
+    if (get_mem_counters(sigar, swap, NULL) != SIGAR_OK) {
         swap->page_in = SIGAR_FIELD_NOTIMPL;
         swap->page_out = SIGAR_FIELD_NOTIMPL;
     }
