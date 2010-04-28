@@ -170,28 +170,10 @@ typedef enum {
     SC_STATUS_PROCESS_INFO = 0
 } SC_STATUS_TYPE;
 
-typedef struct _PERFORMANCE_INFORMATION {
-    DWORD  cb;
-    SIZE_T CommitTotal;
-    SIZE_T CommitLimit;
-    SIZE_T CommitPeak;
-    SIZE_T PhysicalTotal;
-    SIZE_T PhysicalAvailable;
-    SIZE_T SystemCache;
-    SIZE_T KernelTotal;
-    SIZE_T KernelPaged;
-    SIZE_T KernelNonpaged;
-    SIZE_T PageSize;
-    DWORD  HandleCount;
-    DWORD  ProcessCount;
-    DWORD  ThreadCount;
-} PERFORMANCE_INFORMATION, *PPERFORMANCE_INFORMATION;
-
 #ifndef ERROR_DATATYPE_MISMATCH
 #define ERROR_DATATYPE_MISMATCH 1629L
 #endif
-#else
-#include <psapi.h>
+
 #endif /* _MSC_VER */
 
 #include <iprtrmib.h>
@@ -455,8 +437,6 @@ typedef BOOL (CALLBACK *psapi_enum_processes)(DWORD *,
                                               DWORD,
                                               DWORD *);
 
-typedef BOOL (CALLBACK *psapi_get_perf_info)(PPERFORMANCE_INFORMATION, DWORD);
-
 /* winsta.dll */
 typedef BOOLEAN (CALLBACK *winsta_query_info)(HANDLE,
                                               ULONG,
@@ -533,7 +513,6 @@ typedef struct {
     SIGAR_DLLFUNC(psapi, enum_modules);
     SIGAR_DLLFUNC(psapi, enum_processes);
     SIGAR_DLLFUNC(psapi, get_module_name);
-    SIGAR_DLLFUNC(psapi, get_perf_info);
 
     sigar_dll_func_t end;
 } sigar_psapi_t;

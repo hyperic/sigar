@@ -341,7 +341,6 @@ static sigar_psapi_t sigar_psapi = {
     { "EnumProcessModules", NULL },
     { "EnumProcesses", NULL },
     { "GetModuleFileNameExA", NULL },
-    { "GetPerformanceInfo", NULL },
     { NULL, NULL }
 };
 
@@ -631,14 +630,9 @@ char *sigar_os_error_string(sigar_t *sigar, int err)
 #define sigar_GlobalMemoryStatusEx \
     sigar->kernel.memory_status.func
 
-#define sigar_GetPerformanceInfo \
-    sigar->psapi.get_perf_info.func
-
 SIGAR_DECLARE(int) sigar_mem_get(sigar_t *sigar, sigar_mem_t *mem)
 {
-    sigar_uint64_t kern = 0;
     DLLMOD_INIT(kernel, TRUE);
-    DLLMOD_INIT(psapi, FALSE);
 
     if (sigar_GlobalMemoryStatusEx) {
         MEMORYSTATUSEX memstat;
@@ -651,14 +645,6 @@ SIGAR_DECLARE(int) sigar_mem_get(sigar_t *sigar, sigar_mem_t *mem)
 
         mem->total = memstat.ullTotalPhys;
         mem->free  = memstat.ullAvailPhys;
-
-        if (sigar_GetPerformanceInfo) {
-            PERFORMANCE_INFORMATION info;
-            if (sigar_GetPerformanceInfo(&info, sizeof(info))) {
-                kern = info.SystemCache;
-                kern *= sigar->pagesize;
-            }
-        }
     }
     else {
         MEMORYSTATUS memstat;
@@ -669,8 +655,8 @@ SIGAR_DECLARE(int) sigar_mem_get(sigar_t *sigar, sigar_mem_t *mem)
 
     mem->used = mem->total - mem->free;
 
-    mem->actual_free = mem->free + kern;
-    mem->actual_used = mem->used - kern;
+    mem->actual_free = mem->free;
+    mem->actual_used = mem->used;
 
     sigar_mem_calc_ram(sigar, mem);
 
