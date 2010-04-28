@@ -476,6 +476,7 @@
  <target name="dist-common" depends="javadoc,dist-bindings">
    <copy toDir="${dist}" overwrite="true">
      <fileset dir="../..">
+       <include name="AUTHORS"/>
        <include name="README"/>
        <include name="LICENSE"/>
        <include name="NOTICE"/>
