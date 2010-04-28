@@ -48,9 +48,9 @@ public class TestMem extends SigarTestCase {
 
         assertGtZeroTrace("Free", mem.getFree());
 
-        assertGtZeroTrace("ActualUsed", mem.getUsed());
+        assertGtZeroTrace("ActualUsed", mem.getActualUsed());
 
-        assertGtZeroTrace("ActualFree", mem.getFree());
+        assertGtZeroTrace("ActualFree", mem.getActualFree());
 
         assertGtZeroTrace("Ram", mem.getRam());
 
