@@ -378,7 +378,7 @@ public class Sigar implements SigarProxy {
         CpuPerc[] perc =
             new CpuPerc[curLen < oldLen ? curLen : oldLen];
         
-        for (int i=0; i<curLen; i++) {
+        for (int i=0; i<perc.length; i++) {
             perc[i] =
                 CpuPerc.fetch(this, oldCpuList[i],
                               this.lastCpuList[i]);
