@@ -158,7 +158,18 @@ public class EventLogThread implements Runnable {
                 //      cleaner way to go, but we cannot interrupt
                 //      a native system call.
                 int lastEvent = log.getNewestRecord();
+                if (lastEvent < curEvent) {
+                    logger.debug(this.logName + " EventLog has changed, re-opening");
+                    try { log.close(); } catch (Win32Exception e) {}
+                    log.open(this.logName);
+                    curEvent = log.getOldestRecord();
+                    lastEvent = log.getNewestRecord();
+                }
+
                 if (lastEvent > curEvent) {
+                    if (curEvent == -1) {
+                        curEvent = 0; //log was cleared
+                    }
                     handleEvents(log, curEvent, lastEvent);
                 }
 
