@@ -53,7 +53,7 @@ end
 
 desc 'Build sigar extension'
 task :build do
-  in_ext();
+  in_ext()
   unless File.exists? "Makefile"
     unless system("ruby extconf.rb")
       STDERR.puts "Failed to configure"
@@ -78,13 +78,13 @@ end
 desc 'Clean sigar extension'
 task :clean do
   in_ext()
-  system(MAKE + ' clean')
+  system(MAKE + ' clean') if File.exists? "Makefile"
 end
 
 desc 'Dist Clean sigar extension'
 task :distclean do
   in_ext()
-  system(MAKE + ' distclean')
+  system(MAKE + ' distclean') if File.exists? "Makefile"
 end
 
 desc 'Run sigar examples (test)'
