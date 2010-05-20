@@ -157,13 +157,26 @@ public class EventLogThread implements Runnable {
                 // XXX: Using the waitForChange() method would be a
                 //      cleaner way to go, but we cannot interrupt
                 //      a native system call.
+                boolean logChanged = false;
                 int lastEvent = log.getNewestRecord();
                 if (lastEvent < curEvent) {
+                    logChanged = true;
+                }
+                else if ((lastEvent == curEvent) && (lastEvent != -1)) {
+                    //example: clearing the Security log generates an event
+                    //and clear it again before any new events come in
+                    try {
+                        log.read(lastEvent);
+                    } catch (Win32Exception e) {
+                        logChanged = true;
+                    }
+                }
+
+                if (logChanged) {
                     logger.debug(this.logName + " EventLog has changed, re-opening");
                     try { log.close(); } catch (Win32Exception e) {}
                     log.open(this.logName);
-                    curEvent = log.getOldestRecord();
-                    lastEvent = log.getNewestRecord();
+                    curEvent = 0; //all events in the log are new to us after being cleared
                 }
 
                 if (lastEvent > curEvent) {
