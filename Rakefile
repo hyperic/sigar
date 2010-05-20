@@ -68,6 +68,7 @@ end
 
 Rake::TestTask.new do |t|
   t.pattern = 'test/*_test.rb'
+  t.libs << "."
 end
 
 task :test => [:build] do
@@ -90,7 +91,7 @@ desc 'Run sigar examples (test)'
 task :examples => [:build] do
   in_ext()
   Dir["examples/*.rb"].each do |file|
-    cmd = "ruby #{file}"
+    cmd = "ruby -I. #{file}"
     print cmd + "\n"
     system(cmd)
   end
