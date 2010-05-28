@@ -102,14 +102,24 @@ unless is_win32
   end
 end
 
+$distcleanfiles = ['rbsigar_generated.rx','sigar_version.c']
+
 system('perl -Mlib=.. -MSigarWrapper -e generate Ruby .')
 libname = extension_name + '.' + CONFIG['DLEXT']
-system('perl -Mlib=.. -MSigarBuild -e version_file ' +
-       'ARCHNAME=' + RUBY_PLATFORM + ' ' +
-       'ARCHLIB=' + libname + ' ' +
-       'BINNAME=' + libname)
+filters =
+  'ARCHNAME=' + RUBY_PLATFORM + ' ' +
+  'ARCHLIB=' + libname + ' ' +
+  'BINNAME=' + libname
 
-$distcleanfiles = ['rbsigar_generated.rx','sigar_version.c']
+system('perl -Mlib=.. -MSigarBuild -e version_file ' + filters)
+
+if is_win32
+  system('perl -Mlib=.. -MSigarBuild -e resource_file ' + filters)
+  system('rc /r sigar.rc')
+  $LDFLAGS += ' sigar.res'
+  $distcleanfiles << ['sigar.rc', 'sigar.res']
+end
+
 #XXX seems mkmf forces basename on srcs
 #XXX should be linking against libsigar anyhow
 (Dir["../../src/*.c"] + Dir["#{osdir}/*.c"] + Dir["#{osdir}/*.cpp"]).each do |file|
