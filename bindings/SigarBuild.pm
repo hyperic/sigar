@@ -28,7 +28,7 @@ use POSIX ();
 
 use vars qw(@ISA @EXPORT);
 @ISA = qw(Exporter);
-@EXPORT = qw(cppflags ldflags libs os src inline_src version_file);
+@EXPORT = qw(cppflags ldflags libs os src inline_src version_file resource_file);
 
 sub archname {
     my $os = lc $^O;
@@ -259,6 +259,11 @@ sub version_properties {
         join '.', $props->{'version'}, $props->{'version.build'};
 
     return $props;
+}
+
+sub resource_file {
+    my(@args) = @_ ? @_ : @ARGV;
+    version_file(find_file("src/os/win32/sigar.rc.in"), "sigar.rc", @args);
 }
 
 sub version_file {
