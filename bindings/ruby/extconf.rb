@@ -118,6 +118,8 @@ if is_win32
   system('rc /r sigar.rc')
   $LDFLAGS += ' sigar.res'
   $distcleanfiles << ['sigar.rc', 'sigar.res']
+  #do not want dynamic runtime else "MSVCR80.dll was not found"
+  $CFLAGS = $CFLAGS.gsub('-MD', '')
 end
 
 #XXX seems mkmf forces basename on srcs
