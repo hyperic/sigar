@@ -30,7 +30,7 @@ class FileSystemTest < Test::Unit::TestCase
 
       begin
         usage = sigar.file_system_usage fs.dir_name
-      rescue err
+      rescue => err
         if fs.type == Sigar::FSTYPE_LOCAL_DISK
           raise err
         end
