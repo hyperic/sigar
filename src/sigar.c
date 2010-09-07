@@ -412,7 +412,7 @@ static int sigar_common_fs_type_get(sigar_file_system_t *fsp)
 
     switch (*type) {
       case 'n':
-        if (strEQ(type, "nfs")) {
+        if (strnEQ(type, "nfs", 3)) {
             fsp->type = SIGAR_FSTYPE_NETWORK;
         }
         break;
