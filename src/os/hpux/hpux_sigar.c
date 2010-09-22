@@ -1,19 +1,19 @@
 /*
- * Copyright (C) [2004, 2005, 2006], Hyperic, Inc.
- * This file is part of SIGAR.
- * 
- * SIGAR is free software; you can redistribute it and/or modify
- * it under the terms version 2 of the GNU General Public License as
- * published by the Free Software Foundation. This program is distributed
- * in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
- * even the implied warranty of MERCHANTABILITY or FITNESS FOR A
- * PARTICULAR PURPOSE. See the GNU General Public License for more
- * details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- * USA.
+ * Copyright (c) 2004-2009 Hyperic, Inc.
+ * Copyright (c) 2009 SpringSource, Inc.
+ * Copyright (c) 2009-2010 VMware, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 #include "sigar.h"
@@ -77,7 +77,9 @@ char *sigar_os_error_string(sigar_t *sigar, int err)
 int sigar_mem_get(sigar_t *sigar, sigar_mem_t *mem)
 {
     struct pst_dynamic stats;
+    struct pst_vminfo vminfo;
     sigar_uint64_t pagesize = sigar->pstatic.page_size;
+    sigar_uint64_t kern;
 
     mem->total = sigar->pstatic.physical_memory * pagesize;
 
@@ -86,8 +88,12 @@ int sigar_mem_get(sigar_t *sigar, sigar_mem_t *mem)
     mem->free = stats.psd_free * pagesize;
     mem->used = mem->total - mem->free;
 
-    mem->actual_free = mem->free;
-    mem->actual_used = mem->used;
+    pstat_getvminfo(&vminfo, sizeof(vminfo), 1, 0);
+
+    /* "kernel dynamic memory" */
+    kern = vminfo.psv_kern_dynmem * pagesize;
+    mem->actual_free = mem->free + kern;
+    mem->actual_used = mem->used - kern;
 
     sigar_mem_calc_ram(sigar, mem);
 
@@ -559,7 +565,7 @@ int sigar_file_system_list_get(sigar_t *sigar,
     FILE *fp;
     sigar_file_system_t *fsp;
 
-    if (!(fp = setmntent(MNT_CHECKLIST, "r"))) {
+    if (!(fp = setmntent(MNT_MNTTAB, "r"))) {
         return errno;
     }
 

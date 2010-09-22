@@ -1,3 +1,21 @@
+#
+# Copyright (c) 2007, 2009 Hyperic, Inc.
+# Copyright (c) 2009 SpringSource, Inc.
+# Copyright (c) 2010 VMware, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
 require 'mkmf'
 require 'rbconfig'
 
@@ -84,14 +102,26 @@ unless is_win32
   end
 end
 
+$distcleanfiles = ['rbsigar_generated.rx','sigar_version.c']
+
 system('perl -Mlib=.. -MSigarWrapper -e generate Ruby .')
 libname = extension_name + '.' + CONFIG['DLEXT']
-system('perl -Mlib=.. -MSigarBuild -e version_file ' +
-       'ARCHNAME=' + RUBY_PLATFORM + ' ' +
-       'ARCHLIB=' + libname + ' ' +
-       'BINNAME=' + libname)
+filters =
+  'ARCHNAME=' + RUBY_PLATFORM + ' ' +
+  'ARCHLIB=' + libname + ' ' +
+  'BINNAME=' + libname
 
-$distcleanfiles = ['rbsigar_generated.rx','sigar_version.c']
+system('perl -Mlib=.. -MSigarBuild -e version_file ' + filters)
+
+if is_win32
+  system('perl -Mlib=.. -MSigarBuild -e resource_file ' + filters)
+  system('rc /r sigar.rc')
+  $LDFLAGS += ' sigar.res'
+  $distcleanfiles << ['sigar.rc', 'sigar.res']
+  #do not want dynamic runtime else "MSVCR80.dll was not found"
+  $CFLAGS = $CFLAGS.gsub('-MD', '')
+end
+
 #XXX seems mkmf forces basename on srcs
 #XXX should be linking against libsigar anyhow
 (Dir["../../src/*.c"] + Dir["#{osdir}/*.c"] + Dir["#{osdir}/*.cpp"]).each do |file|

@@ -1,25 +1,28 @@
 /*
- * Copyright (C) [2004, 2005, 2006], Hyperic, Inc.
- * This file is part of SIGAR.
- * 
- * SIGAR is free software; you can redistribute it and/or modify
- * it under the terms version 2 of the GNU General Public License as
- * published by the Free Software Foundation. This program is distributed
- * in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
- * even the implied warranty of MERCHANTABILITY or FITNESS FOR A
- * PARTICULAR PURPOSE. See the GNU General Public License for more
- * details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- * USA.
+ * Copyright (c) 2009 Hyperic, Inc.
+ * Copyright (c) 2009 SpringSource, Inc.
+ * Copyright (c) 2009-2010 VMware, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package org.hyperic.jni;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileFilter;
+import java.io.FileReader;
+import java.io.Reader;
 import java.util.Arrays;
 
 import org.apache.tools.ant.Task;
@@ -134,5 +137,71 @@ public class ArchNameTask extends Task {
                 System.out.println("Using -mmacosx-version-min=" + min);
             }
         }
+        getProject().setProperty("jni.scmrev", getSourceRevision());
+
+        //jni.javahome required to find include/jni.h
+        String home = getProject().getProperty("jni.javahome");
+        if (home == null) {
+            home = System.getProperty("java.home");
+        }
+        File dir = new File(home);
+        if (!new File(dir, "include").exists()) {
+            dir = dir.getParentFile(); //was /jre
+        }
+        getProject().setProperty("jni.javahome", dir.getPath());
+    }
+
+    //XXX source rev stuff should be in another task
+    private String readLine(String filename) {
+        Reader reader = null;
+        try {
+            reader = new FileReader(filename);
+            return new BufferedReader(reader).readLine();
+        } catch (Exception e) {
+        } finally {
+            if (reader != null) {
+                try { reader.close(); } catch (Exception e) {}
+            }
+        }
+        return null;
+    }
+
+    private String getSourceRevision() {
+        final String exported = "exported";
+        String sha1 = getGitSourceRevision();
+        if (sha1 == null) {
+            return exported;
+        }
+        else {
+            return sha1;
+        }
+    }
+
+    //same as: git rev-parse --short HEAD
+    //same as: (cd .git && cat HEAD | awk '{print $2}' | xargs cat | cut -b 1-7)
+    private String getGitSourceRevision() {
+        String git = getProject().getProperty("jni.git");
+        if (git == null) {
+            git = ".git";
+        }
+        if (new File(git).exists()) {
+            String head = readLine(git + "/HEAD");
+
+            if (head != null) {
+                String sha1;
+                final String refp = "ref: ";
+                if (head.startsWith(refp)) {
+                    //branch
+                    String ref = head.substring(refp.length()).trim();
+                    sha1 = readLine(git + "/" + ref);
+                }
+                else {
+                    //git checkout -f origin/branch-name (no branch)
+                    sha1 = head;
+                }
+                return sha1.substring(0, 7);
+            }
+        }
+        return null;
     }
 }

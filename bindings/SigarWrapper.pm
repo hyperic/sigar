@@ -1,3 +1,21 @@
+#
+# Copyright (c) 2007-2009 Hyperic, Inc.
+# Copyright (c) 2009 SpringSource, Inc.
+# Copyright (c) 2009-2010 VMware, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
 #extension source generator for all bindings
 package SigarWrapper;
 
@@ -2952,40 +2970,6 @@ EOF
     }
 }
 EOF
-
-    $self->SUPER::finish;
-}
-
-#XXX not currently supporting netware
-package SigarWrapper::Netware;
-
-use vars qw(@ISA);
-@ISA = qw(SigarWrapper);
-
-sub start {
-    my $self = shift;
-    $self->SUPER::start;
-    $self->{dfh} = $self->create('javasigar_generated.def');
-}
-
-sub finish {
-    my $self = shift;
-    my $fh = $self->{dfh};
-    for my $func (@{ $self->{nativefunc} }) {
-        #$fh->println($nativefunc) if $impl;
-    }
-    my $jsigar = "../../src/jni/javasigar.c";
-    my(%alias) = (x => 'Sigar');
-    open JSIGAR, $jsigar or die "open $jsigar: $!";
-    while (<JSIGAR>) {
-        next unless /SIGAR_JNI([a-z]?)\(([A-Za-z_]+)\)/;
-        my $class = "";
-        if ($1) {
-            $class = $alias{$1} . "_";
-        }
-        $fh->println("Java_org_hyperic_sigar_$class$2");
-    }
-    close JSIGAR;
 
     $self->SUPER::finish;
 }

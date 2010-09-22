@@ -14,6 +14,7 @@
   <property name="jni.define.name" value="SIGAR"/>
   <property name="sigar-bin" location="sigar-bin"/>
   <property name="sigar-bin-dir" location="${sigar-bin}"/>
+  <property name="jni.git" location="../../.git"/>
   <property name="jni.bin" location="${sigar-bin}"/>
   <property name="jni.source.dir" location="../.."/>
   <property name="jni.src.java" value="hyperic_jni/src"/>
@@ -55,6 +56,7 @@
   <path id="alljars">
      <path refid="libjars"/>
      <fileset dir="${sigar-bin}/lib" includes="${sigar.jar}"/>
+     <fileset dir="${ant.library.dir}" includes="junit*.jar"/>
   </path>
 
   <target name="javadoc_check">
@@ -83,21 +85,26 @@
              doctitle="Sigar">
       <group title="Sigar" packages="org.hyperic.sigar" />
       <classpath refid="libjars"/>
-      <classpath><path path="${env.ANT_HOME}/lib/ant.jar"/></classpath> 
+      <classpath><path path="${ant.library.dir}/ant.jar"/></classpath>
      <bottom>Copyright &#169; ${copyright.year} <![CDATA[<a target="_top" href="http://www.hyperic.com/">Hyperic</a>]]>. All Rights Reserved.</bottom>
     </javadoc>
   </target>
 
   <target name="compile">
     <mkdir dir="${build}/classes"/>
+    <available classname="junit.framework.TestCase" property="junit.present">
+      <classpath refid="alljars"/>
+    </available>
     <javac destdir="${build}/classes"
            source="1.4" target="1.4"
+           sourcepath=""
            debug="true"
            classpathref="libjars">
       <src path="${src}"/>
       <src path="${build}/src"/>
       <src path="${jni.src.java}"/>
       <include name="**/*.java"/>
+      <exclude name="**/test/*.java" unless="junit.present"/>
     </javac>
   </target>
 
@@ -116,7 +123,7 @@
     <replace file="${version.tofile}">
       <replacefilter token="@@BUILD_DATE@@" value="${BUILD_DATE}"/>
       <replacefilter token="@@VERSION_STRING@@" value="${sigar.version}.${version.build}"/>
-      <replacefilter token="@@SCM_REVISION@@" value="${sigar.scmrev}"/>
+      <replacefilter token="@@SCM_REVISION@@" value="${jni.scmrev}"/>
       <replacefilter token="@@ARCHNAME@@" value="${jni.libarch}"/>
       <replacefilter token="@@ARCHLIB@@" value="${jni.libname.full}"/>
       <replacefilter token="@@BINNAME@@" value="${jni.project.archname}"/>
@@ -128,59 +135,12 @@
     </replace>
   </target>
 
-  <target name="check-svn">
-    <condition property="svn.available">
-      <and>
-        <available file=".svn" type="dir"/>
-        <available file="svn" type="file">
-          <filepath>
-            <pathelement path="${env.PATH}"/>
-          </filepath>
-        </available>
-     </and>
-    </condition>
-  </target>
-
-  <target name="svn-revision" if="svn.available">
-    <exec executable="svnversion" dir="."
-          outputproperty="sigar.scmrev"
-          failifexecutionfails="false">
-      <arg value="."/>
-    </exec>
-    <echo message="SIGAR svn revision #${sigar.scmrev}"/>
-  </target>
-
-  <target name="check-git">
-    <condition property="git.available">
-      <and>
-        <available file="../../.git" type="dir"/>
-        <available file="git" type="file">
-          <filepath>
-            <pathelement path="${env.PATH}"/>
-          </filepath>
-        </available>
-     </and>
-    </condition>
-  </target>
-
-  <target name="git-revision" if="git.available">
-    <exec executable="git" dir="."
-          outputproperty="sigar.scmrev"
-          failifexecutionfails="false">
-      <arg value="rev-parse"/>
-      <arg value="--short"/>
-      <arg value="HEAD"/>
-    </exec>
-    <echo message="SIGAR git revision #${sigar.scmrev}"/>
-  </target>
-
-  <target name="sigar-version" depends="check-svn,svn-revision,check-git,git-revision">
+  <target name="sigar-version">
     <tstamp>
       <format property="BUILD_DATE" pattern="MM/dd/yyyy hh:mm aa"/>
     </tstamp>
 
-    <!-- in the case of release source builds -->
-    <property name="sigar.scmrev" value="exported"/>
+    <echo message="SIGAR git revision ${jni.scmrev}"/>
 
     <antcall target="version-file">
        <param name="version.file"
@@ -194,15 +154,6 @@
               value="src/sigar_version.c"/>
        <param name="version.tofile"
               value="${build}/src/sigar_version.c"/>
-    </antcall>
-
-    <antcall target="version-file">
-       <param name="version.file.srcdir"
-              value="../.."/>
-       <param name="version.file"
-              value="src/os/netware/sigar.def"/>
-       <param name="version.tofile"
-              value="${build}/src/sigar.def"/>
     </antcall>
 
     <antcall target="version-file">
@@ -459,7 +410,6 @@
        <include name="lib/*.lib"/>
      </fileset>
      <fileset dir=".">
-       <include name="lib/junit.jar"/>
        <include name="lib/log4j.jar"/>
      </fileset>
    </copy>
@@ -528,10 +478,10 @@
  <target name="dist-common" depends="javadoc,dist-bindings">
    <copy toDir="${dist}" overwrite="true">
      <fileset dir="../..">
+       <include name="AUTHORS"/>
        <include name="README"/>
-       <include name="COPYING"/>
-       <include name="LICENSES"/>
-       <include name="EXCEPTIONS"/>
+       <include name="LICENSE"/>
+       <include name="NOTICE"/>
        <include name="ChangeLog"/>
      </fileset>
    </copy>

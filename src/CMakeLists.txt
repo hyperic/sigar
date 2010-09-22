@@ -42,11 +42,7 @@ ENDIF(CMAKE_SYSTEM_NAME MATCHES "(Solaris|SunOS)" )
 
 ## solaris
 IF (CMAKE_SYSTEM_NAME MATCHES "(hpux)" )
-  SET(SIGAR_SRC
-	os/hpux/hpux_sigar.c
-	os/hpux/dlpi.c
-  )
-
+  SET(SIGAR_SRC os/hpux/hpux_sigar.c)
   INCLUDE_DIRECTORIES(os/hpux/)
   ADD_DEFINITIONS(-DSIGAR_HPUX)
   SET(SIGAR_LINK_FLAGS -lnm)

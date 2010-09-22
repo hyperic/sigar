@@ -1,19 +1,19 @@
 /*
- * Copyright (C) [2004, 2005, 2006], Hyperic, Inc.
- * This file is part of SIGAR.
- * 
- * SIGAR is free software; you can redistribute it and/or modify
- * it under the terms version 2 of the GNU General Public License as
- * published by the Free Software Foundation. This program is distributed
- * in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
- * even the implied warranty of MERCHANTABILITY or FITNESS FOR A
- * PARTICULAR PURPOSE. See the GNU General Public License for more
- * details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- * USA.
+ * Copyright (c) 2004-2009 Hyperic, Inc.
+ * Copyright (c) 2009 SpringSource, Inc.
+ * Copyright (c) 2009-2010 VMware, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 #include "sigar.h"
@@ -235,7 +235,7 @@ static PERF_OBJECT_TYPE *get_perf_object_inst(sigar_t *sigar,
 #define get_perf_object(sigar, counter_key, err) \
     get_perf_object_inst(sigar, counter_key, 1, err)
 
-static int get_swap_counters(sigar_t *sigar, sigar_swap_t *swap)
+static int get_mem_counters(sigar_t *sigar, sigar_swap_t *swap, sigar_mem_t *mem)
 {
     int status;
     PERF_OBJECT_TYPE *object =
@@ -259,10 +259,17 @@ static int get_swap_counters(sigar_t *sigar, sigar_swap_t *swap)
 
         switch (counter->CounterNameTitleIndex) {
           case 48: /* "Pages Output/sec" */
-            swap->page_out = *((DWORD *)(data + offset));
+            if (swap) swap->page_out = *((DWORD *)(data + offset));
             break;
+          case 76: /* "System Cache Resident Bytes" aka file cache */
+            if (mem) {
+                sigar_uint64_t kern = *((DWORD *)(data + offset));
+                mem->actual_free = mem->free + kern;
+                mem->actual_used = mem->used - kern;
+                return SIGAR_OK;
+            }
           case 822: /* "Pages Input/sec" */
-            swap->page_in = *((DWORD *)(data + offset));
+            if (swap) swap->page_in = *((DWORD *)(data + offset));
             break;
           default:
             continue;
@@ -659,6 +666,8 @@ SIGAR_DECLARE(int) sigar_mem_get(sigar_t *sigar, sigar_mem_t *mem)
 
     mem->actual_free = mem->free;
     mem->actual_used = mem->used;
+    /* set actual_{free,used} */
+    get_mem_counters(sigar, NULL, mem);
 
     sigar_mem_calc_ram(sigar, mem);
 
@@ -691,7 +700,7 @@ SIGAR_DECLARE(int) sigar_swap_get(sigar_t *sigar, sigar_swap_t *swap)
 
     swap->used = swap->total - swap->free;
 
-    if (get_swap_counters(sigar, swap) != SIGAR_OK) {
+    if (get_mem_counters(sigar, swap, NULL) != SIGAR_OK) {
         swap->page_in = SIGAR_FIELD_NOTIMPL;
         swap->page_out = SIGAR_FIELD_NOTIMPL;
     }
@@ -1479,7 +1488,8 @@ int sigar_os_proc_args_get(sigar_t *sigar, sigar_pid_t pid,
     }
 }
 
-static int sigar_proc_env_parse(UCHAR *ptr, sigar_proc_env_t *procenv)
+static int sigar_proc_env_parse(UCHAR *ptr, sigar_proc_env_t *procenv,
+                                int multi)
 {
     while (*ptr) {
         char *val;
@@ -1512,6 +1522,10 @@ static int sigar_proc_env_parse(UCHAR *ptr, sigar_proc_env_t *procenv)
             return status;
         }
 
+        if (!multi) {
+            break; /* caller only provided 1 key=val pair */
+        }
+
         ptr += klen + 1 + vlen + 1;
     }
 
@@ -1523,7 +1537,7 @@ static int sigar_local_proc_env_get(sigar_t *sigar, sigar_pid_t pid,
 {
     UCHAR *env = (UCHAR*)GetEnvironmentStrings();
 
-    sigar_proc_env_parse(env, procenv);
+    sigar_proc_env_parse(env, procenv, TRUE);
 
     FreeEnvironmentStrings(env);
 
@@ -1552,8 +1566,9 @@ static int sigar_remote_proc_env_get(sigar_t *sigar, sigar_pid_t pid,
 
         while ((size > 0) && (*ptr != L'\0')) {
             DWORD len = (wcslen((LPWSTR)ptr) + 1) * sizeof(WCHAR);
+            /* multi=FALSE so no need to: memset(ent, '\0', sizeof(ent)) */
             SIGAR_W2A((WCHAR *)ptr, ent, sizeof(ent));
-            if (sigar_proc_env_parse(ent, procenv) != SIGAR_OK) {
+            if (sigar_proc_env_parse(ent, procenv, FALSE) != SIGAR_OK) {
                 break;
             }
             size -= len;
@@ -2631,6 +2646,11 @@ static int netif_hash(char *s)
     return hash;
 }
 
+/* Vista and later, wireless network cards are reported as IF_TYPE_IEEE80211 */
+#ifndef IF_TYPE_IEEE80211
+#define IF_TYPE_IEEE80211 71
+#endif
+
 SIGAR_DECLARE(int)
 sigar_net_interface_list_get(sigar_t *sigar,
                              sigar_net_interface_list_t *iflist)
@@ -2673,7 +2693,9 @@ sigar_net_interface_list_get(sigar_t *sigar,
         else if (ifr->dwType == MIB_IF_TYPE_LOOPBACK) {
             sprintf(name, "lo%d", lo++);
         }
-        else if (ifr->dwType == MIB_IF_TYPE_ETHERNET) {
+        else if ((ifr->dwType == MIB_IF_TYPE_ETHERNET) ||
+                 (ifr->dwType == IF_TYPE_IEEE80211))
+        {
             sprintf(name, "eth%d", eth++);
         }
         else {

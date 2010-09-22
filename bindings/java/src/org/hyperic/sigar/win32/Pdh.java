@@ -1,19 +1,18 @@
 /*
- * Copyright (C) [2004, 2005, 2006], Hyperic, Inc.
- * This file is part of SIGAR.
- * 
- * SIGAR is free software; you can redistribute it and/or modify
- * it under the terms version 2 of the GNU General Public License as
- * published by the Free Software Foundation. This program is distributed
- * in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
- * even the implied warranty of MERCHANTABILITY or FITNESS FOR A
- * PARTICULAR PURPOSE. See the GNU General Public License for more
- * details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- * USA.
+ * Copyright (c) 2006-2007 Hyperic, Inc.
+ * Copyright (c) 2010 VMware, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package org.hyperic.sigar.win32;
@@ -62,6 +61,15 @@ public class Pdh extends Win32 {
 
     public static final String PERFLIB_KEY =
         "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Perflib";
+
+    //see winperf.h
+    public static final long PERF_TYPE_NUMBER  = 0x00000000; // a number (not a counter)
+
+    public static final long PERF_TYPE_COUNTER = 0x00000400; // an increasing numeric value
+
+    public static final long PERF_TYPE_TEXT    = 0x00000800; // a text field
+
+    public static final long PERF_TYPE_ZERO    = 0x00000C00; // displays a zero
 
     private long   query = -1l; // Handle to the query
     private String hostname = null;
@@ -292,8 +300,49 @@ public class Pdh extends Win32 {
         }
     }
 
+    /* PdhCounterInfo.ExplainText */
+    public String getDescription(String path) throws Win32Exception {
+        long counter =
+            pdhAddCounter(this.query, translate(path));
+        try {
+            return pdhGetDescription(counter);
+        } finally {
+            pdhRemoveCounter(counter);
+        }
+    }
+
+    public long getCounterType(String path) throws Win32Exception {
+        long counter =
+            pdhAddCounter(this.query, translate(path));
+        try {
+            return pdhGetCounterType(counter);
+        } finally {
+            pdhRemoveCounter(counter);
+        }
+    }
+
+    private static final class InstanceIndex {
+        long index = 0;
+    }
+
     public static String[] getInstances(String path) throws Win32Exception {
-        return pdhGetInstances(getCounterName(path));
+        String[] instances = pdhGetInstances(getCounterName(path));
+
+        /* PdhEnumObjectItems() does not include the instance index */
+        HashMap names = new HashMap(instances.length);
+        for (int i=0; i<instances.length; i++) {
+            InstanceIndex ix = (InstanceIndex)names.get(instances[i]);
+            if (ix == null) {
+                ix = new InstanceIndex();
+                names.put(instances[i], ix);
+            }
+            else {
+                ix.index++;
+                instances[i] = instances[i] + "#" + ix.index;
+            }
+        }
+
+        return instances;
     }
 
     public static String[] getKeys(String path) throws Win32Exception {
@@ -318,6 +367,10 @@ public class Pdh extends Win32 {
     private static final native double pdhGetValue(long query, 
                                                    long counter,
                                                    boolean fmt)
+        throws Win32Exception;
+    private static final native String pdhGetDescription(long counter)
+        throws Win32Exception;
+    private static final native long pdhGetCounterType(long counter)
         throws Win32Exception;
     private static final native String[] pdhGetInstances(String path)
         throws Win32Exception;

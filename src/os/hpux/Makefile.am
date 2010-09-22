@@ -1,6 +1,6 @@
 INCLUDES = @INCLUDES@
 
-SIGAR_OS_SRCS = hpux_sigar.c dlpi.c
+SIGAR_OS_SRCS = hpux_sigar.c
 
 SIGAR_OS_HDRS = sigar_os.h
 

@@ -1,25 +1,25 @@
 /*
- * Copyright (C) [2004, 2005, 2006], Hyperic, Inc.
- * This file is part of SIGAR.
- * 
- * SIGAR is free software; you can redistribute it and/or modify
- * it under the terms version 2 of the GNU General Public License as
- * published by the Free Software Foundation. This program is distributed
- * in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
- * even the implied warranty of MERCHANTABILITY or FITNESS FOR A
- * PARTICULAR PURPOSE. See the GNU General Public License for more
- * details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- * USA.
+ * Copyright (c) 2006-2008 Hyperic, Inc.
+ * Copyright (c) 2010 VMware, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package org.hyperic.sigar.cmd;
 
 import java.io.IOException;
 import java.io.File;
+import java.lang.reflect.Constructor;
 
 import org.hyperic.sigar.Sigar;
 import org.hyperic.sigar.SigarException;
@@ -35,9 +35,6 @@ import org.hyperic.sigar.shell.ShellCommandExecException;
 import org.hyperic.sigar.shell.ShellCommandHandler;
 import org.hyperic.sigar.shell.ShellCommandInitException;
 import org.hyperic.sigar.shell.ShellCommandUsageException;
-
-import org.hyperic.sigar.test.SigarTestCase;
-import org.hyperic.sigar.test.SigarTestRunner;
 
 import org.hyperic.sigar.util.Getline;
 
@@ -112,12 +109,19 @@ public class Shell extends ShellBase {
         }
         try {
             //requires junit.jar
-            registerCommandHandler("test", new SigarTestRunner(this));
+            registerCommandHandler("test", "org.hyperic.sigar.test.SigarTestRunner");
         } catch (NoClassDefFoundError e) { }
+        catch (Exception e) { }
         try {
             //requires jre 1.5+ or mx4j
             registerCommandHandler("mx", new Mx(this));
         } catch (NoClassDefFoundError e) { }
+    }
+
+    private void registerCommandHandler(String name, String className) throws Exception {
+        Class cls = Class.forName(className);
+        Constructor con = cls.getConstructor(new Class[] { this.getClass() });
+        registerCommandHandler(name, (ShellCommandHandler)con.newInstance(new Object[] { this }));
     }
 
     public void processCommand(ShellCommandHandler handler, String args[])
@@ -199,9 +203,18 @@ public class Shell extends ShellBase {
 
     public void shutdown() {
         this.sigar.close();
-        //avoid possible Class Not Found: junit/framework/TestCase
-        if (System.getProperty("jni.dmalloc") != null) {
-            SigarTestCase.closeSigar(); //shutup dmalloc
+        //cleanup for dmalloc
+        //using reflection incase junit.jar is not present
+        try {
+            //SigarTestCase.closeSigar();
+            Class.forName("org.hyperic.sigar.test.SigarTestCase").
+                getMethod("closeSigar", new Class[0]).invoke(null, new Object[0]);
+        } catch (ClassNotFoundException e) {
+            //SigarTestCase.java not compiled w/o junit.jar
+        } catch (Exception e) {
+            e.printStackTrace();
+        } catch (NoClassDefFoundError e) {
+            //avoiding possible Class Not Found: junit/framework/TestCase
         }
         super.shutdown();
     }

@@ -1,19 +1,18 @@
 /*
- * Copyright (C) [2004, 2005, 2006], Hyperic, Inc.
- * This file is part of SIGAR.
- * 
- * SIGAR is free software; you can redistribute it and/or modify
- * it under the terms version 2 of the GNU General Public License as
- * published by the Free Software Foundation. This program is distributed
- * in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
- * even the implied warranty of MERCHANTABILITY or FITNESS FOR A
- * PARTICULAR PURPOSE. See the GNU General Public License for more
- * details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- * USA.
+ * Copyright (c) 2004-2007 Hyperic, Inc.
+ * Copyright (c) 2010 VMware, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 #ifdef WIN32
@@ -222,6 +221,55 @@ JNIEXPORT jdouble SIGAR_JNI(win32_Pdh_pdhGetValue)
     }
 }
 
+JNIEXPORT jstring SIGAR_JNI(win32_Pdh_pdhGetDescription)
+(JNIEnv *env, jclass cur, jlong counter)
+{
+    HCOUNTER h_counter = (HCOUNTER)counter;
+    PDH_COUNTER_INFO *info = NULL;
+    jstring retval = NULL;
+    DWORD size = 0;
+    PDH_STATUS status;
+
+    status = PdhGetCounterInfo(h_counter, TRUE, &size, NULL);
+    if (status != PDH_MORE_DATA) {
+        win32_throw_exception(env, get_error_message(status));
+        return NULL;
+    }
+
+    info = malloc(size);
+
+    status = PdhGetCounterInfo(h_counter, 1, &size, info);
+    if (status == ERROR_SUCCESS) {
+        if (info->szExplainText) {
+            retval = JENV->NewString(env, info->szExplainText,
+                                     lstrlen(info->szExplainText));
+        }
+    }
+    else {
+        win32_throw_exception(env, get_error_message(status));
+    }
+
+    free(info);
+    return retval;
+}
+
+JNIEXPORT jlong SIGAR_JNI(win32_Pdh_pdhGetCounterType)
+(JNIEnv *env, jclass cur, jlong counter)
+{
+    HCOUNTER h_counter = (HCOUNTER)counter;
+    PDH_COUNTER_INFO info;
+    DWORD size = sizeof(info);
+    PDH_STATUS status;
+
+    status = PdhGetCounterInfo(h_counter, FALSE, &size, &info);
+    if (status != ERROR_SUCCESS) {
+        win32_throw_exception(env, get_error_message(status));
+        return -1;
+    }
+
+    return info.dwType;
+}
+
 JNIEXPORT jobjectArray SIGAR_JNI(win32_Pdh_pdhGetInstances)
 (JNIEnv *env, jclass cur, jstring cp)
 {
@@ -270,6 +318,10 @@ JNIEXPORT jobjectArray SIGAR_JNI(win32_Pdh_pdhGetInstances)
                                      JENV->FindClass(env, 
                                                      "java/lang/String"),
                                      JENV->NewStringUTF(env, ""));
+        if (JENV->ExceptionCheck(env)) {
+            free(instance_list_buf);
+            return NULL;
+        }
 
         /* Walk the return instance list, creating an array */
         for (cur_object = instance_list_buf, i = 0;
@@ -280,6 +332,10 @@ JNIEXPORT jobjectArray SIGAR_JNI(win32_Pdh_pdhGetInstances)
             jstring s =
                 JENV->NewString(env, (const jchar *)cur_object, len);
             JENV->SetObjectArrayElement(env, array, i, s);
+            if (JENV->ExceptionCheck(env)) {
+                free(instance_list_buf);
+                return NULL;
+            }
             cur_object += len + 1;
         }
     } else {
@@ -342,6 +398,10 @@ JNIEXPORT jobjectArray SIGAR_JNI(win32_Pdh_pdhGetKeys)
                                      JENV->FindClass(env, 
                                                      "java/lang/String"),
                                      JENV->NewStringUTF(env, ""));
+        if (JENV->ExceptionCheck(env)) {
+            free(instance_list_buf);
+            return NULL;
+        }
 
         /* Walk the return instance list, creating an array */
         for (cur_object = instance_list_buf, i = 0;
@@ -352,6 +412,10 @@ JNIEXPORT jobjectArray SIGAR_JNI(win32_Pdh_pdhGetKeys)
             jstring s =
                 JENV->NewString(env, (const jchar *)cur_object, len);
             JENV->SetObjectArrayElement(env, array, i, s);
+            if (JENV->ExceptionCheck(env)) {
+                free(instance_list_buf);
+                return NULL;
+            }
             cur_object += len + 1;
         }
     } else {
@@ -410,6 +474,10 @@ JNIEXPORT jobjectArray SIGAR_JNI(win32_Pdh_pdhGetObjects)
                                  JENV->FindClass(env, 
                                                  "java/lang/String"),
                                  JENV->NewStringUTF(env, ""));
+    if (JENV->ExceptionCheck(env)) {
+        free(list_buf);
+        return NULL;
+    }
 
     for (cur_object = list_buf, i = 0;
          *cur_object != 0;
@@ -419,6 +487,10 @@ JNIEXPORT jobjectArray SIGAR_JNI(win32_Pdh_pdhGetObjects)
         jstring s =
             JENV->NewString(env, (const jchar *)cur_object, len);
         JENV->SetObjectArrayElement(env, array, i, s);
+        if (JENV->ExceptionCheck(env)) {
+            free(list_buf);
+            return NULL;
+        }
         cur_object += len + 1;
     }
 

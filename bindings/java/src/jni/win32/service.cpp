@@ -1,3 +1,20 @@
+/*
+ * Copyright (c) 2004-2005, 2008 Hyperic, Inc.
+ * Copyright (c) 2010 VMware, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #ifdef WIN32
 #define UNICODE
 #define _UNICODE
@@ -289,6 +306,9 @@ static int to_array(JNIEnv *env, LPTSTR str, jobjectArray array)
             jstring jstr =
                 env->NewString((const jchar *)ptr, slen);
             env->SetObjectArrayElement(array, i, jstr);
+            if (env->ExceptionCheck()) {
+                return -1;
+            }
         }
         offset += slen + 1;
         ptr = &str[offset];
@@ -333,11 +353,19 @@ JNIEXPORT jboolean SIGAR_JNI(win32_Service_QueryServiceConfig)
         int i;
         jobjectArray jargv =
             env->NewObjectArray(argc, stringclass, 0);
+        if (env->ExceptionCheck()) {
+            LocalFree(argv);
+            return JNI_FALSE;
+        }
 
         for (i=0; i<argc; i++) {
             jstring jstr =
                 env->NewString((const jchar *)argv[i], lstrlen(argv[i]));
             env->SetObjectArrayElement(jargv, i, jstr);
+            if (env->ExceptionCheck()) {
+                LocalFree(argv);
+                return JNI_FALSE;
+            }
         }
 
         id = env->GetFieldID(cls, "argv", ASTRING_SIG);
@@ -352,11 +380,22 @@ JNIEXPORT jboolean SIGAR_JNI(win32_Service_QueryServiceConfig)
 
     if (config->lpDependencies) {
         /* first pass just get num for NewObjectArray */
+        jobjectArray dependencies;
         int num = to_array(env, config->lpDependencies, NULL);
-        jobjectArray dependencies =
-            env->NewObjectArray(num, stringclass, 0);
+
+        if (num < 0) {
+            return JNI_FALSE; /* Exception thrown */
+        }
+
+        dependencies = env->NewObjectArray(num, stringclass, 0);
+        if (env->ExceptionCheck()) {
+            return JNI_FALSE;
+        }
 
         to_array(env, config->lpDependencies, dependencies);
+        if (num < 0) {
+            return JNI_FALSE; /* Exception thrown */
+        }
 
         id = env->GetFieldID(cls, "dependencies", ASTRING_SIG);
 

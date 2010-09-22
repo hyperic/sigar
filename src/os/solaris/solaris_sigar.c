@@ -1,19 +1,19 @@
 /*
- * Copyright (C) [2004, 2005, 2006], Hyperic, Inc.
- * This file is part of SIGAR.
- * 
- * SIGAR is free software; you can redistribute it and/or modify
- * it under the terms version 2 of the GNU General Public License as
- * published by the Free Software Foundation. This program is distributed
- * in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
- * even the implied warranty of MERCHANTABILITY or FITNESS FOR A
- * PARTICULAR PURPOSE. See the GNU General Public License for more
- * details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- * USA.
+ * Copyright (c) 2004-2008 Hyperic, Inc.
+ * Copyright (c) 2009 SpringSource, Inc.
+ * Copyright (c) 2009-2010 VMware, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 #include "sigar.h"
@@ -153,6 +153,9 @@ int sigar_os_open(sigar_t **sig)
 int sigar_os_close(sigar_t *sigar)
 {
     kstat_close(sigar->kc);
+    if (sigar->mib2.sd != -1) {
+        close_mib2(&sigar->mib2);
+    }
 
     if (sigar->ks.lcpu) {
         free(sigar->ks.cpu);
@@ -189,6 +192,7 @@ int sigar_mem_get(sigar_t *sigar, sigar_mem_t *mem)
 {
     kstat_ctl_t *kc = sigar->kc; 
     kstat_t *ksp;
+    sigar_uint64_t kern = 0;
 
     SIGAR_ZERO(mem);
 
@@ -213,8 +217,28 @@ int sigar_mem_get(sigar_t *sigar, sigar_mem_t *mem)
         sigar_koffsets_init_mempages(sigar, ksp);
     }
 
-    mem->actual_free = mem->free;
-    mem->actual_used = mem->used;
+    /* XXX mdb ::memstat cachelist/freelist not available to kstat, see: */
+    /* http://bugs.opensolaris.org/bugdatabase/view_bug.do?bug_id=6821980 */
+
+    /* ZFS ARC cache. see: http://opensolaris.org/jive/thread.jspa?messageID=393695 */
+    if ((ksp = kstat_lookup(sigar->kc, "zfs", 0, "arcstats")) &&
+        (kstat_read(sigar->kc, ksp, NULL) != -1))
+    {
+        kstat_named_t *kn;
+
+        if ((kn = (kstat_named_t *)kstat_data_lookup(ksp, "size"))) {
+            kern = kn->value.i64;
+        }
+        if ((kn = (kstat_named_t *)kstat_data_lookup(ksp, "c_min"))) {
+            /* c_min cannot be reclaimed they say */
+            if (kern > kn->value.i64) {
+                kern -= kn->value.i64;
+            }
+        }
+    }
+
+    mem->actual_free = mem->free + kern;
+    mem->actual_used = mem->used - kern;
 
     sigar_mem_calc_ram(sigar, mem);
 
@@ -225,25 +249,41 @@ int sigar_swap_get(sigar_t *sigar, sigar_swap_t *swap)
 {
     kstat_t *ksp;
     kstat_named_t *kn;
-    struct anoninfo anon;
+    swaptbl_t *stab;
+    int num, i;
+    char path[PATH_MAX+1]; /* {un,re}used */
 
-    /* XXX vm/anon.h says:
-     * "The swap data can be aquired more efficiently through the
-     *  kstats interface."
-     * but cannot find anything that explains howto convert those numbers.
-     */
-
-    if (swapctl(SC_AINFO, &anon) == -1) {
+    /* see: man swapctl(2) */
+    if ((num = swapctl(SC_GETNSWP, NULL)) == -1) {
         return errno;
     }
 
-    swap->total = anon.ani_max;
-    swap->used  = anon.ani_resv;
-    swap->free  = anon.ani_max - anon.ani_resv;
+    stab = malloc(num * sizeof(stab->swt_ent[0]) + sizeof(*stab));
+
+    stab->swt_n = num;
+    for (i=0; i<num; i++) {
+        stab->swt_ent[i].ste_path = path;
+    }
+
+    if ((num = swapctl(SC_LIST, stab)) == -1) {
+        free(stab);
+        return errno;
+    }
+
+    num = num < stab->swt_n ? num : stab->swt_n;
+    swap->total = swap->free = 0;
+    for (i=0; i<num; i++) {
+        if (stab->swt_ent[i].ste_flags & ST_INDEL) {
+            continue; /* swap file is being deleted */
+        }
+        swap->total += stab->swt_ent[i].ste_pages;
+        swap->free  += stab->swt_ent[i].ste_free;
+    }
+    free(stab);
 
     swap->total <<= sigar->pagesize;
     swap->free  <<= sigar->pagesize;
-    swap->used  <<= sigar->pagesize;
+    swap->used  = swap->total - swap->free;
 
     if (sigar_kstat_update(sigar) == -1) {
         return errno;
@@ -882,7 +922,7 @@ int sigar_os_proc_args_get(sigar_t *sigar, sigar_pid_t pid,
     pinfo = sigar->pinfo;
 
     if (pinfo->pr_argc == 0) {
-        procargs->number = procargs->size = 0;
+        procargs->number = 0;
         return SIGAR_OK;
     }
     else if (pinfo->pr_dmodel != PR_MODEL_NATIVE) {
@@ -934,7 +974,6 @@ int sigar_os_proc_args_get(sigar_t *sigar, sigar_pid_t pid,
             if (argvp != argvb) {
                 free(argvp);
             }
-            sigar_proc_args_destroy(sigar, procargs);
             return errno;
         }
 

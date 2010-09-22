@@ -1,3 +1,20 @@
+/*
+ * Copyright (c) 2004-2006, 2008 Hyperic, Inc.
+ * Copyright (c) 2010 VMware, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #if defined(WIN32) && !defined(SIGAR_NO_ATL)
 #define UNICODE
 #define _UNICODE
@@ -269,7 +286,10 @@ JNIEXPORT jobjectArray SIGAR_JNI(win32_MetaBase_MetaBaseGetMultiStringValue)
             NewObjectArray(count,
                            env->FindClass("java/lang/String"),
                            env->NewString((const jchar *)"", 1));
-        
+        if (env->ExceptionCheck()) {
+            return NULL;
+        }
+
         // Walk the return instance list, creating an array
         for (szThisInstance = (TCHAR *)MyRecord.pbMDData, i = 0;
              *szThisInstance != 0;
@@ -278,6 +298,9 @@ JNIEXPORT jobjectArray SIGAR_JNI(win32_MetaBase_MetaBaseGetMultiStringValue)
             env->SetObjectArrayElement(ret,i,env->NewString(
                       (const jchar *)(LPCTSTR)szThisInstance,
                       lstrlen(szThisInstance)));
+            if (env->ExceptionCheck()) {
+                return NULL;
+            }
         }
         return ret;
     }

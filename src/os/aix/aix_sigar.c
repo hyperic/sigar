@@ -1,19 +1,19 @@
 /*
- * Copyright (C) [2004, 2005, 2006], Hyperic, Inc.
- * This file is part of SIGAR.
- * 
- * SIGAR is free software; you can redistribute it and/or modify
- * it under the terms version 2 of the GNU General Public License as
- * published by the Free Software Foundation. This program is distributed
- * in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
- * even the implied warranty of MERCHANTABILITY or FITNESS FOR A
- * PARTICULAR PURPOSE. See the GNU General Public License for more
- * details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- * USA.
+ * Copyright (c) 2004-2009 Hyperic, Inc.
+ * Copyright (c) 2009 SpringSource, Inc.
+ * Copyright (c) 2009-2010 VMware, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 /* pull in time.h before resource.h does w/ _KERNEL */
@@ -252,18 +252,20 @@ int sigar_mem_get(sigar_t *sigar, sigar_mem_t *mem)
 {
     int status;
     perfstat_memory_total_t minfo;
+    sigar_uint64_t kern;
 
     if (sigar_perfstat_memory(&minfo) == 1) {
         mem->total = PAGESHIFT(minfo.real_total);
         mem->free  = PAGESHIFT(minfo.real_free);
+        kern = PAGESHIFT(minfo.numperm); /* number of pages in file cache */
     }
     else {
         return errno;
     }            
 
     mem->used = mem->total - mem->free;
-    mem->actual_used = mem->used;
-    mem->actual_free = mem->free;
+    mem->actual_used = mem->used - kern;
+    mem->actual_free = mem->free + kern;
     
     sigar_mem_calc_ram(sigar, mem);
 
@@ -1512,7 +1514,7 @@ int sigar_cpu_info_list_get(sigar_t *sigar,
 int sigar_net_route_list_get(sigar_t *sigar,
                              sigar_net_route_list_t *routelist)
 {
-    size_t needed;
+    int needed;
     int bit;
     char *buf, *next, *lim;
     struct rt_msghdr *rtm;

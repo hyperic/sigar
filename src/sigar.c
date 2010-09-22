@@ -1,19 +1,19 @@
 /*
- * Copyright (C) [2004, 2005, 2006], Hyperic, Inc.
- * This file is part of SIGAR.
- * 
- * SIGAR is free software; you can redistribute it and/or modify
- * it under the terms version 2 of the GNU General Public License as
- * published by the Free Software Foundation. This program is distributed
- * in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
- * even the implied warranty of MERCHANTABILITY or FITNESS FOR A
- * PARTICULAR PURPOSE. See the GNU General Public License for more
- * details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- * USA.
+ * Copyright (c) 2004-2009 Hyperic, Inc.
+ * Copyright (c) 2009 SpringSource, Inc.
+ * Copyright (c) 2009-2010 VMware, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 #include <errno.h>
@@ -373,8 +373,13 @@ SIGAR_DECLARE(int) sigar_proc_args_get(sigar_t *sigar,
                                        sigar_pid_t pid,
                                        sigar_proc_args_t *procargs)
 {
+    int status;
     sigar_proc_args_create(procargs);
-    return sigar_os_proc_args_get(sigar, pid, procargs);
+    status = sigar_os_proc_args_get(sigar, pid, procargs);
+    if (status != SIGAR_OK) {
+        sigar_proc_args_destroy(sigar, procargs);
+    }
+    return status;
 }
 
 int sigar_file_system_list_create(sigar_file_system_list_t *fslist)
@@ -407,7 +412,7 @@ static int sigar_common_fs_type_get(sigar_file_system_t *fsp)
 
     switch (*type) {
       case 'n':
-        if (strEQ(type, "nfs")) {
+        if (strnEQ(type, "nfs", 3)) {
             fsp->type = SIGAR_FSTYPE_NETWORK;
         }
         break;
@@ -432,6 +437,9 @@ static int sigar_common_fs_type_get(sigar_file_system_t *fsp)
       case 'c':
         if (strEQ(type, "cvfs")) {
             fsp->type = SIGAR_FSTYPE_LOCAL_DISK;
+        }
+        else if (strEQ(type, "cifs")) {
+            fsp->type = SIGAR_FSTYPE_NETWORK;
         }
         break;
       case 'm':

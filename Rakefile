@@ -53,7 +53,7 @@ end
 
 desc 'Build sigar extension'
 task :build do
-  in_ext();
+  in_ext()
   unless File.exists? "Makefile"
     unless system("ruby extconf.rb")
       STDERR.puts "Failed to configure"
@@ -68,6 +68,7 @@ end
 
 Rake::TestTask.new do |t|
   t.pattern = 'test/*_test.rb'
+  t.libs << "."
 end
 
 task :test => [:build] do
@@ -77,20 +78,20 @@ end
 desc 'Clean sigar extension'
 task :clean do
   in_ext()
-  system(MAKE + ' clean')
+  system(MAKE + ' clean') if File.exists? "Makefile"
 end
 
 desc 'Dist Clean sigar extension'
 task :distclean do
   in_ext()
-  system(MAKE + ' distclean')
+  system(MAKE + ' distclean') if File.exists? "Makefile"
 end
 
 desc 'Run sigar examples (test)'
 task :examples => [:build] do
   in_ext()
   Dir["examples/*.rb"].each do |file|
-    cmd = "ruby #{file}"
+    cmd = "ruby -I. #{file}"
     print cmd + "\n"
     system(cmd)
   end

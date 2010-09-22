@@ -1,3 +1,230 @@
+2010-04-28  Doug MacEachern  <dougm@hyperic.com>
+
+	* 1.6.4 release
+
+	* GPL v2 license -> Apache 2 license
+
+	* (SIGAR-188) implement mem actual free/used on Windows
+
+2010-04-27  Doug MacEachern  <dougm@hyperic.com>
+
+	* (SIGAR-215) use swapctl SC_LIST for Solaris swap_get impl
+
+2010-04-15  Doug MacEachern  <dougm@hyperic.com>
+
+	* osf1 no longer supported
+
+	* netware no longer supported
+
+	* (SIGAR-201) JNIEnv->ExceptionCheck to avoid possible SEGV on OutOfMemoryError
+
+2010-04-14  Doug MacEachern  <dougm@hyperic.com>
+
+	* (SIGAR-192) avoid possible stack corruption in Windows proc_env impl
+
+	* (SIGAR-213) check ENV.ANT_HOME/lib for junit in Main-Class
+
+2010-04-09  Doug MacEachern  <dougm@hyperic.com>
+
+	* (SIGAR-214) properly adjust jni.javahome when JAVA_HOME is not set
+
+2010-04-08  Doug MacEachern  <dougm@hyperic.com>
+
+	* cpptasks patches moved to http://github.com/dougm/ant-contrib-cpptasks
+
+	* mv tools/PerfBrowser http://github.com/dougm/csharp-perfbrowser
+
+	* mv exp/ http://github.com/dougm/sigar-stuff
+
+2010-04-07  Doug MacEachern  <dougm@hyperic.com>
+
+	* (SIGAR-213) remove junit.jar from distribution
+
+	* (SIGAR-188) implement mem actual free/used on HPUX
+
+	* (SIGAR-188) implement mem actual free/used on AIX
+
+2010-04-05  Doug MacEachern  <dougm@hyperic.com>
+
+	* (SIGAR-188) implement mem actual free/used on OpenBSD and NetBSD
+
+	* (SIGAR-188) implement mem actual free/used on Solaris
+
+2010-04-02  Doug MacEachern  <dougm@hyperic.com>
+
+	* (SIGAR-212) pass LANG_ENGLISH to FormatMessage in Windows sigar_strerror impl
+
+2010-04-01  Doug MacEachern  <dougm@hyperic.com>
+
+	* (SIGAR-188) implement mem actual free/used on Windows
+
+2010-04-01  Trevor Pounds  <trevor.pounds@gmail.com>
+
+	* (SIGAR-202) Change CreateFile() access flags to prevent potential inode calculation
+	errors on Windows when tailing a file.
+
+2010-04-01  Doug MacEachern  <dougm@hyperic.com>
+
+	* (SIGAR-207) append instance index in Pdh.getInstances()
+
+2010-03-31  Doug MacEachern  <dougm@hyperic.com>
+
+	* (SIGAR-207) Add Pdh.getCounterType method
+
+	* (SIGAR-207) Add Pdh.getDescription method
+
+	* (SIGAR-210) recognize cifs as a network file system
+
+2010-03-30  Doug MacEachern  <dougm@hyperic.com>
+
+	* (SIGAR-211) HPUX file_system_list needs to read /etc/mnttab instead of /etc/fstab
+
+2010-02-09  Doug MacEachern  <dougm@hyperic.com>
+
+	* add -i (inode format) support to df command
+
+2010-02-05  Doug MacEachern  <dougm@hyperic.com>
+
+	* (SIGAR-205) Vista and higher changed wireless card type to IF_TYPE_IEEE80211
+
+2010-01-18  Doug MacEachern  <dougm@hyperic.com>
+
+	* rid dup in solaris route_list impl
+
+2010-01-17  Doug MacEachern  <dougm@hyperic.com>
+
+	* (SIGAR-181) fill-in sigar_net_route_t.ifname on HPUX
+
+2010-01-12  Doug MacEachern  <dougm@hyperic.com>
+
+	* (SIGAR-196) use pst_processor.psp_cpu_frequency to calculate cpu_info.mhz on HP-UX 11.31+
+
+2010-01-04  Doug MacEachern  <dougm@hyperic.com>
+
+	* (SIGAR-194) sigar_file_system_t.dev_name on Windows should be the network path for remote drives
+
+2009-12-23  Doug MacEachern  <dougm@hyperic.com>
+
+	* (SIGAR-193) Migrate from mach/shared_memory_server.h to mach/shared_region.h on Darwin
+
+2009-11-09  Doug MacEachern  <dougm@hyperic.com>
+
+	* only display event code in toString as the Event Viewer does
+
+	* 'N/A' for null user in EventLogRecord.toString
+
+	* include the same fields as Event Viewer in EventLogRecord.toString
+
+	* (SIGAR-191) fix EventLogRecord.computerName
+
+	* (SIGAR-190) add category to EventLogRecord
+
+2009-11-05  Doug MacEachern  <dougm@hyperic.com>
+
+	* (SIGAR-189) ignore CP_WAIT time on HPUX
+
+2009-11-03  Doug MacEachern  <dougm@hyperic.com>
+
+	* (SIGAR-187) implement proc_exe on AIX
+
+	* (SIGAR-188) implement mem actual free/used on MacOSX
+
+2009-11-02  Doug MacEachern  <dougm@hyperic.com>
+
+	* (SIGAR-188) implement mem actual free/used on FreeBSD
+
+2009-10-23  Doug MacEachern  <dougm@hyperic.com>
+
+	* Pdh test adjustments for windows 2000
+
+	* (SIGAR-185) fix RegistryKey open on windows 2000
+
+	* (SIGAR-186) fix Win32.getFileVersion on windows 2000
+
+2009-09-30  Doug MacEachern  <dougm@hyperic.com>
+
+	* hpux pa 64-bit support
+
+2009-09-17  Doug MacEachern  <dougm@hyperic.com>
+
+	* 64-bit MacOSX 10.6 sdk does not support ppc64, switch from universal build to i386 only
+
+2009-09-15  Doug MacEachern  <dougm@hyperic.com>
+
+	* (SIGAR-181) net_route.ifname impl for Win32
+
+	* (SIGAR-181) net_route.ifname impl for MacOSX and *BSD
+
+	* (SIGAR-182) use mib2_ip_t.ipRouteEntrySize to determine mib2_ipRouteEntry_t size
+
+2009-09-08  Doug MacEachern  <dougm@hyperic.com>
+
+	* fix MacOSX10.6.sdk build issues
+
+2009-09-01  Doug MacEachern  <dougm@hyperic.com>
+
+	* (SIGAR-168) always fallback to wmi when peb fails for proc_args
+
+2009-08-30  Doug MacEachern  <dougm@hyperic.com>
+
+	* 6.1 == Windows 7
+
+	* 10.6 == Snow Leopard
+
+2009-08-23  Doug MacEachern  <dougm@hyperic.com>
+
+	* (SIGAR-179) Increase buffer size in cpu_list query from 16 to 128
+
+2009-08-11  Jan Kneschke  <jan@kneschke.de>
+
+	* (SIGAR-137) sdl_data isn't 0-terminated
+
+2009-08-05  Doug MacEachern  <dougm@hyperic.com>
+
+	* try wmi if peb fails for proc_exe
+
+	* add wmi proc_args wrapper
+
+2009-07-31  Doug MacEachern  <dougm@hyperic.com>
+
+	* only exclude nfs/rpcv2.h on FreeBSD 8+
+
+2009-07-30  Doug MacEachern  <dougm@hyperic.com>
+
+	* net_route_list bandaid for FreeBSD 8.0
+
+	* sigar_proc_port_get does not compile on FreeBSD 8.0
+
+	* only need nfs/rpcv2.h on darwin
+
+2009-07-18  Doug MacEachern  <dougm@hyperic.com>
+
+	* (SIGAR-164) return ENXIO instead of ENOENT in disk_usage win32 impl
+
+	* (SIGAR-164) return ENXIO instead of ENOENT in disk_usage linux impl
+
+	* (SIGAR-164) return ENXIO instead of ENOENT in disk_usage aix impl
+
+	* (SIGAR-164) return ENXIO instead of ESRCH in disk_usage darwin impl
+
+2009-07-17  Doug MacEachern  <dougm@hyperic.com>
+
+	* (SIGAR-163) Recognize cvfs (StorNext) as local filesystem type
+
+2009-07-16  Doug MacEachern  <dougm@hyperic.com>
+
+	* (SIGAR-162) plug possible memory leak in sigar_iodev_get util
+
+2009-07-14  Doug MacEachern  <dougm@hyperic.com>
+
+	* remove pdh.dll (only used on NT 4.0)
+
+2009-07-13  Doug MacEachern  <dougm@hyperic.com>
+
+	* (SIGAR-155) Plug memory leak sigar_proc_exe_get Darwin impl
+
+	* bump version to 1.6.4
+
 2008-07-13  Doug MacEachern  <dougm@hyperic.com>
 
 	* 1.6.3 release
