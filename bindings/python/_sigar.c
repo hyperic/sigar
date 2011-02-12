@@ -147,6 +147,22 @@ static PyObject *pysigar_new_doublelist(double *data, unsigned long number)
     return av;
 }
 
+static PyObject *pysigar_new_intlist(int *data, unsigned long number)
+{
+    unsigned long i;
+    PyObject *av;
+
+    if (!(av = PyTuple_New(number))) {
+        return NULL;
+    }
+
+    for (i=0; i<number; i++) {
+        PyTuple_SET_ITEM(av, i, PyInt_FromLong(data[i]));
+    }
+
+    return av;
+}
+
 static PyObject *pysigar_new_list(char *data, unsigned long number,
                                   int size, PyTypeObject *type)
 {
@@ -245,6 +261,28 @@ static PyObject *pysigar_loadavg(PyObject *self, PyObject *args)
     return pysigar_new_doublelist(loadavg.loadavg, 3);
 }
 
+static PyObject *pysigar_proc_list(PyObject *self, PyObject *args)
+{
+    int status;
+    sigar_t *sigar = PySIGAR;
+    sigar_proc_list_t list;
+
+    PyObject *RETVAL;
+
+    status = sigar_proc_list_get(sigar, &list);
+
+    if (status != SIGAR_OK) {
+        PySigar_Croak();
+        return NULL;
+    }
+
+    RETVAL = pysigar_new_intlist(&list.data[0], list.number);
+
+    sigar_proc_list_destroy(sigar, &list);
+
+    return RETVAL;
+}
+
 static PyObject *pysigar_format_size(PyObject *self, PyObject *args)
 {
     char buffer[56];
@@ -264,6 +302,7 @@ static PyMethodDef pysigar_methods[] = {
     { "file_system_list", pysigar_file_system_list, METH_NOARGS, NULL },
     { "arp_list", pysigar_arp_list, METH_NOARGS, NULL },
     { "loadavg", pysigar_loadavg, METH_NOARGS, NULL },
+    { "proc_list", pysigar_proc_list, METH_NOARGS, NULL },
     PY_SIGAR_METHODS
     {NULL}
 };
