@@ -131,6 +131,22 @@ static PyObject *pysigar_new_strlist(char **data, unsigned long number)
     return av;
 }
 
+static PyObject *pysigar_new_doublelist(double *data, unsigned long number)
+{
+    unsigned long i;
+    PyObject *av;
+
+    if (!(av = PyTuple_New(number))) {
+        return NULL;
+    }
+
+    for (i=0; i<number; i++) {
+        PyTuple_SET_ITEM(av, i, PyFloat_FromDouble(data[i]));
+    }
+
+    return av;
+}
+
 static PyObject *pysigar_new_list(char *data, unsigned long number,
                                   int size, PyTypeObject *type)
 {
@@ -214,6 +230,21 @@ static PyObject *pysigar_arp_list(PyObject *self, PyObject *args)
     return RETVAL;
 }
 
+static PyObject *pysigar_loadavg(PyObject *self, PyObject *args)
+{
+    int status;
+    sigar_t *sigar = PySIGAR;
+    sigar_loadavg_t loadavg;
+
+    status = sigar_loadavg_get(sigar, &loadavg);
+    if (status != SIGAR_OK) {
+        PySigar_Croak();
+        return NULL;
+    }
+
+    return pysigar_new_doublelist(loadavg.loadavg, 3);
+}
+
 static PyObject *pysigar_format_size(PyObject *self, PyObject *args)
 {
     char buffer[56];
@@ -232,6 +263,7 @@ static PyMethodDef pysigar_methods[] = {
     { "net_interface_list", pysigar_net_interface_list, METH_NOARGS, NULL },
     { "file_system_list", pysigar_file_system_list, METH_NOARGS, NULL },
     { "arp_list", pysigar_arp_list, METH_NOARGS, NULL },
+    { "loadavg", pysigar_loadavg, METH_NOARGS, NULL },
     PY_SIGAR_METHODS
     {NULL}
 };
