@@ -4,6 +4,29 @@ MESSAGE(STATUS "CMAKE_SYSTEM_NAME is ${CMAKE_SYSTEM_NAME}")
 
 INCLUDE_DIRECTORIES(../include/)
 
+INCLUDE(CheckCSourceCompiles)
+
+MACRO (CHECK_STRUCT_MEMBER _STRUCT _MEMBER _HEADER _RESULT)
+   SET(_INCLUDE_FILES)
+   FOREACH (it ${_HEADER})
+      SET(_INCLUDE_FILES "${_INCLUDE_FILES}#include <${it}>\n")
+   ENDFOREACH (it)
+
+   SET(_CHECK_STRUCT_MEMBER_SOURCE_CODE "
+${_INCLUDE_FILES}
+int main()
+{
+   static ${_STRUCT} tmp;
+   if (sizeof(tmp.${_MEMBER}))
+      return 0;
+  return 0;
+}
+")
+   CHECK_C_SOURCE_COMPILES("${_CHECK_STRUCT_MEMBER_SOURCE_CODE}" ${_RESULT})
+
+ENDMACRO (CHECK_STRUCT_MEMBER)
+
+
 ## linux
 IF(CMAKE_SYSTEM_NAME STREQUAL "Linux")
   SET(SIGAR_SRC os/linux/linux_sigar.c)
@@ -60,6 +83,8 @@ IF(WIN32)
   ADD_DEFINITIONS(-DSIGAR_SHARED)
   SET(SIGAR_SRC os/win32/peb.c os/win32/win32_sigar.c)
   INCLUDE_DIRECTORIES(os/win32)
+  CHECK_STRUCT_MEMBER(MIB_IPADDRROW wType "windows.h;iphlpapi.h" wType_in_MIB_IPADDRROW)
+  add_definitions(-DHAVE_MIB_IPADDRROW_WTYPE=${wType_in_MIB_IPADDRROW})
 ENDIF(WIN32)
 
 SET(SIGAR_SRC ${SIGAR_SRC}
