@@ -2671,6 +2671,42 @@ static int netif_hash(char *s)
 #define IF_TYPE_IEEE80211 71
 #endif
 
+SIGAR_DECLARE(char *)
+sigar_net_interface_name_get(sigar_t *sigar, MIB_IFROW *ifr)
+{
+    char *match = NULL;
+    PIP_ADAPTER_ADDRESSES address_list, iter;
+    int lpc = 0;
+
+    sigar_t *peek = sigar_new();
+    int status = sigar_get_adapters_addresses(peek, AF_UNSPEC, GAA_FLAG_INCLUDE_PREFIX, &address_list);
+    if (status != SIGAR_OK) {
+	goto done;
+    }
+
+    for (iter = address_list; iter != NULL; iter = iter->Next) {
+	for(lpc = 0; lpc < iter->PhysicalAddressLength; lpc++) {
+	    if(iter->PhysicalAddress[lpc] != ifr->bPhysAddr[lpc]) {
+		break;
+	    }
+	}
+
+	if(lpc == iter->PhysicalAddressLength) {
+	    match = malloc(MAX_INTERFACE_NAME_LEN);
+	    wcstombs(match, iter->FriendlyName, MAX_INTERFACE_NAME_LEN);
+	    match[MAX_INTERFACE_NAME_LEN-1] = 0;
+	    goto done;
+	}
+    }
+
+  done:
+    sigar_close(peek);
+    if(match == NULL) {
+	fprintf(stderr, "No match found\n");
+    }
+    return match;
+}
+
 SIGAR_DECLARE(int)
 sigar_net_interface_list_get(sigar_t *sigar,
                              sigar_net_interface_list_t *iflist)
@@ -2701,22 +2737,42 @@ sigar_net_interface_list_get(sigar_t *sigar,
     }
 
     for (i=0; i<ift->dwNumEntries; i++) {
-        char name[16];
+        char name[MAX_INTERFACE_NAME_LEN];
         int key;
         MIB_IFROW *ifr = ift->table + i;
         sigar_cache_entry_t *entry;
+        char *friendly = NULL;
 
         if (strEQ(ifr->bDescr, MS_LOOPBACK_ADAPTER)) {
             /* special-case */
             sprintf(name, NETIF_LA "%d", la++);
         }
         else if (ifr->dwType == MIB_IF_TYPE_LOOPBACK) {
-            sprintf(name, "lo%d", lo++);
+	   friendly = sigar_net_interface_name_get(sigar, ifr);
+	   if(friendly == NULL) {
+		sprintf(name, "lo%d", lo++);
+	   } else {
+		snprintf(name, MAX_INTERFACE_NAME_LEN, "%s", friendly);
+	   }
+	   name[MAX_INTERFACE_NAME_LEN] = 0;
+	   free(friendly);
         }
         else if ((ifr->dwType == MIB_IF_TYPE_ETHERNET) ||
                  (ifr->dwType == IF_TYPE_IEEE80211))
         {
-            sprintf(name, "eth%d", eth++);
+	    
+	    if(strstr(ifr->bDescr, "Scheduler") == NULL
+	       && strstr(ifr->bDescr, "Filter") == NULL) {
+		friendly = sigar_net_interface_name_get(sigar, ifr);
+	    }
+	    
+	    if(friendly == NULL) {
+		snprintf(name, ifr->dwDescrLen, "%s", ifr->bDescr);
+	    } else {
+		snprintf(name, MAX_INTERFACE_NAME_LEN, "%s", friendly);
+	    }
+	    name[MAX_INTERFACE_NAME_LEN] = 0;
+	    free(friendly);
         }
         else {
             continue; /*XXX*/
