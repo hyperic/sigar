@@ -19,11 +19,15 @@
 #ifndef SIGAR_OS_H
 #define SIGAR_OS_H
 
+#ifdef MSVC
 #if _MSC_VER <= 1200
 #define SIGAR_USING_MSC6 /* Visual Studio version 6 */
 #endif
+#else
+/* Cross compiling */
+#define _WIN32_WINNT 0x0501
+#endif
 
-#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <winreg.h>
 #include <winperf.h>
@@ -38,7 +42,22 @@
 
 #include "sigar_util.h"
 
-#define INT64_C(val) val##i64
+#ifdef MSVC
+#  define INT64_C(val) val##i64
+#  define SIGAR_DLLFUNC(api, name) \
+    struct { \
+         const char *name; \
+         ##api##_##name func; \
+    } ##name
+#else
+/* The GCC compiler doesn't require/accept the ## prefix */
+#  define INT64_C(val) val##L
+#  define SIGAR_DLLFUNC(api, name)		\
+    struct { \
+         const char *name; \
+         api##_##name func; \
+    } name
+#endif
 
 /* see apr/include/arch/win32/atime.h */
 #define EPOCH_DELTA INT64_C(11644473600000000)
@@ -456,12 +475,6 @@ typedef BOOL (CALLBACK *kernel_memory_status)(MEMORYSTATUSEX *);
 typedef BOOL (CALLBACK *mpr_get_net_connection)(LPCTSTR,
                                                 LPTSTR,
                                                 LPDWORD);
-
-#define SIGAR_DLLFUNC(api, name) \
-    struct { \
-         const char *name; \
-         ##api##_##name func; \
-    } ##name
 
 typedef struct {
     sigar_dll_handle_t handle;

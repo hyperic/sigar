@@ -39,7 +39,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
-#if defined(_WIN32)
+#if defined(MSVC)
 #include <WinError.h>
 #endif
 
@@ -85,7 +85,7 @@ TEST(test_sigar_file_system_list_get) {
 		} else {
 			switch (ret) {
 				/* track the expected error code */
-#if defined(_WIN32)
+#if defined(MSVC)
 			case ERROR_NOT_READY:
 				break;
 #endif

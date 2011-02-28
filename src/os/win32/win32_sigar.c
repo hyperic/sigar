@@ -23,6 +23,7 @@
 #include "sigar_util.h"
 #include "sigar_format.h"
 #include <shellapi.h>
+#include <iphlpapi.h>
 
 #define USING_WIDE_S(s) (s)->using_wide
 #define USING_WIDE()    USING_WIDE_S(sigar)
@@ -123,6 +124,9 @@ typedef enum {
 
 #define MS_LOOPBACK_ADAPTER "Microsoft Loopback Adapter"
 #define NETIF_LA "la"
+
+static int get_proc_info(sigar_t *sigar, sigar_pid_t pid);
+static int netif_hash(char *s);
 
 sigar_uint64_t sigar_FileTimeToTime(FILETIME *ft)
 {
@@ -374,6 +378,7 @@ static sigar_mpr_t sigar_mpr = {
     { NULL, NULL }
 };
 
+#ifdef MSVC
 #define DLLMOD_COPY(name) \
     memcpy(&(sigar->##name), &sigar_##name, sizeof(sigar_##name))
 
@@ -382,6 +387,18 @@ static sigar_mpr_t sigar_mpr = {
 
 #define DLLMOD_FREE(name) \
     sigar_dllmod_free((sigar_dll_module_t *)&(sigar->##name))
+#else
+/* The GCC compiler doesn't require/accept the ## prefix */
+#define DLLMOD_COPY(name) \
+    memcpy(&(sigar->name), &sigar_##name, sizeof(sigar_##name))
+
+#define DLLMOD_INIT(name, all) \
+    sigar_dllmod_init(sigar, (sigar_dll_module_t *)&(sigar->name), all)
+
+#define DLLMOD_FREE(name) \
+    sigar_dllmod_free((sigar_dll_module_t *)&(sigar->name))
+#endif
+
 
 static void sigar_dllmod_free(sigar_dll_module_t *module)
 {
@@ -1470,7 +1487,9 @@ static int sigar_remote_proc_args_get(sigar_t *sigar, sigar_pid_t pid,
     }
 
     /* likely we are 32-bit, pid process is 64-bit */
+#ifdef MSVC
     status = sigar_proc_args_wmi_get(sigar, pid, procargs);
+#endif
     if (status == ERROR_NOT_FOUND) {
         status = SIGAR_NO_SUCH_PROCESS;
     }
@@ -1507,7 +1526,7 @@ static int sigar_proc_env_parse(UCHAR *ptr, sigar_proc_env_t *procenv,
             break; /*XXX*/
         }
 
-        klen = val - ptr;
+        klen = val - (char*)ptr;
         SIGAR_SSTRCPY(key, ptr);
         key[klen] = '\0';
         ++val;
@@ -1640,6 +1659,7 @@ SIGAR_DECLARE(int) sigar_proc_exe_get(sigar_t *sigar, sigar_pid_t pid,
     }
 
     status = sigar_proc_exe_peb_get(sigar, proc, procexe);
+#ifdef MSVC
     if (procexe->name[0] == '\0') {
         /* likely we are 32-bit, pid process is 64-bit */
         /* procexe->cwd[0] = XXX where else can we try? */
@@ -1648,7 +1668,7 @@ SIGAR_DECLARE(int) sigar_proc_exe_get(sigar_t *sigar, sigar_pid_t pid,
             status = SIGAR_NO_SUCH_PROCESS;
         }
     }
-
+#endif
     if (procexe->cwd[0] != '\0') {
         /* strip trailing '\' */
         int len = strlen(procexe->cwd);
@@ -2394,10 +2414,10 @@ static int sigar_get_netif_ipaddr(sigar_t *sigar,
             MIB_IPADDRROW *row = &mib->table[i];
             short type;
 
-#ifdef SIGAR_USING_MSC6
-            type = row->unused2;
-#else
+#if HAVE_MIB_IPADDRROW_WTYPE
             type = row->wType;
+#else
+            type = row->unused2;
 #endif
             if (!(type & MIB_IPADDR_PRIMARY)) {
                 continue;
