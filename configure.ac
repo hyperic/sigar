@@ -79,10 +79,12 @@ case $host_os in
 esac
 AC_MSG_RESULT([$SRC_OS])
 
-AC_CHECK_HEADERS(utmp.h utmpx.h libproc.h valgrind/valgrind.h)
+AC_CHECK_HEADERS(utmp.h utmpx.h libproc.h valgrind/valgrind.h libdlpi.h)
 if test $ac_cv_header_libproc_h = yes; then
         AC_DEFINE(DARWIN_HAS_LIBPROC_H, [1], [sigar named them DARWIN_HAS_... instead of HAVE_])
 fi
+
+AC_SEARCH_LIBS(dlpi_open, dlpi)
 
 INCLUDES="-I\$(top_srcdir)/include -I\$(top_srcdir)/src/os/$SRC_OS $SIGAR_INCLUDES"
 
