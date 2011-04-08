@@ -403,7 +403,7 @@ int sigar_get_iftype(const char *name, int *type, int *inst);
 #include <netdb.h>
 #endif
 
-#define SIGAR_HOSTENT_LEN 512
+#define SIGAR_HOSTENT_LEN 1024
 #if defined(_AIX)
 #define SIGAR_HAS_HOSTENT_DATA
 #endif
