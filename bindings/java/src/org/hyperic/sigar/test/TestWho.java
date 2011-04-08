@@ -19,6 +19,7 @@ package org.hyperic.sigar.test;
 import java.util.Date;
 
 import org.hyperic.sigar.SigarException;
+import org.hyperic.sigar.SigarLoader;
 import org.hyperic.sigar.Who;
 
 public class TestWho extends SigarTestCase {
@@ -39,7 +40,9 @@ public class TestWho extends SigarTestCase {
                     who[i].getDevice() + "\t" +
                     new Date(who[i].getTime() * 1000) + "\t" +
                     host);
-            assertLengthTrace("user", who[i].getUser());
+            if (!SigarLoader.IS_WIN32) {
+                assertLengthTrace("user", who[i].getUser());
+            }
         }
     }
 }
