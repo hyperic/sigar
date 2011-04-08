@@ -23,6 +23,8 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
+import org.apache.log4j.Logger;
+
 public abstract class FileWatcher {
 
     private Sigar sigar;
@@ -30,6 +32,9 @@ public abstract class FileWatcher {
     private long lastTime = 0;
     private Set files =
         Collections.synchronizedSet(new HashSet());
+
+    private static final Logger log =
+        SigarLog.getLogger(FileWatcher.class.getName());
 
     public abstract void onChange(FileInfo info);
 
@@ -66,14 +71,22 @@ public abstract class FileWatcher {
     public void add(File[] files)
         throws SigarException {
         for (int i=0; i<files.length; i++) {
-            add(files[i]);
+            try {
+                add(files[i]);
+            } catch (SigarFileNotFoundException e) {
+               log.error("Cannot add file: " + files[i].getAbsolutePath(), e);
+            }
         }
     }
 
     public void add(String[] files)
         throws SigarException {
         for (int i=0; i<files.length; i++) {
-            add(files[i]);
+            try {
+               add(files[i]);
+            } catch (SigarFileNotFoundException e) {
+               log.error("Cannot add file: " + files[i], e);
+            }
         }
     }
     

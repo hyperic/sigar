@@ -508,6 +508,7 @@
        <include name="bindings/java/**/*.java"/>
        <include name="bindings/java/**/*.java.in"/>
        <include name="bindings/java/**/*.c"/>
+       <include name="bindings/java/**/*.cpp"/>
        <include name="bindings/java/**/*.h"/>
        <include name="bindings/java/**/*.pl"/>
        <include name="bindings/java/**/build.xml"/>
