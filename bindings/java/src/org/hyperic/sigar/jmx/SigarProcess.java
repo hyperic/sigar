@@ -82,7 +82,7 @@ public class SigarProcess implements SigarProcessMBean {
 
     public String getObjectName() throws SigarException {
         long pid = getPid();
-        String name = this.sigar.getProcState(pid).getName();
+        String name = this.sigar.getProcState(pid).getName().replaceAll(":", "_");
         String cls = "unknown";
         if (name.startsWith("java")) {
             try {
