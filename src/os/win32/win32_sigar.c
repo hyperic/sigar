@@ -23,7 +23,9 @@
 #include "sigar_util.h"
 #include "sigar_format.h"
 #include <shellapi.h>
+#ifndef MSVC
 #include <iphlpapi.h>
+#endif
 
 #define USING_WIDE_S(s) (s)->using_wide
 #define USING_WIDE()    USING_WIDE_S(sigar)
