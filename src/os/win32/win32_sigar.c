@@ -2680,18 +2680,18 @@ sigar_net_interface_name_get(sigar_t *sigar, MIB_IFROW *ifr, PIP_ADAPTER_ADDRESS
     }
 
     for (iter = address_list; iter != NULL; iter = iter->Next) {
-	for(lpc = 0; lpc < iter->PhysicalAddressLength; lpc++) {
-	    if(iter->PhysicalAddress[lpc] != ifr->bPhysAddr[lpc]) {
-		break;
-	    }
-	}
+        for (lpc = 0; lpc < iter->PhysicalAddressLength; lpc++) {
+            if (iter->PhysicalAddress[lpc] != ifr->bPhysAddr[lpc]) {
+                break;
+            }
+        }
 
-	if(lpc == iter->PhysicalAddressLength) {
-	    match = malloc(MAX_INTERFACE_NAME_LEN);
-	    wcstombs(match, iter->FriendlyName, MAX_INTERFACE_NAME_LEN);
-	    match[MAX_INTERFACE_NAME_LEN-1] = 0;
+        if (lpc == iter->PhysicalAddressLength) {
+            match = malloc(MAX_INTERFACE_NAME_LEN);
+            wcstombs(match, iter->FriendlyName, MAX_INTERFACE_NAME_LEN);
+            match[MAX_INTERFACE_NAME_LEN-1] = 0;
             break;
-	}
+        }
     }
 
     return match;
@@ -2750,29 +2750,32 @@ sigar_net_interface_list_get(sigar_t *sigar,
         }
         else if (ifr->dwType == MIB_IF_TYPE_LOOPBACK) {
             friendly = sigar_net_interface_name_get(sigar, ifr, address_list);
-	   if(friendly == NULL) {
-		sprintf(name, "lo%d", lo++);
-	   } else {
-		snprintf(name, MAX_INTERFACE_NAME_LEN, "%s", friendly);
-	   }
-	   name[MAX_INTERFACE_NAME_LEN] = 0;
-	   free(friendly);
+            if (friendly == NULL) {
+                sprintf(name, "lo%d", lo++);
+            }
+            else {
+                snprintf(name, MAX_INTERFACE_NAME_LEN, "%s", friendly);
+            }
+            name[MAX_INTERFACE_NAME_LEN] = 0;
+            free(friendly);
         }
         else if ((ifr->dwType == MIB_IF_TYPE_ETHERNET) ||
                  (ifr->dwType == IF_TYPE_IEEE80211))
         {
-	    if(strstr(ifr->bDescr, "Scheduler") == NULL
-	       && strstr(ifr->bDescr, "Filter") == NULL) {
-		friendly = sigar_net_interface_name_get(sigar, ifr, address_list);
-	    }
-	    
-	    if(friendly == NULL) {
-		snprintf(name, ifr->dwDescrLen, "%s", ifr->bDescr);
-	    } else {
-		snprintf(name, MAX_INTERFACE_NAME_LEN, "%s", friendly);
-	    }
-	    name[MAX_INTERFACE_NAME_LEN] = 0;
-	    free(friendly);
+            if ((strstr(ifr->bDescr, "Scheduler") == NULL) &&
+                (strstr(ifr->bDescr, "Filter") == NULL))
+            {
+                friendly = sigar_net_interface_name_get(sigar, ifr, address_list);
+            }
+
+            if (friendly == NULL) {
+                snprintf(name, ifr->dwDescrLen, "%s", ifr->bDescr);
+            }
+            else {
+                snprintf(name, MAX_INTERFACE_NAME_LEN, "%s", friendly);
+            }
+            name[MAX_INTERFACE_NAME_LEN] = 0;
+            free(friendly);
         }
         else {
             continue; /*XXX*/
