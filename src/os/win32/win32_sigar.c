@@ -2301,9 +2301,9 @@ static int sigar_get_adapter_info(sigar_t *sigar,
 
 static int sigar_get_adapters_addresses(sigar_t *sigar,
                                         ULONG family, ULONG flags,
-                                        PIP_ADAPTER_ADDRESSES *addrs)
+                                        PIP_ADAPTER_ADDRESSES *addrs,
+                                        ULONG *size)
 {
-    ULONG size = sigar->ifconf_len;
     ULONG rc;
 
     DLLMOD_INIT(iphlpapi, FALSE);
@@ -2312,28 +2312,23 @@ static int sigar_get_adapters_addresses(sigar_t *sigar,
         return SIGAR_ENOTIMPL;
     }
 
-    *addrs = (PIP_ADAPTER_ADDRESSES)sigar->ifconf_buf;
     rc = sigar_GetAdaptersAddresses(family,
                                     flags,
                                     NULL,
                                     *addrs,
-                                    &size);
+                                    size);
 
     if (rc == ERROR_BUFFER_OVERFLOW) {
         sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
-                         "GetAdaptersAddresses "
-                         "realloc ifconf_buf old=%d, new=%d",
-                         sigar->ifconf_len, size);
-        sigar->ifconf_len = size;
-        sigar->ifconf_buf = realloc(sigar->ifconf_buf,
-                                    sigar->ifconf_len);
+                         "GetAdaptersAddresses realloc to %d", size);
 
-        *addrs = (PIP_ADAPTER_ADDRESSES)sigar->ifconf_buf;
+        *addrs = realloc(*addrs, *size);
+
         rc = sigar_GetAdaptersAddresses(family,
                                         flags,
                                         NULL,
-                                        *addrs,
-                                        &size);
+                                        (PIP_ADAPTER_ADDRESSES)*addrs,
+                                        size);
     }
 
     if (rc != ERROR_SUCCESS) {
@@ -2673,17 +2668,15 @@ static int netif_hash(char *s)
 #define IF_TYPE_IEEE80211 71
 #endif
 
-SIGAR_DECLARE(char *)
-sigar_net_interface_name_get(sigar_t *sigar, MIB_IFROW *ifr)
+static char *
+sigar_net_interface_name_get(sigar_t *sigar, MIB_IFROW *ifr, PIP_ADAPTER_ADDRESSES address_list)
 {
     char *match = NULL;
-    PIP_ADAPTER_ADDRESSES address_list, iter;
+    PIP_ADAPTER_ADDRESSES iter;
     int lpc = 0;
 
-    sigar_t *peek = sigar_new();
-    int status = sigar_get_adapters_addresses(peek, AF_UNSPEC, GAA_FLAG_INCLUDE_PREFIX, &address_list);
-    if (status != SIGAR_OK) {
-	goto done;
+    if (address_list == NULL) {
+        return NULL;
     }
 
     for (iter = address_list; iter != NULL; iter = iter->Next) {
@@ -2697,15 +2690,10 @@ sigar_net_interface_name_get(sigar_t *sigar, MIB_IFROW *ifr)
 	    match = malloc(MAX_INTERFACE_NAME_LEN);
 	    wcstombs(match, iter->FriendlyName, MAX_INTERFACE_NAME_LEN);
 	    match[MAX_INTERFACE_NAME_LEN-1] = 0;
-	    goto done;
+            break;
 	}
     }
 
-  done:
-    sigar_close(peek);
-    if(match == NULL) {
-	fprintf(stderr, "No match found\n");
-    }
     return match;
 }
 
@@ -2716,6 +2704,14 @@ sigar_net_interface_list_get(sigar_t *sigar,
     MIB_IFTABLE *ift;
     int i, status;
     int lo=0, eth=0, la=0;
+    PIP_ADAPTER_ADDRESSES address_list = NULL;
+    ULONG size = 0;
+
+    status = sigar_get_adapters_addresses(sigar, AF_UNSPEC, GAA_FLAG_INCLUDE_PREFIX, &address_list, &size);
+
+    if (status != SIGAR_OK) {
+        address_list = NULL;
+    }
 
     if (!sigar->netif_mib_rows) {
         sigar->netif_mib_rows =
@@ -2728,6 +2724,9 @@ sigar_net_interface_list_get(sigar_t *sigar,
     }
 
     if ((status = sigar_get_if_table(sigar, &ift)) != SIGAR_OK) {
+        if (address_list) {
+            free(address_list);
+        }
         return status;
     }
 
@@ -2750,7 +2749,7 @@ sigar_net_interface_list_get(sigar_t *sigar,
             sprintf(name, NETIF_LA "%d", la++);
         }
         else if (ifr->dwType == MIB_IF_TYPE_LOOPBACK) {
-	   friendly = sigar_net_interface_name_get(sigar, ifr);
+            friendly = sigar_net_interface_name_get(sigar, ifr, address_list);
 	   if(friendly == NULL) {
 		sprintf(name, "lo%d", lo++);
 	   } else {
@@ -2762,10 +2761,9 @@ sigar_net_interface_list_get(sigar_t *sigar,
         else if ((ifr->dwType == MIB_IF_TYPE_ETHERNET) ||
                  (ifr->dwType == IF_TYPE_IEEE80211))
         {
-	    
 	    if(strstr(ifr->bDescr, "Scheduler") == NULL
 	       && strstr(ifr->bDescr, "Filter") == NULL) {
-		friendly = sigar_net_interface_name_get(sigar, ifr);
+		friendly = sigar_net_interface_name_get(sigar, ifr, address_list);
 	    }
 	    
 	    if(friendly == NULL) {
@@ -2798,6 +2796,10 @@ sigar_net_interface_list_get(sigar_t *sigar,
         }
     }
 
+    if (address_list != NULL) {
+        free(address_list);
+    }
+
     return SIGAR_OK;
 }
 
@@ -2808,10 +2810,9 @@ static int sigar_net_interface_ipv6_config_find(sigar_t *sigar, int index,
     return SIGAR_ENOTIMPL;
 #else
     int status;
-    PIP_ADAPTER_ADDRESSES aa, addrs;
+    PIP_ADAPTER_ADDRESSES aa = (PIP_ADAPTER_ADDRESSES)sigar->ifconf_buf, addrs;
     ULONG flags = GAA_FLAG_INCLUDE_PREFIX;
-
-    status = sigar_get_adapters_addresses(sigar, AF_UNSPEC, flags, &aa);
+    status = sigar_get_adapters_addresses(sigar, AF_UNSPEC, flags, &aa, &sigar->ifconf_len);
 
     if (status != SIGAR_OK) {
         return status;
