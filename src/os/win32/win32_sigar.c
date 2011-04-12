@@ -526,6 +526,19 @@ static int sigar_enable_privilege(char *name)
     return status;
 }
 
+static int netif_name_short(void)
+{
+    char value[32767]; /* max size from msdn docs */
+    DWORD retval =
+        GetEnvironmentVariable("SIGAR_NETIF_NAME_SHORT", value, sizeof(value));
+    if ((retval > 0) && (strEQ(value, "1") || (strEQ(value, "true")))) {
+        return 1;
+    }
+    else {
+        return 0;
+    }
+}
+
 int sigar_os_open(sigar_t **sigar_ptr)
 {
     LONG result;
@@ -586,6 +599,8 @@ int sigar_os_open(sigar_t **sigar_ptr)
     sigar->netif_addr_rows = NULL;
     sigar->netif_adapters = NULL;
     sigar->netif_names = NULL;
+    sigar->netif_name_short = netif_name_short();
+
     sigar->pinfo.pid = -1;
     sigar->ws_version = 0;
     sigar->lcpu = -1;
@@ -2748,7 +2763,9 @@ sigar_net_interface_list_get(sigar_t *sigar,
             sprintf(name, NETIF_LA "%d", la++);
         }
         else if (ifr->dwType == MIB_IF_TYPE_LOOPBACK) {
-            status = sigar_net_interface_name_get(sigar, ifr, address_list, name);
+            if (!sigar->netif_name_short) {
+                status = sigar_net_interface_name_get(sigar, ifr, address_list, name);
+            }
             if (status != SIGAR_OK) {
                 sprintf(name, "lo%d", lo++);
             }
@@ -2756,14 +2773,20 @@ sigar_net_interface_list_get(sigar_t *sigar,
         else if ((ifr->dwType == MIB_IF_TYPE_ETHERNET) ||
                  (ifr->dwType == IF_TYPE_IEEE80211))
         {
-            if ((strstr(ifr->bDescr, "Scheduler") == NULL) &&
+            if (!sigar->netif_name_short &&
+                (strstr(ifr->bDescr, "Scheduler") == NULL) &&
                 (strstr(ifr->bDescr, "Filter") == NULL))
             {
                 status = sigar_net_interface_name_get(sigar, ifr, address_list, name);
             }
 
             if (status != SIGAR_OK) {
-                snprintf(name, ifr->dwDescrLen, "%s", ifr->bDescr);
+                if (sigar->netif_name_short) {
+                    sprintf(name, "eth%d", eth++);
+                }
+                else {
+                    snprintf(name, ifr->dwDescrLen, "%s", ifr->bDescr);
+                }
             }
         }
         else {
