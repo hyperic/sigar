@@ -2668,15 +2668,14 @@ static int netif_hash(char *s)
 #define IF_TYPE_IEEE80211 71
 #endif
 
-static char *
-sigar_net_interface_name_get(sigar_t *sigar, MIB_IFROW *ifr, PIP_ADAPTER_ADDRESSES address_list)
+static int
+sigar_net_interface_name_get(sigar_t *sigar, MIB_IFROW *ifr, PIP_ADAPTER_ADDRESSES address_list, char *name)
 {
-    char *match = NULL;
     PIP_ADAPTER_ADDRESSES iter;
     int lpc = 0;
 
     if (address_list == NULL) {
-        return NULL;
+        return SIGAR_ENOTIMPL;
     }
 
     for (iter = address_list; iter != NULL; iter = iter->Next) {
@@ -2687,14 +2686,13 @@ sigar_net_interface_name_get(sigar_t *sigar, MIB_IFROW *ifr, PIP_ADAPTER_ADDRESS
         }
 
         if (lpc == iter->PhysicalAddressLength) {
-            match = malloc(MAX_INTERFACE_NAME_LEN);
-            wcstombs(match, iter->FriendlyName, MAX_INTERFACE_NAME_LEN);
-            match[MAX_INTERFACE_NAME_LEN-1] = 0;
-            break;
+            wcstombs(name, iter->FriendlyName, MAX_INTERFACE_NAME_LEN);
+            name[MAX_INTERFACE_NAME_LEN-1] = '\0';
+            return SIGAR_OK;
         }
     }
 
-    return match;
+    return SIGAR_ENOENT;
 }
 
 SIGAR_DECLARE(int)
@@ -2742,22 +2740,18 @@ sigar_net_interface_list_get(sigar_t *sigar,
         int key;
         MIB_IFROW *ifr = ift->table + i;
         sigar_cache_entry_t *entry;
-        char *friendly = NULL;
+
+        status = SIGAR_ENOENT;
 
         if (strEQ(ifr->bDescr, MS_LOOPBACK_ADAPTER)) {
             /* special-case */
             sprintf(name, NETIF_LA "%d", la++);
         }
         else if (ifr->dwType == MIB_IF_TYPE_LOOPBACK) {
-            friendly = sigar_net_interface_name_get(sigar, ifr, address_list);
-            if (friendly == NULL) {
+            status = sigar_net_interface_name_get(sigar, ifr, address_list, name);
+            if (status != SIGAR_OK) {
                 sprintf(name, "lo%d", lo++);
             }
-            else {
-                snprintf(name, MAX_INTERFACE_NAME_LEN, "%s", friendly);
-            }
-            name[MAX_INTERFACE_NAME_LEN] = 0;
-            free(friendly);
         }
         else if ((ifr->dwType == MIB_IF_TYPE_ETHERNET) ||
                  (ifr->dwType == IF_TYPE_IEEE80211))
@@ -2765,17 +2759,12 @@ sigar_net_interface_list_get(sigar_t *sigar,
             if ((strstr(ifr->bDescr, "Scheduler") == NULL) &&
                 (strstr(ifr->bDescr, "Filter") == NULL))
             {
-                friendly = sigar_net_interface_name_get(sigar, ifr, address_list);
+                status = sigar_net_interface_name_get(sigar, ifr, address_list, name);
             }
 
-            if (friendly == NULL) {
+            if (status != SIGAR_OK) {
                 snprintf(name, ifr->dwDescrLen, "%s", ifr->bDescr);
             }
-            else {
-                snprintf(name, MAX_INTERFACE_NAME_LEN, "%s", friendly);
-            }
-            name[MAX_INTERFACE_NAME_LEN] = 0;
-            free(friendly);
         }
         else {
             continue; /*XXX*/
