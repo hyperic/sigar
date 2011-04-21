@@ -380,17 +380,6 @@ static sigar_mpr_t sigar_mpr = {
     { NULL, NULL }
 };
 
-#ifdef MSVC
-#define DLLMOD_COPY(name) \
-    memcpy(&(sigar->##name), &sigar_##name, sizeof(sigar_##name))
-
-#define DLLMOD_INIT(name, all) \
-    sigar_dllmod_init(sigar, (sigar_dll_module_t *)&(sigar->##name), all)
-
-#define DLLMOD_FREE(name) \
-    sigar_dllmod_free((sigar_dll_module_t *)&(sigar->##name))
-#else
-/* The GCC compiler doesn't require/accept the ## prefix */
 #define DLLMOD_COPY(name) \
     memcpy(&(sigar->name), &sigar_##name, sizeof(sigar_##name))
 
@@ -399,8 +388,6 @@ static sigar_mpr_t sigar_mpr = {
 
 #define DLLMOD_FREE(name) \
     sigar_dllmod_free((sigar_dll_module_t *)&(sigar->name))
-#endif
-
 
 static void sigar_dllmod_free(sigar_dll_module_t *module)
 {
