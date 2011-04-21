@@ -28,7 +28,7 @@
 #pragma comment(lib, "wbemuuid.lib")
 
 #ifndef SIGAR_CMDLINE_MAX
-#define SIGAR_CMDLINE_MAX 4096
+#define SIGAR_CMDLINE_MAX 4096<<2
 #endif
 
 class WMI {
