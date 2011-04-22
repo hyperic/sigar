@@ -31,6 +31,8 @@ public class SigarLog {
     private static final int LOG_INFO   = 3;
     private static final int LOG_DEBUG  = 4;
 
+    private static final boolean enableLogFallbackConf = ! Boolean.getBoolean("sigar.noLog4jDefaultConfig");
+
     private static native void setLogger(Sigar sigar, Logger log);
 
     public static native void setLevel(Sigar sigar, int level);
@@ -48,7 +50,7 @@ public class SigarLog {
 
     public static Logger getLogger(String name) {
         Logger log = Logger.getLogger(name);
-        if (!isLogConfigured()) {
+        if (enableLogFallbackConf && !isLogConfigured()) {
             BasicConfigurator.configure();
         }
         return log;
