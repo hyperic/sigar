@@ -904,8 +904,8 @@ static int sigar_cpu_ntsys_get(sigar_t *sigar, sigar_cpu_t *cpu)
         cpu->sys  += NS100_2MSEC(info[i].KernelTime.QuadPart -
                                  info[i].IdleTime.QuadPart);
         cpu->irq  += NS100_2MSEC(info[i].InterruptTime.QuadPart);
-        cpu->total += cpu->idle + cpu->user + cpu->sys;
     }
+    cpu->total = cpu->idle + cpu->user + cpu->sys;
 
     return SIGAR_OK;
 }
@@ -974,7 +974,7 @@ static int sigar_cpu_list_perflib_get(sigar_t *sigar,
         cpu->nice = cpu->wait = 0; /*N/A*/
 
         /*XXX adding up too much here if xeon, but not using this atm*/
-        cpu->total += cpu->sys + cpu->user + cpu->idle + cpu->irq;
+        cpu->total = cpu->sys + cpu->user + cpu->idle + cpu->irq;
 
         inst = PdhNextInstance(inst);
     }
