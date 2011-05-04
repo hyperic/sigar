@@ -67,17 +67,23 @@ int sigar_os_open(sigar_t **sig)
     struct utsname name;
     char *ptr;
 
-    sigar = malloc(sizeof(*sigar));
-    *sig = sigar;
+    if ((kc = kstat_open()) == NULL) {
+       *sig = NULL;
+       return errno;
+    }
 
-    sigar->log_level = -1; /* log nothing by default */
-    sigar->log_impl = NULL;
-    sigar->log_data = NULL;
+    /*
+     * Use calloc instead of malloc to set everything to 0
+     * to avoid having to set each individual member to 0/NULL
+     * later.
+     */
+    if ((*sig = sigar = calloc(1, sizeof(*sigar))) == NULL) {
+       return ENOMEM;
+    }
 
     uname(&name);
     if ((ptr = strchr(name.release, '.'))) {
-        ptr++;
-        sigar->solaris_version = atoi(ptr);
+        sigar->solaris_version = atoi(ptr + 1);
     }
     else {
         sigar->solaris_version = 6;
@@ -86,9 +92,9 @@ int sigar_os_open(sigar_t **sig)
     if ((ptr = getenv("SIGAR_USE_UCB_PS"))) {
         sigar->use_ucb_ps = strEQ(ptr, "true");
     }
-    else {
-        struct stat sb;
-        if (stat(SIGAR_USR_UCB_PS, &sb) < 0) {
+
+    if (sigar->use_ucb_ps) {
+        if (access(SIGAR_USR_UCB_PS, X_OK) == -1) {
             sigar->use_ucb_ps = 0;
         }
         else {
@@ -103,18 +109,7 @@ int sigar_os_open(sigar_t **sig)
     }
 
     sigar->ticks = sysconf(_SC_CLK_TCK);
-    sigar->kc = kc = kstat_open();
-
-    if (!kc) {
-        return errno;
-    }
-
-    sigar->cpulist.size = 0;
-    sigar->ncpu = 0;
-    sigar->ks.cpu = NULL;
-    sigar->ks.cpu_info = NULL;
-    sigar->ks.cpuid = NULL;
-    sigar->ks.lcpu = 0;
+    sigar->kc = kc;
 
     sigar->koffsets.system[0] = -1;
     sigar->koffsets.mempages[0] = -1;
@@ -122,9 +117,7 @@ int sigar_os_open(sigar_t **sig)
 
     if ((status = sigar_get_kstats(sigar)) != SIGAR_OK) {
         fprintf(stderr, "status=%d\n", status);
-    } 
-
-    sigar->boot_time = 0;
+    }
 
     if ((ksp = sigar->ks.system) &&
         (kstat_read(kc, ksp, NULL) >= 0))
@@ -135,16 +128,6 @@ int sigar_os_open(sigar_t **sig)
     }
 
     sigar->last_pid = -1;
-    sigar->pinfo = NULL;
-
-    sigar->plib = NULL;
-    sigar->pgrab = NULL;
-    sigar->pfree = NULL;
-    sigar->pobjname = NULL;
-
-    sigar->pargs = NULL;
-
-    SIGAR_ZERO(&sigar->mib2);
     sigar->mib2.sd = -1;
 
     return SIGAR_OK;
