@@ -223,6 +223,29 @@ static PyObject *pysigar_net_interface_list(PyObject *self, PyObject *args)
     return RETVAL;
 }
 
+static PyObject *pysigar_net_route_list(PyObject *self, PyObject *args)
+{
+    int status;
+    sigar_t *sigar = PySIGAR;
+    sigar_net_route_list_t net_routelist;
+    PyObject *RETVAL;
+
+    status = sigar_net_route_list_get(sigar, &net_routelist);
+    if (status != SIGAR_OK) {
+        PySigar_Croak();
+        return NULL;
+    }
+
+    RETVAL = pysigar_new_list((char *)&net_routelist.data[0],
+                              net_routelist.number,
+                              sizeof(*net_routelist.data),
+                              &pysigar_PySigarNetRouteType);
+
+    sigar_net_route_list_destroy(sigar, &net_routelist);
+
+    return RETVAL;
+}
+
 static PyObject *pysigar_arp_list(PyObject *self, PyObject *args)
 {
     int status;
@@ -347,6 +370,7 @@ static PyObject *pysigar_format_size(PyObject *self, PyObject *args)
 static PyMethodDef pysigar_methods[] = {
     { "close", pysigar_close, METH_NOARGS, NULL },
     { "net_interface_list", pysigar_net_interface_list, METH_NOARGS, NULL },
+    { "net_route_list", pysigar_net_route_list, METH_NOARGS, NULL },
     { "file_system_list", pysigar_file_system_list, METH_NOARGS, NULL },
     { "arp_list", pysigar_arp_list, METH_NOARGS, NULL },
     { "loadavg", pysigar_loadavg, METH_NOARGS, NULL },
