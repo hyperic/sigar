@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2007 Hyperic, Inc.
- * Copyright (c) 2010 VMware, Inc.
+ * Copyright (c) 2010-2011 VMware, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -283,6 +283,31 @@ static PyObject *pysigar_proc_list(PyObject *self, PyObject *args)
     return RETVAL;
 }
 
+static PyObject *pysigar_proc_args(PyObject *self, PyObject *args)
+{
+    int status;
+    sigar_t *sigar = PySIGAR;
+    sigar_proc_args_t proc_args;
+    long pid;
+
+    PyObject *RETVAL;
+
+    PySigar_ParsePID;
+
+    status = sigar_proc_args_get(sigar, pid, &proc_args);
+
+    if (status != SIGAR_OK) {
+        PySigar_Croak();
+        return NULL;
+    }
+
+    RETVAL = pysigar_new_strlist(proc_args.data, proc_args.number);
+
+    sigar_proc_args_destroy(sigar, &proc_args);
+
+    return RETVAL;
+}
+
 static PyObject *pysigar_format_size(PyObject *self, PyObject *args)
 {
     char buffer[56];
@@ -303,6 +328,7 @@ static PyMethodDef pysigar_methods[] = {
     { "arp_list", pysigar_arp_list, METH_NOARGS, NULL },
     { "loadavg", pysigar_loadavg, METH_NOARGS, NULL },
     { "proc_list", pysigar_proc_list, METH_NOARGS, NULL },
+    { "proc_args", pysigar_proc_args, METH_VARARGS, NULL },
     PY_SIGAR_METHODS
     {NULL}
 };
