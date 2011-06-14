@@ -261,6 +261,29 @@ static PyObject *pysigar_loadavg(PyObject *self, PyObject *args)
     return pysigar_new_doublelist(loadavg.loadavg, 3);
 }
 
+static PyObject *pysigar_who_list(PyObject *self, PyObject *args)
+{
+    int status;
+    sigar_t *sigar = PySIGAR;
+    sigar_who_list_t wholist;
+    PyObject *RETVAL;
+
+    status = sigar_who_list_get(sigar, &wholist);
+    if (status != SIGAR_OK) {
+        PySigar_Croak();
+        return NULL;
+    }
+
+    RETVAL = pysigar_new_list((char *)&wholist.data[0],
+                              wholist.number,
+                              sizeof(*wholist.data),
+                              &pysigar_PySigarWhoType);
+
+    sigar_who_list_destroy(sigar, &wholist);
+
+    return RETVAL;
+}
+
 static PyObject *pysigar_proc_list(PyObject *self, PyObject *args)
 {
     int status;
@@ -327,6 +350,7 @@ static PyMethodDef pysigar_methods[] = {
     { "file_system_list", pysigar_file_system_list, METH_NOARGS, NULL },
     { "arp_list", pysigar_arp_list, METH_NOARGS, NULL },
     { "loadavg", pysigar_loadavg, METH_NOARGS, NULL },
+    { "who_list", pysigar_who_list, METH_NOARGS, NULL },
     { "proc_list", pysigar_proc_list, METH_NOARGS, NULL },
     { "proc_args", pysigar_proc_args, METH_VARARGS, NULL },
     PY_SIGAR_METHODS
