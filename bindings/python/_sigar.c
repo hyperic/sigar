@@ -413,11 +413,37 @@ static PyObject *pysigar_proc_list(PyObject *self, PyObject *args)
 
     PyObject *RETVAL;
 
-    status = sigar_proc_list_get(sigar, &list);
+    if (PyTuple_Size(args) == 0) {
+        status = sigar_proc_list_get(sigar, &list);
 
-    if (status != SIGAR_OK) {
-        PySigar_Croak();
-        return NULL;
+        if (status != SIGAR_OK) {
+            PySigar_Croak();
+            return NULL;
+        }
+    }
+    else {
+        sigar_ptql_query_t *query;
+        sigar_ptql_error_t error;
+        char *ptql;
+
+        if (!PyArg_ParseTuple(args, "s", &ptql)) {
+            return NULL;
+        }
+
+        status = sigar_ptql_query_create(&query, ptql, &error);
+
+        if (status != SIGAR_OK) {
+            PyErr_SetString(PyExc_ValueError, error.message);
+            return NULL;
+        }
+        sigar_ptql_re_impl_set(sigar, NULL, pysigar_ptql_re_impl);
+        status = sigar_ptql_query_find(sigar, query, &list);
+        sigar_ptql_re_impl_set(sigar, NULL, NULL);
+        sigar_ptql_query_destroy(query);
+        if (status != SIGAR_OK) {
+            PySigar_Croak();
+            return NULL;
+        }
     }
 
     RETVAL = pysigar_new_intlist(&list.data[0], list.number);
@@ -473,7 +499,7 @@ static PyMethodDef pysigar_methods[] = {
     { "arp_list", pysigar_arp_list, METH_NOARGS, NULL },
     { "loadavg", pysigar_loadavg, METH_NOARGS, NULL },
     { "who_list", pysigar_who_list, METH_NOARGS, NULL },
-    { "proc_list", pysigar_proc_list, METH_NOARGS, NULL },
+    { "proc_list", pysigar_proc_list, METH_VARARGS, NULL },
     { "proc_args", pysigar_proc_args, METH_VARARGS, NULL },
     PY_SIGAR_METHODS
     {NULL}
