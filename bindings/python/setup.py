@@ -22,6 +22,7 @@ import sys
 
 build = 'build'
 options = {'perl':'perl'}
+deps = [build + '/_sigar_generated.c']
 
 def parse_args():
     global options
@@ -59,6 +60,7 @@ if 'sigar' in options:
     _sigar = Extension(
         "_sigar",
         ["_sigar.c"],
+        depends = deps,
         include_dirs = [sigar + '/include', build],
         extra_compile_args = ['-Wall'],
         libraries=['sigar'],
@@ -72,6 +74,7 @@ else :
     _sigar = Extension(
         "_sigar",
         src,
+        depends = deps,
         include_dirs = [build],
         extra_compile_args = cppflags,
         extra_link_args = sargs('ldflags'),
