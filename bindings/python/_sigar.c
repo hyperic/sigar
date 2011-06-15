@@ -69,6 +69,42 @@ static void pysigar_free(PyObject *self)
     self->ob_type->tp_free((PyObject *)self);
 }
 
+static int pysigar_ptql_re_impl(void *data,
+                                char *haystack, char *needle)
+{
+    PyObject *name = PyString_FromString("sigar");
+    PyObject *module = PyImport_Import(name);
+    PyObject *match, *args, *source, *regex, *result;
+    int matches = 0;
+
+    match = PyObject_GetAttrString(module, "string_matches");
+
+    source = PyString_FromString(haystack);
+    regex = PyString_FromString(needle);
+    args = PyTuple_New(2);
+    PyTuple_SetItem(args, 0, source); /* steals source reference */
+    PyTuple_SetItem(args, 1, regex); /* steals regex reference */
+
+    result = PyObject_CallObject(match, args);
+
+    Py_DECREF(name);
+    Py_DECREF(module);
+    Py_DECREF(args);
+    Py_DECREF(match);
+
+    if (result == NULL) {
+        if (PyErr_Occurred()) {
+            PyErr_Print();
+        }
+    }
+    else {
+        matches = (result == Py_True);
+        Py_DECREF(result);
+    }
+
+    return matches;
+}
+
 #define sigar_isdigit(c) \
     (isdigit(((unsigned char)(c))))
 
@@ -103,9 +139,9 @@ static int pysigar_parse_pid(sigar_t *sigar, PyObject *args, long *pid)
 
             status = sigar_ptql_query_create(&query, ptql, &error);
             if (status == SIGAR_OK) {
-                /*sigar_ptql_re_impl_set(sigar, NULL, pysigar_ptql_re_impl);*/
+                sigar_ptql_re_impl_set(sigar, NULL, pysigar_ptql_re_impl);
                 status = sigar_ptql_query_find_process(sigar, query, (sigar_pid_t *)pid);
-                /*sigar_ptql_re_impl_set(sigar, NULL, NULL);*/
+                sigar_ptql_re_impl_set(sigar, NULL, NULL);
                 sigar_ptql_query_destroy(query);
 
                 if (status == SIGAR_OK) {

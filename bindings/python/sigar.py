@@ -1,5 +1,6 @@
 #
 # Copyright (c) 2007 Hyperic, Inc.
+# Copyright (c) 2011 VMware, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,3 +16,8 @@
 #
 
 from _sigar import *
+
+import re
+#wrapper for pysigar_ptql_re_impl
+def string_matches(source, regex):
+    return re.compile(regex).match(source) != None
