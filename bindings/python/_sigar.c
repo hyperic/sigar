@@ -321,6 +321,34 @@ static PyObject *pysigar_net_interface_list(PyObject *self, PyObject *args)
     return RETVAL;
 }
 
+static PyObject *pysigar_net_connection_list(PyObject *self, PyObject *args)
+{
+    int status, flags;
+    sigar_t *sigar = PySIGAR;
+    sigar_net_connection_list_t connlist;
+    PyObject *RETVAL;
+
+    if (!PyArg_ParseTuple(args, "i", &flags)) {
+        return NULL;
+    }
+
+    status = sigar_net_connection_list_get(sigar, &connlist, flags);
+
+    if (status != SIGAR_OK) {
+        PySigar_Croak();
+        return NULL;
+    }
+
+    RETVAL = pysigar_new_list((char *)&connlist.data[0],
+                              connlist.number,
+                              sizeof(*connlist.data),
+                              &pysigar_PySigarNetConnectionType);
+
+    sigar_net_connection_list_destroy(sigar, &connlist);
+
+    return RETVAL;
+}
+
 static PyObject *pysigar_net_route_list(PyObject *self, PyObject *args)
 {
     int status;
@@ -576,6 +604,7 @@ static PyObject *pysigar_format_size(PyObject *self, PyObject *args)
 static PyMethodDef pysigar_methods[] = {
     { "close", pysigar_close, METH_NOARGS, NULL },
     { "net_interface_list", pysigar_net_interface_list, METH_NOARGS, NULL },
+    { "net_connection_list", pysigar_net_connection_list, METH_VARARGS, NULL },
     { "net_route_list", pysigar_net_route_list, METH_NOARGS, NULL },
     { "file_system_list", pysigar_file_system_list, METH_NOARGS, NULL },
     { "arp_list", pysigar_arp_list, METH_NOARGS, NULL },
