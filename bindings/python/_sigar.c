@@ -151,6 +151,10 @@ static int pysigar_parse_pid(sigar_t *sigar, PyObject *args, long *pid)
                     PySigar_Croak();
                 }
             }
+            else {
+                PyErr_SetString(PyExc_ValueError, error.message);
+                return !SIGAR_OK;
+            }
         }
     }
 
