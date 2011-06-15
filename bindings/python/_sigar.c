@@ -524,6 +524,42 @@ static PyObject *pysigar_proc_args(PyObject *self, PyObject *args)
     return RETVAL;
 }
 
+static int pysigar_env_getall(void *data,
+                              const char *key, int klen,
+                              char *val, int vlen)
+{
+    PyDict_SetItem((PyObject *)data,
+                   PyString_FromStringAndSize(key, klen),
+                   PyString_FromStringAndSize(val, vlen));
+
+    return SIGAR_OK;
+}
+
+static PyObject *pysigar_proc_env(PyObject *self, PyObject *args)
+{
+    int status;
+    sigar_t *sigar = PySIGAR;
+    sigar_proc_env_t procenv;
+    long pid;
+
+    PyObject *RETVAL;
+
+    PySigar_ParsePID;
+
+    RETVAL = PyDict_New();
+
+    procenv.type = SIGAR_PROC_ENV_ALL;
+    procenv.env_getter = pysigar_env_getall;
+    procenv.data = RETVAL;
+
+    status = sigar_proc_env_get(sigar, pid, &procenv);
+    if (status != SIGAR_OK) {
+        PySigar_Croak();
+    }
+
+    return RETVAL;
+}
+
 static PyObject *pysigar_format_size(PyObject *self, PyObject *args)
 {
     char buffer[56];
@@ -549,6 +585,7 @@ static PyMethodDef pysigar_methods[] = {
     { "who_list", pysigar_who_list, METH_NOARGS, NULL },
     { "proc_list", pysigar_proc_list, METH_VARARGS, NULL },
     { "proc_args", pysigar_proc_args, METH_VARARGS, NULL },
+    { "proc_env", pysigar_proc_env, METH_VARARGS, NULL },
     PY_SIGAR_METHODS
     {NULL}
 };
