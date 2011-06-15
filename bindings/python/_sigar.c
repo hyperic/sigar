@@ -19,13 +19,14 @@
 #include "sigar.h"
 #include "sigar_fileinfo.h"
 #include "sigar_format.h"
+#include "sigar_ptql.h"
 
 #define PySigarString_FromNetAddr(a) pysigar_net_address_to_string(&a)
 
 #define PySigarInt_FromChar(c) PyInt_FromLong((int)c)
 
 #define PySigar_ParsePID \
-    if (!PyArg_ParseTuple(args, "i", &pid)) return NULL
+    if (pysigar_parse_pid(sigar, args, &pid) != SIGAR_OK) return NULL
 
 #define PySigar_ParseName \
     if (!PyArg_ParseTuple(args, "s", &name, &name_len)) return NULL
@@ -66,6 +67,63 @@ static void pysigar_free(PyObject *self)
     }
 
     self->ob_type->tp_free((PyObject *)self);
+}
+
+#define sigar_isdigit(c) \
+    (isdigit(((unsigned char)(c))))
+
+static int pysigar_parse_pid(sigar_t *sigar, PyObject *args, long *pid)
+{
+    if ((PyTuple_Size(args) >= 1) && PyString_Check(PyTuple_GetItem(args, 0))) {
+        char *ptql;
+        int ptql_len;
+
+        if (!PyArg_ParseTuple(args, "s#", &ptql, &ptql_len)) {
+            return !SIGAR_OK;
+        }
+
+        if (sigar_isdigit(*ptql)) {
+            /* XXX pluck strtoull define from sigar_ptql.c */
+            PyObject *obj = PyLong_FromString(ptql, &ptql, 10);
+            *pid = PyLong_AsLong(obj);
+            Py_DECREF(obj);
+            return SIGAR_OK;
+        }
+        else if ((ptql_len == 2) &&
+                 (*ptql == '$') && (*(ptql + 1) == '$'))
+        {
+            *pid = sigar_pid_get(sigar);
+            return SIGAR_OK;
+        }
+        else {
+            /* XXX cache queries */
+            sigar_ptql_query_t *query;
+            sigar_ptql_error_t error;
+            int status;
+
+            status = sigar_ptql_query_create(&query, ptql, &error);
+            if (status == SIGAR_OK) {
+                /*sigar_ptql_re_impl_set(sigar, NULL, pysigar_ptql_re_impl);*/
+                status = sigar_ptql_query_find_process(sigar, query, (sigar_pid_t *)pid);
+                /*sigar_ptql_re_impl_set(sigar, NULL, NULL);*/
+                sigar_ptql_query_destroy(query);
+
+                if (status == SIGAR_OK) {
+                    return SIGAR_OK;
+                }
+                else {
+                    PySigar_Croak();
+                }
+            }
+        }
+    }
+
+    if (PyArg_ParseTuple(args, "i", pid)) {
+        return SIGAR_OK;
+    }
+    else {
+        return !SIGAR_OK;
+    }
 }
 
 static PyObject *pysigar_net_address_to_string(sigar_net_address_t *address)
