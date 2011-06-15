@@ -395,6 +395,29 @@ static PyObject *pysigar_arp_list(PyObject *self, PyObject *args)
     return RETVAL;
 }
 
+static PyObject *pysigar_net_stat(PyObject *self, PyObject *args)
+{
+    int status, flags;
+    sigar_t *sigar = PySIGAR;
+    sigar_net_stat_t *RETVAL;
+
+    if (!PyArg_ParseTuple(args, "i", &flags)) {
+        return NULL;
+    }
+
+    RETVAL = malloc(sizeof(*RETVAL));
+    if ((status = sigar_net_stat_get(sigar, RETVAL, flags)) != SIGAR_OK) {
+        free(RETVAL);
+        PySigar_Croak();
+        return NULL;
+    }
+    else {
+        PyObject *self = PySigar_new(pysigar_PySigarNetStatType);
+        PySIGAR_OBJ->ptr = RETVAL;
+        return self;
+    }
+}
+
 static PyObject *pysigar_cpu_list(PyObject *self, PyObject *args)
 {
     int status;
@@ -608,6 +631,7 @@ static PyMethodDef pysigar_methods[] = {
     { "net_route_list", pysigar_net_route_list, METH_NOARGS, NULL },
     { "file_system_list", pysigar_file_system_list, METH_NOARGS, NULL },
     { "arp_list", pysigar_arp_list, METH_NOARGS, NULL },
+    { "net_stat", pysigar_net_stat, METH_VARARGS, NULL },
     { "cpu_list", pysigar_cpu_list, METH_NOARGS, NULL },
     { "cpu_info_list", pysigar_cpu_info_list, METH_NOARGS, NULL },
     { "loadavg", pysigar_loadavg, METH_NOARGS, NULL },
