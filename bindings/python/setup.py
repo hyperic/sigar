@@ -17,7 +17,9 @@
 #
 
 from distutils.core import setup, Extension
-from os import system, mkdir, path, popen
+from distutils.util import get_platform
+from distutils.sysconfig import get_config_var, get_python_version
+from os import system, mkdir, path, popen, rename
 import sys
 
 build = 'build'
@@ -69,6 +71,18 @@ else :
     print "Inlining libsigar sources"
     src = sargs('inline_src -- ' + build)
     src.append('_sigar.c')
+
+    version_file = "sigar_version.c"
+    build_version_file = build + "/" + version_file
+    libname = "_sigar" + get_config_var("SO")
+    filters = \
+        'ARCHNAME=' + get_platform() + '-' + get_python_version() + ' ' + \
+        'ARCHLIB=' + libname + ' ' + \
+        'BINNAME=' + libname
+    system(options['perl'] + ' -Mlib=.. -MSigarBuild -e version_file ' + filters)
+    rename(version_file, build_version_file)
+    src.append(build_version_file)
+
     cppflags = sargs('cppflags')
     cppflags.append('-Wall')
     _sigar = Extension(

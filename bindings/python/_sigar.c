@@ -697,9 +697,23 @@ static PyMethodDef pysigar_module_methods[] = {
 #define PY_SIGAR_CONST_STR(name) \
     PyDict_SetItemString(dict, #name, o=PyString_FromString(SIGAR_##name)); Py_DECREF(o)
 
+#define PY_SIGAR_DEFINE_CONST_STR(name, value) \
+    PyDict_SetItemString(dict, name, o=PyString_FromString(value)); Py_DECREF(o)
+
+static void init_pysigar_version(PyObject *dict)
+{
+    PyObject *o;
+    sigar_version_t *sv = sigar_version_get();
+    PY_SIGAR_DEFINE_CONST_STR("BUILD_DATE", sv->build_date);
+    PY_SIGAR_DEFINE_CONST_STR("SCM_REVISION", sv->scm_revision);
+    PY_SIGAR_DEFINE_CONST_STR("VERSION", sv->version);
+}
+
 static void init_pysigar_constants(PyObject *dict)
 {
     PyObject *o;
+
+    init_pysigar_version(dict);
 
     PY_SIGAR_CONST_INT(FIELD_NOTIMPL);
 
