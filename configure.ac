@@ -21,6 +21,7 @@ AC_PROG_LN_S
 AC_PROG_INSTALL
 AC_PROG_MAKE_SET
 AC_PROG_LIBTOOL
+AC_CONFIG_MACRO_DIR([m4])
 
 AC_MSG_CHECKING([for os type ($host_os)])
 FRAMEWORK=
@@ -148,10 +149,7 @@ src/os/darwin/Makefile
 src/os/freebsd/Makefile
 src/os/hpux/Makefile
 src/os/linux/Makefile
-src/os/netware/Makefile
-src/os/osf1/Makefile
 src/os/solaris/Makefile
-src/os/stub/Makefile
 src/os/win32/Makefile
 examples/Makefile
 src/sigar_version_autoconf.c
