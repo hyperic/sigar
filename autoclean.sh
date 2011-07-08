@@ -2,7 +2,8 @@
 
 set -x
 
-rm -f INSTALL NEWS AUTHORS \
+rm -f INSTALL NEWS \
+&& rm -f -r m4 \
 && rm -f aclocal.m4 \
 && rm -f -r autom4te.cache \
 && rm -f compile \
