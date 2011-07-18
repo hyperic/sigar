@@ -31,7 +31,7 @@ public class ProcUtil {
 
         for (int i=0; i<len; i++) {
             char c = name.charAt(i);
-            if (!((c == '.') || Character.isLetter(c))) {
+            if (!((c == '.') || Character.isJavaIdentifierPart(c))) {
                 return false;
             }
         }

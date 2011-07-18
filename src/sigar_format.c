@@ -37,7 +37,7 @@
 #include <grp.h>
 
 /* sysconf(_SC_GET{PW,GR}_R_SIZE_MAX) */
-#define R_SIZE_MAX 1024
+#define R_SIZE_MAX 2048
 
 int sigar_user_name_get(sigar_t *sigar, int uid, char *buf, int buflen)
 {
