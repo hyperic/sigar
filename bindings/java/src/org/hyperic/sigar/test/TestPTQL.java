@@ -25,6 +25,8 @@ import org.hyperic.sigar.SigarNotImplementedException;
 import org.hyperic.sigar.ptql.ProcessQuery;
 import org.hyperic.sigar.ptql.ProcessQueryFactory;
 import org.hyperic.sigar.ptql.MalformedQueryException;
+import org.hyperic.sigar.ptql.SimplePTQL;
+import org.testng.Assert;
 
 public class TestPTQL extends SigarTestCase {
 
@@ -214,6 +216,34 @@ public class TestPTQL extends SigarTestCase {
         ProcessQuery status = this.qf.getQuery(q);
         long pid = sigar.getPid();
         traceln(q + "=" + status.match(sigar, pid));
+    }
+    
+    public void TestSimplePTQLescape() throws Exception {
+		final String regex = "\\Qpipe,name=office1\\E";
+		String newVal = SimplePTQL.escapePTQLForRegex(regex);
+		Assert.assertEquals(newVal, "pipe.name=office1");
+
+		String part1 = "office.*";
+		String whole = part1 + regex;
+
+		Assert.assertEquals(whole, "office.*\\Qpipe,name=office1\\E");
+
+		int index = whole.indexOf(regex);
+		if (index == -1) {
+			return;
+		}
+
+		Assert.assertEquals(whole.substring(0, index), part1);
+		Assert.assertEquals(whole.substring(index), regex);
+	}
+    
+    public void testSimplePTQLBuilder() throws Exception {
+	    SimplePTQL ptql = new SimplePTQL.Builder(SimplePTQL.STATE_NAME(), SimplePTQL.EQ(), "java").createQuery();
+		Assert.assertEquals(ptql.getQuery(), JAVA_PROCESS);
+		
+		Sigar sigar = getSigar();
+		int runQuery = runQuery(sigar, ptql.getQuery());
+		Assert.assertTrue(runQuery > 0);
     }
 }
 
