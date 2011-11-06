@@ -31,6 +31,10 @@
 #include <arpa/inet.h>
 #endif
 
+#if defined(__FreeBSD__)
+#include <sys/param.h>
+#endif
+
 #include "sigar.h"
 #include "sigar_private.h"
 #include "sigar_util.h"
@@ -1038,6 +1042,11 @@ SIGAR_DECLARE(int) sigar_who_list_destroy(sigar_t *sigar,
 #  include <utmpx.h>
 #  define SIGAR_UTMP_FILE _UTMPX_FILE
 #  define ut_time ut_tv.tv_sec
+#elif (defined(__FreeBSD__) && (__FreeBSD_version >= 900000))
+#  include <utmpx.h>
+#  define SIGAR_UTMP_FILE _UTMPX_FILE
+#  define SIGAR_NO_UTMP
+#  define ut_name ut_user
 #elif defined(WIN32)
 /* XXX may not be the default */
 #define SIGAR_UTMP_FILE "C:\\cygwin\\var\\run\\utmp"
@@ -1080,15 +1089,21 @@ static char *getpass(const char *prompt)
 #  define ut_user ut_name
 #endif
 
-#ifdef DARWIN
+#if defined(DARWIN) || (defined(__FreeBSD__) && (__FreeBSD_version >= 900000))
 /* XXX from utmpx.h; sizeof changed in 10.5 */
 /* additionally, utmpx does not work on 10.4 */
 #define SIGAR_HAS_UTMPX
-#define _PATH_UTMPX     "/var/run/utmpx"
+#if defined(DARWIN)
+#  define _PATH_UTMPX     "/var/run/utmpx"
+#elif (defined(__FreeBSD__) && (__FreeBSD_version >= 900000))
+#  define _PATH_UTMPX     "/var/run/utx.active"
+# endif
 #define _UTX_USERSIZE   256     /* matches MAXLOGNAME */
 #define _UTX_LINESIZE   32
 #define _UTX_IDSIZE     4
 #define _UTX_HOSTSIZE   256
+
+#if defined(DARWIN)
 struct utmpx {
     char ut_user[_UTX_USERSIZE];    /* login name */
     char ut_id[_UTX_IDSIZE];        /* id */
@@ -1099,6 +1114,8 @@ struct utmpx {
     char ut_host[_UTX_HOSTSIZE];    /* host name */
     __uint32_t ut_pad[16];          /* reserved for future use */
 };
+#endif
+
 #define ut_xtime ut_tv.tv_sec
 #define UTMPX_USER_PROCESS      7
 /* end utmpx.h */
@@ -1167,7 +1184,7 @@ static int sigar_who_utmp(sigar_t *sigar,
 #endif
     if (!(fp = fopen(SIGAR_UTMP_FILE, "r"))) {
 #ifdef SIGAR_HAS_UTMPX
-        /* Darwin 10.5 */
+        /* Darwin 10.5, FreeBSD >= 9 */
         return sigar_who_utmpx(sigar, wholist);
 #endif
         return errno;
