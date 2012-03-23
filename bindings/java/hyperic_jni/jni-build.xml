@@ -356,8 +356,6 @@
         <compilerarg value="${uni.arch}"/>
         <compilerarg value="-mmacosx-version-min=${osx.min}"/>
 
-        <sysincludepath location="/Developer/Headers/FlatCarbon"/>
-
         <defineset>
           <define name="DARWIN"/>
           <define name="DARWIN_HAS_LIBPROC_H" if="libproc.h"/>

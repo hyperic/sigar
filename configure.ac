@@ -35,7 +35,6 @@ case $host_os in
      SRC_OS="darwin"
      AC_DEFINE(DARWIN,[],[running on MacOS X])
      AC_DEFINE(SIGAR_TEST_OS_DARWIN, [1], [for the tests])
-     SIGAR_INCLUDES="-I /Developer/Headers/FlatCarbon/"
      SIGAR_LIBS="-framework IOKit -framework CoreServices"
      ;;
      *netbsd*)

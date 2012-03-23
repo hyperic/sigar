@@ -40,7 +40,6 @@ IF(CMAKE_SYSTEM_NAME MATCHES "(Darwin|FreeBSD)")
 
   INCLUDE_DIRECTORIES(os/darwin/)
   IF(CMAKE_SYSTEM_NAME MATCHES "(Darwin)")
-    INCLUDE_DIRECTORIES(/Developer/Headers/FlatCarbon/)
     ADD_DEFINITIONS(-DDARWIN)
     SET(SIGAR_LINK_FLAGS "-framework CoreServices -framework IOKit")
   ELSE(CMAKE_SYSTEM_NAME MATCHES "(Darwin)")

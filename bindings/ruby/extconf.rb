@@ -1,7 +1,7 @@
 #
 # Copyright (c) 2007, 2009 Hyperic, Inc.
 # Copyright (c) 2009 SpringSource, Inc.
-# Copyright (c) 2010 VMware, Inc.
+# Copyright (c) 2010-2012 VMware, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -26,20 +26,11 @@ print 'Ruby platform=' + RUBY_PLATFORM + "\n"
 case RUBY_PLATFORM
 when /darwin/
   os = 'darwin'
-  sdks = Dir.glob('/Developer/SDKs/MacOSX10.*.sdk').sort.reverse
-  if sdks.length == 0
-    print "Xcode Developer Tools not installed\n"
-    print "Download from http://developer.apple.com/technology/xcode.html\n"
-    exit 1
-  else
-    print "Available SDKs...\n(*) " + sdks.join("\n    ") + "\n"
-    sdk = sdks[0]
-  end
   if File.file?("/usr/include/libproc.h")
     $CPPFLAGS += ' -DDARWIN_HAS_LIBPROC_H'
   end
-  $CPPFLAGS += ' -DDARWIN -I/Developer/Headers/FlatCarbon -isysroot ' + sdk
-  $LDFLAGS += ' -Wl,-syslibroot,' + sdk + ' -framework CoreServices -framework IOKit'
+  $CPPFLAGS += ' -DDARWIN'
+  $LDFLAGS += ' -framework CoreServices -framework IOKit'
 when /bsd/
   os = 'darwin'
   have_library("kvm")

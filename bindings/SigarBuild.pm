@@ -108,22 +108,8 @@ sub flags {
     }
     elsif ($os =~ /(darwin)/) {
         $os = $1;
-        my(@sdks) = reverse sort </Developer/SDKs/MacOSX10.*.sdk>;
-        my $sdk;
-        if (@sdks == 0) {
-            die
-              "Xcode Developer Tools not installed\n".
-              "Download from http://developer.apple.com/technology/xcode.html";
-        }
-        else {
-            #print "Available SDKs...\n(*) " . join("\n    ", @sdks) . "\n";
-            $sdk = $sdks[0];
-        }
-        @cppflags = ('-DDARWIN',
-                     "-I/Developer/Headers/FlatCarbon -isysroot $sdk");
-        @ldflags = ("-Wl,-syslibroot,$sdk",
-                    '-framework CoreServices',
-                    '-framework IOKit');
+        @cppflags = ('-DDARWIN');
+        @ldflags = ('-framework CoreServices', '-framework IOKit');
         if (-e "/usr/local/libproc.h") {
             push @cppflags, '-DDARWIN_HAS_LIBPROC_H';
         }
