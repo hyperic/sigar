@@ -22,7 +22,7 @@ spec = Gem::Specification.new do |s|
   s.name = GEM
 #  s.version = props['version.major'] + '.' + props['version.minor'] + '.' + props['version.maint']
 #  '0.7.x' until the sigar-1.7.0 release
-  s.version = '0' + '.' + props['version.minor'] + '.' + '1'
+  s.version = '0' + '.' + props['version.minor'] + '.' + '2'
   s.summary = props['project.summary']
   s.description = s.summary
   s.author = props['project.author']
@@ -34,7 +34,7 @@ spec = Gem::Specification.new do |s|
   s.files =
     %w(LICENSE NOTICE README Rakefile version.properties) +
     %w(bindings/SigarWrapper.pm bindings/SigarBuild.pm) +
-    Dir.glob("bindings/ruby/**/*") +
+    `git ls-files -- bindings/ruby/*.*`.split("\n") +
     Dir.glob("include/*.h") +
     Dir.glob("src/**/*.[ch]") +
     Dir.glob("src/**/*.in")
