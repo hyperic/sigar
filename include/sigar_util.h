@@ -17,6 +17,7 @@
 
 #ifndef SIGAR_UTIL_H
 #define SIGAR_UTIL_H
+#include "sigar_private.h"
 
 /* most of this is crap for dealing with linux /proc */
 #define UITOA_BUFFER_SIZE \
