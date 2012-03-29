@@ -34,6 +34,7 @@
 #include <stdlib.h>
 
 #include "sigar.h"
+#include "sigar_util.h"
 #include "sigar_os.h"
 #include "lua-sigar.h"
 
