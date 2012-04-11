@@ -17,6 +17,10 @@
 #ifndef SIGAR_PTQL_H
 #define SIGAR_PTQL_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define SIGAR_PTQL_MALFORMED_QUERY -1
 
 typedef struct sigar_ptql_query_t sigar_ptql_query_t;
@@ -49,5 +53,9 @@ SIGAR_DECLARE(int) sigar_ptql_query_find_process(sigar_t *sigar,
 SIGAR_DECLARE(int) sigar_ptql_query_find(sigar_t *sigar,
                                          sigar_ptql_query_t *query,
                                          sigar_proc_list_t *proclist);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /*SIGAR_PTQL_H*/

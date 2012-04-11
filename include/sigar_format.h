@@ -18,6 +18,10 @@
 #ifndef SIGAR_FORMAT_H
 #define SIGAR_FORMAT_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct {
     double user;
     double sys;
@@ -60,6 +64,10 @@ SIGAR_DECLARE(char *) sigar_net_interface_flags_to_string(sigar_uint64_t flags, 
 
 SIGAR_DECLARE(char *)sigar_net_services_name_get(sigar_t *sigar,
                                                  int protocol, unsigned long port);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
 

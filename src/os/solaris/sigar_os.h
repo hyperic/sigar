@@ -44,6 +44,10 @@ typedef unsigned long long int u_int64_t;
 
 #include "get_mib2.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* avoid -Wall warning since solaris doesnt have a prototype for this */
 int getdomainname(char *, int);
 
@@ -219,6 +223,10 @@ struct sigar_t {
 #define HAVE_GETPWUID_R
 
 #define SIGAR_EMIB2 (SIGAR_OS_START_ERROR+1)
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* SIGAR_OS_H */
 

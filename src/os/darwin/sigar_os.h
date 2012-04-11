@@ -35,6 +35,10 @@ typedef int (*proc_pidfdinfo_func_t)(int, int, int, void *, int);
 #endif
 #include <sys/sysctl.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 enum {
     KOFFSET_CPUINFO,
     KOFFSET_VMMETER,
@@ -76,5 +80,9 @@ struct sigar_t {
 
 #define SIGAR_EPERM_KMEM (SIGAR_OS_START_ERROR+EACCES)
 #define SIGAR_EPROC_NOENT (SIGAR_OS_START_ERROR+2)
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* SIGAR_OS_H */

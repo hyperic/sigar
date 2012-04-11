@@ -25,6 +25,10 @@
 #include <procinfo.h>
 #include <sys/resource.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 enum {
     KOFFSET_LOADAVG,
     KOFFSET_VAR,
@@ -69,5 +73,9 @@ struct sigar_t {
 #define HAVE_STRERROR_R
 
 #define SIGAR_EPERM_KMEM (SIGAR_OS_START_ERROR+EACCES)
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* SIGAR_OS_H */

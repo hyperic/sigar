@@ -40,6 +40,10 @@
 #include <dmalloc.h>
 #endif
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* common to all os sigar_t's */
 /* XXX: this is ugly; but don't want the same stuffs
  * duplicated on 4 platforms and am too lazy to change
@@ -418,5 +422,9 @@ typedef struct {
     struct hostent_data hd;
 #endif
 } sigar_hostent_t;
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

@@ -70,6 +70,10 @@
 
 #include "sigar.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef enum {
     SIGAR_FILETYPE_NOFILE = 0,     /**< no file type determined */
     SIGAR_FILETYPE_REG,            /**< a regular file */
@@ -155,3 +159,7 @@ SIGAR_DECLARE(int) sigar_dir_stat_get(sigar_t *sigar,
 SIGAR_DECLARE(int) sigar_dir_usage_get(sigar_t *sigar,
                                        const char *dir,
                                        sigar_dir_usage_t *dirusage);
+
+#ifdef __cplusplus
+}
+#endif

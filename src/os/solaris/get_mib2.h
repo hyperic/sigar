@@ -54,6 +54,10 @@
 #include <inet/mib2.h>
 #include <inet/led.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 
 /*
  * Miscellaneous definitions
@@ -123,5 +127,9 @@ int get_mib2(				/* get MIB2 information */
 int open_mib2(				/* open acccess to MIB2 information */
         solaris_mib2_t *mib2 
 	);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif	/* !defined(GET_MIB2_H) */

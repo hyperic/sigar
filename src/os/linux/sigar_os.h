@@ -30,6 +30,10 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct {
     sigar_pid_t pid;
     time_t mtime;
@@ -78,5 +82,9 @@ struct sigar_t {
 #define HAVE_GETPWNAM_R
 #define HAVE_GETPWUID_R
 #define HAVE_GETGRGID_R
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* SIGAR_OS_H */

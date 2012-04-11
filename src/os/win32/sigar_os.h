@@ -51,6 +51,10 @@
 
 #include "sigar_util.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifdef MSVC
 #  define INT64_C(val) val##i64
 #  define SIGAR_DLLFUNC(api, name) \
@@ -672,5 +676,9 @@ int sigar_file_version_get(sigar_file_version_t *version,
 #endif
 
 #define SIGAR_NO_SUCH_PROCESS (SIGAR_OS_START_ERROR+1)
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* SIGAR_OS_H */

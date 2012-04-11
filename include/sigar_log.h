@@ -19,6 +19,10 @@
 
 #include <stdarg.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define	SIGAR_LOG_FATAL  0
 #define	SIGAR_LOG_ERROR  1
 #define	SIGAR_LOG_WARN   2
@@ -76,5 +80,8 @@ SIGAR_DECLARE(int) sigar_log_level_get(sigar_t *sigar);
 
 SIGAR_DECLARE(void) sigar_log_level_set(sigar_t *sigar, int level);
 
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* SIGAR_LOG_H */

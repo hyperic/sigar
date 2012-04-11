@@ -34,6 +34,10 @@
 #include <stdlib.h>
 #include <fcntl.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 struct sigar_t {
     SIGAR_T_BASE;
     struct pst_static pstatic;
@@ -45,5 +49,9 @@ struct sigar_t {
 };
 
 int hpux_get_mib_ifentry(int ppa, mib_ifEntry *mib);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* SIGAR_OS_H */

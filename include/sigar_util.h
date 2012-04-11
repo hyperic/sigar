@@ -18,6 +18,10 @@
 #ifndef SIGAR_UTIL_H
 #define SIGAR_UTIL_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* most of this is crap for dealing with linux /proc */
 #define UITOA_BUFFER_SIZE \
     (sizeof(int) * 3 + 1)
@@ -187,5 +191,9 @@ sigar_cache_entry_t *sigar_cache_find(sigar_cache_t *table,
                                       sigar_uint64_t key);
 
 void sigar_cache_destroy(sigar_cache_t *table);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* SIGAR_UTIL_H */
