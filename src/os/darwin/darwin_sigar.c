@@ -3654,13 +3654,13 @@ int sigar_os_sys_info_get(sigar_t *sigar,
       return SIGAR_EPROC_NOENT;
     }
 
-    str = CFDictionaryGetValue(dict, _kCFSystemVersionProductNameKey);
+    str = CFDictionaryGetValue(dict, CFSTR(_kCFSystemVersionProductNameKey));
     CFStringGetCString(str, buf, sizeof(buf), kCFStringEncodingUTF8);
 
     SIGAR_SSTRCPY(sysinfo->name, "MacOSX");
     SIGAR_SSTRCPY(sysinfo->vendor_name, buf);
 
-    CFDictionaryGetValue(dict, _kCFSystemVersionProductVersionKey),
+    CFDictionaryGetValue(dict, CFSTR(_kCFSystemVersionProductVersionKey)),
     CFStringGetCString(str, buf, sizeof(buf), kCFStringEncodingUTF8);
 
     rv = sscanf(buf, "%d.%d.%d", &version_major, &version_minor, &version_fix);
