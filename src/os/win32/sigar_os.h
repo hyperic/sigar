@@ -667,6 +667,8 @@ int sigar_file_version_get(sigar_file_version_t *version,
                            char *name,
                            sigar_proc_env_t *infocb);
 
+const char* inet_ntop(int af, const void* src, char* dst, int cnt);
+
 #ifdef __cplusplus
 }
 #endif
