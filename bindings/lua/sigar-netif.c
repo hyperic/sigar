@@ -98,6 +98,9 @@ static int lua_sigar_netif_get_info(lua_State *L) {
 #define DATA \
 	(&(usage))
 
+	if (usage.address6.family == SIGAR_AF_INET6) {
+		LUA_EXPORT_ADDRESS(DATA, address6);
+	}
 	LUA_EXPORT_STR(DATA, name);
 	LUA_EXPORT_STR(DATA, type);
 	LUA_EXPORT_ADDRESS(DATA, hwaddr);

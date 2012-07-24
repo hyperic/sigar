@@ -42,10 +42,7 @@
  * push the converted sigar_net_address_t as string on the stack
  */
 int lua_sigar_push_address(lua_State *L, sigar_net_address_t *addr) {
-	char s[24 + 1]; /* AF_LINK  is 2 * 8 + 7 colons = 23
-			   AF_INET6 is 4 * 4 + 3 colons = 17
-			   AF_INET  is 4 * 3 + 3 dots = 15
-			   */
+	char s[SIGAR_INET6_ADDRSTRLEN + 1];
 	size_t s_have = sizeof(s) - 1;
 	size_t s_need;
 
@@ -61,17 +58,7 @@ int lua_sigar_push_address(lua_State *L, sigar_net_address_t *addr) {
 				(addr->addr.in >> 24) & 0xff);
 		return 1;
 	case SIGAR_AF_INET6:
-		s_need = snprintf(s, s_have, "%4x:%4x:%4x:%4x",
-				(addr->addr.in6[0]),
-				(addr->addr.in6[1]),
-				(addr->addr.in6[2]),
-				(addr->addr.in6[3]));
-
-		if (s_need > s_have) {
-			/* string is truncated, but written to s */
-			luaL_error(L, "can't convert INET6 address string, not enough memory: %d need, %d available",
-					s_need, s_have);
-		}
+		inet_ntop(AF_INET6, &addr->addr.in6, s, INET6_ADDRSTRLEN);
 		lua_pushstring(L, s);
 		return 1;
 	case SIGAR_AF_LINK:
