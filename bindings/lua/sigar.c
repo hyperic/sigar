@@ -36,6 +36,7 @@
 #include "sigar.h"
 #include "sigar_util.h"
 #include "sigar_os.h"
+#include "sigar_format.h"
 #include "lua-sigar.h"
 
 /**
@@ -43,40 +44,14 @@
  */
 int lua_sigar_push_address(lua_State *L, sigar_net_address_t *addr) {
 	char s[SIGAR_INET6_ADDRSTRLEN + 1];
-	size_t s_have = sizeof(s) - 1;
-	size_t s_need;
-
 	switch (addr->family) {
 	case SIGAR_AF_UNSPEC:
 		lua_pushnil(L);
 		return 1;
 	case SIGAR_AF_INET:
-		lua_pushfstring(L, "%d.%d.%d.%d",
-				(addr->addr.in >> 0) & 0xff,
-				(addr->addr.in >> 8) & 0xff,
-				(addr->addr.in >> 16) & 0xff,
-				(addr->addr.in >> 24) & 0xff);
-		return 1;
 	case SIGAR_AF_INET6:
-		inet_ntop(AF_INET6, &addr->addr.in6, s, INET6_ADDRSTRLEN);
-		lua_pushstring(L, s);
-		return 1;
 	case SIGAR_AF_LINK:
-		s_need = snprintf(s, s_have, "%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x",
-				addr->addr.mac[0],
-				addr->addr.mac[1],
-				addr->addr.mac[2],
-				addr->addr.mac[3],
-				addr->addr.mac[4],
-				addr->addr.mac[5],
-				addr->addr.mac[6],
-				addr->addr.mac[7]);
-
-		if (s_need > s_have) {
-			/* string is truncated, but written to s */
-			luaL_error(L, "can't convert MAC address string, not enough memory: %d need, %d available",
-					s_need, s_have);
-		}
+		sigar_net_address_to_string(NULL, addr, s);
 		lua_pushstring(L, s);
 		return 1;
 	}
