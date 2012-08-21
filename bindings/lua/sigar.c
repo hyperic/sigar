@@ -92,6 +92,8 @@ static int lua_sigar_new(lua_State *L) {
 		lua_setfield(L, -2, "disk");
 		lua_pushcfunction(L, lua_sigar_who_get);
 		lua_setfield(L, -2, "who");
+		lua_pushcfunction(L, lua_sigar_load_get);
+		lua_setfield(L, -2, "load");
 		lua_pushcfunction(L, lua_sigar_netifs_get);
 		lua_setfield(L, -2, "netifs");
 		lua_pushcfunction(L, lua_sigar_proc_get);
