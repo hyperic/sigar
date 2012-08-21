@@ -26,46 +26,39 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#ifndef __LUA_SIGAR_H__
-#define __LUA_SIGAR_H__
+#include <lua.h>
+#include <lauxlib.h>
+#include <lualib.h>
+
+#include <string.h>
 
 #include "sigar.h"
+#include "lua-sigar.h"
 
-#define LUA_EXPORT_INT(x, y) \
-	if (x->y == SIGAR_FIELD_NOTIMPL) { \
-		lua_pushnil(L); \
-	} else { \
-		lua_pushnumber(L, x->y); \
-	} \
-	lua_setfield(L, -2, #y);
+int lua_sigar_load_get(lua_State *L) {
+  int rc;
+	sigar_t *s = *(sigar_t **)luaL_checkudata(L, 1, "sigar");
+	sigar_loadavg_t load;
 
-#define LUA_EXPORT_DOUBLE(x, y) \
-	lua_pushnumber(L, x->y); \
-	lua_setfield(L, -2, #y);
+	rc = sigar_loadavg_get(s, &load);
 
-#define LUA_EXPORT_STR(x, y) \
-	lua_pushstring(L, x->y); \
-	lua_setfield(L, -2, #y);
+  if (rc != 0) {
+    luaL_error(L, "load average error: %s", sigar_strerror(s, rc));
+    return 0;
+  }
 
-#define LUA_EXPORT_ADDRESS(x, y) \
-	lua_sigar_push_address(L, &(x->y)); \
-	lua_setfield(L, -2, #y);
+	lua_newtable(L);
 
-int lua_sigar_cpus_get(lua_State *L);
-int lua_sigar_mem_get(lua_State *L);
-int lua_sigar_swap_get(lua_State *L);
-int lua_sigar_procs_get(lua_State *L);
-int lua_sigar_proc_get(lua_State *L);
-int lua_sigar_pid_get(lua_State *L);
-int lua_sigar_fses_get(lua_State *L);
-int lua_sigar_disk_get(lua_State *L);
-int lua_sigar_disks_get(lua_State *L);
-int lua_sigar_netifs_get(lua_State *L);
-int lua_sigar_who_get(lua_State *L);
-int lua_sigar_version_get(lua_State *L);
-int lua_sigar_sysinfo_get(lua_State *L);
-int lua_sigar_load_get(lua_State *L);
+	lua_pushnumber(L, load.loadavg[0]);
+	lua_setfield(L, -2, "5m");
 
-int lua_sigar_push_address(lua_State *L, sigar_net_address_t *addr);
+	lua_pushnumber(L, load.loadavg[1]);
+	lua_setfield(L, -2, "10m");
 
-#endif
+	lua_pushnumber(L, load.loadavg[2]);
+	lua_setfield(L, -2, "15m");
+
+	return 1;
+}
+
+
