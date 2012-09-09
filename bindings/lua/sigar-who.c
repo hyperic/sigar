@@ -83,10 +83,17 @@ static int lua_sigar_who_get_who(lua_State *L) {
 int lua_sigar_who_get(lua_State *L) {
 	sigar_t *s = *(sigar_t **)luaL_checkudata(L, 1, "sigar");
 	lua_sigar_who_t *who;
+  int rc;
 
 	who = lua_newuserdata(L, sizeof(lua_sigar_who_t));
 	who->sigar = s;
-	sigar_who_list_get(s, &(who->who));
+
+	rc = sigar_who_list_get(s, &(who->who));
+	if (rc != SIGAR_OK) {
+    luaL_error(L, "sigar_sys_info_get error: %s", sigar_strerror(s, rc));
+    return 0;
+  }
+
 	if (0 != luaL_newmetatable(L, "sigar_who")) {
 		lua_pushcfunction(L, lua_sigar_who_len);
 		lua_setfield(L, -2, "__len");

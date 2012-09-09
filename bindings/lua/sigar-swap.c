@@ -38,8 +38,13 @@
 int lua_sigar_swap_get(lua_State *L) {
 	sigar_t *s = *(sigar_t **)luaL_checkudata(L, 1, "sigar");
 	sigar_swap_t swap;
+  int rc;
 
-	sigar_swap_get(s, &swap);
+	rc = sigar_swap_get(s, &swap);
+	if (rc != SIGAR_OK) {
+    luaL_error(L, "sigar_swap_get error: %s", sigar_strerror(s, rc));
+    return 0;
+  }
 
 	lua_newtable(L);
 #define DATA \

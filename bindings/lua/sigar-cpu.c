@@ -161,11 +161,23 @@ static int lua_sigar_cpus_len(lua_State *L) {
 int lua_sigar_cpus_get(lua_State *L) {
 	sigar_t *s = *(sigar_t **)luaL_checkudata(L, 1, "sigar");
 	lua_sigar_cpus_t *cpus;
+  int rc;
 
 	cpus = lua_newuserdata(L, sizeof(lua_sigar_cpus_t));
 	cpus->sigar = s;
-	sigar_cpu_list_get(s, &(cpus->data));
-	sigar_cpu_info_list_get(s, &(cpus->info));
+
+	rc = sigar_cpu_list_get(s, &(cpus->data));
+	if (rc != SIGAR_OK) {
+    luaL_error(L, "sigar_cpu_list_get error: %s", sigar_strerror(s, rc));
+    return 0;
+  }
+
+	rc = sigar_cpu_info_list_get(s, &(cpus->info));
+	if (rc != SIGAR_OK) {
+    luaL_error(L, "sigar_cpu_info_list_get error: %s", sigar_strerror(s, rc));
+    return 0;
+  }
+
 	cpus->ref_count = 1;
 	if (0 != luaL_newmetatable(L, "sigar_cpus")) {
 		lua_pushcfunction(L, lua_sigar_cpus_len);
