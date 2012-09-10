@@ -39,8 +39,14 @@
 int lua_sigar_sysinfo_get(lua_State *L) {
 	sigar_t *s = *(sigar_t **)luaL_checkudata(L, 1, "sigar");
 	sigar_sys_info_t sysinfo;
+  int rc;
 
-	sigar_sys_info_get(s, &sysinfo);
+	rc = sigar_sys_info_get(s, &sysinfo);
+	if (rc != SIGAR_OK) {
+    luaL_error(L, "sigar_sys_info_get error: %s", sigar_strerror(s, rc));
+    return 0;
+  }
+
 
 	lua_newtable(L);
 #define DATA \

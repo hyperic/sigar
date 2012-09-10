@@ -43,7 +43,7 @@ int lua_sigar_load_get(lua_State *L) {
 	rc = sigar_loadavg_get(s, &load);
 
   if (rc != 0) {
-    luaL_error(L, "load average error: %s", sigar_strerror(s, rc));
+    luaL_error(L, "sigar_loadavg_get error: %s", sigar_strerror(s, rc));
     return 0;
   }
 

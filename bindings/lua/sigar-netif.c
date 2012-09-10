@@ -188,10 +188,18 @@ static int lua_sigar_netifs_get_netif(lua_State *L) {
 int lua_sigar_netifs_get(lua_State *L) {
 	sigar_t *s = *(sigar_t **)luaL_checkudata(L, 1, "sigar");
 	lua_sigar_netifs_t *netifs;
+  int rc;
 
 	netifs = lua_newuserdata(L, sizeof(lua_sigar_netifs_t));
 	netifs->sigar = s;
-	sigar_net_interface_list_get(s, &(netifs->netifs));
+
+	rc = sigar_net_interface_list_get(s, &(netifs->netifs));
+	if (rc != SIGAR_OK) {
+    luaL_error(L, "sigar_net_interface_list_get error: %s", sigar_strerror(s, rc));
+    return 0;
+  }
+
+
 	netifs->ref_count = 1;
 	if (0 != luaL_newmetatable(L, "sigar_netifs")) {
 		lua_pushcfunction(L, lua_sigar_netifs_len);
