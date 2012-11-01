@@ -50,10 +50,10 @@ int lua_sigar_load_get(lua_State *L) {
 	lua_newtable(L);
 
 	lua_pushnumber(L, load.loadavg[0]);
-	lua_setfield(L, -2, "5m");
+	lua_setfield(L, -2, "1m");
 
 	lua_pushnumber(L, load.loadavg[1]);
-	lua_setfield(L, -2, "10m");
+	lua_setfield(L, -2, "5m");
 
 	lua_pushnumber(L, load.loadavg[2]);
 	lua_setfield(L, -2, "15m");
