@@ -61,7 +61,7 @@ static int lua_sigar_procs_get_pid(lua_State *L) {
 	lua_sigar_procs_t *procs = (lua_sigar_procs_t *)luaL_checkudata(L, 1, "sigar_procs");
 	int ndx = luaL_checkint(L, 2);
 
-	if (ndx - 1 < 0 || 
+	if (ndx - 1 < 0 ||
 	    ndx - 1 >= procs->procs.number) {
 		luaL_error(L, ".procs[%d] out of range: 1..%d", ndx, procs->procs.number);
 	}
@@ -110,6 +110,29 @@ static int lua_sigar_proc_gc(lua_State *L) {
 	return 0;
 }
 
+static int lua_sigar_proc_get_cred(lua_State *L){
+	lua_sigar_proc_t *proc = (lua_sigar_proc_t *)luaL_checkudata(L, 1, "sigar_proc");
+	sigar_proc_cred_name_t cred;
+	int err;
+
+	if (SIGAR_OK != (err = sigar_proc_cred_name_get(proc->sigar, proc->pid, &cred))) {
+		lua_pushnil(L);
+		lua_pushstring(L, strerror(err));
+
+		return 2;
+	}
+
+	lua_newtable(L);
+#define DATA \
+	(&(cred))
+
+	LUA_EXPORT_STR(DATA, user);
+	LUA_EXPORT_STR(DATA, group);
+
+#undef DATA
+
+	return 1;
+}
 static int lua_sigar_proc_get_mem(lua_State *L) {
 	lua_sigar_proc_t *proc = (lua_sigar_proc_t *)luaL_checkudata(L, 1, "sigar_proc");
 	sigar_proc_mem_t mem;
@@ -206,6 +229,7 @@ static int lua_sigar_proc_get_exe(lua_State *L) {
 #define DATA \
 	(&(t))
 
+
 	LUA_EXPORT_STR(DATA, name);
 	LUA_EXPORT_STR(DATA, cwd);
 	LUA_EXPORT_STR(DATA, root);
@@ -227,6 +251,8 @@ int lua_sigar_proc_get(lua_State *L) {
 		lua_newtable(L);
 		lua_pushcfunction(L, lua_sigar_proc_get_mem);
 		lua_setfield(L, -2, "mem");
+		lua_pushcfunction(L, lua_sigar_proc_get_cred);
+		lua_setfield(L, -2, "cred");
 		lua_pushcfunction(L, lua_sigar_proc_get_time);
 		lua_setfield(L, -2, "time");
 		lua_pushcfunction(L, lua_sigar_proc_get_exe);
