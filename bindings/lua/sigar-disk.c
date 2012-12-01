@@ -148,7 +148,7 @@ static int lua_sigar_disks_get_disk(lua_State *L) {
 	}
 
 	disk = lua_newuserdata(L, sizeof(*disk));
-	disk->dev_name = strdup(disks->disks.data[ndx - 1].dir_name);
+	disk->dev_name = strdup(disks->disks.data[ndx - 1].dev_name);
 	disk->sigar = disks->sigar;
 	lua_sigar_disk_set_metatable(L, -1);
 
