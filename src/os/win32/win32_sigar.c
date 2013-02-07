@@ -3747,7 +3747,7 @@ int sigar_os_sys_info_get(sigar_t *sigar,
         }
     }
 
-    SIGAR_SSTRCPY(sysinfo->name, "Win32");
+    SIGAR_SSTRCPY(sysinfo->name, "Windows");
     SIGAR_SSTRCPY(sysinfo->vendor, "Microsoft");
     SIGAR_SSTRCPY(sysinfo->vendor_name, vendor_name);
     SIGAR_SSTRCPY(sysinfo->vendor_version, vendor_version);
