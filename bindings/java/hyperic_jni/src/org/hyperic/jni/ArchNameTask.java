@@ -90,8 +90,12 @@ public class ArchNameTask extends Task {
         if (ArchLoader.IS_DARWIN) {
             //default to most recent SDK
             //MacOSX10.3.9.sdk, MacOSX10.4u.sdk, MacOSX10.5.sdk,etc.
-            File[] sdks =
-                new File("/Developer/SDKs").listFiles(new FileFilter() {
+            String sdkRoot = "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs";
+            if (new File(sdkRoot).exists() == false) {
+                sdkRoot = "/Developer/SDKs";
+            }
+            File[] sdks = 
+                new File(sdkRoot).listFiles(new FileFilter() {
                     public boolean accept(File file) {
                         String name = file.getName();
                         return
@@ -99,6 +103,7 @@ public class ArchNameTask extends Task {
                             name.endsWith(".sdk");
                     }
                 });
+
             if (sdks != null) {
                 Arrays.sort(sdks);
                 String prop = "uni.sdk";
