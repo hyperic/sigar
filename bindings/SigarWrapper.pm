@@ -631,12 +631,12 @@ use vars qw(%classes %cmds);
       {
          name => 'bytes_read', type => 'Long',
          desc => 'Bytes Read',
-         plat => 'L'
+         plat => 'LW'
       },
       {
          name => 'bytes_written', type => 'Long',
          desc => 'Bytes Written',
-         plat => 'L'
+         plat => 'LW'
       }
     ],
     ProcState => [
