@@ -440,7 +440,7 @@ public class Sigar implements SigarProxy {
             return this.processFinder.findSingleProcess(pid);
         }
     }
-
+    
     /**
      * Get process memory info.
      * @param pid The process id.
@@ -636,6 +636,29 @@ public class Sigar implements SigarProxy {
 
         return getProcPort(NetFlags.getConnectionProtocol(protocol),
                            Integer.parseInt(port));
+    }
+
+    /**
+     * Get process disk IO info.
+     * @param pid THe process id.
+     * @exception SigarException on failure.
+     */
+    public ProcDiskIO getProcDiskIO(long pid) throws SigarException {
+    	try {
+    		return ProcDiskIO.fetch(this, pid);
+    	} catch (UnsatisfiedLinkError linkErrorException) {
+    		// We want to handle exceptions gracefully even if the linked
+    		// shared library is older and isn't compiled with the ProcDiskIO APIs.
+    		// The downside of this is that we throw SigarNotImplemented exception
+    		// also when the shared library can't be loaded.
+    		SigarException sigarException = new SigarNotImplementedException();
+    		sigarException.initCause(linkErrorException);
+    		throw sigarException;
+    	}
+    }
+
+    public ProcDiskIO getProcDiskIO(String pid) throws SigarException {
+    	return getProcDiskIO(convertPid(pid));
     }
 
     /**

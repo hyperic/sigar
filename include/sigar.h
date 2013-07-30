@@ -293,6 +293,15 @@ SIGAR_DECLARE(int) sigar_proc_mem_get(sigar_t *sigar, sigar_pid_t pid,
                                       sigar_proc_mem_t *procmem);
 
 typedef struct {
+    sigar_uint64_t
+        bytes_read,
+        bytes_written;
+} sigar_proc_disk_io_t;
+
+SIGAR_DECLARE(int) sigar_proc_disk_io_get(sigar_t *sigar, sigar_pid_t pid,
+                                          sigar_proc_disk_io_t *proc_disk_io);
+
+typedef struct {
     sigar_uid_t uid;
     sigar_gid_t gid;
     sigar_uid_t euid;

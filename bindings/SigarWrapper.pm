@@ -627,6 +627,18 @@ use vars qw(%classes %cmds);
          plat => '*'
       },
     ],
+    ProcDiskIO => [
+      {
+         name => 'bytes_read', type => 'Long',
+         desc => 'Bytes Read',
+         plat => 'L'
+      },
+      {
+         name => 'bytes_written', type => 'Long',
+         desc => 'Bytes Written',
+         plat => 'L'
+      }
+    ],
     ProcState => [
       {
          name => 'state', type => 'Char',

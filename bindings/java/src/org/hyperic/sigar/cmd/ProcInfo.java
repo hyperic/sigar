@@ -100,6 +100,9 @@ public class ProcInfo extends SigarCommandBase {
         try {
             println("credname=" + sigar.getProcCredName(pid));
         } catch (SigarException e) {}
+        try {
+        	println("diskio=" + sigar.getProcDiskIO(pid));
+        } catch (SigarException e) {}
     }
 
     public static void main(String[] args) throws Exception {
