@@ -17,6 +17,7 @@
 package org.hyperic.jni;
 
 import java.io.File;
+import java.io.UnsupportedEncodingException;
 import java.util.StringTokenizer;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -315,7 +316,16 @@ public class ArchLoader {
         if ((file != null) &&
             ((file = file.getParentFile()) != null))
         {
-            String dir = URLDecoder.decode(file.toString()); 
+            String dir;
+			try {
+				// Passing UTF-8 according to the recommendation in the URLDecoder.decode JavaDoc.
+				dir = URLDecoder.decode(file.toString(), "UTF-8");
+			} catch (UnsupportedEncodingException e) {
+				String msg = "Unsupported encoding in file name: " + file.toString();
+				ArchLoaderException archLoaderException = new ArchLoaderException(msg);
+				archLoaderException.initCause(e);
+				throw archLoaderException;
+			}
             if (findNativeLibrary(dir, libName)) {
                 return dir;
             }
