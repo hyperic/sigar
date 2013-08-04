@@ -295,7 +295,8 @@ SIGAR_DECLARE(int) sigar_proc_mem_get(sigar_t *sigar, sigar_pid_t pid,
 typedef struct {
     sigar_uint64_t
         bytes_read,
-        bytes_written;
+        bytes_written,
+        bytes_total;
 } sigar_proc_disk_io_t;
 
 SIGAR_DECLARE(int) sigar_proc_disk_io_get(sigar_t *sigar, sigar_pid_t pid,

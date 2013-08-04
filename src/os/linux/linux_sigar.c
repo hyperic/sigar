@@ -791,6 +791,7 @@ int sigar_proc_disk_io_get(sigar_t *sigar, sigar_pid_t pid,
 
     proc_disk_io->bytes_read = get_named_proc_token(buffer, "\nread_bytes");
     proc_disk_io->bytes_written = get_named_proc_token(buffer, "\nwrite_bytes");
+    proc_disk_io->bytes_total = proc_disk_io->bytes_read + proc_disk_io->bytes_written;
 
     return SIGAR_OK;
 }

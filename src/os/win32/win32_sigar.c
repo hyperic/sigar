@@ -1224,8 +1224,9 @@ SIGAR_DECLARE(int) sigar_proc_disk_io_get(sigar_t *sigar, sigar_pid_t pid,
         return status;
     }
 
-	proc_disk_io->bytes_read = pinfo->bytes_read;
-	proc_disk_io->bytes_written = pinfo->bytes_written;
+    proc_disk_io->bytes_read = pinfo->bytes_read;
+    proc_disk_io->bytes_written = pinfo->bytes_written;
+    proc_disk_io->bytes_total = proc_disk_io->bytes_read + proc_disk_io->bytes_written;
 
     return SIGAR_OK;
 }

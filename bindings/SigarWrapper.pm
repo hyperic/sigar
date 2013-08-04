@@ -637,6 +637,11 @@ use vars qw(%classes %cmds);
          name => 'bytes_written', type => 'Long',
          desc => 'Bytes Written',
          plat => 'LW'
+      },
+      {
+         name => 'bytes_total', type => 'Long',
+         desc => 'Bytes Total',
+         plat => 'LW'
       }
     ],
     ProcState => [
