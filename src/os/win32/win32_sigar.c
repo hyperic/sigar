@@ -3722,6 +3722,7 @@ int sigar_who_list_get_win32(sigar_t *sigar,
 #define SIGAR_ARCH "x86"
 #endif
 
+
 int sigar_os_sys_info_get(sigar_t *sigar,
                           sigar_sys_info_t *sysinfo)
 {
@@ -3729,7 +3730,7 @@ int sigar_os_sys_info_get(sigar_t *sigar,
     char *vendor_name, *vendor_version, *code_name=NULL;
 
     version.dwOSVersionInfoSize = sizeof(version);
-    GetVersionEx((OSVERSIONINFO *)&version);
+    GetVersionEx((OSVERSIONINFO *)&version); 
 
     if (version.dwMajorVersion == 4) {
         vendor_name = "Windows NT";
@@ -3769,11 +3770,25 @@ int sigar_os_sys_info_get(sigar_t *sigar,
                 code_name = "Vienna";
             }
         }
-        else {
-            vendor_name = "Windows 2008";
-            vendor_version = "2008";
-            code_name = "Longhorn Server";
-        }
+	else {
+             // not nt work station
+             if (version.dwMinorVersion == 0 || version.dwMinorVersion ==1) {
+            	vendor_name = "Windows 2008";
+            	vendor_version = "2008";
+	        code_name = "Longhorn Server";
+             }
+	     else  if (version.dwMinorVersion == 2) {
+ 	    	vendor_name = "Windows 2012";
+            	vendor_version = "2012";
+            	code_name = "Windows Server 8";
+	     }
+	     else {
+		// defaults
+		 vendor_name = "Windows Unknown";
+		 vendor_version = "2012";
+	     }
+	}
+
     }
 
     SIGAR_SSTRCPY(sysinfo->name, "Win32");
