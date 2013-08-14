@@ -310,7 +310,19 @@ int sigar_proc_mem_get(sigar_t *sigar, sigar_pid_t pid,
 int sigar_proc_disk_io_get(sigar_t *sigar, sigar_pid_t pid, 
                            sigar_proc_disk_io_t *proc_disk_io)
 {
-    return SIGAR_ENOTIMPL;
+
+    int status = sigar_pstat_getproc(sigar, pid);
+    struct pst_status *pinfo = sigar->pinfo;
+
+    if (status != SIGAR_OK) {
+        return status;
+    }
+    proc_disk_io->bytes_read =  pinfo->pst_inblock;
+    proc_disk_io->bytes_written = pinfo->pst_oublock;
+    proc_disk_io->bytes_total =  pinfo->pst_inblock + pinfo->pst_oublock;
+
+
+   return SIGAR_OK;
 }
 
 
