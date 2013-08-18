@@ -722,7 +722,16 @@ int sigar_proc_mem_get(sigar_t *sigar, sigar_pid_t pid,
 int sigar_proc_disk_io_get(sigar_t *sigar, sigar_pid_t pid, 
                            sigar_proc_disk_io_t *proc_disk_io)
 {
-    return SIGAR_ENOTIMPL;
+   prusage_t usage;
+   int status;
+   if ((status = sigar_proc_usage_get(sigar, &usage, pid)) != SIGAR_OK) {
+        return status;
+   }
+   proc_disk_io->bytes_read = usage.pr_inblk;
+   proc_disk_io->bytes_written = usage.pr_oublk;
+   proc_disk_io->bytes_total =  usage.pr_ioch;
+
+    return SIGAR_OK;
 }
 
 int sigar_proc_cred_get(sigar_t *sigar, sigar_pid_t pid,
