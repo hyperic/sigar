@@ -763,8 +763,8 @@ int sigar_proc_disk_io_get(sigar_t *sigar, sigar_pid_t pid,
     if (status != SIGAR_OK) {
         return status;
     }
-    proc_disk_io->bytes_read = 0;
-    proc_disk_io->bytes_written = 0;
+    proc_disk_io->bytes_read = SIGAR_FIELD_NOTIMPL;
+    proc_disk_io->bytes_written =  SIGAR_FIELD_NOTIMPL;
     proc_disk_io->bytes_total = pinfo->pi_ioch;
 
     return SIGAR_OK;

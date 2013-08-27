@@ -317,9 +317,9 @@ int sigar_proc_disk_io_get(sigar_t *sigar, sigar_pid_t pid,
     if (status != SIGAR_OK) {
         return status;
     }
-    proc_disk_io->bytes_read =  pinfo->pst_inblock;
-    proc_disk_io->bytes_written = pinfo->pst_oublock;
-    proc_disk_io->bytes_total =  pinfo->pst_inblock + pinfo->pst_oublock;
+    proc_disk_io->bytes_read = SIGAR_FIELD_NOTIMPL; 
+    proc_disk_io->bytes_written = SIGAR_FIELD_NOTIMPL; 
+    proc_disk_io->bytes_total =  pinfo->pst_ioch;
 
 
    return SIGAR_OK;
