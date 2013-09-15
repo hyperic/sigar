@@ -69,7 +69,7 @@
    sigar_cache_t *net_listen; \
    sigar_cache_t *net_services_tcp; \
    sigar_cache_t *net_services_udp;\
-   sigar_cache_t *proc_io;
+   sigar_cache_t *proc_io
 
 #if defined(WIN32)
 #   define SIGAR_INLINE __inline
