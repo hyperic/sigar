@@ -44,4 +44,6 @@ public interface SigarProcessMBean {
     public Double getCpuUsage();
 
     public Long getOpenFd();
+    
+    public Double getBytesReadWriteTotal();
 }

@@ -103,6 +103,11 @@ public class ProcInfo extends SigarCommandBase {
         try {
         	println("diskio=" + sigar.getProcDiskIO(pid));
         } catch (SigarException e) {}
+
+ 	try {
+                println("cumulative diskio=" + sigar.getProcCumulativeDiskIO(pid));
+        } catch (SigarException e) {}
+
     }
 
     public static void main(String[] args) throws Exception {

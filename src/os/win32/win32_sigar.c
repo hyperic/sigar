@@ -1214,8 +1214,8 @@ SIGAR_DECLARE(int) sigar_proc_mem_get(sigar_t *sigar, sigar_pid_t pid,
     return SIGAR_OK;
 }
 
-SIGAR_DECLARE(int) sigar_proc_disk_io_get(sigar_t *sigar, sigar_pid_t pid,
-                                          sigar_proc_disk_io_t *proc_disk_io)
+SIGAR_DECLARE(int) sigar_proc_cumulative_disk_io_get(sigar_t *sigar, sigar_pid_t pid,
+                                          sigar_proc_cumulative_disk_io_t *proc_cumulative_disk_io)
 {
     int status = get_proc_info(sigar, pid);
     sigar_win32_pinfo_t *pinfo = &sigar->pinfo;
@@ -1224,9 +1224,9 @@ SIGAR_DECLARE(int) sigar_proc_disk_io_get(sigar_t *sigar, sigar_pid_t pid,
         return status;
     }
 
-    proc_disk_io->bytes_read = pinfo->bytes_read;
-    proc_disk_io->bytes_written = pinfo->bytes_written;
-    proc_disk_io->bytes_total = proc_disk_io->bytes_read + proc_disk_io->bytes_written;
+    proc_cumulative_disk_io->bytes_read = pinfo->bytes_read;
+    proc_cumulative_disk_io->bytes_written = pinfo->bytes_written;
+    proc_cumulative_disk_io->bytes_total = proc_cumulative_disk_io->bytes_read + proc_cumulative_disk_io->bytes_written;
 
     return SIGAR_OK;
 }

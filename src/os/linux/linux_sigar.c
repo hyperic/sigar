@@ -778,10 +778,10 @@ SIGAR_INLINE sigar_uint64_t get_named_proc_token(char *buffer,
   return sigar_strtoul(ptr);
 }
 
-int sigar_proc_disk_io_get(sigar_t *sigar, sigar_pid_t pid,
-                           sigar_proc_disk_io_t *proc_disk_io)
+int sigar_proc_cumulative_disk_io_get(sigar_t *sigar, sigar_pid_t pid,
+                           sigar_proc_cumulative_disk_io_t *proc_cumulative_disk_io)
 {
-    char buffer[BUFSIZ], *ptr=buffer;
+    char buffer[BUFSIZ];
     
     int status = SIGAR_PROC_FILE2STR(buffer, pid, "/io");
     
@@ -789,9 +789,9 @@ int sigar_proc_disk_io_get(sigar_t *sigar, sigar_pid_t pid,
         return status;
     }
 
-    proc_disk_io->bytes_read = get_named_proc_token(buffer, "\nread_bytes");
-    proc_disk_io->bytes_written = get_named_proc_token(buffer, "\nwrite_bytes");
-    proc_disk_io->bytes_total = proc_disk_io->bytes_read + proc_disk_io->bytes_written;
+    proc_cumulative_disk_io->bytes_read = get_named_proc_token(buffer, "\nread_bytes");
+    proc_cumulative_disk_io->bytes_written = get_named_proc_token(buffer, "\nwrite_bytes");
+    proc_cumulative_disk_io->bytes_total = proc_cumulative_disk_io->bytes_read + proc_cumulative_disk_io->bytes_written;
 
     return SIGAR_OK;
 }

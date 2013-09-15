@@ -1241,8 +1241,8 @@ int sigar_proc_mem_get(sigar_t *sigar, sigar_pid_t pid,
     return SIGAR_OK;
 }
 
-int sigar_proc_disk_io_get(sigar_t *sigar, sigar_pid_t pid,
-                           sigar_proc_disk_io_t *proc_disk_io)
+int sigar_proc_cumulative_disk_io_get(sigar_t *sigar, sigar_pid_t pid,
+                           sigar_proc_cumulative_disk_io_t *proc_cumulative_disk_io)
 {
     return SIGAR_ENOTIMPL;
 }
