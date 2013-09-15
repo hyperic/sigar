@@ -113,18 +113,21 @@ static void sigar_cache_rehash(sigar_cache_t *table)
     t->entries + (k % t->size)
 
 void sigar_perform_cleanup_if_necessary(sigar_cache_t *table) { 
+    sigar_uint64_t current_time;
+	int i;
+	sigar_cache_entry_t **entries;
     if (table->cleanup_period_millis == SIGAR_FIELD_NOTIMPL) {
- 	/* no cleanup for this cache) */
+		/* no cleanup for this cache) */
+		return;
     }
-    sigar_uint64_t current_time = sigar_time_now_millis();
+    current_time = sigar_time_now_millis();
     if ((current_time - table->last_cleanup_time) < table->cleanup_period_millis) {
         /* not enough time has passed since last cleanup */
         return;
     }	
 
-    /* performing cleanup */
-    int i;
-    sigar_cache_entry_t **entries = table->entries;
+    /* performing cleanup */    
+    entries = table->entries;
 
     table->last_cleanup_time = current_time;
     
@@ -134,15 +137,15 @@ void sigar_perform_cleanup_if_necessary(sigar_cache_t *table) {
         entry = *entries++;
 
         while (entry) {
-            ptr = entry->next;
-            sigar_uint64_t period_with_no_access = current_time - entry->last_access_time;
+			sigar_uint64_t period_with_no_access = current_time - entry->last_access_time;
+            ptr = entry->next;            
             if (table->entry_expire_period < period_with_no_access) {
-		/* no one acess this entry for too long - we can delete it */
-	        if (entry->value) {
+		       /* no one acess this entry for too long - we can delete it */
+	           if (entry->value) {
                    table->free_value(entry->value);
                 } 
                 free(entry);
-		table->count--;
+		        table->count--;
                 if (entry_prev != NULL) {
                    entry_prev->next = ptr;
                 }
@@ -154,7 +157,7 @@ void sigar_perform_cleanup_if_necessary(sigar_cache_t *table) {
             else {
               /* entry not expired - advance entry_prev to current entry*/
               entry_prev = entry;
-	    }
+	        }
             entry = ptr;
         }
     }

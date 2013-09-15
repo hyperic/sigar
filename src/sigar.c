@@ -185,11 +185,13 @@ void copy_cached_disk_io_into_disk_io( sigar_cached_proc_disk_io_t *cached,  sig
 }
 
 sigar_uint64_t get_io_diff(sigar_uint64_t current_value, sigar_uint64_t prev_value,  sigar_uint64_t time_diff) {
+   double io_diff;
+   sigar_uint64_t int_io_diff;
    if ( current_value == SIGAR_FIELD_NOTIMPL ) {
       return SIGAR_FIELD_NOTIMPL;
    }
-   double io_diff = (( current_value - prev_value)/(double)time_diff)*SIGAR_MSEC;
-   sigar_uint64_t int_io_diff = (sigar_uint64_t)io_diff;
+   io_diff = (( current_value - prev_value)/(double)time_diff)*SIGAR_MSEC;
+   int_io_diff = (sigar_uint64_t)io_diff;
    if (int_io_diff >=0) {
       return int_io_diff;
    }
@@ -220,7 +222,7 @@ SIGAR_DECLARE(int) sigar_proc_disk_io_get(sigar_t *sigar, sigar_pid_t pid,
     sigar_proc_cumulative_disk_io_t  cumulative_proc_disk_io;
     sigar_uint64_t time_now = sigar_time_now_millis();
     sigar_uint64_t time_diff;
-    int status;
+    int status, is_first_time;
 
     if (!sigar->proc_io) {
         sigar->proc_io =  sigar_expired_cache_new(128, PID_CACHE_CLEANUP_PERIOD, PID_CACHE_ENTRY_EXPIRE_PERIOD);
@@ -234,7 +236,7 @@ SIGAR_DECLARE(int) sigar_proc_disk_io_get(sigar_t *sigar, sigar_pid_t pid,
         prev = entry->value = malloc(sizeof(*prev));
         SIGAR_ZERO(prev);
     }
-    int is_first_time = (prev->last_time == 0);
+    is_first_time = (prev->last_time == 0);
     time_diff = time_now - prev->last_time;
 
     if (time_diff < 1000) {
