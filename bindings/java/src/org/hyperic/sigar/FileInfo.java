@@ -292,74 +292,58 @@ public class FileInfo extends FileAttrs implements java.io.Serializable {
     }
 
     public String diff(FileInfo info) {
-        ArrayList changes = new ArrayList();
+		ArrayList changes = new ArrayList();
 
-        if (this.getMtime() != info.getMtime()) {
-            changes.add(new Diff("Mtime",
-                                 formatDate(info.getMtime()),
-                                 formatDate(this.getMtime())));
+		if (this.getMtime() != info.getMtime()) {
+			changes.add(new Diff("Mtime", formatDate(info.getMtime()),
+					formatDate(this.getMtime())));
+		} else if (this.getCtime() != info.getCtime()) {
+			changes.add(new Diff("Ctime", formatDate(info.getCtime()),
+					formatDate(this.getCtime())));
+		}
+
+		if (this.getPermissions() != info.getPermissions()) {
+			changes.add(new Diff("Perms", info.getPermissionsString(), this
+					.getPermissionsString()));
+		}
+
+		if (this.getType() != info.getType()) {
+			changes.add(new Diff("Type", info.getTypeString(), this
+					.getTypeString()));
+		}
+
+		if (this.getUid() != info.getUid()) {
+			changes.add(new Diff("Uid", info.getUid(), this.getUid()));
+		}
+
+		if (this.getGid() != info.getGid()) {
+			changes.add(new Diff("Gid", info.getGid(), this.getGid()));
+		}
+
+		if (this.getSize() != info.getSize()) {
+			changes.add(new Diff("Size", info.getSize(), this.getSize()));
+		}
+
+		if (!OperatingSystem.IS_WIN32) {
+			if (this.getInode() != info.getInode()) {
+				changes.add(new Diff("Inode", info.getInode(), this.getInode()));
+			}
+
+			if (this.getDevice() != info.getDevice()) {
+				changes.add(new Diff("Device", info.getDevice(), this
+						.getDevice()));
+			}
+
+			if (this.getNlink() != info.getNlink()) {
+				changes.add(new Diff("Nlink", info.getNlink(), this.getNlink()));
+			}
         }
-        else if (this.getCtime() != info.getCtime()) {
-            changes.add(new Diff("Ctime",
-                                 formatDate(info.getCtime()),
-                                 formatDate(this.getCtime())));
-        }
-        else {
-            //no point in checking the rest if all times are the same.
-            //or should we include atime in the diff?
+
+        /* if changes were not detected then return empty String */
+        if (changes.isEmpty()){
             return "";
         }
-
-        if (this.getPermissions() != info.getPermissions()) {
-            changes.add(new Diff("Perms",
-                                 info.getPermissionsString(),
-                                 this.getPermissionsString()));
-        }
-
-        if (this.getType() != info.getType()) {
-            changes.add(new Diff("Type",
-                                 info.getTypeString(),
-                                 this.getTypeString()));
-        }
-
-        if (this.getUid() != info.getUid()) {
-            changes.add(new Diff("Uid",
-                                 info.getUid(),
-                                 this.getUid()));
-        }
-
-        if (this.getGid() != info.getGid()) {
-            changes.add(new Diff("Gid",
-                                 info.getGid(),
-                                 this.getGid()));
-        }
-
-        if (this.getSize() != info.getSize()) {
-            changes.add(new Diff("Size",
-                                 info.getSize(),
-                                 this.getSize()));
-        }
-
-        if (!OperatingSystem.IS_WIN32) {
-            if (this.getInode() != info.getInode()) {
-                changes.add(new Diff("Inode",
-                                     info.getInode(),
-                                     this.getInode()));
-            }
-
-            if (this.getDevice() != info.getDevice()) {
-                changes.add(new Diff("Device",
-                                     info.getDevice(),
-                                     this.getDevice()));
-            }
-
-            if (this.getNlink() != info.getNlink()) {
-                changes.add(new Diff("Nlink",
-                                     info.getNlink(),
-                                     this.getNlink()));
-            }
-        }
-
+        
         StringBuffer sb = format(changes);
         if (this.dirStatEnabled) {
             sb.append(diff(info.stat));
@@ -389,7 +373,9 @@ public class FileInfo extends FileAttrs implements java.io.Serializable {
 
         stat();
 
-        return this.mtime != oldInfo.mtime;
+        boolean isModified = isModified(this.oldInfo);
+        
+        return isModified;
     }
 
     public boolean changed()
@@ -455,4 +441,49 @@ public class FileInfo extends FileAttrs implements java.io.Serializable {
 
         return fetchInfo(sigar, name, false);
     }
+    
+    private boolean isModified(FileInfo info){
+    	/* Check modified time */
+		if (this.getMtime() != info.getMtime()) {
+			return true;
+		} else if (this.getCtime() != info.getCtime()) {
+			return true;
+		}
+		
+		if (this.getPermissions() != info.getPermissions()) {
+			return true;
+		}
+
+		if (this.getType() != info.getType()) {
+			return true;
+		}
+
+		if (this.getUid() != info.getUid()) {
+			return true;
+		}
+
+		if (this.getGid() != info.getGid()) {
+			return true;
+		}
+
+		if (this.getSize() != info.getSize()) {
+			return true;
+		}
+
+		if (!OperatingSystem.IS_WIN32) {
+			if (this.getInode() != info.getInode()) {
+				return true;
+			}
+
+			if (this.getDevice() != info.getDevice()) {
+				return true;
+			}
+
+			if (this.getNlink() != info.getNlink()) {
+				return true;
+			}
+		}
+
+		return false;
+	}
 }
