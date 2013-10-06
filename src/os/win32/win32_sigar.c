@@ -62,6 +62,8 @@ typedef enum {
 #define PERF_TITLE_PPID       1410
 #define PERF_TITLE_PRIORITY   682
 #define PERF_TITLE_START_TIME 684
+#define PERF_TITLE_IO_READ_BYTES_SEC	1420
+#define PERF_TITLE_IO_WRITE_BYTES_SEC	1422
 
 typedef enum {
     PERF_IX_CPUTIME,
@@ -74,6 +76,8 @@ typedef enum {
     PERF_IX_PPID,
     PERF_IX_PRIORITY,
     PERF_IX_START_TIME,
+	PERF_IX_IO_READ_BYTES_SEC,
+	PERF_IX_IO_WRITE_BYTES_SEC,
     PERF_IX_MAX
 } perf_proc_offsets_t;
 
@@ -1210,6 +1214,23 @@ SIGAR_DECLARE(int) sigar_proc_mem_get(sigar_t *sigar, sigar_pid_t pid,
     return SIGAR_OK;
 }
 
+SIGAR_DECLARE(int) sigar_proc_cumulative_disk_io_get(sigar_t *sigar, sigar_pid_t pid,
+                                          sigar_proc_cumulative_disk_io_t *proc_cumulative_disk_io)
+{
+    int status = get_proc_info(sigar, pid);
+    sigar_win32_pinfo_t *pinfo = &sigar->pinfo;
+
+    if (status != SIGAR_OK) {
+        return status;
+    }
+
+    proc_cumulative_disk_io->bytes_read = pinfo->bytes_read;
+    proc_cumulative_disk_io->bytes_written = pinfo->bytes_written;
+    proc_cumulative_disk_io->bytes_total = proc_cumulative_disk_io->bytes_read + proc_cumulative_disk_io->bytes_written;
+
+    return SIGAR_OK;
+}
+
 #define TOKEN_DAC (STANDARD_RIGHTS_READ | READ_CONTROL | TOKEN_QUERY)
 
 SIGAR_DECLARE(int)
@@ -1441,6 +1462,12 @@ static int get_proc_info(sigar_t *sigar, sigar_pid_t pid)
           case PERF_TITLE_START_TIME:
             perf_offsets[PERF_IX_START_TIME] = offset;
             break;
+		  case PERF_TITLE_IO_READ_BYTES_SEC:
+			perf_offsets[PERF_IX_IO_READ_BYTES_SEC] = offset;
+			break;
+		  case PERF_TITLE_IO_WRITE_BYTES_SEC:
+			perf_offsets[PERF_IX_IO_WRITE_BYTES_SEC] = offset;
+			break;
         }
     }
 
@@ -1466,6 +1493,8 @@ static int get_proc_info(sigar_t *sigar, sigar_pid_t pid)
         pinfo->handles  = PERF_VAL(PERF_IX_HANDLE_CNT);
         pinfo->threads  = PERF_VAL(PERF_IX_THREAD_CNT);
         pinfo->page_faults = PERF_VAL(PERF_IX_PAGE_FAULTS);
+		pinfo->bytes_read = PERF_VAL(PERF_IX_IO_READ_BYTES_SEC);
+		pinfo->bytes_written = PERF_VAL(PERF_IX_IO_WRITE_BYTES_SEC);
 
         return SIGAR_OK;
     }
@@ -3693,6 +3722,7 @@ int sigar_who_list_get_win32(sigar_t *sigar,
 #define SIGAR_ARCH "x86"
 #endif
 
+
 int sigar_os_sys_info_get(sigar_t *sigar,
                           sigar_sys_info_t *sysinfo)
 {
@@ -3700,7 +3730,7 @@ int sigar_os_sys_info_get(sigar_t *sigar,
     char *vendor_name, *vendor_version, *code_name=NULL;
 
     version.dwOSVersionInfoSize = sizeof(version);
-    GetVersionEx((OSVERSIONINFO *)&version);
+    GetVersionEx((OSVERSIONINFO *)&version); 
 
     if (version.dwMajorVersion == 4) {
         vendor_name = "Windows NT";
@@ -3740,11 +3770,25 @@ int sigar_os_sys_info_get(sigar_t *sigar,
                 code_name = "Vienna";
             }
         }
-        else {
-            vendor_name = "Windows 2008";
-            vendor_version = "2008";
-            code_name = "Longhorn Server";
-        }
+	else {
+             // not nt work station
+             if (version.dwMinorVersion == 0 || version.dwMinorVersion ==1) {
+            	vendor_name = "Windows 2008";
+            	vendor_version = "2008";
+	        code_name = "Longhorn Server";
+             }
+	     else  if (version.dwMinorVersion == 2) {
+ 	    	vendor_name = "Windows 2012";
+            	vendor_version = "2012";
+            	code_name = "Windows Server 8";
+	     }
+	     else {
+		// defaults
+		 vendor_name = "Windows Unknown";
+		 vendor_version = "2012";
+	     }
+	}
+
     }
 
     SIGAR_SSTRCPY(sysinfo->name, "Win32");

@@ -768,6 +768,34 @@ int sigar_proc_mem_get(sigar_t *sigar, sigar_pid_t pid,
     return SIGAR_OK;
 }
 
+SIGAR_INLINE sigar_uint64_t get_named_proc_token(char *buffer,
+                                                 char *token) {
+  char *ptr = strstr(buffer, token);
+  if (!ptr) {
+    return SIGAR_FIELD_NOTIMPL;
+  }
+  ptr = sigar_skip_token(ptr);
+  return sigar_strtoul(ptr);
+}
+
+int sigar_proc_cumulative_disk_io_get(sigar_t *sigar, sigar_pid_t pid,
+                           sigar_proc_cumulative_disk_io_t *proc_cumulative_disk_io)
+{
+    char buffer[BUFSIZ];
+    
+    int status = SIGAR_PROC_FILE2STR(buffer, pid, "/io");
+    
+    if (status != SIGAR_OK) {
+        return status;
+    }
+
+    proc_cumulative_disk_io->bytes_read = get_named_proc_token(buffer, "\nread_bytes");
+    proc_cumulative_disk_io->bytes_written = get_named_proc_token(buffer, "\nwrite_bytes");
+    proc_cumulative_disk_io->bytes_total = proc_cumulative_disk_io->bytes_read + proc_cumulative_disk_io->bytes_written;
+
+    return SIGAR_OK;
+}
+
 #define NO_ID_MSG "[proc_cred] /proc/%lu" PROC_PSTATUS " missing "
 
 int sigar_proc_cred_get(sigar_t *sigar, sigar_pid_t pid,

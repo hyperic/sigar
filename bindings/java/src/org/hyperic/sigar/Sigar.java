@@ -42,6 +42,8 @@ public class Sigar implements SigarProxy {
     private static String loadError = null;
 
     public static final long FIELD_NOTIMPL = -1;
+    public static final int PID_PROC_CPU_CACHE = 1;
+    public static final int PID_PROC_IO_CACHE = 2;
 
     /**
      * The Sigar java version.
@@ -440,7 +442,7 @@ public class Sigar implements SigarProxy {
             return this.processFinder.findSingleProcess(pid);
         }
     }
-
+    
     /**
      * Get process memory info.
      * @param pid The process id.
@@ -637,6 +639,57 @@ public class Sigar implements SigarProxy {
         return getProcPort(NetFlags.getConnectionProtocol(protocol),
                            Integer.parseInt(port));
     }
+
+    /**
+     * Get process disk IO info.
+     * @param pid THe process id.
+     * @exception SigarException on failure.
+     */
+    public ProcDiskIO getProcDiskIO(long pid) throws SigarException {
+    	try {
+    		return ProcDiskIO.fetch(this, pid);
+    	} catch (UnsatisfiedLinkError linkErrorException) {
+    		// We want to handle exceptions gracefully even if the linked
+    		// shared library is older and isn't compiled with the ProcDiskIO APIs.
+    		// The downside of this is that we throw SigarNotImplemented exception
+    		// also when the shared library can't be loaded.
+    		SigarException sigarException = new SigarNotImplementedException();
+    		sigarException.initCause(linkErrorException);
+    		throw sigarException;
+    	}
+    }
+
+    public ProcDiskIO getProcDiskIO(String pid) throws SigarException {
+    	return getProcDiskIO(convertPid(pid));
+    }
+
+   /**
+     * Get process cumulative disk IO info.
+     * @param pid THe process id.
+     * @exception SigarException on failure.
+     */
+    public ProcCumulativeDiskIO getProcCumulativeDiskIO(long pid) throws SigarException {
+        try {
+                return ProcCumulativeDiskIO.fetch(this, pid);
+        } catch (UnsatisfiedLinkError linkErrorException) {
+                // We want to handle exceptions gracefully even if the linked
+                // shared library is older and isn't compiled with the ProcDiskIO APIs.
+                // The downside of this is that we throw SigarNotImplemented exception
+                // also when the shared library can't be loaded.
+                SigarException sigarException = new SigarNotImplementedException();
+                sigarException.initCause(linkErrorException);
+                throw sigarException;
+        }
+    }
+
+  public ProcCumulativeDiskIO getProcCumulativeDiskIO(String pid) throws SigarException {
+        return getProcCumulativeDiskIO(convertPid(pid));
+  }
+
+  public DumpPidCache dumpPidCache() throws SigarException {
+       return DumpPidCache.fetch(this);
+  }
+
 
     /**
      * Get the cumulative cpu time for the calling thread.
