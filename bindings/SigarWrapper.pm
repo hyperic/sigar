@@ -43,6 +43,7 @@ my %has_name_arg = map { $_, 1 } qw(FileSystemUsage DiskUsage
                                     FileAttrs DirStat DirUsage
                                     NetInterfaceConfig NetInterfaceStat);
 
+
 my %proc_no_arg = map { $_, 1 } qw(stat);
 
 my %get_not_impl = map { $_, 1 } qw(net_address net_route net_connection net_stat cpu_perc
@@ -527,6 +528,7 @@ use vars qw(%classes %cmds);
          plat => '*'
       },
     ],
+
     ProcMem => [
       {
          name => 'size', type => 'Long',
@@ -627,6 +629,51 @@ use vars qw(%classes %cmds);
          plat => '*'
       },
     ],
+    ProcDiskIO => [
+      {
+         name => 'bytes_read', type => 'Long',
+         desc => 'Bytes Read',
+         plat => 'LW'
+      },
+      {
+         name => 'bytes_written', type => 'Long',
+         desc => 'Bytes Written',
+         plat => 'LW'
+      },
+      {
+         name => 'bytes_total', type => 'Long',
+         desc => 'Bytes Total',
+         plat => 'LWAHS'
+      }
+    ],
+
+    ProcCumulativeDiskIO => [
+      {
+         name => 'bytes_read', type => 'Long',
+         desc => 'Bytes Read from Start',
+         plat => 'LW'
+      },
+      {
+         name => 'bytes_written', type => 'Long',
+         desc => 'Bytes Written from Start',
+         plat => 'LW'
+      },
+      {
+         name => 'bytes_total', type => 'Long',
+         desc => 'Bytes Total from Start',
+         plat => 'LWAHS'
+      }
+    ],
+
+    DumpPidCache => [
+      {
+         name => 'dummy', type => 'Long',
+         desc => 'Dummy',
+         plat => 'LWAHS'
+      }
+    ],
+
+
     ProcState => [
       {
          name => 'state', type => 'Char',

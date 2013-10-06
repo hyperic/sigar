@@ -407,7 +407,7 @@ int sigar_cpu_get(sigar_t *sigar, sigar_cpu_t *cpu)
         cpu->idle  += xcpu->idle;
         cpu->nice  += xcpu->nice;
         cpu->wait  += xcpu->wait;
-        cpu->total = xcpu->total;
+        cpu->total += xcpu->total;
     }
 
     return SIGAR_OK;
@@ -715,6 +715,21 @@ int sigar_proc_mem_get(sigar_t *sigar, sigar_pid_t pid,
         procmem->major_faults = SIGAR_FIELD_NOTIMPL;
         procmem->page_faults = SIGAR_FIELD_NOTIMPL;
     }
+
+    return SIGAR_OK;
+}
+
+int sigar_proc_cumulative_disk_io_get(sigar_t *sigar, sigar_pid_t pid, 
+                           sigar_proc_cumulative_disk_io_t *proc_cumulative_disk_io)
+{
+   prusage_t usage;
+   int status;
+   if ((status = sigar_proc_usage_get(sigar, &usage, pid)) != SIGAR_OK) {
+        return status;
+   }
+   proc_cumulative_disk_io->bytes_read = SIGAR_FIELD_NOTIMPL;
+   proc_cumulative_disk_io->bytes_written = SIGAR_FIELD_NOTIMPL;
+   proc_cumulative_disk_io->bytes_total =  usage.pr_ioch;
 
     return SIGAR_OK;
 }

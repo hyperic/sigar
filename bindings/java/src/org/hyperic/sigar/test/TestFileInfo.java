@@ -133,11 +133,11 @@ public class TestFileInfo extends SigarTestCase {
         tmp.deleteOnExit();
         traceln("TMP=" + file);
 
-        try {
+      //  try {
             //stat() mtime is in seconds, this happens to quick to detect change.
-            Thread.sleep(1000 * 1);
-        } catch (InterruptedException e) {
-        }
+            //Thread.sleep(1000 * 1);
+      //  } catch (InterruptedException e) {
+       // }
 
         try {
             FileInfo info = sigar.getFileInfo(file);

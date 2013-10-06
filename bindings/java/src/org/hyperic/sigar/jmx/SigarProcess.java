@@ -20,6 +20,7 @@ import org.hyperic.sigar.ProcCpu;
 import org.hyperic.sigar.ProcFd;
 import org.hyperic.sigar.ProcMem;
 import org.hyperic.sigar.ProcUtil;
+import org.hyperic.sigar.ProcDiskIO;
 import org.hyperic.sigar.Sigar;
 import org.hyperic.sigar.SigarException;
 import org.hyperic.sigar.SigarProxy;
@@ -75,6 +76,16 @@ public class SigarProcess implements SigarProcessMBean {
             throw unexpectedError("Cpu", e);
         }   
     }
+
+
+    private synchronized ProcDiskIO getDiskIO() {
+	try {
+            return this.sigar.getProcDiskIO(getPid());
+        } catch (SigarException e) {
+            throw unexpectedError("DiskIO", e);
+        }
+    }
+
 
     private synchronized ProcFd getFd() throws SigarException {
         return this.sigar.getProcFd(getPid());
@@ -153,4 +164,9 @@ public class SigarProcess implements SigarProcessMBean {
             return NOTIMPL;
         }
     }
+
+     public Double getBytesReadWriteTotal() {
+        return new Double(getDiskIO().getBytesTotal());
+    }
+
 }

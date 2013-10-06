@@ -307,6 +307,25 @@ int sigar_proc_mem_get(sigar_t *sigar, sigar_pid_t pid,
     return SIGAR_OK;
 }
 
+int sigar_proc_cumulative_disk_io_get(sigar_t *sigar, sigar_pid_t pid, 
+                           sigar_proc_cumulative_disk_io_t *proc_cumulative_disk_io)
+{
+
+    int status = sigar_pstat_getproc(sigar, pid);
+    struct pst_status *pinfo = sigar->pinfo;
+
+    if (status != SIGAR_OK) {
+        return status;
+    }
+    proc_cumulative_disk_io->bytes_read = SIGAR_FIELD_NOTIMPL; 
+    proc_cumulative_disk_io->bytes_written = SIGAR_FIELD_NOTIMPL; 
+    proc_cumulative_disk_io->bytes_total =  pinfo->pst_ioch;
+
+
+   return SIGAR_OK;
+}
+
+
 int sigar_proc_cred_get(sigar_t *sigar, sigar_pid_t pid,
                         sigar_proc_cred_t *proccred)
 {

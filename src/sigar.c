@@ -64,6 +64,7 @@ SIGAR_DECLARE(int) sigar_open(sigar_t **sigar)
         (*sigar)->net_listen = NULL;
         (*sigar)->net_services_tcp = NULL;
         (*sigar)->net_services_udp = NULL;
+	(*sigar)->proc_io = NULL;
     }
 
     return status;
@@ -96,6 +97,11 @@ SIGAR_DECLARE(int) sigar_close(sigar_t *sigar)
     if (sigar->net_services_udp) {
         sigar_cache_destroy(sigar->net_services_udp);
     }
+    if (sigar->proc_io) {
+        sigar_cache_destroy(sigar->proc_io);
+    }
+
+
 
     return sigar_os_close(sigar);
 }
@@ -123,7 +129,7 @@ SIGAR_DECLARE(int) sigar_proc_cpu_get(sigar_t *sigar, sigar_pid_t pid,
     int status;
 
     if (!sigar->proc_cpu) {
-        sigar->proc_cpu = sigar_cache_new(128);
+        sigar->proc_cpu = sigar_expired_cache_new(128, PID_CACHE_CLEANUP_PERIOD, PID_CACHE_ENTRY_EXPIRE_PERIOD);
     }
 
     entry = sigar_cache_get(sigar->proc_cpu, pid);
@@ -171,6 +177,106 @@ SIGAR_DECLARE(int) sigar_proc_cpu_get(sigar_t *sigar, sigar_pid_t pid,
     proccpu->percent = total_diff / (double)time_diff;
 
     return SIGAR_OK;
+}
+void copy_cached_disk_io_into_disk_io( sigar_cached_proc_disk_io_t *cached,  sigar_proc_disk_io_t *proc_disk_io) {
+   proc_disk_io->bytes_read = cached->bytes_read_diff;
+   proc_disk_io->bytes_written = cached->bytes_written_diff;
+   proc_disk_io->bytes_total = cached->bytes_total_diff;
+}
+
+sigar_uint64_t get_io_diff(sigar_uint64_t current_value, sigar_uint64_t prev_value,  sigar_uint64_t time_diff) {
+   double io_diff;
+   sigar_uint64_t int_io_diff;
+   if ( current_value == SIGAR_FIELD_NOTIMPL ) {
+      return SIGAR_FIELD_NOTIMPL;
+   }
+   io_diff = (( current_value - prev_value)/(double)time_diff)*SIGAR_MSEC;
+   int_io_diff = (sigar_uint64_t)io_diff;
+   if (int_io_diff >=0) {
+      return int_io_diff;
+   }
+   return 0;
+}
+
+void calculate_io_diff(sigar_proc_cumulative_disk_io_t * proc_disk_io, sigar_cached_proc_disk_io_t *cached,  sigar_uint64_t time_diff, int is_first_time) {
+   /*calculate avg diff /read/write/total per second*/
+   if (!is_first_time) {
+       cached->bytes_written_diff = get_io_diff(proc_disk_io->bytes_written, cached->bytes_written, time_diff);
+       cached->bytes_read_diff = get_io_diff(proc_disk_io->bytes_read, cached->bytes_read, time_diff);
+       cached->bytes_total_diff = get_io_diff(proc_disk_io->bytes_total, cached->bytes_total, time_diff);
+   }
+   else {
+       cached->bytes_total_diff =  cached->bytes_read_diff =  cached->bytes_written_diff = 0.0;
+   }
+   // now put in cache the current cumulative values
+   cached->bytes_written = proc_disk_io->bytes_written;
+   cached->bytes_read = proc_disk_io->bytes_read;
+   cached->bytes_total = proc_disk_io->bytes_total;
+}
+
+SIGAR_DECLARE(int) sigar_proc_disk_io_get(sigar_t *sigar, sigar_pid_t pid,
+                                          sigar_proc_disk_io_t *proc_disk_io)
+{
+    sigar_cache_entry_t *entry;
+    sigar_cached_proc_disk_io_t *prev;
+    sigar_proc_cumulative_disk_io_t  cumulative_proc_disk_io;
+    sigar_uint64_t time_now = sigar_time_now_millis();
+    sigar_uint64_t time_diff;
+    int status, is_first_time;
+
+    if (!sigar->proc_io) {
+        sigar->proc_io =  sigar_expired_cache_new(128, PID_CACHE_CLEANUP_PERIOD, PID_CACHE_ENTRY_EXPIRE_PERIOD);
+    }
+
+    entry = sigar_cache_get(sigar->proc_io, pid);
+    if (entry->value) {
+        prev = (sigar_cached_proc_disk_io_t *)entry->value;
+    }
+    else {
+        prev = entry->value = malloc(sizeof(*prev));
+        SIGAR_ZERO(prev);
+    }
+    is_first_time = (prev->last_time == 0);
+    time_diff = time_now - prev->last_time;
+
+    if (time_diff < 1000) {
+        /* we were just called within < 1 second ago. */
+        copy_cached_disk_io_into_disk_io(prev, proc_disk_io);
+	if (time_diff < 0) {
+	   // something is wrong at least from now on the time will be ok
+ 	   prev->last_time = time_now;
+        }
+        return SIGAR_OK;
+    }
+    prev->last_time = time_now;
+
+
+    status =
+        sigar_proc_cumulative_disk_io_get(sigar, pid,
+                            &cumulative_proc_disk_io);
+
+    if (status != SIGAR_OK) {
+        return status;
+    }
+    calculate_io_diff(&cumulative_proc_disk_io, prev, time_diff,  is_first_time);
+    copy_cached_disk_io_into_disk_io(prev, proc_disk_io);
+    return SIGAR_OK;
+}
+
+void get_cache_info(sigar_cache_t * cache, char * name){
+   if (cache == NULL) {
+      return;
+   }
+
+   printf("******** %s *********\n", name);
+   sigar_cache_dump(cache);
+}
+
+SIGAR_DECLARE(int) sigar_dump_pid_cache_get(sigar_t *sigar, sigar_dump_pid_cache_t *info) {
+  
+  get_cache_info(sigar->proc_cpu, "proc cpu cache");
+  get_cache_info(sigar->proc_io, "proc io cache");
+  return SIGAR_OK;
 }
 
 SIGAR_DECLARE(int) sigar_proc_stat_get(sigar_t *sigar,
