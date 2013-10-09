@@ -170,15 +170,21 @@ struct sigar_cache_entry_t {
     sigar_cache_entry_t *next;
     sigar_uint64_t id;
     void *value;
+    sigar_uint64_t last_access_time;
 };
 
 typedef struct {
     sigar_cache_entry_t **entries;
     unsigned int count, size;
     void (*free_value)(void *ptr);
+    sigar_uint64_t entry_expire_period;
+    sigar_uint64_t cleanup_period_millis;
+    sigar_uint64_t last_cleanup_time;
 } sigar_cache_t;
 
 sigar_cache_t *sigar_cache_new(int size);
+sigar_cache_t *sigar_expired_cache_new(int size, sigar_uint64_t cleanup_period_millis, sigar_uint64_t entry_expire_period);
+void sigar_cache_dump(sigar_cache_t *table);
 
 sigar_cache_entry_t *sigar_cache_get(sigar_cache_t *table,
                                      sigar_uint64_t key);

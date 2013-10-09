@@ -106,6 +106,16 @@ public interface SigarProxy {
 
     public long getProcPort(String protocol, String port) throws SigarException;
 
+    public ProcDiskIO getProcDiskIO(long pid) throws SigarException;
+
+    public ProcDiskIO getProcDiskIO(String pid) throws SigarException;
+
+    public ProcCumulativeDiskIO getProcCumulativeDiskIO(long pid) throws SigarException;
+
+    public ProcCumulativeDiskIO getProcCumulativeDiskIO(String pid) throws SigarException;
+
+    public DumpPidCache dumpPidCache() throws SigarException;
+
     public FileSystem[] getFileSystemList() throws SigarException;
 
     public FileSystemMap getFileSystemMap() throws SigarException;

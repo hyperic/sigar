@@ -66,7 +66,8 @@
    sigar_cache_t *proc_cpu; \
    sigar_cache_t *net_listen; \
    sigar_cache_t *net_services_tcp; \
-   sigar_cache_t *net_services_udp
+   sigar_cache_t *net_services_udp;\
+   sigar_cache_t *proc_io
 
 #if defined(WIN32)
 #   define SIGAR_INLINE __inline
@@ -339,10 +340,14 @@ int sigar_get_iftype(const char *name, int *type, int *inst);
 #define SIGAR_NIC_LOOPBACK "Local Loopback"
 #define SIGAR_NIC_ETHERNET "Ethernet"
 #define SIGAR_NIC_NETROM   "AMPR NET/ROM"
-
+#define PID_CACHE_CLEANUP_PERIOD 1000*60*10 /* 10 minutes */
+#define PID_CACHE_ENTRY_EXPIRE_PERIOD 1000*60*20 /* 20 minutes */
 #ifndef WIN32
 #include <netdb.h>
 #endif
+
+#define PROC_PID_CPU_CACHE 1
+#define PROC_PID_IO_CACHE 2
 
 #define SIGAR_HOSTENT_LEN 1024
 #if defined(_AIX)

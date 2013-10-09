@@ -19,6 +19,8 @@ package org.hyperic.sigar.jmx;
 import org.hyperic.sigar.ProcCpu;
 import org.hyperic.sigar.ProcFd;
 import org.hyperic.sigar.ProcMem;
+import org.hyperic.sigar.ProcUtil;
+import org.hyperic.sigar.ProcDiskIO;
 import org.hyperic.sigar.Sigar;
 import org.hyperic.sigar.SigarException;
 import org.hyperic.sigar.SigarProxy;
@@ -31,20 +33,24 @@ import org.hyperic.sigar.SigarProxyCache;
 
 public class SigarProcess implements SigarProcessMBean {
 
+    private static final Long NOTIMPL = new Long(Sigar.FIELD_NOTIMPL);
     private Sigar sigarImpl;
     private SigarProxy sigar;
+    private long pid = -1;
 
     public SigarProcess() {
-        this(new Sigar());
-    }
-
-    public SigarProcess(Sigar sigar) {
-        this.sigarImpl = sigar;
+        this.sigarImpl = new Sigar();
         this.sigar = SigarProxyCache.newInstance(sigarImpl);
     }
 
+    public SigarProcess(SigarProxy sigar) {
+        this.sigar = sigar;
+    }
+
     public void close() {
-        this.sigarImpl.close();
+        if (this.sigarImpl != null) {
+            this.sigarImpl.close();
+        }
     }
 
     private RuntimeException unexpectedError(String type,
@@ -57,8 +63,7 @@ public class SigarProcess implements SigarProcessMBean {
                                    
     private synchronized ProcMem getMem() {
         try {
-            long pid = this.sigar.getPid();
-            return this.sigar.getProcMem(pid);
+            return this.sigar.getProcMem(getPid());
         } catch (SigarException e) {
             throw unexpectedError("Mem", e);
         }
@@ -66,22 +71,40 @@ public class SigarProcess implements SigarProcessMBean {
 
     private synchronized ProcCpu getCpu() {
         try {
-            long pid = this.sigar.getPid();
-            return this.sigar.getProcCpu(pid);
+            return this.sigar.getProcCpu(getPid());
         } catch (SigarException e) {
             throw unexpectedError("Cpu", e);
         }   
     }
 
-    private synchronized ProcFd getFd() {
-        try {
-            long pid = this.sigar.getPid();
-            return this.sigar.getProcFd(pid);
+   
+    private synchronized ProcDiskIO getDiskIO() {
+	try {
+            return this.sigar.getProcDiskIO(getPid());
         } catch (SigarException e) {
-            throw unexpectedError("Fd", e);
-        }   
+            throw unexpectedError("DiskIO", e);
+        }
     }
-    
+
+
+    private synchronized ProcFd getFd() throws SigarException {
+        return this.sigar.getProcFd(getPid());
+    }
+
+
+    public long getPid() {
+        if (this.pid < 0) {
+            return this.sigar.getPid();
+        }
+        else {
+            return this.pid;
+        }
+    }
+
+    public void setPid(long pid) {
+        this.pid = pid;
+    }
+
     public Long getMemSize() {
         return new Long(getMem().getSize());
     }
@@ -119,7 +142,11 @@ public class SigarProcess implements SigarProcessMBean {
     }
 
     public Long getOpenFd() {
-        return new Long(getFd().getTotal());
+try {
+            return new Long(getFd().getTotal());
+        } catch (SigarException e) {
+            return NOTIMPL;
+        }    
     }
 
     public static void main(String args[]) {
@@ -132,4 +159,9 @@ public class SigarProcess implements SigarProcessMBean {
         System.out.println("TimeSys=" + proc.getTimeSys());
         System.out.println("OpenFd=" + proc.getOpenFd());
     }
+
+     public Double getBytesReadWriteTotal() {
+        return new Double(getDiskIO().getBytesTotal());
+    }
+
 }

@@ -1325,6 +1325,14 @@ static ptql_lookup_t PTQL_Cpu[] = {
     { NULL }
 };
 
+static ptql_lookup_t PTQL_Disk_IO[] = {
+    { "BytesRead", PTQL_LOOKUP_ENTRY(proc_disk_io, bytes_read, UI64) },
+    { "BytesWritten",      PTQL_LOOKUP_ENTRY(proc_disk_io, bytes_written, UI64) },
+    { "BytesTotal",       PTQL_LOOKUP_ENTRY(proc_disk_io, bytes_total, UI64) },
+    { NULL }
+};
+
+
 static ptql_lookup_t PTQL_CredName[] = {
     { "User",  PTQL_LOOKUP_ENTRY(proc_cred_name, user, STR) },
     { "Group", PTQL_LOOKUP_ENTRY(proc_cred_name, group, STR) },
@@ -1411,6 +1419,7 @@ static ptql_entry_t ptql_map[] = {
     { "Port",     PTQL_Port },
     { "Pid",      PTQL_Pid },
     { "Service",  PTQL_Service },
+    { "Disk_IO",   PTQL_Disk_IO },
     { NULL }
 };
 
