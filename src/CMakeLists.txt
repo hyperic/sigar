@@ -80,7 +80,8 @@ ENDIF(CMAKE_SYSTEM_NAME MATCHES "(AIX)" )
 
 IF(WIN32)
   ADD_DEFINITIONS(-DSIGAR_SHARED)
-  SET(SIGAR_SRC os/win32/peb.c os/win32/win32_sigar.c)
+  ENABLE_LANGUAGE(CXX) #needed by wmi.cpp
+  SET(SIGAR_SRC os/win32/peb.c os/win32/win32_sigar.c os/win32/wmi.cpp)
   INCLUDE_DIRECTORIES(os/win32)
   CHECK_STRUCT_MEMBER(MIB_IPADDRROW wType "windows.h;iphlpapi.h" wType_in_MIB_IPADDRROW)
   add_definitions(-DHAVE_MIB_IPADDRROW_WTYPE=${wType_in_MIB_IPADDRROW})
