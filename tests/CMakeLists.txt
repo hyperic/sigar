@@ -37,6 +37,9 @@ IF(WIN32)
   ADD_DEFINITIONS(-DSIGAR_TEST_OS_WIN32)
 ENDIF(WIN32)
 
+#asserts will be compiled out with NDEBUG -- must remove it
+string(REPLACE "NDEBUG" "NNDEBUG" CMAKE_C_FLAGS_RELEASE ${CMAKE_C_FLAGS_RELEASE})
+
 SIGAR_TEST(t_sigar_cpu)
 SIGAR_TEST(t_sigar_fs)
 SIGAR_TEST(t_sigar_loadavg)
