@@ -1947,6 +1947,12 @@ int sigar_net_interface_list_get(sigar_t *sigar,
         }
 #   endif        
 #endif
+
+#ifdef __linux__
+        char *ptr = strchr(ifr->ifr_name, ':');
+        if (ptr != NULL) *ptr = '\0';
+#endif
+
         iflist->data[iflist->number++] =
             sigar_strdup(ifr->ifr_name);
     }
