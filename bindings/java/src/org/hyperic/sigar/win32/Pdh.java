@@ -20,6 +20,8 @@ package org.hyperic.sigar.win32;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.StringTokenizer;
 
@@ -353,6 +355,60 @@ public class Pdh extends Win32 {
         return pdhGetObjects();
     }
 
+	/**
+		sigar is compatible with java 1.4 (no generics there)
+	**/
+    public Map getFormattedValues(Collection paths) throws Win32Exception {
+        if (this.hostname != null) {
+            pdhConnectMachine(this.hostname);
+        }
+        Map res = new HashMap();
+
+	    Map counters = new HashMap();
+		/*
+		* no for each loop either
+		*/
+		Iterator pathsIt = paths.iterator();
+        while (pathsIt.hasNext()) {
+		    String path = (String)pathsIt.next();
+            try {			    
+                counters.put(path,  new Long(pdhAddCounter(this.query, translate(path))));
+            } catch ( Win32Exception ex) {
+            }
+        }
+
+        if (counters.size() > 0) {
+            try {
+                pdhCollectQueryDataOverSecond(this.query);
+				pathsIt = paths.iterator();
+                while (pathsIt.hasNext()) {
+                    try {
+					    String path = (String)pathsIt.next();
+                        Long c = (Long)counters.get(path);
+                        if (c != null) {
+                            double val = pdhGetFormattedValue(c.longValue());
+                            res.put(path, new Double(val));
+                        }
+                    } catch (Exception ex) {
+                    }
+                }
+            } finally {
+			   Iterator countersIt = counters.values().iterator();
+               while (countersIt.hasNext()) {
+                    try {
+					    Long counter = (Long)countersIt.next();
+                        pdhRemoveCounter(counter.longValue());
+                    } catch (Win32Exception ex) {
+                        
+                    }
+                }
+            }
+        }
+
+       return res;
+    }
+
+
     public static final native int validate(String path);
 
     private static final native void pdhConnectMachine(String host)
@@ -382,6 +438,13 @@ public class Pdh extends Win32 {
         throws Win32Exception;
     private static final native int pdhLookupPerfIndex(String name)
         throws Win32Exception;
+
+    private static final native void pdhCollectQueryDataOverSecond(long query)
+       throws Win32Exception;
+
+    private static final native double pdhGetFormattedValue(long counter)
+        throws Win32Exception;
+
 
     /**
      * Main method for dumping the entire PDH

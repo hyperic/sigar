@@ -172,6 +172,34 @@ JNIEXPORT void SIGAR_JNI(win32_Pdh_pdhRemoveCounter)
     }
 }
 
+JNIEXPORT void SIGAR_JNI(win32_Pdh_pdhCollectQueryDataOverSecond) 
+(JNIEnv *env, jclass cur, jlong query)
+{
+   HQUERY                h_query        = (HQUERY)query;
+   PdhCollectQueryData(h_query);
+   Sleep(1000);
+   PdhCollectQueryData(h_query);
+}
+
+
+JNIEXPORT jdouble SIGAR_JNI(win32_Pdh_pdhGetFormattedValue)
+(JNIEnv *env, jclass cur, jlong counter)
+{
+    HCOUNTER              h_counter      = (HCOUNTER)counter;
+    PDH_STATUS            status;
+    PDH_FMT_COUNTERVALUE fmt_value; 
+    status = PdhGetFormattedCounterValue(h_counter,
+                                         PDH_FMT_DOUBLE,
+                                         (LPDWORD)NULL,
+                                         &fmt_value);
+    if (status != ERROR_SUCCESS) {
+        win32_throw_exception(env, get_error_message(status));
+        return 0;
+    }
+
+    return fmt_value.doubleValue;
+}
+
 JNIEXPORT jdouble SIGAR_JNI(win32_Pdh_pdhGetValue)
 (JNIEnv *env, jclass cur, jlong query, jlong counter, jboolean fmt)
 {
@@ -352,6 +380,7 @@ JNIEXPORT jobjectArray SIGAR_JNI(win32_Pdh_pdhGetInstances)
 
     return array;
 }
+
 
 JNIEXPORT jobjectArray SIGAR_JNI(win32_Pdh_pdhGetKeys)
 (JNIEnv *env, jclass cur, jstring cp)
