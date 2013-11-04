@@ -665,6 +665,17 @@ JNIEXPORT jlongArray SIGAR_JNIx(getProcList)
 
     return procarray;
 }
+jstring getProcArgStr(char *arg, JNIEnv *env) {
+   jstring s;
+#ifdef WIN32
+   WCHAR warg[3000];
+   SIGAR_A2W(arg, warg, sizeof(warg));		
+   s = JENV->NewString(env,  (const jchar *)warg, wcslen(warg));		
+#else
+   s = JENV->NewStringUTF(env, arg);
+#endif
+return s;
+}
 
 JNIEXPORT jobjectArray SIGAR_JNIx(getProcArgs)
 (JNIEnv *env, jobject sigar_obj, jlong pid)
@@ -684,8 +695,9 @@ JNIEXPORT jobjectArray SIGAR_JNIx(getProcArgs)
     argsarray = JENV->NewObjectArray(env, procargs.number, stringclass, 0);
     SIGAR_CHEX;
 
-    for (i=0; i<procargs.number; i++) {
-        jstring s = JENV->NewStringUTF(env, procargs.data[i]);
+    for (i=0; i<procargs.number; i++) {	
+		
+		jstring s = getProcArgStr(procargs.data[i], env);
         JENV->SetObjectArrayElement(env, argsarray, i, s);
         SIGAR_CHEX;
     }
@@ -1296,18 +1308,28 @@ JNIEXPORT jboolean SIGAR_JNI(ptql_SigarProcessQuery_match)
 JNIEXPORT void SIGAR_JNI(ptql_SigarProcessQuery_create)
 (JNIEnv *env, jobject obj, jstring jptql)
 {
-    int status;
-    jboolean is_copy;
-    const char *ptql;
+	int status;
+    jboolean is_copy;    
     sigar_ptql_query_t *query;
     sigar_ptql_error_t error;
-
-    ptql = JENV->GetStringUTFChars(env, jptql, &is_copy);
+#ifdef WIN32	
+    LPCTSTR ptql;
+    char ptql_ch[3000];   
+    ptql = (LPCTSTR)JENV->GetStringChars(env, jptql, &is_copy);       
+		 
+    SIGAR_W2A((LPCWSTR)ptql, ptql_ch, sizeof(ptql_ch));  
+    status = sigar_ptql_query_create(&query, ptql_ch, &error);
+    if (is_copy) {
+        JENV->ReleaseStringChars(env, jptql,  (const jchar *)ptql);
+    }
+#else
+    const char *ptql;
+	ptql = JENV->GetStringUTFChars(env, jptql, &is_copy);
     status = sigar_ptql_query_create(&query, (char *)ptql, &error);
     if (is_copy) {
         JENV->ReleaseStringUTFChars(env, jptql, ptql);
     }
-
+#endif
     if (status != SIGAR_OK) {
         sigar_throw_ptql_malformed(env, error.message);
     }
