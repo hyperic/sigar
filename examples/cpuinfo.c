@@ -33,8 +33,14 @@ int main(int argc, char **argv) {
         exit(1);
     }
 
+    printf("Number of CPUs: %d\n", (unsigned)cpulist.number);
+
     for (i=0; i<cpulist.number; i++) {
         sigar_cpu_t cpu = cpulist.data[i];
+        printf("CPU %d: User=" SIGAR_F_U64 " Sys=" SIGAR_F_U64
+               " Nice=" SIGAR_F_U64 " Idle=" SIGAR_F_U64 " Total="
+               SIGAR_F_U64 "\n", i, cpu.user, cpu.sys, cpu.nice, cpu.idle,
+               cpu.total);
         /*...*/
     }
 
