@@ -3123,6 +3123,15 @@ static int net_conn_get_tcp(sigar_net_connection_walker_t *walker)
 
 static int net_conn_get_udp(sigar_net_connection_walker_t *walker)
 {
+    /* Disabled because it isn't properly implemented and
+     * cause the windows runtime to abort due to use
+     * of uninitialized variable in the for-loop below.
+     * IS_UDP_SERVER(conn, flags) We don't use this
+     * functionality anyway
+     */
+    return SIGAR_ENOTIMPL;
+
+#if 0
     sigar_t *sigar = walker->sigar;
     int flags = walker->flags;
     int status;
@@ -3174,6 +3183,7 @@ static int net_conn_get_udp(sigar_net_connection_walker_t *walker)
 
     free(udp);
     return SIGAR_OK;
+#endif
 }
 
 SIGAR_DECLARE(int)
