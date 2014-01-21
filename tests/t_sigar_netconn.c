@@ -64,12 +64,8 @@ TEST(test_sigar_net_connections_get) {
 
 			assert(con.local_port < 65536);
 			assert(con.local_port < 65536);
-			assert(con.uid >= 0);
-			assert(con.inode >= 0);
 			assert(con.type >= 0);
 			assert(con.state >= 0);
-			assert(con.send_queue >= 0);
-			assert(con.receive_queue >= 0);
 		}
 
 		assert(SIGAR_OK == sigar_net_connection_list_destroy(t, &connlist));
