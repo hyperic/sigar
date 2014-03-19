@@ -17,6 +17,7 @@ AC_SUBST(VERSION_MAINT)
 AC_SUBST(VERSION_BUILD)
 
 AC_PROG_CC
+AC_PROG_CXX
 AC_PROG_LN_S
 AC_PROG_INSTALL
 AC_PROG_MAKE_SET
@@ -67,6 +68,10 @@ case $host_os in
      SRC_OS="solaris"
      AC_DEFINE(SIGAR_TEST_OS_SOLARIS, [1], [for the tests])
      SIGAR_LIBS="-lkstat -lsocket"
+     ;;
+     *mingw*)
+     SRC_OS="win32"
+     AC_DEFINE(SIGAR_TEST_OS_WIN32, [1], [for the tests])
      ;;
      *)
      ac_system="unknown"
