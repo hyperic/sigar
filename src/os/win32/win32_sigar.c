@@ -102,7 +102,7 @@ typedef enum {
 #define PERF_TITLE_DISK_WRITE_BYTES 222 /* Disk Write Bytes/sec */
 #define PERF_TITLE_DISK_QUEUE 198 /* Current Disk Queue Length */
 
-/* 
+/*
  * diff is:
  *   ExW      -> ExA
  *   wcounter -> counter
@@ -221,7 +221,7 @@ static PERF_OBJECT_TYPE *get_perf_object_inst(sigar_t *sigar,
     }
     object = PdhFirstObject(block);
 
-    /* 
+    /*
      * only seen on windows 2003 server when pdh.dll
      * functions are in use by the same process.
      * confucius say what the fuck.
@@ -416,14 +416,14 @@ static int sigar_dllmod_init(sigar_t *sigar,
     if (module->handle) {
         return SIGAR_OK;
     }
-    
+
     module->handle = LoadLibrary(module->name);
     if (!(success = (module->handle ? TRUE : FALSE))) {
         rc = GetLastError();
         /* dont try again */
         module->handle = INVALID_HANDLE_VALUE;
     }
-    
+
     if (is_debug) {
         sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
                          "LoadLibrary(%s): %s",
@@ -1250,7 +1250,7 @@ sigar_proc_cred_name_get(sigar_t *sigar, sigar_pid_t pid,
     if (!(proc = open_process(pid))) {
         return GetLastError();
     }
-    
+
     if (!OpenProcessToken(proc, TOKEN_DAC, &token)) {
         CloseHandle(proc);
         return GetLastError();
@@ -1637,7 +1637,7 @@ SIGAR_DECLARE(int) sigar_proc_env_get(sigar_t *sigar, sigar_pid_t pid,
     if (pid == sigar->pid) {
         if (procenv->type == SIGAR_PROC_ENV_KEY) {
             char value[32767]; /* max size from msdn docs */
-            DWORD retval = 
+            DWORD retval =
                 GetEnvironmentVariable(procenv->key, value, sizeof(value));
 
             if (retval == 0) {
@@ -1737,7 +1737,7 @@ SIGAR_DECLARE(int) sigar_proc_exe_get(sigar_t *sigar, sigar_pid_t pid,
 SIGAR_DECLARE(int) sigar_proc_modules_get(sigar_t *sigar, sigar_pid_t pid,
                                           sigar_proc_modules_t *procmods)
 {
-    HANDLE proc; 
+    HANDLE proc;
     HMODULE modules[1024];
     DWORD size = 0;
     unsigned int i;
@@ -1813,7 +1813,7 @@ int sigar_os_fs_type_get(sigar_file_system_t *fsp)
     return fsp->type;
 }
 
-#ifndef FILE_READ_ONLY_VOLUME 
+#ifndef FILE_READ_ONLY_VOLUME
 #define FILE_READ_ONLY_VOLUME 0x00080000
 #endif
 #ifndef FILE_NAMED_STREAMS
@@ -2124,7 +2124,7 @@ static int sigar_cpu_info_get(sigar_t *sigar, sigar_cpu_info_t *info)
         RegCloseKey(key);
         return rc;
     }
-       
+
     rc = RegOpenKey(key, id, &cpu);
     if (rc != ERROR_SUCCESS) {
         RegCloseKey(key);
@@ -2482,7 +2482,7 @@ SIGAR_DECLARE(int) sigar_net_info_get(sigar_t *sigar,
     DWORD rc;
 
     DLLMOD_INIT(iphlpapi, FALSE);
-    
+
     if (!sigar_GetNetworkParams) {
         return SIGAR_ENOTIMPL;
     }
@@ -2510,7 +2510,7 @@ SIGAR_DECLARE(int) sigar_net_info_get(sigar_t *sigar,
         SIGAR_SSTRCPY(netinfo->secondary_dns,
                       ip->IpAddress.String);
     }
-    
+
     free(info);
 
     if (sigar_get_adapters_info(sigar, &adapter) != SIGAR_OK) {
@@ -2584,10 +2584,10 @@ SIGAR_DECLARE(int) sigar_net_route_list_get(sigar_t *sigar,
 
         sigar_net_address_set(route->destination,
                               ipr->dwForwardDest);
-        
+
         sigar_net_address_set(route->mask,
                               ipr->dwForwardMask);
-        
+
         sigar_net_address_set(route->gateway,
                               ipr->dwForwardNextHop);
 
@@ -2676,7 +2676,7 @@ static int get_mib_ifrow(sigar_t *sigar,
 
     *ifrp = (MIB_IFROW *)entry->value;
     if (cached) {
-        /* refresh */ 
+        /* refresh */
         if ((status = sigar_GetIfEntry(*ifrp)) != NO_ERROR) {
             return status;
         }
@@ -2689,7 +2689,7 @@ static int netif_hash(char *s)
 {
     int hash = 0;
     while (*s) {
-        hash = 31*hash + *s++; 
+        hash = 31*hash + *s++;
     }
     return hash;
 }
@@ -2970,16 +2970,16 @@ sigar_net_interface_stat_get(sigar_t *sigar, const char *name,
     if (status != SIGAR_OK) {
         return status;
     }
-    
+
     ifstat->rx_bytes    = ifr->dwInOctets;
-    ifstat->rx_packets  = ifr->dwInUcastPkts + ifr->dwInNUcastPkts; 
+    ifstat->rx_packets  = ifr->dwInUcastPkts + ifr->dwInNUcastPkts;
     ifstat->rx_errors   = ifr->dwInErrors;
     ifstat->rx_dropped  = ifr->dwInDiscards;
     ifstat->rx_overruns = SIGAR_FIELD_NOTIMPL;
     ifstat->rx_frame    = SIGAR_FIELD_NOTIMPL;
 
     ifstat->tx_bytes      = ifr->dwOutOctets;
-    ifstat->tx_packets    = ifr->dwOutUcastPkts + ifr->dwOutNUcastPkts; 
+    ifstat->tx_packets    = ifr->dwOutUcastPkts + ifr->dwOutNUcastPkts;
     ifstat->tx_errors     = ifr->dwOutErrors;
     ifstat->tx_dropped    = ifr->dwOutDiscards;
     ifstat->tx_overruns   = SIGAR_FIELD_NOTIMPL;
@@ -3289,7 +3289,7 @@ SIGAR_DECLARE(int) sigar_proc_port_get(sigar_t *sigar,
             }
 
             *pid = tcp->table[i].dwProcessId;
-            
+
             return SIGAR_OK;
         }
     }
@@ -3313,7 +3313,7 @@ SIGAR_DECLARE(int) sigar_proc_port_get(sigar_t *sigar,
             }
 
             *pid = udp->table[i].dwProcessId;
-            
+
             return SIGAR_OK;
         }
     }
@@ -3471,7 +3471,7 @@ static int get_logon_info(HKEY users,
                              NULL, NULL, NULL, NULL, NULL,
                              NULL, NULL, NULL, NULL, NULL,
                              &wtime);
-    
+
     if (status == ERROR_SUCCESS) {
         FileTimeToLocalFileTime(&wtime, &wtime);
         who->time = sigar_FileTimeToTime(&wtime) / 1000000;
@@ -3544,7 +3544,7 @@ static int sigar_who_registry(sigar_t *sigar,
         }
 
         if (LookupAccountSid(NULL, /* server */
-                             sid, 
+                             sid,
                              username, &username_len,
                              domain, &domain_len,
                              &type))
@@ -3553,13 +3553,13 @@ static int sigar_who_registry(sigar_t *sigar,
 
             SIGAR_WHO_LIST_GROW(wholist);
             who = &wholist->data[wholist->number++];
-            
+
             SIGAR_SSTRCPY(who->user, username);
             SIGAR_SSTRCPY(who->host, domain);
             SIGAR_SSTRCPY(who->device, "console");
 
             get_logon_info(users, subkey, who);
-        }               
+        }
 
         LocalFree(sid);
     }
@@ -3618,7 +3618,7 @@ static int sigar_who_wts(sigar_t *sigar,
                                              &buffer,
                                              &bytes))
         {
-            int isConsole = 
+            int isConsole =
                 (*buffer == WTS_PROTOCOL_TYPE_CONSOLE);
 
             sigar_WTSFreeMemory(buffer);
@@ -3730,7 +3730,7 @@ int sigar_os_sys_info_get(sigar_t *sigar,
     char *vendor_name, *vendor_version, *code_name=NULL;
 
     version.dwOSVersionInfoSize = sizeof(version);
-    GetVersionEx((OSVERSIONINFO *)&version); 
+    GetVersionEx((OSVERSIONINFO *)&version);
 
     if (version.dwMajorVersion == 4) {
         vendor_name = "Windows NT";
@@ -3980,7 +3980,7 @@ int sigar_file_version_get(sigar_file_version_t *version,
         return !SIGAR_OK;
     }
     data = malloc(len);
- 
+
     if (GetFileVersionInfo(name, handle, len, data)) {
         if (VerQueryValue(data, "\\", &info, &len)) {
             version->product_major = HIWORD(info->dwProductVersionMS);
