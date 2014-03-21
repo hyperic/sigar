@@ -3974,7 +3974,8 @@ int sigar_file_version_get(sigar_file_version_t *version,
                            char *name,
                            sigar_proc_env_t *infocb)
 {
-    DWORD handle, len;
+    DWORD handle;
+    UINT len;
     LPTSTR data;
     VS_FIXEDFILEINFO *info;
     int status;
@@ -3989,7 +3990,7 @@ int sigar_file_version_get(sigar_file_version_t *version,
     data = malloc(len);
 
     if (GetFileVersionInfo(name, handle, len, data)) {
-        if (VerQueryValue(data, "\\", &info, &len)) {
+        if (VerQueryValue(data, "\\", (void **)&info, &len)) {
             version->product_major = HIWORD(info->dwProductVersionMS);
             version->product_minor = LOWORD(info->dwProductVersionMS);
             version->product_build = HIWORD(info->dwProductVersionLS);
@@ -4015,7 +4016,7 @@ int sigar_file_version_get(sigar_file_version_t *version,
         } *trans;
 
         if (VerQueryValue(data, "\\VarFileInfo\\Translation",
-                          &trans, &len))
+                          (void **)&trans, &len))
         {
             int i;
             char buf[1024];
