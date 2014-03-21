@@ -139,7 +139,16 @@ typedef enum {
 #define NETIF_LA "la"
 
 static int get_proc_info(sigar_t *sigar, sigar_pid_t pid);
-static int netif_hash(char *s);
+
+static int netif_hash(const char *s)
+{
+    int hash = 0;
+    while (*s) {
+        hash = 31 * hash + *s++;
+    }
+    return hash;
+}
+
 
 sigar_uint64_t sigar_FileTimeToTime(FILETIME *ft)
 {
@@ -2692,15 +2701,6 @@ static int get_mib_ifrow(sigar_t *sigar,
     }
 
     return SIGAR_OK;
-}
-
-static int netif_hash(char *s)
-{
-    int hash = 0;
-    while (*s) {
-        hash = 31*hash + *s++;
-    }
-    return hash;
 }
 
 /* Vista and later, wireless network cards are reported as IF_TYPE_IEEE80211 */
