@@ -2451,7 +2451,7 @@ static int sigar_get_netif_ipaddr(sigar_t *sigar,
             MIB_IPADDRROW *row = &mib->table[i];
             short type;
 
-#if HAVE_MIB_IPADDRROW_WTYPE
+#if defined(HAVE_MIB_IPADDRROW_WTYPE) || defined(__MINGW32__)
             type = row->wType;
 #else
             type = row->unused2;
