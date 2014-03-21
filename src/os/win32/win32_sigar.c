@@ -2361,11 +2361,7 @@ static int sigar_get_adapters_addresses(sigar_t *sigar,
         return SIGAR_ENOTIMPL;
     }
 
-    rc = sigar_GetAdaptersAddresses(family,
-                                    flags,
-                                    NULL,
-                                    *addrs,
-                                    size);
+    rc = sigar_GetAdaptersAddresses(family, flags, NULL, *addrs, size);
 
     if (rc == ERROR_BUFFER_OVERFLOW) {
         sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
@@ -2852,7 +2848,9 @@ static int sigar_net_interface_ipv6_config_find(sigar_t *sigar, int index,
     int status;
     PIP_ADAPTER_ADDRESSES aa = (PIP_ADAPTER_ADDRESSES)sigar->ifconf_buf, addrs;
     ULONG flags = GAA_FLAG_INCLUDE_PREFIX;
-    status = sigar_get_adapters_addresses(sigar, AF_UNSPEC, flags, &aa, &sigar->ifconf_len);
+    ULONG size = sigar->ifconf_len;
+    status = sigar_get_adapters_addresses(sigar, AF_UNSPEC, flags, &aa, &size);
+    sigar->ifconf_len = size;
 
     if (status != SIGAR_OK) {
         return status;
