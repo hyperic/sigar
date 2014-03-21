@@ -23,7 +23,14 @@
 #include "sigar_util.h"
 #include "sigar_format.h"
 #include <shellapi.h>
-#ifndef MSVC
+
+#ifdef MSVC
+typedef __int32 int32_t;
+typedef unsigned __int32 uint32_t;
+typedef __int64 int64_t;
+typedef unsigned __int64 uint64_t;
+#else
+#include <stdint.h>
 #include <iphlpapi.h>
 #endif
 
@@ -1316,7 +1323,7 @@ SIGAR_DECLARE(int) sigar_proc_cred_get(sigar_t *sigar, sigar_pid_t pid,
 }
 
 #define FILETIME2MSEC(ft) \
-    NS100_2MSEC(((ft.dwHighDateTime << 32) | ft.dwLowDateTime))
+    NS100_2MSEC((((uint64_t)ft.dwHighDateTime << 32) | ft.dwLowDateTime))
 
 sigar_int64_t sigar_time_now_millis(void)
 {
