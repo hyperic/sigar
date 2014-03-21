@@ -186,7 +186,7 @@ static char *get_counter_name(char *key)
 
 static PERF_OBJECT_TYPE *get_perf_object_inst(sigar_t *sigar,
                                               char *counter_key,
-                                              DWORD inst, DWORD *err)
+                                              DWORD inst, int *err)
 {
     DWORD retval, type, bytes;
     WCHAR wcounter_key[MAX_PATH+1];
@@ -735,7 +735,7 @@ SIGAR_DECLARE(int) sigar_swap_get(sigar_t *sigar, sigar_swap_t *swap)
 
 static PERF_INSTANCE_DEFINITION *get_cpu_instance(sigar_t *sigar,
                                                   DWORD *perf_offsets,
-                                                  DWORD *num, DWORD *err)
+                                                  DWORD *num, int *err)
 {
     PERF_OBJECT_TYPE *object = get_perf_object(sigar, PERF_TITLE_CPU_KEY, err);
     PERF_INSTANCE_DEFINITION *inst;
@@ -828,10 +828,10 @@ static int get_idle_cpu(sigar_t *sigar, sigar_cpu_t *cpu,
 
 static int sigar_cpu_perflib_get(sigar_t *sigar, sigar_cpu_t *cpu)
 {
-    int status;
+    int status, err;
     PERF_INSTANCE_DEFINITION *inst;
     PERF_COUNTER_BLOCK *counter_block;
-    DWORD perf_offsets[PERF_IX_CPU_MAX], err;
+    DWORD perf_offsets[PERF_IX_CPU_MAX];
 
     SIGAR_ZERO(cpu);
     memset(&perf_offsets, 0, sizeof(perf_offsets));
@@ -903,9 +903,9 @@ SIGAR_DECLARE(int) sigar_cpu_get(sigar_t *sigar, sigar_cpu_t *cpu)
 static int sigar_cpu_list_perflib_get(sigar_t *sigar,
                                       sigar_cpu_list_t *cpulist)
 {
-    int status, i, j;
+    int status, i, j, err;
     PERF_INSTANCE_DEFINITION *inst;
-    DWORD perf_offsets[PERF_IX_CPU_MAX], num, err;
+    DWORD perf_offsets[PERF_IX_CPU_MAX], num;
     int core_rollup = sigar_cpu_core_rollup(sigar);
 
     memset(&perf_offsets, 0, sizeof(perf_offsets));
@@ -1079,11 +1079,11 @@ SIGAR_DECLARE(int) sigar_loadavg_get(sigar_t *sigar,
 static int sigar_proc_list_get_perf(sigar_t *sigar,
                                     sigar_proc_list_t *proclist)
 {
-
+    int err;
     PERF_OBJECT_TYPE *object;
     PERF_INSTANCE_DEFINITION *inst;
     PERF_COUNTER_DEFINITION *counter;
-    DWORD i, err;
+    DWORD i;
     DWORD perf_offsets[PERF_IX_MAX];
 
     perf_offsets[PERF_IX_PID] = 0;
@@ -1392,10 +1392,11 @@ SIGAR_DECLARE(int) sigar_proc_state_get(sigar_t *sigar, sigar_pid_t pid,
 
 static int get_proc_info(sigar_t *sigar, sigar_pid_t pid)
 {
+    int err;
     PERF_OBJECT_TYPE *object;
     PERF_INSTANCE_DEFINITION *inst;
     PERF_COUNTER_DEFINITION *counter;
-    DWORD i, err;
+    DWORD i;
     DWORD perf_offsets[PERF_IX_MAX];
     sigar_win32_pinfo_t *pinfo = &sigar->pinfo;
     time_t timenow = time(NULL);
@@ -1943,7 +1944,7 @@ SIGAR_DECLARE(int) sigar_file_system_list_get(sigar_t *sigar,
 
 static PERF_INSTANCE_DEFINITION *get_disk_instance(sigar_t *sigar,
                                                    DWORD *perf_offsets,
-                                                   DWORD *num, DWORD *err)
+                                                   DWORD *num, int *err)
 {
     PERF_OBJECT_TYPE *object =
         get_perf_object(sigar, PERF_TITLE_DISK_KEY, err);
@@ -2013,7 +2014,8 @@ SIGAR_DECLARE(int) sigar_disk_usage_get(sigar_t *sigar,
                                         const char *dirname,
                                         sigar_disk_usage_t *disk)
 {
-    DWORD i, err;
+    int err;
+    DWORD i;
     PERF_OBJECT_TYPE *object =
         get_perf_object(sigar, PERF_TITLE_DISK_KEY, &err);
     PERF_INSTANCE_DEFINITION *inst;
