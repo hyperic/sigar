@@ -20,9 +20,14 @@
 #define _WIN32_DCOM
 
 #include <windows.h>
-#include <objbase.h>
-#include <comdef.h>
-#include <wbemidl.h>
+#include <unistd.h>
+#include <stdio.h>
+#include <ole2.h>
+#include <initguid.h>
+#include <wbemcli.h>
+#include <shobjidl.h>
+#include <tchar.h>
+#include <stdint.h>
 #include "sigar.h"
 
 #pragma comment(lib, "wbemuuid.lib")
@@ -31,213 +36,248 @@
 #define SIGAR_CMDLINE_MAX 4096<<2
 #endif
 
-class WMI {
+#ifndef _MSC_VER
+DEFINE_GUID(CLSID_WbemLocator, 0x4590f811, 0x1d3a, 0x11d0, 0x89, 0x1f, 0x00, 0xaa, 0x00, 0x4b, 0x2e, 0x24);
+template <> const GUID & __mingw_uuidof < IWbemLocator > () {
+	return IID_IWbemLocator;
+}
 
-  public:
-    WMI();
-    ~WMI();
-    HRESULT Open(LPCTSTR machine=NULL, LPCTSTR user=NULL, LPCTSTR pass=NULL);
-    void Close();
-    HRESULT GetProcStringProperty(DWORD pid, TCHAR *name, TCHAR *value, DWORD len);
-    HRESULT GetProcExecutablePath(DWORD pid, TCHAR *value);
-    HRESULT GetProcCommandLine(DWORD pid, TCHAR *value);
-    int GetLastError();
+template <> const GUID & __mingw_uuidof < IWbemLocator * >() {
+	return __mingw_uuidof < IWbemLocator > ();
+}
+#endif
 
-  private:
-    IWbemServices *wbem;
-    HRESULT result;
-    BSTR GetProcQuery(DWORD pid);
+struct wmi_handle {
+	static IWbemLocator *locator;
+	static IWbemServices *services;
 };
 
-WMI::WMI()
+int wmi_map_sigar_error(HRESULT hres)
 {
-    wbem = NULL;
-    result = S_OK;
-    CoInitializeEx(NULL, COINIT_MULTITHREADED);
+	switch (hres) {
+	case S_OK:
+		return ERROR_SUCCESS;
+	case WBEM_E_NOT_FOUND:
+		return ERROR_NOT_FOUND;
+	case WBEM_E_ACCESS_DENIED:
+		return ERROR_ACCESS_DENIED;
+	case WBEM_E_NOT_SUPPORTED:
+		return SIGAR_ENOTIMPL;
+	default:
+		return ERROR_INVALID_FUNCTION;
+	}
 }
 
-WMI::~WMI()
+int wmi_handle_close(struct wmi_handle *wmi)
 {
-    Close();
-    CoUninitialize();
+	if (wmi->services) {
+		wmi->services->Release();
+		wmi->services = NULL;
+	}
+
+	if (wmi->locator) {
+		wmi->locator->Release();
+		wmi->services = NULL;
+	}
 }
 
-/* XXX must be a better way to map HRESULT */
-int WMI::GetLastError()
+int wmi_handle_open(struct wmi_handle *wmi)
 {
-    switch (result) {
-      case S_OK:
-        return ERROR_SUCCESS;
-      case WBEM_E_NOT_FOUND:
-        return ERROR_NOT_FOUND;
-      case WBEM_E_ACCESS_DENIED:
-        return ERROR_ACCESS_DENIED;
-      case WBEM_E_NOT_SUPPORTED:
-        return SIGAR_ENOTIMPL;
-      default:
-        return ERROR_INVALID_FUNCTION;
-    }
+	memset(wmi, 0, sizeof(*wmi));
+
+	HRESULT hres;
+	wchar_t root[] = L"root\\CIMV2";
+
+	hres = CoInitializeEx(NULL, COINIT_MULTITHREADED);
+	if (FAILED(hres)) {
+		goto err;
+	}
+
+	hres = CoInitializeSecurity(NULL, -1, NULL, NULL, RPC_C_AUTHN_LEVEL_CONNECT,
+								RPC_C_IMP_LEVEL_IMPERSONATE, NULL, EOAC_NONE, 0);
+	if (FAILED(hres)) {
+		goto err;
+	}
+
+	hres = CoCreateInstance(CLSID_WbemLocator, NULL, CLSCTX_ALL, IID_PPV_ARGS(&wmi->locator));
+	if (FAILED(hres)) {
+		goto err;
+	}
+
+	hres = wmi->locator->ConnectServer(root, NULL, NULL, NULL,
+									   WBEM_FLAG_CONNECT_USE_MAX_WAIT, NULL, NULL, &wmi->services);
+	if (FAILED(hres)) {
+		goto err;
+	}
+
+	return 0;
+
+err:
+	wmi_handle_close(wmi);
+	return wmi_map_sigar_error(hres);
 }
 
-HRESULT WMI::Open(LPCTSTR machine, LPCTSTR user, LPCTSTR pass)
+HRESULT wmi_get_proc_string_property(struct wmi_handle * wmi, DWORD pid,
+									 TCHAR * name, TCHAR * value, DWORD len)
 {
-    IWbemLocator *locator;
-    wchar_t path[MAX_PATH];
+	IWbemClassObject *obj;
+	VARIANT var;
 
-    if (wbem) {
-        result = S_OK;
-        return result;
-    }
+	wchar_t query[56];
+	wsprintf(query, L"Win32_Process.Handle=%d", pid);
 
-    result =
-        CoInitializeSecurity(NULL,                        //Security Descriptor
-                             -1,                          //COM authentication
-                             NULL,                        //Authentication services
-                             NULL,                        //Reserved
-                             RPC_C_AUTHN_LEVEL_DEFAULT,   //Default authentication
-                             RPC_C_IMP_LEVEL_IMPERSONATE, //Default Impersonation
-                             NULL,                        //Authentication info
-                             EOAC_NONE,                   //Additional capabilities
-                             NULL);                       //Reserved
+	HRESULT result = wmi->services->GetObject(query, 0, 0, &obj, 0);
 
-    result = CoCreateInstance(CLSID_WbemLocator,
-                              NULL, /* IUnknown */
-                              CLSCTX_INPROC_SERVER,
-                              IID_IWbemLocator,
-                              (LPVOID *)&locator);
+	if (FAILED(result)) {
+		return result;
+	}
 
-    if (FAILED(result)) {
-        return result;
-    }
+	result = obj->Get(name, 0, &var, 0, 0);
 
-    if (machine == NULL) {
-        machine = L".";
-    }
+	if (SUCCEEDED(result)) {
+		if (var.vt == VT_NULL) {
+			result = E_INVALIDARG;
+		} else {
+			lstrcpyn(value, var.bstrVal, len);
+		}
+		VariantClear(&var);
+	}
 
-    wsprintf(path, L"\\\\%S\\ROOT\\CIMV2", machine);
+	obj->Release();
 
-    result = locator->ConnectServer(bstr_t(path), //Object path of WMI namespace
-                                    bstr_t(user), //User name. NULL = current user
-                                    bstr_t(pass), //User password. NULL = current
-                                    NULL,         //Locale. NULL indicates current
-                                    0,            //Security flags
-                                    NULL,         //Authority (e.g. Kerberos)
-                                    NULL,         //Context object
-                                    &wbem);       //pointer to IWbemServices proxy
-
-    locator->Release();
-
-    return result;
+	return result;
 }
 
-void WMI::Close()
+HRESULT wmi_get_proc_executable_path(struct wmi_handle * wmi, DWORD pid, TCHAR * value)
 {
-    if (wbem) {
-        wbem->Release();
-        wbem = NULL;
-        result = S_OK;
-    }
+	wchar_t prop[] = L"ExecutablePath";
+	return wmi_get_proc_string_property(wmi, pid, prop, value, MAX_PATH);
 }
 
-BSTR WMI::GetProcQuery(DWORD pid)
+HRESULT wmi_get_proc_command_line(struct wmi_handle * wmi, DWORD pid, TCHAR * value)
 {
-    wchar_t query[56];
-    wsprintf(query, L"Win32_Process.Handle=%d", pid);
-    return bstr_t(query);
+	wchar_t prop[] = L"CommandLine";
+	return wmi_get_proc_string_property(wmi, pid, prop, value, MAX_PATH);
 }
 
-HRESULT WMI::GetProcStringProperty(DWORD pid, TCHAR *name, TCHAR *value, DWORD len)
+IEnumWbemClassObject *wmi_query(struct wmi_handle * wmi, const wchar_t * query)
 {
-    IWbemClassObject *obj;
-    VARIANT var;
+	IEnumWbemClassObject *wmi_enum = NULL;
+	if (wmi) {
+		wchar_t lang[] = L"WQL";
+		wchar_t *query_cpy = wcsdup(query);
 
-    result = wbem->GetObject(GetProcQuery(pid), 0, 0, &obj, 0);
+		HRESULT hres =
+			wmi->services->ExecQuery(lang, query_cpy, WBEM_FLAG_FORWARD_ONLY, NULL, &wmi_enum);
 
-    if (FAILED(result)) {
-        return result;
-    }
-
-    result = obj->Get(name, 0, &var, 0, 0);
-
-    if (SUCCEEDED(result)) {
-        if (var.vt == VT_NULL) {
-            result = E_INVALIDARG;
-        }
-        else {
-            lstrcpyn(value, var.bstrVal, len);
-        }
-        VariantClear(&var);
-    }
-
-    obj->Release();
-
-    return result;
+		free(query_cpy);
+	}
+	return wmi_enum;
 }
 
-HRESULT WMI::GetProcExecutablePath(DWORD pid, TCHAR *value)
+int wmi_query_sum_u64(struct wmi_handle *wmi, const wchar_t * query, const wchar_t * attrib,
+					  uint64_t * sum, unsigned long *num_elems)
 {
-    return GetProcStringProperty(pid, L"ExecutablePath", value, MAX_PATH);
+	*sum = 0;
+	*num_elems = 0;
+
+	IEnumWbemClassObject *wmi_enum = wmi_query(wmi, query);
+	if (!wmi_enum) {
+		return -1;
+	}
+
+	wchar_t *attrib_cpy = wcsdup(attrib);
+
+	IWbemClassObject *wmi_obj = NULL;
+	HRESULT hres;
+	unsigned long curr_elem = 0;
+	while (((hres = wmi_enum->Next(WBEM_INFINITE, 1, &wmi_obj, &curr_elem)) != WBEM_S_FALSE)
+		   && !FAILED(hres)) {
+		(*num_elems)++;
+		VARIANT val;
+		VariantInit(&val);
+		if (SUCCEEDED(wmi_obj->Get(attrib_cpy, 0, &val, NULL, NULL))) {
+			if (val.vt == VT_BSTR) {
+				*sum += _wtoi(val.bstrVal);
+			} else {
+				*sum += val.intVal;
+			}
+		}
+		wmi_obj->Release();
+	}
+
+	free(attrib_cpy);
+	wmi_enum->Release();
+
+	return 0;
 }
 
-HRESULT WMI::GetProcCommandLine(DWORD pid, TCHAR *value)
+int wmi_query_sum_u32(struct wmi_handle *wmi, const wchar_t * query, const wchar_t * attrib,
+					  uint32_t * sum, unsigned long *num_elems)
 {
-    return GetProcStringProperty(pid, L"CommandLine", value, SIGAR_CMDLINE_MAX);
+	uint64_t sum64 = 0;
+	int rc = wmi_query_sum_u64(wmi, query, attrib, &sum64, num_elems);
+	*sum = sum64;
+	return rc;
 }
+
+int wmi_query_avg(struct wmi_handle *wmi, const wchar_t * query, const wchar_t * attrib, float *avg)
+{
+	uint64_t sum = 0;
+	unsigned long num_elems = 0;
+	int rc = wmi_query_sum_u64(wmi, query, attrib, &sum, &num_elems);
+	if (!rc && num_elems) {
+		*avg = sum / (double)(num_elems);
+	}
+	return rc;
+}
+
+extern "C" {
 
 /* in peb.c */
-extern "C" int sigar_parse_proc_args(sigar_t *sigar, WCHAR *buf,
-                                     sigar_proc_args_t *procargs);
+int sigar_parse_proc_args(sigar_t * sigar, WCHAR * buf, sigar_proc_args_t * procargs);
 
-extern "C" int sigar_proc_args_wmi_get(sigar_t *sigar, sigar_pid_t pid,
-                                       sigar_proc_args_t *procargs)
-{
-    int status;
-    TCHAR buf[SIGAR_CMDLINE_MAX];
-    WMI *wmi = new WMI();
+int sigar_proc_args_wmi_get(sigar_t * sigar, sigar_pid_t pid, sigar_proc_args_t * procargs) {
+	TCHAR buf[SIGAR_CMDLINE_MAX];
+	int status;
+	struct wmi_handle wmi;
+	if ((status = wmi_handle_open(&wmi))) {
+		return status;
+	}
 
-    if (FAILED(wmi->Open())) {
-        return wmi->GetLastError();
-    }
+	if ((status = wmi_get_proc_command_line(&wmi, pid, buf))) {
+		goto out;
+	} else {
+		status = sigar_parse_proc_args(sigar, buf, procargs);
+	}
 
-    if (FAILED(wmi->GetProcCommandLine(pid, buf))) {
-        status = wmi->GetLastError();
-    }
-    else {
-        status = sigar_parse_proc_args(sigar, buf, procargs);
-    }
-
-    wmi->Close();
-    delete wmi;
-
-    return status;
+out:
+	wmi_handle_close(&wmi);
+	return status;
 }
 
-extern "C" int sigar_proc_exe_wmi_get(sigar_t *sigar, sigar_pid_t pid,
-                                      sigar_proc_exe_t *procexe)
-{
-    int status;
-    TCHAR buf[MAX_PATH+1];
-    WMI *wmi = new WMI();
+int sigar_proc_exe_wmi_get(sigar_t * sigar, sigar_pid_t pid, sigar_proc_exe_t * procexe) {
+	TCHAR buf[MAX_PATH + 1];
+	int status;
+	struct wmi_handle wmi;
+	if ((status = wmi_handle_open(&wmi))) {
+		return status;
+	}
 
-    if (FAILED(wmi->Open())) {
-        return wmi->GetLastError();
-    }
+	procexe->name[0] = '\0';
 
-    procexe->name[0] = '\0';
+	if ((status = wmi_get_proc_executable_path(&wmi, pid, buf))) {
+		goto out;
+	} else {
+		status = SIGAR_OK;
+		/* SIGAR_W2A(buf, procexe->name, sizeof(procexe->name)); */
+		WideCharToMultiByte(CP_ACP, 0, buf, -1,
+			(LPSTR) procexe->name, sizeof(procexe->name), NULL, NULL);
+	}
 
-    if (FAILED(wmi->GetProcExecutablePath(pid, buf))) {
-        status = wmi->GetLastError();
-    }
-    else {
-        status = SIGAR_OK;
-        /* SIGAR_W2A(buf, procexe->name, sizeof(procexe->name)); */
-        WideCharToMultiByte(CP_ACP, 0, buf, -1,
-                            (LPSTR)procexe->name, sizeof(procexe->name),
-                            NULL, NULL);
-    }
-
-    wmi->Close();
-    delete wmi;
-
-    return status;
+out:
+	wmi_handle_close(&wmi);
+	return status;
 }
+
+}								//extern "C"
