@@ -27,7 +27,6 @@
 #include <wbemcli.h>
 #include <shobjidl.h>
 #include <tchar.h>
-#include <stdint.h>
 #include "sigar.h"
 
 #pragma comment(lib, "wbemuuid.lib")
@@ -46,10 +45,11 @@ template <> const GUID & __mingw_uuidof < IWbemLocator * >() {
 	return __mingw_uuidof < IWbemLocator > ();
 }
 #endif
+extern "C" {
 
 struct wmi_handle {
-	static IWbemLocator *locator;
-	static IWbemServices *services;
+	IWbemLocator *locator;
+	IWbemServices *services;
 };
 
 int wmi_map_sigar_error(HRESULT hres)
@@ -176,7 +176,7 @@ IEnumWbemClassObject *wmi_query(struct wmi_handle * wmi, const wchar_t * query)
 }
 
 int wmi_query_sum_u64(struct wmi_handle *wmi, const wchar_t * query, const wchar_t * attrib,
-					  uint64_t * sum, unsigned long *num_elems)
+					  sigar_uint64_t * sum, unsigned long *num_elems)
 {
 	*sum = 0;
 	*num_elems = 0;
@@ -212,18 +212,19 @@ int wmi_query_sum_u64(struct wmi_handle *wmi, const wchar_t * query, const wchar
 	return 0;
 }
 
-int wmi_query_sum_u32(struct wmi_handle *wmi, const wchar_t * query, const wchar_t * attrib,
-					  uint32_t * sum, unsigned long *num_elems)
+int wmi_query_sum_u32(struct wmi_handle *wmi, const wchar_t * query,
+		const wchar_t * attrib, sigar_uint32_t * sum, unsigned long *num_elems)
 {
-	uint64_t sum64 = 0;
+	sigar_uint64_t sum64 = 0;
 	int rc = wmi_query_sum_u64(wmi, query, attrib, &sum64, num_elems);
 	*sum = sum64;
 	return rc;
 }
 
-int wmi_query_avg(struct wmi_handle *wmi, const wchar_t * query, const wchar_t * attrib, float *avg)
+int wmi_query_avg(struct wmi_handle *wmi, const wchar_t * query,
+		const wchar_t * attrib, float *avg)
 {
-	uint64_t sum = 0;
+	sigar_uint64_t sum = 0;
 	unsigned long num_elems = 0;
 	int rc = wmi_query_sum_u64(wmi, query, attrib, &sum, &num_elems);
 	if (!rc && num_elems) {
@@ -232,12 +233,11 @@ int wmi_query_avg(struct wmi_handle *wmi, const wchar_t * query, const wchar_t *
 	return rc;
 }
 
-extern "C" {
-
 /* in peb.c */
 int sigar_parse_proc_args(sigar_t * sigar, WCHAR * buf, sigar_proc_args_t * procargs);
 
-int sigar_proc_args_wmi_get(sigar_t * sigar, sigar_pid_t pid, sigar_proc_args_t * procargs) {
+int sigar_proc_args_wmi_get(sigar_t * sigar, sigar_pid_t pid, sigar_proc_args_t * procargs)
+{
 	TCHAR buf[SIGAR_CMDLINE_MAX];
 	int status;
 	struct wmi_handle wmi;
@@ -256,7 +256,8 @@ out:
 	return status;
 }
 
-int sigar_proc_exe_wmi_get(sigar_t * sigar, sigar_pid_t pid, sigar_proc_exe_t * procexe) {
+int sigar_proc_exe_wmi_get(sigar_t * sigar, sigar_pid_t pid, sigar_proc_exe_t * procexe)
+{
 	TCHAR buf[MAX_PATH + 1];
 	int status;
 	struct wmi_handle wmi;
@@ -274,6 +275,26 @@ int sigar_proc_exe_wmi_get(sigar_t * sigar, sigar_pid_t pid, sigar_proc_exe_t * 
 		WideCharToMultiByte(CP_ACP, 0, buf, -1,
 			(LPSTR) procexe->name, sizeof(procexe->name), NULL, NULL);
 	}
+
+out:
+	wmi_handle_close(&wmi);
+	return status;
+}
+
+int sigar_processor_queue_get(sigar_t *sigar, sigar_processor_queue_t *queue_info)
+{
+	memset(queue_info, 0, sizeof(*queue_info));
+
+	int status;
+	struct wmi_handle wmi;
+	if ((status = wmi_handle_open(&wmi))) {
+		return status;
+	}
+
+	unsigned long num_elems;
+	status = wmi_query_sum_u32(&wmi,
+		L"SELECT ProcessorQueueLength FROM Win32_PerfFormattedData_PerfOS_System",
+		L"ProcessorQueueLength", &queue_info->processor_queue, &num_elems);
 
 out:
 	wmi_handle_close(&wmi);

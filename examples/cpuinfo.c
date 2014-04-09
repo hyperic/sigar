@@ -15,6 +15,7 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "sigar.h"
 
@@ -45,6 +46,15 @@ int main(int argc, char **argv) {
     }
 
     sigar_cpu_list_destroy(sigar, &cpulist);
+
+	sigar_processor_queue_t proc_queue;
+	status = sigar_processor_queue_get(sigar, &proc_queue);
+    if (status != SIGAR_OK) {
+        printf("processor_queue error: %d (%s)\n",
+               status, sigar_strerror(sigar, status));
+        exit(1);
+    }
+	printf("Processor Queue Length: %u\n", proc_queue.processor_queue);
 
     sigar_close(sigar);
 

@@ -663,6 +663,12 @@ int sigar_who_list_get(sigar_t *sigar,
     return SIGAR_OK;
 }
 
+int sigar_processor_queue_get(sigar_t *sigar,
+                              sigar_processor_queue_t *queue_info)
+{
+    return SIGAR_ENOTIMPL;
+}
+
 int sigar_loadavg_get(sigar_t *sigar,
                       sigar_loadavg_t *loadavg)
 {
