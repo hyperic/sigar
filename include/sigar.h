@@ -223,17 +223,11 @@ SIGAR_DECLARE(int) sigar_uptime_get(sigar_t *sigar,
 
 typedef struct {
     double loadavg[3];
+    sigar_uint32_t processor_queue;
 } sigar_loadavg_t;
 
 SIGAR_DECLARE(int) sigar_loadavg_get(sigar_t *sigar,
                                      sigar_loadavg_t *loadavg);
-
-typedef struct {
-	sigar_uint32_t processor_queue;
-} sigar_processor_queue_t;
-
-SIGAR_DECLARE(int) sigar_processor_queue_get(sigar_t *sigar,
-                                             sigar_processor_queue_t *queue_info);
 
 typedef struct {
     unsigned long number;

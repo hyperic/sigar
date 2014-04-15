@@ -23,6 +23,7 @@ int main(int argc, char **argv) {
     int status, i;
     sigar_t *sigar;
     sigar_cpu_list_t cpulist;
+    sigar_loadavg_t  loadavg;
 
     sigar_open(&sigar);
 
@@ -46,15 +47,16 @@ int main(int argc, char **argv) {
     }
 
     sigar_cpu_list_destroy(sigar, &cpulist);
+    
+    status = sigar_loadavg_get(sigar, &loadavg);
 
-	sigar_processor_queue_t proc_queue;
-	status = sigar_processor_queue_get(sigar, &proc_queue);
     if (status != SIGAR_OK) {
-        printf("processor_queue error: %d (%s)\n",
+        printf("sigar_loadavg_get: %d (%s)\n",
                status, sigar_strerror(sigar, status));
         exit(1);
     }
-	printf("Processor Queue Length: %u\n", proc_queue.processor_queue);
+
+    printf("Processor Queue Length: %u\n", loadavg.processor_queue);
 
     sigar_close(sigar);
 

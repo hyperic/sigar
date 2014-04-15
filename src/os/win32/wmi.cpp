@@ -28,6 +28,12 @@
 #include <shobjidl.h>
 #include <tchar.h>
 #include "sigar.h"
+#include "sigar_private.h"
+#include "sigar_pdh.h"
+#include "sigar_os.h"
+#include "sigar_rma.h"
+#include "sigar_util.h"
+#include "sigar_format.h"
 
 #pragma comment(lib, "wbemuuid.lib")
 
@@ -48,14 +54,6 @@ template <> const GUID & __mingw_uuidof < IWbemLocator * >() {
 #endif
 extern "C" {
 
-struct wmi_handle {
-	int           initialized;
-	IWbemLocator  *locator;
-	IWbemServices *services;
-};
-
-struct wmi_handle gWMI_handle;
-
 int wmi_map_sigar_error(HRESULT hres)
 {
 	switch (hres) {
@@ -72,28 +70,29 @@ int wmi_map_sigar_error(HRESULT hres)
 	}
 }
 
-int wmi_handle_close(struct wmi_handle *wmi)
+void wmi_handle_close(sigar_wmi_handle_t *wmi_handle)
 {
-	if (wmi->services) {
-		wmi->services->Release();
-		wmi->services = NULL;
+	if(wmi_handle == NULL)
+		return;
+
+	if (wmi_handle->services) {
+		wmi_handle->services->Release();
+		wmi_handle->services = NULL;
 	}
 
-	if (wmi->locator) {
-		wmi->locator->Release();
-		wmi->services = NULL;
+	if (wmi_handle->locator) {
+		wmi_handle->locator->Release();
+		wmi_handle->services = NULL;
 	}
 }
 
-struct wmi_handle * wmi_handle_open(int *error)
+sigar_wmi_handle_t * wmi_handle_open(int *error)
 {
 	*error = SIGAR_OK;
-	if(gWMI_handle.initialized)
-	{
-		return &gWMI_handle;
-	}
 
-	memset(&gWMI_handle, 0, sizeof(gWMI_handle));
+	sigar_wmi_handle_t *handle;
+
+	handle = (sigar_wmi_handle_t *)calloc(1, sizeof (*handle));
 
 	HRESULT hres;
 	wchar_t root[] = L"root\\CIMV2";
@@ -104,42 +103,42 @@ struct wmi_handle * wmi_handle_open(int *error)
 	}
 
 	hres = CoInitializeSecurity(NULL, -1, NULL, NULL, RPC_C_AUTHN_LEVEL_CONNECT,
-								RPC_C_IMP_LEVEL_IMPERSONATE, NULL, EOAC_NONE, 0);
+                                    RPC_C_IMP_LEVEL_IMPERSONATE, NULL, EOAC_NONE, 0);
 	if (FAILED(hres)) {
 		goto err;
 	}
 
-	hres = CoCreateInstance(CLSID_WbemLocator, NULL, CLSCTX_ALL, IID_PPV_ARGS(&gWMI_handle.locator));
+	hres = CoCreateInstance(CLSID_WbemLocator, NULL, CLSCTX_ALL, IID_PPV_ARGS(&handle->locator));
 	if (FAILED(hres)) {
 		goto err;
 	}
 
-	hres = gWMI_handle.locator->ConnectServer(root, NULL, NULL, NULL,
-									   WBEM_FLAG_CONNECT_USE_MAX_WAIT, NULL, NULL, &gWMI_handle.services);
+	hres = handle->locator->ConnectServer(root, NULL, NULL, NULL,
+                                              WBEM_FLAG_CONNECT_USE_MAX_WAIT, NULL, NULL, &handle->services);
 	if (FAILED(hres)) {
 		goto err;
 	}
 
-	gWMI_handle.initialized = 1;
-
-	return &gWMI_handle;
-
+	return handle;
 err:
-	wmi_handle_close(&gWMI_handle);
+	wmi_handle_close(handle);
 	*error = wmi_map_sigar_error(hres);
 	return NULL;
 }
 
-HRESULT wmi_get_proc_string_property(struct wmi_handle * wmi, DWORD pid,
-									 TCHAR * name, TCHAR * value, DWORD len)
+HRESULT wmi_get_proc_string_property(sigar_t *sigar, DWORD pid, TCHAR * name, TCHAR * value, DWORD len)
 {
 	IWbemClassObject *obj;
 	VARIANT var;
+	HRESULT result; 
+
+	if(sigar->wmi_handle == NULL)
+            return (E_INVALIDARG);
 
 	wchar_t query[56];
 	wsprintf(query, L"Win32_Process.Handle=%d", pid);
 
-	HRESULT result = wmi->services->GetObject(query, 0, 0, &obj, 0);
+        result = sigar->wmi_handle->services->GetObject(query, 0, 0, &obj, 0);
 
 	if (FAILED(result)) {
 		return result;
@@ -161,40 +160,40 @@ HRESULT wmi_get_proc_string_property(struct wmi_handle * wmi, DWORD pid,
 	return result;
 }
 
-HRESULT wmi_get_proc_executable_path(struct wmi_handle * wmi, DWORD pid, TCHAR * value)
+HRESULT wmi_get_proc_executable_path(sigar_t *sigar, DWORD pid, TCHAR * value)
 {
 	wchar_t prop[] = L"ExecutablePath";
-	return wmi_get_proc_string_property(wmi, pid, prop, value, MAX_PATH);
+	return wmi_get_proc_string_property(sigar, pid, prop, value, MAX_PATH);
 }
 
-HRESULT wmi_get_proc_command_line(struct wmi_handle * wmi, DWORD pid, TCHAR * value)
+HRESULT wmi_get_proc_command_line(sigar_t *sigar, DWORD pid, TCHAR * value)
 {
 	wchar_t prop[] = L"CommandLine";
-	return wmi_get_proc_string_property(wmi, pid, prop, value, MAX_PATH);
+	return wmi_get_proc_string_property(sigar, pid, prop, value, MAX_PATH);
 }
 
-IEnumWbemClassObject *wmi_query(struct wmi_handle * wmi, const wchar_t * query)
+IEnumWbemClassObject *wmi_query(sigar_t *sigar, const wchar_t * query)
 {
 	IEnumWbemClassObject *wmi_enum = NULL;
-	if (wmi) {
+	if (sigar->wmi_handle) {
 		wchar_t lang[] = L"WQL";
 		wchar_t *query_cpy = wcsdup(query);
 
 		HRESULT hres =
-			wmi->services->ExecQuery(lang, query_cpy, WBEM_FLAG_FORWARD_ONLY, NULL, &wmi_enum);
+			sigar->wmi_handle->services->ExecQuery(lang, query_cpy, WBEM_FLAG_FORWARD_ONLY, NULL, &wmi_enum);
 
 		free(query_cpy);
 	}
 	return wmi_enum;
 }
 
-int wmi_query_sum_u64(struct wmi_handle *wmi, const wchar_t * query, const wchar_t * attrib,
+int wmi_query_sum_u64(sigar_t  *sigar, const wchar_t * query, const wchar_t * attrib,
 					  sigar_uint64_t * sum, unsigned long *num_elems)
 {
 	*sum = 0;
 	*num_elems = 0;
 
-	IEnumWbemClassObject *wmi_enum = wmi_query(wmi, query);
+	IEnumWbemClassObject *wmi_enum = wmi_query(sigar, query);
 	if (!wmi_enum) {
 		return -1;
 	}
@@ -225,21 +224,21 @@ int wmi_query_sum_u64(struct wmi_handle *wmi, const wchar_t * query, const wchar
 	return 0;
 }
 
-int wmi_query_sum_u32(struct wmi_handle *wmi, const wchar_t * query,
+int wmi_query_sum_u32(sigar_t *sigar, const wchar_t * query,
 		const wchar_t * attrib, sigar_uint32_t * sum, unsigned long *num_elems)
 {
 	sigar_uint64_t sum64 = 0;
-	int rc = wmi_query_sum_u64(wmi, query, attrib, &sum64, num_elems);
+	int rc = wmi_query_sum_u64(sigar, query, attrib, &sum64, num_elems);
 	*sum = sum64;
 	return rc;
 }
 
-int wmi_query_avg(struct wmi_handle *wmi, const wchar_t * query,
+int wmi_query_avg(sigar_t *sigar, const wchar_t * query,
 		const wchar_t * attrib, float *avg)
 {
 	sigar_uint64_t sum = 0;
 	unsigned long num_elems = 0;
-	int rc = wmi_query_sum_u64(wmi, query, attrib, &sum, &num_elems);
+	int rc = wmi_query_sum_u64(sigar, query, attrib, &sum, &num_elems);
 	if (!rc && num_elems) {
 		*avg = sum / (double)(num_elems);
 	}
@@ -253,12 +252,8 @@ int sigar_proc_args_wmi_get(sigar_t * sigar, sigar_pid_t pid, sigar_proc_args_t 
 {
 	TCHAR buf[SIGAR_CMDLINE_MAX];
 	int status;
-	struct wmi_handle *wmi;
-	if ((wmi = wmi_handle_open(&status)) == NULL) {
-		return status;
-	}
 
-	if ((status = wmi_get_proc_command_line(wmi, pid, buf))) {
+	if ((status = wmi_get_proc_command_line(sigar, pid, buf))) {
 		goto out;
 	} else {
 		status = sigar_parse_proc_args(sigar, buf, procargs);
@@ -272,14 +267,10 @@ int sigar_proc_exe_wmi_get(sigar_t * sigar, sigar_pid_t pid, sigar_proc_exe_t * 
 {
 	TCHAR buf[MAX_PATH + 1];
 	int status;
-	struct wmi_handle *wmi;
-	if ((wmi = wmi_handle_open(&status)) == NULL) {
-		return status;
-	}
 
 	procexe->name[0] = '\0';
 
-	if ((status = wmi_get_proc_executable_path(wmi, pid, buf))) {
+	if ((status = wmi_get_proc_executable_path(sigar, pid, buf))) {
 		goto out;
 	} else {
 		status = SIGAR_OK;
@@ -291,24 +282,4 @@ int sigar_proc_exe_wmi_get(sigar_t * sigar, sigar_pid_t pid, sigar_proc_exe_t * 
 out:
 	return status;
 }
-
-int sigar_processor_queue_get(sigar_t *sigar, sigar_processor_queue_t *queue_info)
-{
-	memset(queue_info, 0, sizeof(*queue_info));
-
-	int status;
-	struct wmi_handle *wmi;
-	if ((wmi = wmi_handle_open(&status)) == NULL) {
-		return status;
-	}
-
-	unsigned long num_elems;
-	status = wmi_query_sum_u32(wmi,
-		L"SELECT ProcessorQueueLength FROM Win32_PerfFormattedData_PerfOS_System",
-		L"ProcessorQueueLength", &queue_info->processor_queue, &num_elems);
-
-out:
-	return status;
-}
-
 }								//extern "C"
