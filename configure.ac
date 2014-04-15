@@ -17,6 +17,7 @@ AC_SUBST(VERSION_MAINT)
 AC_SUBST(VERSION_BUILD)
 
 AC_PROG_CC
+AC_PROG_CXX
 AC_PROG_LN_S
 AC_PROG_INSTALL
 AC_PROG_MAKE_SET
@@ -66,17 +67,24 @@ case $host_os in
      AC_DEFINE(SOLARIS,[],[running on Solaris])
      SRC_OS="solaris"
      AC_DEFINE(SIGAR_TEST_OS_SOLARIS, [1], [for the tests])
-     SIGAR_LIBS="-lkstat -lsocket"
+     SIGAR_LIBS="-lkstat -lsocket -lnsl"
+     ;;
+     *mingw*)
+     SRC_OS="win32"
+     AC_DEFINE(SIGAR_TEST_OS_WIN32, [1], [for the tests])
+     SIGAR_LIBS="-lws2_32 -liphlpapi -lnetapi32 -lversion -lole32 -loleaut32"
      ;;
      *)
      ac_system="unknown"
 esac
 AC_MSG_RESULT([$SRC_OS])
 
-AC_CHECK_HEADERS(utmp.h utmpx.h libproc.h valgrind/valgrind.h)
+AC_CHECK_HEADERS(utmp.h utmpx.h libproc.h valgrind/valgrind.h libdlpi.h)
 if test $ac_cv_header_libproc_h = yes; then
         AC_DEFINE(DARWIN_HAS_LIBPROC_H, [1], [sigar named them DARWIN_HAS_... instead of HAVE_])
 fi
+
+AC_SEARCH_LIBS(dlpi_open, dlpi)
 
 INCLUDES="-I\$(top_srcdir)/include -I\$(top_srcdir)/src/os/$SRC_OS $SIGAR_INCLUDES"
 
@@ -109,33 +117,32 @@ AS_IF([test "x$with_valgrind" != xno],
 AM_CONDITIONAL(USE_VALGRIND, test "x$VALGRIND" != x)
 
 dnl Check for lua
-AC_MSG_CHECKING(if with lua)
 AC_ARG_WITH(lua, AC_HELP_STRING([--with-lua],[lua]),
 [WITH_LUA=$withval],[WITH_LUA=no])
-
+AC_MSG_CHECKING(if with lua)
+AS_IF([ test "x$WITH_LUA" != "xno" ],
+      [ AC_MSG_ERROR([Building with LUA is disabled])
 if test "$WITH_LUA" != "no"; then
- AC_MSG_RESULT($WITH_LUA)
  # try pkgconfig
  if test "$WITH_LUA" = "yes"; then
     LUAPC=lua
   else
     LUAPC=$WITH_LUA
   fi
-
- PKG_CHECK_MODULES(LUA, $LUAPC >= 5.1, [
-   AC_DEFINE([HAVE_LUA], [1], [liblua])
-   AC_DEFINE([HAVE_LUA_H], [1], [lua.h])
- ],[
-   PKG_CHECK_MODULES(LUA, lua5.1 >= 5.1, [
-     AC_DEFINE([HAVE_LUA], [1], [liblua])
-     AC_DEFINE([HAVE_LUA_H], [1], [lua.h])
-   ],[WITH_LUA=no])
- ])
-
- AC_SUBST(LUA_CFLAGS)
- AC_SUBST(LUA_LIBS)
+# PKG_CHECK_MODULES(LUA, $LUAPC >= 5.1, [
+#   AC_DEFINE([HAVE_LUA], [1], [liblua])
+#   AC_DEFINE([HAVE_LUA_H], [1], [lua.h])
+# ],[
+#   PKG_CHECK_MODULES(LUA, lua5.1 >= 5.1, [
+#     AC_DEFINE([HAVE_LUA], [1], [liblua])
+#     AC_DEFINE([HAVE_LUA_H], [1], [lua.h])
+#   ],[WITH_LUA=no])
+# ])
 fi
-
+])
+AC_MSG_RESULT($WITH_LUA)
+AC_SUBST(LUA_CFLAGS)
+AC_SUBST(LUA_LIBS)
 AM_CONDITIONAL([BUILD_LUA],[test "$WITH_LUA" != "no"])
 
 AC_CONFIG_FILES([

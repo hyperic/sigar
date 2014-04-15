@@ -15,6 +15,7 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "sigar.h"
 
@@ -22,6 +23,7 @@ int main(int argc, char **argv) {
     int status, i;
     sigar_t *sigar;
     sigar_cpu_list_t cpulist;
+    sigar_loadavg_t  loadavg;
 
     sigar_open(&sigar);
 
@@ -33,12 +35,28 @@ int main(int argc, char **argv) {
         exit(1);
     }
 
+    printf("Number of CPUs: %d\n", (unsigned)cpulist.number);
+
     for (i=0; i<cpulist.number; i++) {
         sigar_cpu_t cpu = cpulist.data[i];
+        printf("CPU %d: User=" SIGAR_F_U64 " Sys=" SIGAR_F_U64
+               " Nice=" SIGAR_F_U64 " Idle=" SIGAR_F_U64 " Total="
+               SIGAR_F_U64 "\n", i, cpu.user, cpu.sys, cpu.nice, cpu.idle,
+               cpu.total);
         /*...*/
     }
 
     sigar_cpu_list_destroy(sigar, &cpulist);
+    
+    status = sigar_loadavg_get(sigar, &loadavg);
+
+    if (status != SIGAR_OK) {
+        printf("sigar_loadavg_get: %d (%s)\n",
+               status, sigar_strerror(sigar, status));
+        exit(1);
+    }
+
+    printf("Processor Queue Length: %u\n", loadavg.processor_queue);
 
     sigar_close(sigar);
 

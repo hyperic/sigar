@@ -72,6 +72,8 @@ SIGAR_DECLARE(void) sigar_log_impl_set(sigar_t *sigar, void *data,
 SIGAR_DECLARE(void) sigar_log_impl_file(sigar_t *sigar, void *data,
                                         int level, char *message);
 
+SIGAR_DECLARE(const char *) sigar_log_level_string_get(sigar_t *sigar);
+
 SIGAR_DECLARE(int) sigar_log_level_get(sigar_t *sigar);
 
 SIGAR_DECLARE(void) sigar_log_level_set(sigar_t *sigar, int level);

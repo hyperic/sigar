@@ -1474,6 +1474,33 @@ int sigar_resource_limit_get(sigar_t *sigar,
 }
 #endif
 
+#ifdef HAVE_LIBDLPI_H
+#include <libdlpi.h>
+
+static void hwaddr_libdlpi_lookup(sigar_t *sigar, sigar_net_interface_config_t *ifconfig)
+{
+    dlpi_handle_t handle;
+    dlpi_info_t linkinfo;
+    uchar_t addr[DLPI_PHYSADDR_MAX];
+    uint_t alen = sizeof(addr);
+
+    if (dlpi_open(ifconfig->name, &handle, 0) != DLPI_SUCCESS) {
+        return;
+    }
+
+    if (dlpi_get_physaddr(handle, DL_CURR_PHYS_ADDR, addr, &alen) == DLPI_SUCCESS &&
+        dlpi_info(handle, &linkinfo, 0) == DLPI_SUCCESS) {
+        if (alen < sizeof(ifconfig->hwaddr.addr.mac)) {
+            sigar_net_address_mac_set(ifconfig->hwaddr, addr, alen);
+            SIGAR_SSTRCPY(ifconfig->type, dlpi_mactype(linkinfo.di_mactype));
+        }
+    }
+
+    dlpi_close(handle);
+}
+#endif
+
+
 #if !defined(WIN32) && !defined(NETWARE) && !defined(DARWIN) && \
     !defined(__FreeBSD__) && !defined(__OpenBSD__) && !defined(__NetBSD__)
 
@@ -1731,7 +1758,9 @@ int sigar_net_interface_config_get(sigar_t *sigar, const char *name,
                                   ifr_s_addr(ifr));
         }
 
-#if defined(SIOCGIFHWADDR)
+#if defined(HAVE_LIBDLPI_H)
+        hwaddr_libdlpi_lookup(sigar, ifconfig);
+#elif defined(SIOCGIFHWADDR)
         if (!ioctl(sock, SIOCGIFHWADDR, &ifr)) {
             get_interface_type(ifconfig,
                                ifr.ifr_hwaddr.sa_family);

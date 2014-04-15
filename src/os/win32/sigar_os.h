@@ -34,13 +34,15 @@
 #endif
 #else
 /* Cross compiling */
+#ifndef _WIN32_WINNT
 #define _WIN32_WINNT 0x0501
 #endif
+#endif
 
+#include <winsock2.h>
 #include <windows.h>
 #include <winreg.h>
 #include <winperf.h>
-#include <winsock2.h>
 #include <ws2tcpip.h>
 #include <stddef.h>
 #include <sys/types.h>
@@ -48,7 +50,9 @@
 #include <stdio.h>
 #include <errno.h>
 #include <tlhelp32.h>
+#include <wbemcli.h>
 
+#include "sigar_rma.h"
 #include "sigar_util.h"
 
 #ifdef MSVC
@@ -570,6 +574,13 @@ typedef struct {
     sigar_dll_func_t end;
 } sigar_mpr_t;
 
+
+typedef struct wmi_handle {
+    int           initialized;
+    IWbemLocator  *locator;
+    IWbemServices *services;
+} sigar_wmi_handle_t;
+
 struct sigar_t {
     SIGAR_T_BASE;
     char *machine;
@@ -578,6 +589,7 @@ struct sigar_t {
     HKEY handle;
     char *perfbuf;
     DWORD perfbuf_size;
+    sigar_wmi_handle_t *wmi_handle;
     sigar_wtsapi_t wtsapi;
     sigar_iphlpapi_t iphlpapi;
     sigar_advapi_t advapi;
@@ -587,6 +599,7 @@ struct sigar_t {
     sigar_kernel_t kernel;
     sigar_mpr_t mpr;
     sigar_win32_pinfo_t pinfo;
+    sigar_rma_stat_handle_t *rma_process_queue;
     sigar_cache_t *netif_adapters;
     sigar_cache_t *netif_mib_rows;
     sigar_cache_t *netif_addr_rows;

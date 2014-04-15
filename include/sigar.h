@@ -223,6 +223,7 @@ SIGAR_DECLARE(int) sigar_uptime_get(sigar_t *sigar,
 
 typedef struct {
     double loadavg[3];
+    sigar_uint32_t processor_queue;
 } sigar_loadavg_t;
 
 SIGAR_DECLARE(int) sigar_loadavg_get(sigar_t *sigar,

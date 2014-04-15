@@ -753,7 +753,7 @@ sigar_getline_setwidth(int w)
 }
 
 SIGAR_DECLARE(void)
-sigar_getline_windowchanged()
+sigar_getline_windowchanged(void)
 {
 #ifdef TIOCGWINSZ
    if (sigar_isatty(0)) {
@@ -1008,7 +1008,7 @@ sigar_getlinem(int mode, char *prompt)
 }
 
 SIGAR_DECLARE(int)
-sigar_getline_eof()
+sigar_getline_eof(void)
 {
    return gl_eof;
 }
