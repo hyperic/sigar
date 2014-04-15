@@ -37,8 +37,8 @@ typedef struct {
 	int		current_pos;	/* Current index location.                */
 } sigar_rma_stat_handle_t;
 
-sigar_rma_stat_handle_t *sigar_rma_init(int sample_rate_secs, int max_average_time);
-void		sigar_rma_add_sample(sigar_rma_stat_handle_t * rma, float sample);
-float		sigar_rma_get_average(sigar_rma_stat_handle_t * rma, int rate);
+sigar_rma_stat_handle_t *sigar_rma_init(sigar_t *sigar, int sample_rate_secs, int max_average_time);
+void		sigar_rma_add_sample(sigar_t *sigar, sigar_rma_stat_handle_t * rma, float sample);
+float		sigar_rma_get_average(sigar_t *sigar, sigar_rma_stat_handle_t * rma, int rate);
 
 #endif				/* SIGAR_RMA_H */

@@ -12,11 +12,31 @@
  * under the License.
  */
 
+#include <stdio.h>
+#include <stdlib.h>
+#include "sigar.h"
+#include "sigar_log.h"
 #include "sigar_rma.h"
 
 sigar_rma_stat_handle_t *
-sigar_rma_init(int sample_rate_secs, int max_average_time)
+sigar_rma_init(sigar_t *sigar, int sample_rate_secs, int max_average_time)
 {
+        if(sample_rate_secs <= 0)
+        {
+            sigar_log_printf(sigar, SIGAR_LOG_ERROR, \
+                     "sigar_rma_init: invalid sample_rate_secs : %d", \
+                     sample_rate_secs);
+            return NULL;
+        }
+
+        if(max_average_time <= 0)
+        {
+            sigar_log_printf(sigar, SIGAR_LOG_ERROR, \
+                     "sigar_rma_init: invalid max_average_time : %d", \
+                     sample_rate_secs);
+            return NULL;
+        }
+
 	sigar_rma_stat_handle_t *rma;
 	rma = calloc(1, sizeof(*rma));
 
@@ -33,8 +53,15 @@ sigar_rma_init(int sample_rate_secs, int max_average_time)
 }
 
 void 
-sigar_rma_add_sample(sigar_rma_stat_handle_t * rma, float sample)
+sigar_rma_add_sample(sigar_t *sigar, sigar_rma_stat_handle_t * rma, float sample)
 {
+        if(rma == NULL)
+        {
+            sigar_log_printf(sigar, SIGAR_LOG_ERROR, \
+                     "sigar_rma_add_sample: NULL sigar_rma_stat_handle_t");
+            return;
+        }
+
 	rma->values[rma->current_pos++] = sample;
 	if (rma->current_pos == rma->element_count) {
 		rma->have_wrapped = true;
@@ -43,12 +70,29 @@ sigar_rma_add_sample(sigar_rma_stat_handle_t * rma, float sample)
 }
 
 float 
-sigar_rma_get_average(sigar_rma_stat_handle_t * rma, int rate)
+sigar_rma_get_average(sigar_t *sigar, sigar_rma_stat_handle_t * rma, int rate)
 {
 	float		avg = 0;
 	int		pos;
 	int		backup_size = rate / rma->sample_rate_secs;
 	int		count;
+
+        if(rma == NULL)
+        {
+            sigar_log_printf(sigar, SIGAR_LOG_ERROR, \
+                     "sigar_rma_get_average: NULL sigar_rma_stat_handle_t");
+            return 0.0;
+        }
+
+        /* Safety check to avoid divide by 0. */
+
+        if(backup_size == 0)
+        {
+            sigar_log_printf(sigar, SIGAR_LOG_ERROR, \
+                     "sigar_rma_get_average: Computed 0 backup for rate : %d and sample size %d",
+                     rate, rma->sample_rate_secs);
+            return 0.0;
+        }
 
 	/*
 	 * * To compute the average, we first compute the number of samples

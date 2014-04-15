@@ -1114,18 +1114,12 @@ SIGAR_DECLARE(int) sigar_loadavg_get(sigar_t *sigar,
      if (status == SIGAR_OK)
      {
 	if(sigar->rma_process_queue == NULL)
-		sigar->rma_process_queue = sigar_rma_init(1, SIGAR_RMA_RATE_15_MIN);
-	sigar_rma_add_sample(sigar->rma_process_queue, p_queue);
+		sigar->rma_process_queue = sigar_rma_init(sigar, 1, SIGAR_RMA_RATE_15_MIN);
+	sigar_rma_add_sample(sigar, sigar->rma_process_queue, p_queue);
         loadavg->processor_queue = p_queue;
-        loadavg->loadavg[0] = sigar_rma_get_average(sigar->rma_process_queue, SIGAR_RMA_RATE_1_MIN);
-        loadavg->loadavg[1] = sigar_rma_get_average(sigar->rma_process_queue, SIGAR_RMA_RATE_5_MIN);
-	loadavg->loadavg[2] = sigar_rma_get_average(sigar->rma_process_queue, SIGAR_RMA_RATE_15_MIN);
-
-	printf("Queue : %d , avg %f/%f/%f\n", 
-		loadavg->processor_queue,
-		loadavg->loadavg[0],
-		loadavg->loadavg[1],
-		loadavg->loadavg[2]);
+        loadavg->loadavg[0] = sigar_rma_get_average(sigar, sigar->rma_process_queue, SIGAR_RMA_RATE_1_MIN);
+        loadavg->loadavg[1] = sigar_rma_get_average(sigar, sigar->rma_process_queue, SIGAR_RMA_RATE_5_MIN);
+	loadavg->loadavg[2] = sigar_rma_get_average(sigar, sigar->rma_process_queue, SIGAR_RMA_RATE_15_MIN);
  	return SIGAR_OK;
      }
  
