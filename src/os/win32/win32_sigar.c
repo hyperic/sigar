@@ -20,6 +20,7 @@
 #include "sigar_private.h"
 #include "sigar_pdh.h"
 #include "sigar_os.h"
+#include "sigar_rma.h"
 #include "sigar_util.h"
 #include "sigar_format.h"
 #include <shellapi.h>
@@ -557,6 +558,7 @@ int sigar_os_open(sigar_t **sigar_ptr)
     HINSTANCE h;
     OSVERSIONINFO version;
     int i;
+    int wmi_status;
     sigar_t *sigar;
 
     *sigar_ptr = sigar = malloc(sizeof(*sigar));
@@ -619,6 +621,16 @@ int sigar_os_open(sigar_t **sigar_ptr)
 
     /* increase process visibility */
     sigar_enable_privilege(SE_DEBUG_NAME);
+
+    /* Open our WMI handle. */
+
+    sigar->wmi_handle = (sigar_wmi_handle_t *)wmi_handle_open(&wmi_status);
+
+    if(wmi_status != 0)
+    {
+        /* TODO What shall we do if WMI open fails?  Retry every call? */
+        sigar_log_printf(sigar, SIGAR_LOG_WARN, "Unable to create WMI handle");
+    }
 
     return result;
 }
@@ -1091,7 +1103,27 @@ SIGAR_DECLARE(int) sigar_uptime_get(sigar_t *sigar,
 SIGAR_DECLARE(int) sigar_loadavg_get(sigar_t *sigar,
                                      sigar_loadavg_t *loadavg)
 {
-    return SIGAR_ENOTIMPL;
+     sigar_uint32_t p_queue = 0;
+     int status;
+
+     unsigned long num_elems;
+     status = wmi_query_sum_u32(sigar,
+                L"SELECT ProcessorQueueLength FROM Win32_PerfFormattedData_PerfOS_System",
+                L"ProcessorQueueLength", &p_queue, &num_elems);
+
+     if (status == SIGAR_OK)
+     {
+	if(sigar->rma_process_queue == NULL)
+		sigar->rma_process_queue = sigar_rma_init(sigar, 1, SIGAR_RMA_RATE_15_MIN);
+	sigar_rma_add_sample(sigar, sigar->rma_process_queue, p_queue);
+        loadavg->processor_queue = p_queue;
+        loadavg->loadavg[0] = sigar_rma_get_average(sigar, sigar->rma_process_queue, SIGAR_RMA_RATE_1_MIN);
+        loadavg->loadavg[1] = sigar_rma_get_average(sigar, sigar->rma_process_queue, SIGAR_RMA_RATE_5_MIN);
+	loadavg->loadavg[2] = sigar_rma_get_average(sigar, sigar->rma_process_queue, SIGAR_RMA_RATE_15_MIN);
+ 	return SIGAR_OK;
+     }
+ 
+     return status;
 }
 
 #define get_process_object(sigar, err) \

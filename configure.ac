@@ -72,7 +72,7 @@ case $host_os in
      *mingw*)
      SRC_OS="win32"
      AC_DEFINE(SIGAR_TEST_OS_WIN32, [1], [for the tests])
-     SIGAR_LIBS="-lws2_32 -liphlpapi -lnetapi32 -lversion"
+     SIGAR_LIBS="-lws2_32 -liphlpapi -lnetapi32 -lversion -lole32 -loleaut32"
      ;;
      *)
      ac_system="unknown"

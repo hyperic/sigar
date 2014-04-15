@@ -17,6 +17,7 @@ libsigar_la_SOURCES = \
 	sigar_format.c \
 	sigar_getline.c \
 	sigar_ptql.c \
+	sigar_rma.c \
 	sigar_signal.c \
 	sigar_util.c \
 	sigar_version_autoconf.c
