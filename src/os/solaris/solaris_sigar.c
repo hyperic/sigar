@@ -583,11 +583,11 @@ int sigar_system_stats_get (sigar_t *sigar,
     for (i = 0; i < sigar->ncpu; i++) {
         cpu_stat = (cpu_stat_t *)sigar->ks.cpu[i]->ks_data;
         info = &cpu_stat->cpu_sysinfo;
-
         system_stats->ctxt_switches += info->pswitch;
         system_stats->irq += info->intr;
-        system_stats->soft_irq = SIGAR_FIELD_NOTIMPL;
     }
+
+    system_stats->soft_irq = SIGAR_FIELD_NOTIMPL;
 
     return SIGAR_OK;
 }
