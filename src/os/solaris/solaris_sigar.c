@@ -565,6 +565,33 @@ int sigar_loadavg_get(sigar_t *sigar,
     return SIGAR_OK;
 }
 
+int sigar_system_stats_get (sigar_t *sigar,
+                            sigar_system_stats_t *system_stats)
+{
+    int status;
+    int i;
+    cpu_stat_t *cpu_stat;
+    cpu_sysinfo_t *info;
+
+    status =  sigar_cpu_list_get(sigar, &sigar->cpulist);
+
+    if(status != SIGAR_OK)
+        return SIGAR_ENOTIMPL;
+
+    memset(system_stats, 0, sizeof(*system_stats));
+
+    for (i = 0; i < sigar->ncpu; i++) {
+        cpu_stat = (cpu_stat_t *)sigar->ks.cpu[i]->ks_data;
+        info = &cpu_stat->cpu_sysinfo;
+        system_stats->ctxt_switches += info->pswitch;
+        system_stats->irq += info->intr;
+    }
+
+    system_stats->soft_irq = SIGAR_FIELD_NOTIMPL;
+
+    return SIGAR_OK;
+}
+
 #define LIBPROC "/usr/lib/libproc.so"
 
 #define CHECK_PSYM(s) \

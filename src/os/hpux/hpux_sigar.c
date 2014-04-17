@@ -215,6 +215,12 @@ int sigar_loadavg_get(sigar_t *sigar,
     return SIGAR_OK;
 }
 
+int sigar_system_stats_get (sigar_t *sigar,
+                            sigar_system_stats_t *system_stats)
+{
+    return SIGAR_ENOTIMPL;
+}
+
 #define PROC_ELTS 16
 
 int sigar_os_proc_list_get(sigar_t *sigar,

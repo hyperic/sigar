@@ -681,6 +681,12 @@ int sigar_loadavg_get(sigar_t *sigar,
     }
 }
 
+int sigar_system_stats_get (sigar_t *sigar,
+                            sigar_system_stats_t *system_stats)
+{
+    return SIGAR_ENOTIMPL;
+}
+
 int sigar_os_proc_list_get(sigar_t *sigar,
                            sigar_proc_list_t *proclist)
 {
