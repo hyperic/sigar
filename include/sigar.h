@@ -230,6 +230,16 @@ SIGAR_DECLARE(int) sigar_loadavg_get(sigar_t *sigar,
                                      sigar_loadavg_t *loadavg);
 
 typedef struct {
+    sigar_uint64_t
+        ctxt_switches,
+        irq, 
+        soft_irq;
+} sigar_system_stats_t;
+
+SIGAR_DECLARE(int) sigar_system_stats_get (sigar_t *sigar,
+                                           sigar_system_stats_t *stats);
+
+typedef struct {
     unsigned long number;
     unsigned long size;
     sigar_pid_t *data;

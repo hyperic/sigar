@@ -1126,6 +1126,39 @@ SIGAR_DECLARE(int) sigar_loadavg_get(sigar_t *sigar,
      return status;
 }
 
+SIGAR_DECLARE(int) sigar_system_stats_get (sigar_t *sigar,
+                            sigar_system_stats_t *system_stats)
+{
+    int status;
+    sigar_uint32_t switches = 0;
+    sigar_uint32_t irq = 0;
+
+    memset(system_stats, 0, sizeof(*system_stats));
+
+    unsigned long num_elems;
+    status = wmi_query_sum_u32(sigar,
+                L"SELECT ContextSwitchesPerSec FROM Win32_PerfFormattedData_PerfOS_System",
+                L"ContextSwitchesPerSec", &switches, &num_elems);
+     
+    if (status == SIGAR_OK)
+        system_stats->ctxt_switches = switches;
+    else
+        system_stats->ctxt_switches = SIGAR_FIELD_NOTIMPL;
+
+    status = wmi_query_sum_u32(sigar,
+                L"SELECT InterruptsPerSec FROM Win32_PerfFormattedData_PerfOS_Processor",
+                L"InterruptsPerSec", &irq, &num_elems);
+
+    if (status == SIGAR_OK)
+        system_stats->irq =irq;
+    else
+	system_stats->irq = SIGAR_FIELD_NOTIMPL;
+
+    system_stats->soft_irq = SIGAR_FIELD_NOTIMPL;
+ 
+    return status;
+}
+
 #define get_process_object(sigar, err) \
     get_perf_object(sigar, PERF_TITLE_PROC_KEY, err)
 
