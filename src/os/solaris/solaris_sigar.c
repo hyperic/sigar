@@ -837,6 +837,15 @@ int sigar_proc_state_get(sigar_t *sigar, sigar_pid_t pid,
         break;
     }
 
+    sigar_proc_fd_t proc_fd_count;
+
+    proc_fd_count.total = SIGAR_FIELD_NOTIMPL;
+
+    status = sigar_proc_fd_get(sigar, pid, &proc_fd_count );
+
+    if(status == SIGAR_OK)
+        procstate->open_files = proc_fd_count.total;
+
     return SIGAR_OK;
 }
 

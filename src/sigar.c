@@ -142,10 +142,12 @@ SIGAR_DECLARE(int) sigar_proc_cpu_get(sigar_t *sigar, sigar_pid_t pid,
     }
 
     time_diff = time_now - prev->last_time;
+
     proccpu->last_time = prev->last_time = time_now;
 
     if (time_diff == 0) {
         /* we were just called within < 1 second ago. */
+
         memcpy(proccpu, prev, sizeof(*proccpu));
         return SIGAR_OK;
     }
@@ -174,6 +176,7 @@ SIGAR_DECLARE(int) sigar_proc_cpu_get(sigar_t *sigar, sigar_pid_t pid,
     }
 
     total_diff = proccpu->total - otime;
+
     proccpu->percent = total_diff / (double)time_diff;
 
     return SIGAR_OK;
@@ -287,6 +290,7 @@ SIGAR_DECLARE(int) sigar_proc_stat_get(sigar_t *sigar,
 
     SIGAR_ZERO(procstat);
     procstat->threads = SIGAR_FIELD_NOTIMPL;
+    procstat->open_files = SIGAR_FIELD_NOTIMPL;
 
     if ((status = sigar_proc_list_get(sigar, NULL)) != SIGAR_OK) {
         return status;
@@ -304,7 +308,17 @@ SIGAR_DECLARE(int) sigar_proc_stat_get(sigar_t *sigar,
         }
 
         if (state.threads != SIGAR_FIELD_NOTIMPL) {
-            procstat->threads += state.threads;
+            if(procstat->threads == SIGAR_FIELD_NOTIMPL)
+                procstat->threads = state.threads;
+            else
+                procstat->threads += state.threads;
+        }
+
+        if (state.open_files != SIGAR_FIELD_NOTIMPL) {
+            if(procstat->open_files == SIGAR_FIELD_NOTIMPL)
+                procstat->open_files = state.open_files;
+            else
+                procstat->open_files += state.open_files;
         }
 
         switch (state.state) {

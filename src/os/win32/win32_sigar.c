@@ -1255,6 +1255,7 @@ int sigar_os_proc_list_get(sigar_t *sigar,
 
         for (i=0; i<size; i++) {
             DWORD pid = pids[i];
+
             if (pid == 0) {
                 continue; /* dont include the system Idle process */
             }
@@ -1472,6 +1473,7 @@ SIGAR_DECLARE(int) sigar_proc_state_get(sigar_t *sigar, sigar_pid_t pid,
     procstate->tty =  SIGAR_FIELD_NOTIMPL;
     procstate->threads = pinfo->threads;
     procstate->processor = SIGAR_FIELD_NOTIMPL;
+    procstate->open_files = pinfo->handles;
 
     return SIGAR_OK;
 }
@@ -1551,12 +1553,12 @@ static int get_proc_info(sigar_t *sigar, sigar_pid_t pid)
           case PERF_TITLE_START_TIME:
             perf_offsets[PERF_IX_START_TIME] = offset;
             break;
-		  case PERF_TITLE_IO_READ_BYTES_SEC:
-			perf_offsets[PERF_IX_IO_READ_BYTES_SEC] = offset;
-			break;
-		  case PERF_TITLE_IO_WRITE_BYTES_SEC:
-			perf_offsets[PERF_IX_IO_WRITE_BYTES_SEC] = offset;
-			break;
+          case PERF_TITLE_IO_READ_BYTES_SEC:
+	    perf_offsets[PERF_IX_IO_READ_BYTES_SEC] = offset;
+  	    break;
+	  case PERF_TITLE_IO_WRITE_BYTES_SEC:
+	    perf_offsets[PERF_IX_IO_WRITE_BYTES_SEC] = offset;
+	    break;
         }
     }
 
@@ -1582,8 +1584,8 @@ static int get_proc_info(sigar_t *sigar, sigar_pid_t pid)
         pinfo->handles  = PERF_VAL(PERF_IX_HANDLE_CNT);
         pinfo->threads  = PERF_VAL(PERF_IX_THREAD_CNT);
         pinfo->page_faults = PERF_VAL(PERF_IX_PAGE_FAULTS);
-		pinfo->bytes_read = PERF_VAL(PERF_IX_IO_READ_BYTES_SEC);
-		pinfo->bytes_written = PERF_VAL(PERF_IX_IO_WRITE_BYTES_SEC);
+	pinfo->bytes_read = PERF_VAL(PERF_IX_IO_READ_BYTES_SEC);
+	pinfo->bytes_written = PERF_VAL(PERF_IX_IO_WRITE_BYTES_SEC);
 
         return SIGAR_OK;
     }
