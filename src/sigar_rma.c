@@ -109,7 +109,7 @@ sigar_rma_get_average(sigar_t *sigar, sigar_rma_stat_handle_t * rma, int rate, s
 		sigar_log_printf(sigar, SIGAR_LOG_ERROR, \
 			"sigar_rma_get_average: Computed 0 elements for rate : %d",
 			rate);
-			return 0.0;
+		return 0.0;
 	}
 
 	return (avg / count);

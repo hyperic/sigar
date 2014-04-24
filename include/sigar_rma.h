@@ -31,12 +31,12 @@ typedef struct {
 
 	/* Elements configured by the caller. */
 
-	int		element_count;	/* Number of elements in the ring buffer. */
+	int element_count;	/* Number of elements in the ring buffer. */
 
 	/* Internal items for tracking. */
 
-	rma_sample_t	*samples;		/* Ring buffer sample set. 	*/
-	int				current_pos;	/* Current index location. 	*/
+	rma_sample_t *samples;	/* Ring buffer sample set. 	*/
+	int current_pos;        /* Current index location. 	*/
 
 } sigar_rma_stat_handle_t;
 
