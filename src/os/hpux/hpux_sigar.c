@@ -52,9 +52,9 @@ int sigar_os_open(sigar_t **sigar)
     (*sigar)->pinfo = NULL;
 
     (*sigar)->mib = -1;
-    
+
     return SIGAR_OK;
-    
+
 }
 
 int sigar_os_close(sigar_t *sigar)
@@ -64,7 +64,7 @@ int sigar_os_close(sigar_t *sigar)
     }
     if (sigar->mib >= 0) {
         close_mib(sigar->mib);
-    } 
+    }
     free(sigar);
     return SIGAR_OK;
 }
@@ -144,7 +144,7 @@ static void get_cpu_metrics(sigar_t *sigar,
 
     cpu->wait = SIGAR_TICK2MSEC(cpu_time[CP_SWAIT] +
                                 cpu_time[CP_BLOCK]);
-    
+
     cpu->irq = SIGAR_TICK2MSEC(cpu_time[CP_INTR]);
     cpu->soft_irq = 0; /*N/A*/
     cpu->stolen = 0; /*N/A*/
@@ -211,7 +211,8 @@ int sigar_loadavg_get(sigar_t *sigar,
     loadavg->loadavg[0] = stats.psd_avg_1_min;
     loadavg->loadavg[1] = stats.psd_avg_5_min;
     loadavg->loadavg[2] = stats.psd_avg_15_min;
-    
+    loadavg->processor_queue = SIGAR_FIELD_NOTIMPL;
+
     return SIGAR_OK;
 }
 
@@ -289,7 +290,7 @@ int sigar_proc_mem_get(sigar_t *sigar, sigar_pid_t pid,
         return status;
     }
 
-    procmem->size = 
+    procmem->size =
         pinfo->pst_vtsize + /* text */
         pinfo->pst_vdsize + /* data */
         pinfo->pst_vssize + /* stack */
@@ -299,7 +300,7 @@ int sigar_proc_mem_get(sigar_t *sigar, sigar_pid_t pid,
         pinfo->pst_viosize; /* I/O dev mapping */
 
     procmem->size *= pagesize;
-        
+
     procmem->resident = pinfo->pst_rssize * pagesize;
 
     procmem->share = pinfo->pst_vshmsize * pagesize;
@@ -313,7 +314,7 @@ int sigar_proc_mem_get(sigar_t *sigar, sigar_pid_t pid,
     return SIGAR_OK;
 }
 
-int sigar_proc_cumulative_disk_io_get(sigar_t *sigar, sigar_pid_t pid, 
+int sigar_proc_cumulative_disk_io_get(sigar_t *sigar, sigar_pid_t pid,
                            sigar_proc_cumulative_disk_io_t *proc_cumulative_disk_io)
 {
 
@@ -323,8 +324,8 @@ int sigar_proc_cumulative_disk_io_get(sigar_t *sigar, sigar_pid_t pid,
     if (status != SIGAR_OK) {
         return status;
     }
-    proc_cumulative_disk_io->bytes_read = SIGAR_FIELD_NOTIMPL; 
-    proc_cumulative_disk_io->bytes_written = SIGAR_FIELD_NOTIMPL; 
+    proc_cumulative_disk_io->bytes_read = SIGAR_FIELD_NOTIMPL;
+    proc_cumulative_disk_io->bytes_written = SIGAR_FIELD_NOTIMPL;
     proc_cumulative_disk_io->bytes_total =  pinfo->pst_ioch;
 
 
@@ -379,7 +380,7 @@ int sigar_proc_state_get(sigar_t *sigar, sigar_pid_t pid,
         return status;
     }
 
-        
+
     SIGAR_SSTRCPY(procstate->name, pinfo->pst_ucomm);
     procstate->ppid = pinfo->pst_ppid;
     procstate->tty  = makedev(pinfo->pst_term.psd_major,
@@ -447,7 +448,7 @@ int sigar_os_proc_args_get(sigar_t *sigar, sigar_pid_t pid,
         SIGAR_PROC_ARGS_GROW(procargs);
         procargs->data[procargs->number++] = arg;
     }
-    
+
     return SIGAR_OK;
 }
 
@@ -607,7 +608,7 @@ int sigar_file_system_list_get(sigar_t *sigar,
              */
             continue;
         }
-        
+
         SIGAR_FILE_SYSTEM_LIST_GROW(fslist);
 
         fsp = &fslist->data[fslist->number++];
@@ -868,7 +869,7 @@ int sigar_net_route_list_get(sigar_t *sigar,
 
         route = &routelist->data[routelist->number++];
         SIGAR_ZERO(route); /* XXX: other fields */
-        
+
         sigar_net_address_set(route->destination,
                               ent->Dest);
 
@@ -889,7 +890,7 @@ int sigar_net_route_list_get(sigar_t *sigar,
     }
 
     free(routes);
-    
+
     return SIGAR_OK;
 }
 
@@ -1218,7 +1219,7 @@ sigar_tcp_get(sigar_t *sigar,
         unsigned int len = sizeof(val);
         parms.objid = tcps_lu[i].id;
         parms.buffer = &val;
-        parms.len = &len;        
+        parms.len = &len;
 
         if (sigar_get_mib_info(sigar, &parms) != SIGAR_OK) {
             val = -1;
@@ -1334,7 +1335,7 @@ int sigar_os_sys_info_get(sigar_t *sigar,
         case CPU_PA_RISC2_0:
             arch = "PA_RISC2.0";
             break;
-#ifdef CPU_IA64_ARCHREV_0            
+#ifdef CPU_IA64_ARCHREV_0
         case CPU_IA64_ARCHREV_0:
             arch = "ia64";
             break;

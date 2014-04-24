@@ -15,25 +15,19 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "sigar.h"
+#include "sigar_private.h"
+#include "sigar_util.h"
 #include "sigar_log.h"
 #include "sigar_rma.h"
 
 sigar_rma_stat_handle_t *
-sigar_rma_init(sigar_t *sigar, int sample_rate_secs, int max_average_time)
+sigar_rma_init(sigar_t *sigar, int max_average_time)
 {
-        if(sample_rate_secs <= 0)
-        {
-            sigar_log_printf(sigar, SIGAR_LOG_ERROR, \
-                     "sigar_rma_init: invalid sample_rate_secs : %d", \
-                     sample_rate_secs);
-            return NULL;
-        }
-
         if(max_average_time <= 0)
         {
             sigar_log_printf(sigar, SIGAR_LOG_ERROR, \
                      "sigar_rma_init: invalid max_average_time : %d", \
-                     sample_rate_secs);
+                     max_average_time);
             return NULL;
         }
 
@@ -42,18 +36,16 @@ sigar_rma_init(sigar_t *sigar, int sample_rate_secs, int max_average_time)
 
 	/* Allocate enough space to hold the longest period. */
 
-	rma->sample_rate_secs = sample_rate_secs;
-	rma->element_count = max_average_time / sample_rate_secs;
+	rma->element_count = max_average_time;
 
-	rma->values = calloc(rma->element_count, sizeof(float));
+	rma->samples = calloc(rma->element_count, sizeof(rma_sample_t));
 	rma->current_pos = 0;
-	rma->have_wrapped = false;
 
 	return rma;
 }
 
 void 
-sigar_rma_add_sample(sigar_t *sigar, sigar_rma_stat_handle_t * rma, float sample)
+sigar_rma_add_sample(sigar_t *sigar, sigar_rma_stat_handle_t * rma, float value, sigar_int64_t cur_time)
 {
         if(rma == NULL)
         {
@@ -62,20 +54,27 @@ sigar_rma_add_sample(sigar_t *sigar, sigar_rma_stat_handle_t * rma, float sample
             return;
         }
 
-	rma->values[rma->current_pos++] = sample;
+        rma_sample_t *sample = &rma->samples[rma->current_pos++];
+
+        sample->value = value;
+
+        if(cur_time != 0)
+            sample->stime = cur_time;
+        else
+            sample->stime = sigar_time_now_millis() / 1000;
+
 	if (rma->current_pos == rma->element_count) {
-		rma->have_wrapped = true;
 		rma->current_pos = 0;
 	}
 }
 
 float 
-sigar_rma_get_average(sigar_t *sigar, sigar_rma_stat_handle_t * rma, int rate)
+sigar_rma_get_average(sigar_t *sigar, sigar_rma_stat_handle_t * rma, int rate, sigar_int64_t cur_time)
 {
 	float		avg = 0;
 	int		pos;
-	int		backup_size = rate / rma->sample_rate_secs;
 	int		count;
+        rma_sample_t   *sample;
 
         if(rma == NULL)
         {
@@ -84,49 +83,33 @@ sigar_rma_get_average(sigar_t *sigar, sigar_rma_stat_handle_t * rma, int rate)
             return 0.0;
         }
 
-        /* Safety check to avoid divide by 0. */
+        /* Start at our current position and work backwards. */
 
-        if(backup_size == 0)
+        pos = rma->current_pos - 1;
+        count = 0;
+
+        while(pos != rma->current_pos) {
+            sample = &rma->samples[pos];
+
+            if ( sample->stime == 0 ||
+                 (cur_time - sample->stime > rate)) {
+                break;
+            }
+
+            avg += sample->value;
+            count++;
+            pos--;
+            if(pos < 0)
+                pos = rma->element_count - 1;
+       }
+
+        if(count == 0)
         {
             sigar_log_printf(sigar, SIGAR_LOG_ERROR, \
-                     "sigar_rma_get_average: Computed 0 backup for rate : %d and sample size %d",
-                     rate, rma->sample_rate_secs);
+                     "sigar_rma_get_average: Computed 0 elements for rate : %d",
+                     rate);
             return 0.0;
         }
 
-	/*
-	 * * To compute the average, we first compute the number of samples
-	 * to count based * on our sample rate, and how many samples/sec we
-	 * are doing. * eg: (rate = RMA_RATE_1_MIN = 60) / (sample_rate_secs
-	 * = 5) = 12 elements. * We then work backwards adding the number of
-	 * elements, taking into account * buffer wrapping, and partial
-	 * buffer (not yet having the total number of elements.)
-	 */
-
-	/*
-	 * If our buffer has wrapped, then we are assured to have a full
-	 * sample set.
-	 */
-
-	if (rma->have_wrapped) {
-		for (count = 0, pos = rma->current_pos - 1; count < backup_size; count++, pos--) {
-			if (pos < 0)
-				pos = rma->element_count - 1;
-			avg += rma->values[pos];
-		}
-	}
-	/* We may or may not have a full sample set. */
-	else {
-		pos = rma->current_pos;
-
-		if ((pos - backup_size) < 0) {
-			/* We don't have a complete backup sample yet. */
-			backup_size = pos;
-		}
-		for (count = backup_size; count > 0; count--) {
-			avg += rma->values[pos - count];
-		}
-	}
-
-	return (avg / backup_size);
+	return (avg / count);
 }

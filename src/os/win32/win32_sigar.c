@@ -1113,16 +1113,21 @@ SIGAR_DECLARE(int) sigar_loadavg_get(sigar_t *sigar,
 
      if (status == SIGAR_OK)
      {
-	if(sigar->rma_process_queue == NULL)
-		sigar->rma_process_queue = sigar_rma_init(sigar, 1, SIGAR_RMA_RATE_15_MIN);
-	sigar_rma_add_sample(sigar, sigar->rma_process_queue, p_queue);
-        loadavg->processor_queue = p_queue;
-        loadavg->loadavg[0] = sigar_rma_get_average(sigar, sigar->rma_process_queue, SIGAR_RMA_RATE_1_MIN);
-        loadavg->loadavg[1] = sigar_rma_get_average(sigar, sigar->rma_process_queue, SIGAR_RMA_RATE_5_MIN);
-	loadavg->loadavg[2] = sigar_rma_get_average(sigar, sigar->rma_process_queue, SIGAR_RMA_RATE_15_MIN);
- 	return SIGAR_OK;
-     }
- 
+        sigar_int64_t cur_time = sigar_time_now_millis() / 1000;
+
+		if(sigar->rma_process_queue == NULL)
+			sigar->rma_process_queue = sigar_rma_init(sigar, SIGAR_RMA_RATE_15_MIN);
+
+			loadavg->processor_queue = p_queue;
+			sigar_rma_add_sample(sigar, sigar->rma_process_queue, p_queue, cur_time);
+
+			loadavg->loadavg[0] = sigar_rma_get_average(sigar, sigar->rma_process_queue, SIGAR_RMA_RATE_1_MIN, cur_time);
+			loadavg->loadavg[1] = sigar_rma_get_average(sigar, sigar->rma_process_queue, SIGAR_RMA_RATE_5_MIN, cur_time);
+			loadavg->loadavg[2] = sigar_rma_get_average(sigar, sigar->rma_process_queue, SIGAR_RMA_RATE_15_MIN, cur_time);
+
+			return SIGAR_OK;
+	}
+
      return status;
 }
 
@@ -1139,7 +1144,7 @@ SIGAR_DECLARE(int) sigar_system_stats_get (sigar_t *sigar,
     status = wmi_query_sum_u32(sigar,
                 L"SELECT ContextSwitchesPerSec FROM Win32_PerfFormattedData_PerfOS_System",
                 L"ContextSwitchesPerSec", &switches, &num_elems);
-     
+
     if (status == SIGAR_OK)
         system_stats->ctxt_switches = switches;
     else
@@ -1152,10 +1157,10 @@ SIGAR_DECLARE(int) sigar_system_stats_get (sigar_t *sigar,
     if (status == SIGAR_OK)
         system_stats->irq =irq;
     else
-	system_stats->irq = SIGAR_FIELD_NOTIMPL;
+		system_stats->irq = SIGAR_FIELD_NOTIMPL;
 
-    system_stats->soft_irq = SIGAR_FIELD_NOTIMPL;
- 
+	system_stats->soft_irq = SIGAR_FIELD_NOTIMPL;
+
     return status;
 }
 
