@@ -41,7 +41,7 @@ typedef struct {
 } sigar_rma_stat_handle_t;
 
 sigar_rma_stat_handle_t *sigar_rma_init(sigar_t *sigar, int max_average_time);
-void	sigar_rma_add_sample(sigar_t *sigar, sigar_rma_stat_handle_t * rma, float value, sigar_int64_t cur_time);
-float	sigar_rma_get_average(sigar_t *sigar, sigar_rma_stat_handle_t * rma, int rate, sigar_int64_t cur_time);
+void	sigar_rma_add_sample(sigar_t *sigar, sigar_rma_stat_handle_t * rma, float value, sigar_int64_t cur_time_sec);
+float	sigar_rma_get_average(sigar_t *sigar, sigar_rma_stat_handle_t * rma, int rate, sigar_int64_t cur_time_sec);
 
 #endif				/* SIGAR_RMA_H */

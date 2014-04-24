@@ -45,7 +45,7 @@ sigar_rma_init(sigar_t *sigar, int max_average_time)
 }
 
 void
-sigar_rma_add_sample(sigar_t *sigar, sigar_rma_stat_handle_t * rma, float value, sigar_int64_t cur_time)
+sigar_rma_add_sample(sigar_t *sigar, sigar_rma_stat_handle_t * rma, float value, sigar_int64_t cur_time_sec)
 {
 	if(rma == NULL)
 	{
@@ -58,8 +58,8 @@ sigar_rma_add_sample(sigar_t *sigar, sigar_rma_stat_handle_t * rma, float value,
 
    	sample->value = value;
 
-	if(cur_time != 0)
-		sample->stime = cur_time;
+	if(cur_time_sec != 0)
+		sample->stime = cur_time_sec;
 	else
 		sample->stime = sigar_time_now_millis() / 1000;
 
@@ -69,7 +69,7 @@ sigar_rma_add_sample(sigar_t *sigar, sigar_rma_stat_handle_t * rma, float value,
 }
 
 float
-sigar_rma_get_average(sigar_t *sigar, sigar_rma_stat_handle_t * rma, int rate, sigar_int64_t cur_time)
+sigar_rma_get_average(sigar_t *sigar, sigar_rma_stat_handle_t * rma, int rate, sigar_int64_t cur_time_sec)
 {
 	float			avg = 0;
 	int				pos;
@@ -92,7 +92,7 @@ sigar_rma_get_average(sigar_t *sigar, sigar_rma_stat_handle_t * rma, int rate, s
 		sample = &rma->samples[pos];
 
 		if ( sample->stime == 0 ||
-			(cur_time - sample->stime > rate)) {
+			(cur_time_sec - sample->stime > rate)) {
 				break;
 		}
 
