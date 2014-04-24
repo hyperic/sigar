@@ -513,7 +513,7 @@ int sigar_mem_get(sigar_t *sigar, sigar_mem_t *mem)
 #ifdef SIGAR_FREEBSD5
 /* code in this function is based on FreeBSD 5.3 kvm_getswapinfo.c */
 static int getswapinfo_sysctl(struct kvm_swap *swap_ary,
-                              int swap_max) 
+                              int swap_max)
 {
     int ti, ttl;
     size_t mibi, len, size;
@@ -600,7 +600,7 @@ static int sigar_swap_fs_get(sigar_t *sigar, sigar_swap_t *swap) /* <= 10.3 */
     if (!(dirp = opendir(VM_DIR))) {
          return errno;
      }
- 
+
     /* looking for "swapfile0", "swapfile1", etc. */
     while ((ent = readdir(dirp))) {
         char *ptr = swapfile;
@@ -614,7 +614,7 @@ static int sigar_swap_fs_get(sigar_t *sigar, sigar_swap_t *swap) /* <= 10.3 */
         if (!strnEQ(ent->d_name, SWAPFILE, SSTRLEN(SWAPFILE))) {
             continue;
         }
-        
+
         /* sprintf(swapfile, "%s/%s", VM_DIR, ent->d_name) */
 
         memcpy(ptr, VM_DIR, SSTRLEN(VM_DIR));
@@ -939,15 +939,16 @@ int sigar_uptime_get(sigar_t *sigar,
 int sigar_loadavg_get(sigar_t *sigar,
                       sigar_loadavg_t *loadavg)
 {
-    getloadavg(loadavg->loadavg, 3);
+	loadavg->processor_queue = SIGAR_FIELD_NOTIMPL;
+	getloadavg(loadavg->loadavg, 3);
 
-    return SIGAR_OK;
+	return SIGAR_OK;
 }
 
 int sigar_system_stats_get (sigar_t *sigar,
                             sigar_system_stats_t *system_stats)
 {
-    return SIGAR_ENOTIMPL;
+	return SIGAR_ENOTIMPL;
 }
 
 #if defined(DARWIN) && defined(DARWIN_HAS_LIBPROC_H)
@@ -1425,9 +1426,9 @@ static int thread_state_get(thread_basic_info_data_t *info)
       case TH_STATE_STOPPED:
         return 5;
       case TH_STATE_HALTED:
-        return 6;  
+        return 6;
       default:
-        return 7; 
+        return 7;
     }
 }
 
@@ -1464,7 +1465,7 @@ static int sigar_proc_threads_get(sigar_t *sigar, sigar_pid_t pid,
                 state = tstate;
             }
         }
-    }		
+    }
 
     vm_deallocate(self, (vm_address_t)threads, sizeof(thread_t) * count);
 
@@ -1547,7 +1548,7 @@ typedef struct {
     int count;
 } sigar_kern_proc_args_t;
 
-static void sigar_kern_proc_args_destroy(sigar_kern_proc_args_t *kargs) 
+static void sigar_kern_proc_args_destroy(sigar_kern_proc_args_t *kargs)
 {
     if (kargs->buf) {
         free(kargs->buf);
@@ -2322,7 +2323,7 @@ int sigar_file_system_usage_get(sigar_t *sigar,
 #define CTL_HW_FREQ_MAX "hw.cpufrequency_max"
 #define CTL_HW_FREQ_MIN "hw.cpufrequency_min"
 #else
-/* XXX FreeBSD 5.x+ only? */ 
+/* XXX FreeBSD 5.x+ only? */
 #define CTL_HW_FREQ "machdep.tsc_freq"
 #endif
 
@@ -2413,7 +2414,7 @@ int sigar_cpu_info_list_get(sigar_t *sigar,
         SIGAR_SSTRCPY(vendor, "Apple");
     }
     else {
-        /* GenuineIntel -> Intel */ 
+        /* GenuineIntel -> Intel */
         if (strstr(vendor, "Intel")) {
             SIGAR_SSTRCPY(vendor, "Intel");
         }
@@ -2637,13 +2638,13 @@ static int sigar_ifmsg_iter(sigar_t *sigar, ifmsg_iter_t *iter)
         char *name;
         struct sockaddr_dl *sdl;
         struct if_msghdr *ifm = (struct if_msghdr *)ptr;
-        
+
         if (ifm->ifm_type != RTM_IFINFO) {
             break;
         }
 
         ptr += ifm->ifm_msglen;
-        
+
         while (ptr < end) {
             struct if_msghdr *next = (struct if_msghdr *)ptr;
 
