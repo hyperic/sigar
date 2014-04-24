@@ -1113,22 +1113,22 @@ SIGAR_DECLARE(int) sigar_loadavg_get(sigar_t *sigar,
 
      if (status == SIGAR_OK)
      {
-        sigar_int64_t cur_time = sigar_time_now_millis() / 1000;
+		sigar_int64_t cur_time = sigar_time_now_millis() / 1000;
 
 		if(sigar->rma_process_queue == NULL)
 			sigar->rma_process_queue = sigar_rma_init(sigar, SIGAR_RMA_RATE_15_MIN);
 
-			loadavg->processor_queue = p_queue;
-			sigar_rma_add_sample(sigar, sigar->rma_process_queue, p_queue, cur_time);
+		loadavg->processor_queue = p_queue;
+		sigar_rma_add_sample(sigar, sigar->rma_process_queue, p_queue, cur_time);
 
-			loadavg->loadavg[0] = sigar_rma_get_average(sigar, sigar->rma_process_queue, SIGAR_RMA_RATE_1_MIN, cur_time);
-			loadavg->loadavg[1] = sigar_rma_get_average(sigar, sigar->rma_process_queue, SIGAR_RMA_RATE_5_MIN, cur_time);
-			loadavg->loadavg[2] = sigar_rma_get_average(sigar, sigar->rma_process_queue, SIGAR_RMA_RATE_15_MIN, cur_time);
+		loadavg->loadavg[0] = sigar_rma_get_average(sigar, sigar->rma_process_queue, SIGAR_RMA_RATE_1_MIN, cur_time);
+		loadavg->loadavg[1] = sigar_rma_get_average(sigar, sigar->rma_process_queue, SIGAR_RMA_RATE_5_MIN, cur_time);
+		loadavg->loadavg[2] = sigar_rma_get_average(sigar, sigar->rma_process_queue, SIGAR_RMA_RATE_15_MIN, cur_time);
 
-			return SIGAR_OK;
+		return SIGAR_OK;
 	}
 
-     return status;
+	return status;
 }
 
 SIGAR_DECLARE(int) sigar_system_stats_get (sigar_t *sigar,
@@ -1154,14 +1154,14 @@ SIGAR_DECLARE(int) sigar_system_stats_get (sigar_t *sigar,
                 L"SELECT InterruptsPerSec FROM Win32_PerfFormattedData_PerfOS_Processor",
                 L"InterruptsPerSec", &irq, &num_elems);
 
-    if (status == SIGAR_OK)
-        system_stats->irq =irq;
-    else
+	if (status == SIGAR_OK)
+		system_stats->irq =irq;
+	else
 		system_stats->irq = SIGAR_FIELD_NOTIMPL;
 
 	system_stats->soft_irq = SIGAR_FIELD_NOTIMPL;
 
-    return status;
+	return status;
 }
 
 #define get_process_object(sigar, err) \

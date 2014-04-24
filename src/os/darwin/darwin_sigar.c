@@ -942,13 +942,13 @@ int sigar_loadavg_get(sigar_t *sigar,
 	loadavg->processor_queue = SIGAR_FIELD_NOTIMPL;
 	getloadavg(loadavg->loadavg, 3);
 
-    return SIGAR_OK;
+	return SIGAR_OK;
 }
 
 int sigar_system_stats_get (sigar_t *sigar,
                             sigar_system_stats_t *system_stats)
 {
-    return SIGAR_ENOTIMPL;
+	return SIGAR_ENOTIMPL;
 }
 
 #if defined(DARWIN) && defined(DARWIN_HAS_LIBPROC_H)

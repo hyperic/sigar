@@ -2,9 +2,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain a
  * copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -44,72 +44,73 @@ sigar_rma_init(sigar_t *sigar, int max_average_time)
 	return rma;
 }
 
-void 
+void
 sigar_rma_add_sample(sigar_t *sigar, sigar_rma_stat_handle_t * rma, float value, sigar_int64_t cur_time)
 {
-        if(rma == NULL)
-        {
-            sigar_log_printf(sigar, SIGAR_LOG_ERROR, \
-                     "sigar_rma_add_sample: NULL sigar_rma_stat_handle_t");
-            return;
-        }
+	if(rma == NULL)
+	{
+		sigar_log_printf(sigar, SIGAR_LOG_ERROR, \
+				"sigar_rma_add_sample: NULL sigar_rma_stat_handle_t");
+		return;
+	}
 
-        rma_sample_t *sample = &rma->samples[rma->current_pos++];
+	rma_sample_t *sample = &rma->samples[rma->current_pos++];
 
-        sample->value = value;
+   	sample->value = value;
 
-        if(cur_time != 0)
-            sample->stime = cur_time;
-        else
-            sample->stime = sigar_time_now_millis() / 1000;
+	if(cur_time != 0)
+		sample->stime = cur_time;
+	else
+		sample->stime = sigar_time_now_millis() / 1000;
 
 	if (rma->current_pos == rma->element_count) {
 		rma->current_pos = 0;
 	}
 }
 
-float 
+float
 sigar_rma_get_average(sigar_t *sigar, sigar_rma_stat_handle_t * rma, int rate, sigar_int64_t cur_time)
 {
-	float		avg = 0;
-	int		pos;
-	int		count;
-        rma_sample_t   *sample;
+	float			avg = 0;
+	int				pos;
+	int				count;
+	rma_sample_t   *sample;
 
-        if(rma == NULL)
-        {
-            sigar_log_printf(sigar, SIGAR_LOG_ERROR, \
-                     "sigar_rma_get_average: NULL sigar_rma_stat_handle_t");
-            return 0.0;
-        }
+	if(rma == NULL)
+	{
+		sigar_log_printf(sigar, SIGAR_LOG_ERROR, \
+			"sigar_rma_get_average: NULL sigar_rma_stat_handle_t");
+		return 0.0;
+	}
 
-        /* Start at our current position and work backwards. */
+	/* Start at our current position and work backwards. */
 
-        pos = rma->current_pos - 1;
-        count = 0;
+	pos = rma->current_pos - 1;
+	count = 0;
 
-        while(pos != rma->current_pos) {
-            sample = &rma->samples[pos];
+	while(pos != rma->current_pos) {
+		sample = &rma->samples[pos];
 
-            if ( sample->stime == 0 ||
-                 (cur_time - sample->stime > rate)) {
-                break;
-            }
+		if ( sample->stime == 0 ||
+			(cur_time - sample->stime > rate)) {
+				break;
+		}
 
-            avg += sample->value;
-            count++;
-            pos--;
-            if(pos < 0)
-                pos = rma->element_count - 1;
-       }
+		avg += sample->value;
+		count++;
+		pos--;
 
-        if(count == 0)
-        {
-            sigar_log_printf(sigar, SIGAR_LOG_ERROR, \
-                     "sigar_rma_get_average: Computed 0 elements for rate : %d",
-                     rate);
-            return 0.0;
-        }
+		if(pos < 0)
+			pos = rma->element_count - 1;
+	}
+
+	if(count == 0)
+	{
+		sigar_log_printf(sigar, SIGAR_LOG_ERROR, \
+			"sigar_rma_get_average: Computed 0 elements for rate : %d",
+			rate);
+			return 0.0;
+	}
 
 	return (avg / count);
 }

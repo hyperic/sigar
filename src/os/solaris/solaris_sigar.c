@@ -577,10 +577,10 @@ int sigar_system_stats_get (sigar_t *sigar,
 
     status =  sigar_cpu_list_get(sigar, &sigar->cpulist);
 
-    if(status != SIGAR_OK)
+	if(status != SIGAR_OK)
 		return SIGAR_ENOTIMPL;
 
-    memset(system_stats, 0, sizeof(*system_stats));
+	memset(system_stats, 0, sizeof(*system_stats));
 
     for (i = 0; i < sigar->ncpu; i++) {
         cpu_stat = (cpu_stat_t *)sigar->ks.cpu[i]->ks_data;
