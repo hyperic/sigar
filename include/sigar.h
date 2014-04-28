@@ -1016,6 +1016,8 @@ SIGAR_DECLARE(sigar_rma_stat_handle_t *) sigar_rma_init(sigar_t *sigar, int max_
 SIGAR_DECLARE(void) sigar_rma_add_sample(sigar_t *sigar, sigar_rma_stat_handle_t * rma, float value, sigar_int64_t cur_time_sec);
 SIGAR_DECLARE(void) sigar_rma_add_fetch_std_sample(sigar_t *sigar, sigar_rma_stat_handle_t * rma, float value,
 		        sigar_int64_t cur_time_sec, sigar_loadavg_t *loadavg);
+SIGAR_DECLARE(void) sigar_rma_add_fetch_custom_sample(sigar_t *sigar, sigar_rma_stat_handle_t * rma, float value,
+		        sigar_int64_t cur_time_sec, sigar_loadavg_t *loadavg, int num_avgs);
 SIGAR_DECLARE(float) sigar_rma_get_average(sigar_t *sigar, sigar_rma_stat_handle_t * rma, int rate, sigar_int64_t cur_time_sec);
 
 #ifdef __cplusplus
