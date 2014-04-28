@@ -52,7 +52,6 @@
 #include <tlhelp32.h>
 #include <wbemcli.h>
 
-#include "sigar_rma.h"
 #include "sigar_util.h"
 
 #ifdef MSVC

@@ -38,7 +38,7 @@ static void rma_debug(sigar_rma_stat_handle_t *rma)
 	}
 }
 
-sigar_rma_stat_handle_t *
+SIGAR_DECLARE(sigar_rma_stat_handle_t *)
 sigar_rma_init(sigar_t *sigar, int max_average_time)
 {
         if(max_average_time <= 0)
@@ -66,7 +66,7 @@ sigar_rma_init(sigar_t *sigar, int max_average_time)
  * Add a sample and return the current 1m, 5m, 15m average
  */
 
-void
+SIGAR_DECLARE(void)
 sigar_rma_add_fetch_std_sample(sigar_t *sigar, sigar_rma_stat_handle_t * rma, float value,
 		sigar_int64_t cur_time_sec, sigar_loadavg_t *loadavg)
 {
@@ -77,7 +77,26 @@ sigar_rma_add_fetch_std_sample(sigar_t *sigar, sigar_rma_stat_handle_t * rma, fl
 	loadavg->loadavg[2] = sigar_rma_get_average(sigar, rma, SIGAR_RMA_RATE_15_MIN, cur_time_sec);
 }
 
-void
+/*
+ * Add a sample and return the current averages.  Any number of averages may be requested
+ * and the sample sizes are passed in the loadavg field.
+ */
+
+SIGAR_DECLARE(void)
+sigar_rma_add_fetch_custom_sample(sigar_t *sigar, sigar_rma_stat_handle_t * rma, float value,
+		sigar_int64_t cur_time_sec, sigar_loadavg_t *loadavg, int num_avg)
+{
+	int i;
+	int avg_secs;
+	sigar_rma_add_sample(sigar,  rma, value, cur_time_sec);
+
+    for (i = 0; i < num_avg; i++) {
+		avg_secs = loadavg->loadavg[i];
+		loadavg->loadavg[i] = sigar_rma_get_average(sigar, rma, avg_secs, cur_time_sec);
+	}
+}
+
+SIGAR_DECLARE(void)
 sigar_rma_add_sample(sigar_t *sigar, sigar_rma_stat_handle_t * rma, float value, sigar_int64_t cur_time_sec)
 {
 	if(rma == NULL)
@@ -101,7 +120,7 @@ sigar_rma_add_sample(sigar_t *sigar, sigar_rma_stat_handle_t * rma, float value,
 	}
 }
 
-float
+SIGAR_DECLARE(float)
 sigar_rma_get_average(sigar_t *sigar, sigar_rma_stat_handle_t * rma, int rate, sigar_int64_t cur_time_sec)
 {
 	float			avg = 0;
