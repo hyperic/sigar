@@ -141,7 +141,7 @@ typedef struct {
     sigar_uint64_t
         ram,
         total,
-        used, 
+        used,
         free,
         actual_used,
         actual_free;
@@ -154,7 +154,7 @@ SIGAR_DECLARE(int) sigar_mem_get(sigar_t *sigar, sigar_mem_t *mem);
 typedef struct {
     sigar_uint64_t
         total,
-        used, 
+        used,
         free,
         page_in,
         page_out;
@@ -164,7 +164,7 @@ SIGAR_DECLARE(int) sigar_swap_get(sigar_t *sigar, sigar_swap_t *swap);
 
 typedef struct {
     sigar_uint64_t
-        user, 
+        user,
         sys,
         nice,
         idle,
@@ -232,7 +232,7 @@ SIGAR_DECLARE(int) sigar_loadavg_get(sigar_t *sigar,
 typedef struct {
     sigar_uint64_t
         ctxt_switches,
-        irq, 
+        irq,
         soft_irq;
 } sigar_system_stats_t;
 
@@ -305,7 +305,7 @@ SIGAR_DECLARE(int) sigar_proc_mem_get(sigar_t *sigar, sigar_pid_t pid,
                                       sigar_proc_mem_t *procmem);
 
 typedef struct {
-     sigar_uint64_t 
+     sigar_uint64_t
         bytes_read,
         bytes_written,
         bytes_total;
@@ -338,7 +338,7 @@ SIGAR_DECLARE(int) sigar_proc_cumulative_disk_io_get(sigar_t *sigar, sigar_pid_t
                                           sigar_proc_cumulative_disk_io_t *proc_cumulative_disk_io);
 
 
-typedef struct  { 
+typedef struct  {
     sigar_uint64_t dummy;
 }sigar_dump_pid_cache_t;
 
@@ -437,7 +437,7 @@ typedef struct {
     /* used for SIGAR_PROC_ENV_KEY */
     const char *key;
     int klen;
-    
+
     int (*env_getter)(void *, const char *, int, char *, int);
 } sigar_proc_env_t;
 
@@ -479,7 +479,7 @@ typedef struct {
 SIGAR_DECLARE(int) sigar_thread_cpu_get(sigar_t *sigar,
                                         sigar_uint64_t id,
                                         sigar_thread_cpu_t *cpu);
-                                            
+
 typedef enum {
     SIGAR_FSTYPE_UNKNOWN,
     SIGAR_FSTYPE_NONE,
@@ -943,7 +943,7 @@ SIGAR_DECLARE(int) sigar_who_list_get(sigar_t *sigar,
 SIGAR_DECLARE(int) sigar_who_list_destroy(sigar_t *sigar,
                                           sigar_who_list_t *wholist);
 
-SIGAR_DECLARE(int) sigar_proc_port_get(sigar_t *sigar, 
+SIGAR_DECLARE(int) sigar_proc_port_get(sigar_t *sigar,
                                        int protocol, unsigned long port,
                                        sigar_pid_t *pid);
 
@@ -989,6 +989,34 @@ SIGAR_DECLARE(int) sigar_rpc_ping(char *hostname,
 SIGAR_DECLARE(char *) sigar_rpc_strerror(int err);
 
 SIGAR_DECLARE(char *) sigar_password_get(const char *prompt);
+
+#define SIGAR_RMA_RATE_1_MIN   1 * 60
+#define SIGAR_RMA_RATE_5_MIN   5 * 60
+#define SIGAR_RMA_RATE_15_MIN 15 * 60
+
+typedef struct {
+	sigar_int64_t stime;
+	float         value;
+} rma_sample_t;
+
+typedef struct {
+
+	/* Elements configured by the caller. */
+
+	int element_count;  /* Number of elements in the ring buffer. */
+
+	/* Internal items for tracking. */
+
+	rma_sample_t *samples;  /* Ring buffer sample set.  */
+	int current_pos;        /* Current index location.  */
+
+} sigar_rma_stat_handle_t;
+
+SIGAR_DECLARE(sigar_rma_stat_handle_t *) sigar_rma_init(sigar_t *sigar, int max_average_time);
+SIGAR_DECLARE(void) sigar_rma_add_sample(sigar_t *sigar, sigar_rma_stat_handle_t * rma, float value, sigar_int64_t cur_time_sec);
+SIGAR_DECLARE(void) sigar_rma_add_fetch_std_sample(sigar_t *sigar, sigar_rma_stat_handle_t * rma, float value,
+		        sigar_int64_t cur_time_sec, sigar_loadavg_t *loadavg);
+SIGAR_DECLARE(float) sigar_rma_get_average(sigar_t *sigar, sigar_rma_stat_handle_t * rma, int rate, sigar_int64_t cur_time_sec);
 
 #ifdef __cplusplus
 }

@@ -18,7 +18,25 @@
 #include "sigar_private.h"
 #include "sigar_util.h"
 #include "sigar_log.h"
-#include "sigar_rma.h"
+
+/*
+ * Can be used internally to dump out table index/values.
+ */
+
+static void rma_debug(sigar_rma_stat_handle_t *rma)
+{
+	int i;
+	printf("Table element count   = %d\n", rma->element_count);
+	printf("      current_pos     = %d\n", rma->current_pos);
+	for(i = 0; i < rma->element_count; i++)
+	{
+		if(rma->samples[i].stime == 0)
+			continue;
+		printf("%-3d (%-5f) ", i, rma->samples[i].value);
+		if(!((i + 1) % 10))
+			printf("\n");
+	}
+}
 
 sigar_rma_stat_handle_t *
 sigar_rma_init(sigar_t *sigar, int max_average_time)
@@ -42,6 +60,21 @@ sigar_rma_init(sigar_t *sigar, int max_average_time)
 	rma->current_pos = 0;
 
 	return rma;
+}
+
+/*
+ * Add a sample and return the current 1m, 5m, 15m average
+ */
+
+void
+sigar_rma_add_fetch_std_sample(sigar_t *sigar, sigar_rma_stat_handle_t * rma, float value,
+		sigar_int64_t cur_time_sec, sigar_loadavg_t *loadavg)
+{
+	sigar_rma_add_sample(sigar,  rma, value, cur_time_sec);
+
+	loadavg->loadavg[0] = sigar_rma_get_average(sigar, rma, SIGAR_RMA_RATE_1_MIN, cur_time_sec);
+	loadavg->loadavg[1] = sigar_rma_get_average(sigar, rma, SIGAR_RMA_RATE_5_MIN, cur_time_sec);
+	loadavg->loadavg[2] = sigar_rma_get_average(sigar, rma, SIGAR_RMA_RATE_15_MIN, cur_time_sec);
 }
 
 void
