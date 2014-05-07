@@ -1002,23 +1002,44 @@ typedef struct {
 typedef struct {
 
 	/* Elements configured by the caller. */
-
 	int element_count;  /* Number of elements in the ring buffer. */
 
 	/* Internal items for tracking. */
-
 	rma_sample_t *samples;  /* Ring buffer sample set.  */
 	int current_pos;        /* Current index location.  */
 
 } sigar_rma_stat_handle_t;
 
-SIGAR_DECLARE(sigar_rma_stat_handle_t *) sigar_rma_init(sigar_t *sigar, int max_average_time);
-SIGAR_DECLARE(void) sigar_rma_add_sample(sigar_t *sigar, sigar_rma_stat_handle_t * rma, float value, sigar_int64_t cur_time_sec);
-SIGAR_DECLARE(void) sigar_rma_add_fetch_std_sample(sigar_t *sigar, sigar_rma_stat_handle_t * rma, float value,
-		        sigar_int64_t cur_time_sec, sigar_loadavg_t *loadavg);
-SIGAR_DECLARE(void) sigar_rma_add_fetch_custom_sample(sigar_t *sigar, sigar_rma_stat_handle_t * rma, float value,
-		        sigar_int64_t cur_time_sec, sigar_loadavg_t *loadavg, int num_avgs);
-SIGAR_DECLARE(float) sigar_rma_get_average(sigar_t *sigar, sigar_rma_stat_handle_t * rma, int rate, sigar_int64_t cur_time_sec);
+SIGAR_DECLARE(sigar_rma_stat_handle_t *)
+sigar_rma_init(sigar_t *sigar,
+               int max_average_time);
+
+SIGAR_DECLARE(void)
+sigar_rma_add_sample(sigar_t *sigar,
+                     sigar_rma_stat_handle_t * rma,
+                     float value,
+                     sigar_int64_t cur_time_sec);
+
+SIGAR_DECLARE(void)
+sigar_rma_add_fetch_std_sample(sigar_t *sigar,
+                               sigar_rma_stat_handle_t * rma,
+                               float value,
+                               sigar_int64_t cur_time_sec,
+                               sigar_loadavg_t *loadavg);
+
+SIGAR_DECLARE(void)
+sigar_rma_add_fetch_custom_sample(sigar_t *sigar,
+                                  sigar_rma_stat_handle_t * rma,
+                                  float value,
+                                  sigar_int64_t cur_time_sec,
+                                  sigar_loadavg_t *loadavg,
+                                  int num_avgs);
+
+SIGAR_DECLARE(float)
+sigar_rma_get_average(sigar_t *sigar,
+                      sigar_rma_stat_handle_t * rma,
+                      int rate,
+                      sigar_int64_t cur_time_sec);
 
 #ifdef __cplusplus
 }
