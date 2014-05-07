@@ -101,6 +101,24 @@ sigar_rma_add_fetch_custom_sample(sigar_t *sigar,
 	}
 }
 
+static int next_pos(sigar_rma_stat_handle_t * rma, int pos)
+{
+	pos++;
+	if (pos >= rma->element_count) {
+		pos = 0;
+	}
+	return pos;
+}
+
+static int prev_pos(sigar_rma_stat_handle_t * rma, int pos)
+{
+	pos--;
+	if (pos < 0) {
+		pos = rma->element_count - 1;
+	}
+	return pos;
+}
+
 SIGAR_DECLARE(void)
 sigar_rma_add_sample(sigar_t *sigar, sigar_rma_stat_handle_t * rma,
 		float value, sigar_int64_t cur_time_sec)
@@ -111,7 +129,7 @@ sigar_rma_add_sample(sigar_t *sigar, sigar_rma_stat_handle_t * rma,
 		return;
 	}
 
-	rma_sample_t *sample = &rma->samples[rma->current_pos++];
+	rma_sample_t *sample = &rma->samples[rma->current_pos];
 
    	sample->value = value;
 
@@ -121,9 +139,7 @@ sigar_rma_add_sample(sigar_t *sigar, sigar_rma_stat_handle_t * rma,
 		sample->stime = sigar_time_now_millis() / 1000;
 	}
 
-	if (rma->current_pos == rma->element_count) {
-		rma->current_pos = 0;
-	}
+	rma->current_pos = next_pos(rma, rma->current_pos);
 }
 
 SIGAR_DECLARE(float)
@@ -142,7 +158,7 @@ sigar_rma_get_average(sigar_t *sigar, sigar_rma_stat_handle_t * rma, int rate,
 	}
 
 	/* Start at our current position and work backwards. */
-	pos = rma->current_pos - 1;
+	pos = prev_pos(rma, rma->current_pos);
 	count = 0;
 
 	while (pos != rma->current_pos) {
@@ -155,11 +171,8 @@ sigar_rma_get_average(sigar_t *sigar, sigar_rma_stat_handle_t * rma, int rate,
 
 		avg += sample->value;
 		count++;
-		pos--;
 
-		if (pos < 0) {
-			pos = rma->element_count - 1;
-		}
+		pos = prev_pos(rma, pos);
 	}
 
 	if (count == 0) {
