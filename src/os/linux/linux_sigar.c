@@ -475,14 +475,14 @@ int sigar_cpu_list_get(sigar_t *sigar, sigar_cpu_list_t *cpulist)
         i++;
     }
 
-    fclose(fp);
-
     if (cpulist->number == 0) {
         /* likely older kernel where cpu\d is not present */
         cpu = &cpulist->data[cpulist->number++];
         SIGAR_ZERO(cpu);
         get_cpu_metrics(sigar, cpu, cpu_total);
     }
+
+    fclose(fp);
 
     return SIGAR_OK;
 }
@@ -515,6 +515,40 @@ int sigar_loadavg_get(sigar_t *sigar,
     loadavg->loadavg[0] = strtod(buffer, &ptr);
     loadavg->loadavg[1] = strtod(ptr, &ptr);
     loadavg->loadavg[2] = strtod(ptr, &ptr);
+    loadavg->processor_queue = strtod(ptr, &ptr);
+
+    return SIGAR_OK;
+}
+
+int sigar_system_stats_get (sigar_t *sigar,
+                            sigar_system_stats_t *system_stats)
+{
+    FILE *fp;
+    char buffer[BUFSIZ], *ptr;
+
+    if (!(fp = fopen(PROC_STAT, "r"))) {
+        return errno;
+    }
+
+    /* Find the context switches, interrupts, and soft interrupts */
+
+    while ((ptr = fgets(buffer, sizeof(buffer), fp))) {
+        if (strnEQ(ptr, "ctxt", 4)) {
+            ptr = sigar_skip_token(ptr);
+            system_stats->ctxt_switches = sigar_strtoull(ptr);
+        }
+        else if (strnEQ(ptr, "intr", 4)) {
+            ptr = sigar_skip_token(ptr);
+            system_stats->irq = sigar_strtoull(ptr);
+        }
+        else if (strnEQ(ptr, "softirq", 7)) {
+            ptr = sigar_skip_token(ptr);
+            system_stats->soft_irq = sigar_strtoull(ptr);
+        }
+
+    }
+
+    fclose(fp);
 
     return SIGAR_OK;
 }
@@ -900,6 +934,15 @@ int sigar_proc_state_get(sigar_t *sigar, sigar_pid_t pid,
     }
 
     proc_status_get(sigar, pid, procstate);
+
+    sigar_proc_fd_t proc_fd_count;
+
+    proc_fd_count.total = SIGAR_FIELD_NOTIMPL;
+
+    status = sigar_proc_fd_get(sigar, pid, &proc_fd_count );
+
+    if(status == SIGAR_OK)
+        procstate->open_files = proc_fd_count.total;
 
     return SIGAR_OK;
 }

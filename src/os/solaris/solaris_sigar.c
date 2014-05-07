@@ -67,17 +67,23 @@ int sigar_os_open(sigar_t **sig)
     struct utsname name;
     char *ptr;
 
-    sigar = malloc(sizeof(*sigar));
-    *sig = sigar;
+    if ((kc = kstat_open()) == NULL) {
+       *sig = NULL;
+       return errno;
+    }
 
-    sigar->log_level = -1; /* log nothing by default */
-    sigar->log_impl = NULL;
-    sigar->log_data = NULL;
+    /*
+     * Use calloc instead of malloc to set everything to 0
+     * to avoid having to set each individual member to 0/NULL
+     * later.
+     */
+    if ((*sig = sigar = calloc(1, sizeof(*sigar))) == NULL) {
+       return ENOMEM;
+    }
 
     uname(&name);
     if ((ptr = strchr(name.release, '.'))) {
-        ptr++;
-        sigar->solaris_version = atoi(ptr);
+        sigar->solaris_version = atoi(ptr + 1);
     }
     else {
         sigar->solaris_version = 6;
@@ -86,9 +92,9 @@ int sigar_os_open(sigar_t **sig)
     if ((ptr = getenv("SIGAR_USE_UCB_PS"))) {
         sigar->use_ucb_ps = strEQ(ptr, "true");
     }
-    else {
-        struct stat sb;
-        if (stat(SIGAR_USR_UCB_PS, &sb) < 0) {
+
+    if (sigar->use_ucb_ps) {
+        if (access(SIGAR_USR_UCB_PS, X_OK) == -1) {
             sigar->use_ucb_ps = 0;
         }
         else {
@@ -103,18 +109,7 @@ int sigar_os_open(sigar_t **sig)
     }
 
     sigar->ticks = sysconf(_SC_CLK_TCK);
-    sigar->kc = kc = kstat_open();
-
-    if (!kc) {
-        return errno;
-    }
-
-    sigar->cpulist.size = 0;
-    sigar->ncpu = 0;
-    sigar->ks.cpu = NULL;
-    sigar->ks.cpu_info = NULL;
-    sigar->ks.cpuid = NULL;
-    sigar->ks.lcpu = 0;
+    sigar->kc = kc;
 
     sigar->koffsets.system[0] = -1;
     sigar->koffsets.mempages[0] = -1;
@@ -122,9 +117,7 @@ int sigar_os_open(sigar_t **sig)
 
     if ((status = sigar_get_kstats(sigar)) != SIGAR_OK) {
         fprintf(stderr, "status=%d\n", status);
-    } 
-
-    sigar->boot_time = 0;
+    }
 
     if ((ksp = sigar->ks.system) &&
         (kstat_read(kc, ksp, NULL) >= 0))
@@ -135,16 +128,6 @@ int sigar_os_open(sigar_t **sig)
     }
 
     sigar->last_pid = -1;
-    sigar->pinfo = NULL;
-
-    sigar->plib = NULL;
-    sigar->pgrab = NULL;
-    sigar->pfree = NULL;
-    sigar->pobjname = NULL;
-
-    sigar->pargs = NULL;
-
-    SIGAR_ZERO(&sigar->mib2);
     sigar->mib2.sd = -1;
 
     return SIGAR_OK;
@@ -190,7 +173,7 @@ char *sigar_os_error_string(sigar_t *sigar, int err)
 
 int sigar_mem_get(sigar_t *sigar, sigar_mem_t *mem)
 {
-    kstat_ctl_t *kc = sigar->kc; 
+    kstat_ctl_t *kc = sigar->kc;
     kstat_t *ksp;
     sigar_uint64_t kern = 0;
 
@@ -415,7 +398,7 @@ int sigar_cpu_get(sigar_t *sigar, sigar_cpu_t *cpu)
 
 int sigar_cpu_list_get(sigar_t *sigar, sigar_cpu_list_t *cpulist)
 {
-    kstat_ctl_t *kc = sigar->kc; 
+    kstat_ctl_t *kc = sigar->kc;
     kstat_t *ksp;
     uint_t cpuinfo[CPU_STATES];
     unsigned int i;
@@ -561,6 +544,8 @@ int sigar_loadavg_get(sigar_t *sigar,
     kstat_t *ksp;
     int i;
 
+    loadavg->processor_queue = SIGAR_FIELD_NOTIMPL;
+
     if (sigar_kstat_update(sigar) == -1) {
         return errno;
     }
@@ -574,9 +559,39 @@ int sigar_loadavg_get(sigar_t *sigar,
     }
 
     sigar_koffsets_init_system(sigar, ksp);
-    
+
     for (i=0; i<3; i++) {
         loadavg->loadavg[i] = (double)kSYSTEM(loadavg_keys[i]) / FSCALE;
+    }
+
+    return SIGAR_OK;
+}
+
+int sigar_system_stats_get (sigar_t *sigar,
+                            sigar_system_stats_t *system_stats)
+{
+    int status;
+    int i;
+    cpu_stat_t *cpu_stat;
+    cpu_sysinfo_t *info;
+
+    status =  sigar_cpu_list_get(sigar, &sigar->cpulist);
+
+	if(status != SIGAR_OK)
+		return SIGAR_ENOTIMPL;
+
+	memset(system_stats, 0, sizeof(*system_stats));
+
+    for (i = 0; i < sigar->ncpu; i++) {
+        cpu_stat = (cpu_stat_t *)sigar->ks.cpu[i]->ks_data;
+        info = &cpu_stat->cpu_sysinfo;
+        system_stats->ctxt_switches += info->pswitch;
+        system_stats->irq += info->intr;
+        /*
+         * Number of syscalls should give a fair indication of
+         * soft interrputs.
+        */
+        system_stats->soft_irq += info->syscall;
     }
 
     return SIGAR_OK;
@@ -719,7 +734,7 @@ int sigar_proc_mem_get(sigar_t *sigar, sigar_pid_t pid,
     return SIGAR_OK;
 }
 
-int sigar_proc_cumulative_disk_io_get(sigar_t *sigar, sigar_pid_t pid, 
+int sigar_proc_cumulative_disk_io_get(sigar_t *sigar, sigar_pid_t pid,
                            sigar_proc_cumulative_disk_io_t *proc_cumulative_disk_io)
 {
    prusage_t usage;
@@ -826,6 +841,15 @@ int sigar_proc_state_get(sigar_t *sigar, sigar_pid_t pid,
         procstate->state = 'D';
         break;
     }
+
+    sigar_proc_fd_t proc_fd_count;
+
+    proc_fd_count.total = SIGAR_FIELD_NOTIMPL;
+
+    status = sigar_proc_fd_get(sigar, pid, &proc_fd_count );
+
+    if(status == SIGAR_OK)
+        procstate->open_files = proc_fd_count.total;
 
     return SIGAR_OK;
 }
@@ -992,7 +1016,7 @@ int sigar_os_proc_args_get(sigar_t *sigar, sigar_pid_t pid,
             return errno;
         }
 
-        buffer[nread] = '\0'; 
+        buffer[nread] = '\0';
         alen = strlen(buffer)+1;
         arg = malloc(alen);
         memcpy(arg, buffer, alen);
@@ -1202,7 +1226,7 @@ int sigar_proc_exe_get(sigar_t *sigar, sigar_pid_t pid,
     return SIGAR_OK;
 }
 
-static int sigar_read_xmaps(sigar_t *sigar, 
+static int sigar_read_xmaps(sigar_t *sigar,
                             prxmap_t *xmaps, int total,
                             unsigned long *last_inode,
                             struct ps_prochandle *phandle,
@@ -1228,7 +1252,7 @@ static int sigar_read_xmaps(sigar_t *sigar,
 
         sigar->pobjname(phandle, xmaps[i].pr_vaddr, buffer, sizeof(buffer));
 
-        status = 
+        status =
             procmods->module_getter(procmods->data, buffer, strlen(buffer));
 
         if (status != SIGAR_OK) {
@@ -1513,7 +1537,7 @@ static int create_fsdev_cache(sigar_t *sigar)
     sigar->fsdev = sigar_cache_new(15);
 
     status = sigar_file_system_list_get(sigar, &fslist);
-    
+
     if (status != SIGAR_OK) {
         return status;
     }
@@ -1651,7 +1675,7 @@ static int simple_hash(const char *s)
 {
     int hash = 0;
     while (*s) {
-        hash = 31*hash + *s++; 
+        hash = 31*hash + *s++;
     }
     return hash;
 }
@@ -1709,7 +1733,7 @@ int sigar_disk_usage_get(sigar_t *sigar, const char *name,
     /* service_time formula derived from opensolaris.org:iostat.c */
     if ((status == SIGAR_OK) && iodev) {
         sigar_uint64_t delta;
-        double avw, avr, tps, mtps; 
+        double avw, avr, tps, mtps;
         double etime, hr_etime;
 
         if (iodev->disk.snaptime) {
@@ -1980,7 +2004,7 @@ int sigar_net_route_list_get(sigar_t *sigar,
                 route->flags |= RTF_GATEWAY;
             }
 
-            route->use = route->window = route->mtu = 
+            route->use = route->window = route->mtu =
                 SIGAR_FIELD_NOTIMPL; /*XXX*/
         }
     }
@@ -2096,7 +2120,7 @@ static void ifstat_kstat_common(sigar_net_interface_stat_t *ifstat,
 static int sigar_net_ifstat_get_any(sigar_t *sigar, const char *name,
                                     sigar_net_interface_stat_t *ifstat)
 {
-    kstat_ctl_t *kc = sigar->kc; 
+    kstat_ctl_t *kc = sigar->kc;
     kstat_t *ksp;
     kstat_named_t *data;
 
@@ -2322,7 +2346,7 @@ int sigar_net_connection_walk(sigar_net_connection_walker_t *walker)
     struct opthdr *op;
 
     while ((rc = get_mib2(&sigar->mib2, &op, &data, &len)) == GET_MIB2_OK) {
-        if ((op->level == MIB2_TCP) && 
+        if ((op->level == MIB2_TCP) &&
             (op->name == MIB2_TCP_13) &&
             want_tcp)
         {
@@ -2331,7 +2355,7 @@ int sigar_net_connection_walk(sigar_net_connection_walker_t *walker)
                                    (struct mib2_tcpConnEntry *)data,
                                    len);
         }
-        else if ((op->level == MIB2_UDP) && 
+        else if ((op->level == MIB2_UDP) &&
                  (op->name == MIB2_UDP_5) &&
                  want_udp)
         {
@@ -2393,7 +2417,7 @@ sigar_tcp_get(sigar_t *sigar,
 }
 
 static int sigar_nfs_get(sigar_t *sigar,
-                         char *type, 
+                         char *type,
                          char **names,
                          char *nfs)
 {

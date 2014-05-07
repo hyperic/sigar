@@ -23,7 +23,15 @@
 #include "sigar_util.h"
 #include "sigar_format.h"
 #include <shellapi.h>
-#ifndef MSVC
+#include <assert.h>
+
+#ifdef MSVC
+typedef __int32 int32_t;
+typedef unsigned __int32 uint32_t;
+typedef __int64 int64_t;
+typedef unsigned __int64 uint64_t;
+#else
+#include <stdint.h>
 #include <iphlpapi.h>
 #endif
 
@@ -102,7 +110,7 @@ typedef enum {
 #define PERF_TITLE_DISK_WRITE_BYTES 222 /* Disk Write Bytes/sec */
 #define PERF_TITLE_DISK_QUEUE 198 /* Current Disk Queue Length */
 
-/* 
+/*
  * diff is:
  *   ExW      -> ExA
  *   wcounter -> counter
@@ -122,6 +130,10 @@ typedef enum {
     perf_offsets[ix] ? \
         *((DWORD *)((BYTE *)counter_block + perf_offsets[ix])) : 0
 
+#define PERF_VAL64(ix) \
+    perf_offsets[ix] ? \
+        *((sigar_uint64_t *)((BYTE *)counter_block + perf_offsets[ix])) : 0
+
 /* 1/100ns units to milliseconds */
 #define NS100_2MSEC(t) ((t) / 10000)
 
@@ -132,7 +144,16 @@ typedef enum {
 #define NETIF_LA "la"
 
 static int get_proc_info(sigar_t *sigar, sigar_pid_t pid);
-static int netif_hash(char *s);
+
+static int netif_hash(const char *s)
+{
+    int hash = 0;
+    while (*s) {
+        hash = 31 * hash + *s++;
+    }
+    return hash;
+}
+
 
 sigar_uint64_t sigar_FileTimeToTime(FILETIME *ft)
 {
@@ -186,7 +207,7 @@ static char *get_counter_name(char *key)
 
 static PERF_OBJECT_TYPE *get_perf_object_inst(sigar_t *sigar,
                                               char *counter_key,
-                                              DWORD inst, DWORD *err)
+                                              DWORD inst, int *err)
 {
     DWORD retval, type, bytes;
     WCHAR wcounter_key[MAX_PATH+1];
@@ -221,7 +242,7 @@ static PERF_OBJECT_TYPE *get_perf_object_inst(sigar_t *sigar,
     }
     object = PdhFirstObject(block);
 
-    /* 
+    /*
      * only seen on windows 2003 server when pdh.dll
      * functions are in use by the same process.
      * confucius say what the fuck.
@@ -416,14 +437,14 @@ static int sigar_dllmod_init(sigar_t *sigar,
     if (module->handle) {
         return SIGAR_OK;
     }
-    
+
     module->handle = LoadLibrary(module->name);
     if (!(success = (module->handle ? TRUE : FALSE))) {
         rc = GetLastError();
         /* dont try again */
         module->handle = INVALID_HANDLE_VALUE;
     }
-    
+
     if (is_debug) {
         sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
                          "LoadLibrary(%s): %s",
@@ -536,6 +557,7 @@ int sigar_os_open(sigar_t **sigar_ptr)
     HINSTANCE h;
     OSVERSIONINFO version;
     int i;
+    int wmi_status;
     sigar_t *sigar;
 
     *sigar_ptr = sigar = malloc(sizeof(*sigar));
@@ -598,6 +620,16 @@ int sigar_os_open(sigar_t **sigar_ptr)
 
     /* increase process visibility */
     sigar_enable_privilege(SE_DEBUG_NAME);
+
+    /* Open our WMI handle. */
+
+    sigar->wmi_handle = (sigar_wmi_handle_t *)wmi_handle_open(&wmi_status);
+
+    if(wmi_status != 0)
+    {
+        /* TODO What shall we do if WMI open fails?  Retry every call? */
+        sigar_log_printf(sigar, SIGAR_LOG_WARN, "Unable to create WMI handle");
+    }
 
     return result;
 }
@@ -735,7 +767,7 @@ SIGAR_DECLARE(int) sigar_swap_get(sigar_t *sigar, sigar_swap_t *swap)
 
 static PERF_INSTANCE_DEFINITION *get_cpu_instance(sigar_t *sigar,
                                                   DWORD *perf_offsets,
-                                                  DWORD *num, DWORD *err)
+                                                  DWORD *num, int *err)
 {
     PERF_OBJECT_TYPE *object = get_perf_object(sigar, PERF_TITLE_CPU_KEY, err);
     PERF_INSTANCE_DEFINITION *inst;
@@ -828,10 +860,10 @@ static int get_idle_cpu(sigar_t *sigar, sigar_cpu_t *cpu,
 
 static int sigar_cpu_perflib_get(sigar_t *sigar, sigar_cpu_t *cpu)
 {
-    int status;
+    int status, err;
     PERF_INSTANCE_DEFINITION *inst;
     PERF_COUNTER_BLOCK *counter_block;
-    DWORD perf_offsets[PERF_IX_CPU_MAX], err;
+    DWORD perf_offsets[PERF_IX_CPU_MAX];
 
     SIGAR_ZERO(cpu);
     memset(&perf_offsets, 0, sizeof(perf_offsets));
@@ -883,8 +915,8 @@ static int sigar_cpu_ntsys_get(sigar_t *sigar, sigar_cpu_t *cpu)
         cpu->sys  += NS100_2MSEC(info[i].KernelTime.QuadPart -
                                  info[i].IdleTime.QuadPart);
         cpu->irq  += NS100_2MSEC(info[i].InterruptTime.QuadPart);
-        cpu->total += cpu->idle + cpu->user + cpu->sys;
     }
+    cpu->total = cpu->idle + cpu->user + cpu->sys;
 
     return SIGAR_OK;
 }
@@ -903,9 +935,9 @@ SIGAR_DECLARE(int) sigar_cpu_get(sigar_t *sigar, sigar_cpu_t *cpu)
 static int sigar_cpu_list_perflib_get(sigar_t *sigar,
                                       sigar_cpu_list_t *cpulist)
 {
-    int status, i, j;
+    int status, i, j, err;
     PERF_INSTANCE_DEFINITION *inst;
-    DWORD perf_offsets[PERF_IX_CPU_MAX], num, err;
+    DWORD perf_offsets[PERF_IX_CPU_MAX], num;
     int core_rollup = sigar_cpu_core_rollup(sigar);
 
     memset(&perf_offsets, 0, sizeof(perf_offsets));
@@ -953,7 +985,7 @@ static int sigar_cpu_list_perflib_get(sigar_t *sigar,
         cpu->nice = cpu->wait = 0; /*N/A*/
 
         /*XXX adding up too much here if xeon, but not using this atm*/
-        cpu->total += cpu->sys + cpu->user + cpu->idle + cpu->irq;
+        cpu->total = cpu->sys + cpu->user + cpu->idle + cpu->irq;
 
         inst = PdhNextInstance(inst);
     }
@@ -1070,7 +1102,65 @@ SIGAR_DECLARE(int) sigar_uptime_get(sigar_t *sigar,
 SIGAR_DECLARE(int) sigar_loadavg_get(sigar_t *sigar,
                                      sigar_loadavg_t *loadavg)
 {
-    return SIGAR_ENOTIMPL;
+     sigar_uint32_t p_queue = 0;
+     int status;
+
+     unsigned long num_elems;
+     status = wmi_query_sum_u32(sigar,
+                L"SELECT ProcessorQueueLength FROM Win32_PerfFormattedData_PerfOS_System",
+                L"ProcessorQueueLength", &p_queue, &num_elems);
+
+     if (status == SIGAR_OK)
+     {
+		sigar_int64_t cur_time = sigar_time_now_millis() / 1000;
+
+		if(sigar->rma_process_queue == NULL)
+			sigar->rma_process_queue = sigar_rma_init(sigar, SIGAR_RMA_RATE_15_MIN);
+
+		loadavg->processor_queue = p_queue;
+		sigar_rma_add_sample(sigar, sigar->rma_process_queue, p_queue, cur_time);
+
+		loadavg->loadavg[0] = sigar_rma_get_average(sigar, sigar->rma_process_queue, SIGAR_RMA_RATE_1_MIN, cur_time);
+		loadavg->loadavg[1] = sigar_rma_get_average(sigar, sigar->rma_process_queue, SIGAR_RMA_RATE_5_MIN, cur_time);
+		loadavg->loadavg[2] = sigar_rma_get_average(sigar, sigar->rma_process_queue, SIGAR_RMA_RATE_15_MIN, cur_time);
+
+		return SIGAR_OK;
+	}
+
+	return status;
+}
+
+SIGAR_DECLARE(int) sigar_system_stats_get (sigar_t *sigar,
+                            sigar_system_stats_t *system_stats)
+{
+    int status;
+    sigar_uint32_t switches = 0;
+    sigar_uint32_t irq = 0;
+
+    memset(system_stats, 0, sizeof(*system_stats));
+
+    unsigned long num_elems;
+    status = wmi_query_sum_u32(sigar,
+                L"SELECT ContextSwitchesPerSec FROM Win32_PerfFormattedData_PerfOS_System",
+                L"ContextSwitchesPerSec", &switches, &num_elems);
+
+    if (status == SIGAR_OK)
+        system_stats->ctxt_switches = switches;
+    else
+        system_stats->ctxt_switches = SIGAR_FIELD_NOTIMPL;
+
+    status = wmi_query_sum_u32(sigar,
+                L"SELECT InterruptsPerSec FROM Win32_PerfFormattedData_PerfOS_Processor",
+                L"InterruptsPerSec", &irq, &num_elems);
+
+	if (status == SIGAR_OK)
+		system_stats->irq =irq;
+	else
+		system_stats->irq = SIGAR_FIELD_NOTIMPL;
+
+	system_stats->soft_irq = SIGAR_FIELD_NOTIMPL;
+
+	return status;
 }
 
 #define get_process_object(sigar, err) \
@@ -1079,11 +1169,11 @@ SIGAR_DECLARE(int) sigar_loadavg_get(sigar_t *sigar,
 static int sigar_proc_list_get_perf(sigar_t *sigar,
                                     sigar_proc_list_t *proclist)
 {
-
+    int err;
     PERF_OBJECT_TYPE *object;
     PERF_INSTANCE_DEFINITION *inst;
     PERF_COUNTER_DEFINITION *counter;
-    DWORD i, err;
+    DWORD i;
     DWORD perf_offsets[PERF_IX_MAX];
 
     perf_offsets[PERF_IX_PID] = 0;
@@ -1169,6 +1259,7 @@ int sigar_os_proc_list_get(sigar_t *sigar,
 
         for (i=0; i<size; i++) {
             DWORD pid = pids[i];
+
             if (pid == 0) {
                 continue; /* dont include the system Idle process */
             }
@@ -1250,7 +1341,7 @@ sigar_proc_cred_name_get(sigar_t *sigar, sigar_pid_t pid,
     if (!(proc = open_process(pid))) {
         return GetLastError();
     }
-    
+
     if (!OpenProcessToken(proc, TOKEN_DAC, &token)) {
         CloseHandle(proc);
         return GetLastError();
@@ -1316,7 +1407,7 @@ SIGAR_DECLARE(int) sigar_proc_cred_get(sigar_t *sigar, sigar_pid_t pid,
 }
 
 #define FILETIME2MSEC(ft) \
-    NS100_2MSEC(((ft.dwHighDateTime << 32) | ft.dwLowDateTime))
+    NS100_2MSEC((((uint64_t)ft.dwHighDateTime << 32) | ft.dwLowDateTime))
 
 sigar_int64_t sigar_time_now_millis(void)
 {
@@ -1386,16 +1477,18 @@ SIGAR_DECLARE(int) sigar_proc_state_get(sigar_t *sigar, sigar_pid_t pid,
     procstate->tty =  SIGAR_FIELD_NOTIMPL;
     procstate->threads = pinfo->threads;
     procstate->processor = SIGAR_FIELD_NOTIMPL;
+    procstate->open_files = pinfo->handles;
 
     return SIGAR_OK;
 }
 
 static int get_proc_info(sigar_t *sigar, sigar_pid_t pid)
 {
+    int err;
     PERF_OBJECT_TYPE *object;
     PERF_INSTANCE_DEFINITION *inst;
     PERF_COUNTER_DEFINITION *counter;
-    DWORD i, err;
+    DWORD i;
     DWORD perf_offsets[PERF_IX_MAX];
     sigar_win32_pinfo_t *pinfo = &sigar->pinfo;
     time_t timenow = time(NULL);
@@ -1439,9 +1532,11 @@ static int get_proc_info(sigar_t *sigar, sigar_pid_t pid)
             perf_offsets[PERF_IX_PAGE_FAULTS] = offset;
             break;
           case PERF_TITLE_MEM_VSIZE:
+            assert(counter->CounterSize >= 8);
             perf_offsets[PERF_IX_MEM_VSIZE] = offset;
             break;
           case PERF_TITLE_MEM_SIZE:
+            assert(counter->CounterSize >= 8);
             perf_offsets[PERF_IX_MEM_SIZE] = offset;
             break;
           case PERF_TITLE_THREAD_CNT:
@@ -1462,12 +1557,12 @@ static int get_proc_info(sigar_t *sigar, sigar_pid_t pid)
           case PERF_TITLE_START_TIME:
             perf_offsets[PERF_IX_START_TIME] = offset;
             break;
-		  case PERF_TITLE_IO_READ_BYTES_SEC:
-			perf_offsets[PERF_IX_IO_READ_BYTES_SEC] = offset;
-			break;
-		  case PERF_TITLE_IO_WRITE_BYTES_SEC:
-			perf_offsets[PERF_IX_IO_WRITE_BYTES_SEC] = offset;
-			break;
+          case PERF_TITLE_IO_READ_BYTES_SEC:
+	    perf_offsets[PERF_IX_IO_READ_BYTES_SEC] = offset;
+  	    break;
+	  case PERF_TITLE_IO_WRITE_BYTES_SEC:
+	    perf_offsets[PERF_IX_IO_WRITE_BYTES_SEC] = offset;
+	    break;
         }
     }
 
@@ -1486,15 +1581,15 @@ static int get_proc_info(sigar_t *sigar, sigar_pid_t pid)
         SIGAR_W2A(PdhInstanceName(inst),
                   pinfo->name, sizeof(pinfo->name));
 
-        pinfo->size     = PERF_VAL(PERF_IX_MEM_VSIZE);
-        pinfo->resident = PERF_VAL(PERF_IX_MEM_SIZE);
+        pinfo->size     = PERF_VAL64(PERF_IX_MEM_VSIZE);
+        pinfo->resident = PERF_VAL64(PERF_IX_MEM_SIZE);
         pinfo->ppid     = PERF_VAL(PERF_IX_PPID);
         pinfo->priority = PERF_VAL(PERF_IX_PRIORITY);
         pinfo->handles  = PERF_VAL(PERF_IX_HANDLE_CNT);
         pinfo->threads  = PERF_VAL(PERF_IX_THREAD_CNT);
         pinfo->page_faults = PERF_VAL(PERF_IX_PAGE_FAULTS);
-		pinfo->bytes_read = PERF_VAL(PERF_IX_IO_READ_BYTES_SEC);
-		pinfo->bytes_written = PERF_VAL(PERF_IX_IO_WRITE_BYTES_SEC);
+	pinfo->bytes_read = PERF_VAL(PERF_IX_IO_READ_BYTES_SEC);
+	pinfo->bytes_written = PERF_VAL(PERF_IX_IO_WRITE_BYTES_SEC);
 
         return SIGAR_OK;
     }
@@ -1637,7 +1732,7 @@ SIGAR_DECLARE(int) sigar_proc_env_get(sigar_t *sigar, sigar_pid_t pid,
     if (pid == sigar->pid) {
         if (procenv->type == SIGAR_PROC_ENV_KEY) {
             char value[32767]; /* max size from msdn docs */
-            DWORD retval = 
+            DWORD retval =
                 GetEnvironmentVariable(procenv->key, value, sizeof(value));
 
             if (retval == 0) {
@@ -1737,7 +1832,7 @@ SIGAR_DECLARE(int) sigar_proc_exe_get(sigar_t *sigar, sigar_pid_t pid,
 SIGAR_DECLARE(int) sigar_proc_modules_get(sigar_t *sigar, sigar_pid_t pid,
                                           sigar_proc_modules_t *procmods)
 {
-    HANDLE proc; 
+    HANDLE proc;
     HMODULE modules[1024];
     DWORD size = 0;
     unsigned int i;
@@ -1813,7 +1908,7 @@ int sigar_os_fs_type_get(sigar_file_system_t *fsp)
     return fsp->type;
 }
 
-#ifndef FILE_READ_ONLY_VOLUME 
+#ifndef FILE_READ_ONLY_VOLUME
 #define FILE_READ_ONLY_VOLUME 0x00080000
 #endif
 #ifndef FILE_NAMED_STREAMS
@@ -1943,7 +2038,7 @@ SIGAR_DECLARE(int) sigar_file_system_list_get(sigar_t *sigar,
 
 static PERF_INSTANCE_DEFINITION *get_disk_instance(sigar_t *sigar,
                                                    DWORD *perf_offsets,
-                                                   DWORD *num, DWORD *err)
+                                                   DWORD *num, int *err)
 {
     PERF_OBJECT_TYPE *object =
         get_perf_object(sigar, PERF_TITLE_DISK_KEY, err);
@@ -2013,7 +2108,8 @@ SIGAR_DECLARE(int) sigar_disk_usage_get(sigar_t *sigar,
                                         const char *dirname,
                                         sigar_disk_usage_t *disk)
 {
-    DWORD i, err;
+    int err;
+    DWORD i;
     PERF_OBJECT_TYPE *object =
         get_perf_object(sigar, PERF_TITLE_DISK_KEY, &err);
     PERF_INSTANCE_DEFINITION *inst;
@@ -2124,7 +2220,7 @@ static int sigar_cpu_info_get(sigar_t *sigar, sigar_cpu_info_t *info)
         RegCloseKey(key);
         return rc;
     }
-       
+
     rc = RegOpenKey(key, id, &cpu);
     if (rc != ERROR_SUCCESS) {
         RegCloseKey(key);
@@ -2343,11 +2439,7 @@ static int sigar_get_adapters_addresses(sigar_t *sigar,
         return SIGAR_ENOTIMPL;
     }
 
-    rc = sigar_GetAdaptersAddresses(family,
-                                    flags,
-                                    NULL,
-                                    *addrs,
-                                    size);
+    rc = sigar_GetAdaptersAddresses(family, flags, NULL, *addrs, size);
 
     if (rc == ERROR_BUFFER_OVERFLOW) {
         sigar_log_printf(sigar, SIGAR_LOG_DEBUG,
@@ -2442,7 +2534,7 @@ static int sigar_get_netif_ipaddr(sigar_t *sigar,
             MIB_IPADDRROW *row = &mib->table[i];
             short type;
 
-#if HAVE_MIB_IPADDRROW_WTYPE
+#if defined(HAVE_MIB_IPADDRROW_WTYPE) || defined(__MINGW32__)
             type = row->wType;
 #else
             type = row->unused2;
@@ -2482,7 +2574,7 @@ SIGAR_DECLARE(int) sigar_net_info_get(sigar_t *sigar,
     DWORD rc;
 
     DLLMOD_INIT(iphlpapi, FALSE);
-    
+
     if (!sigar_GetNetworkParams) {
         return SIGAR_ENOTIMPL;
     }
@@ -2510,7 +2602,7 @@ SIGAR_DECLARE(int) sigar_net_info_get(sigar_t *sigar,
         SIGAR_SSTRCPY(netinfo->secondary_dns,
                       ip->IpAddress.String);
     }
-    
+
     free(info);
 
     if (sigar_get_adapters_info(sigar, &adapter) != SIGAR_OK) {
@@ -2584,10 +2676,10 @@ SIGAR_DECLARE(int) sigar_net_route_list_get(sigar_t *sigar,
 
         sigar_net_address_set(route->destination,
                               ipr->dwForwardDest);
-        
+
         sigar_net_address_set(route->mask,
                               ipr->dwForwardMask);
-        
+
         sigar_net_address_set(route->gateway,
                               ipr->dwForwardNextHop);
 
@@ -2676,22 +2768,13 @@ static int get_mib_ifrow(sigar_t *sigar,
 
     *ifrp = (MIB_IFROW *)entry->value;
     if (cached) {
-        /* refresh */ 
+        /* refresh */
         if ((status = sigar_GetIfEntry(*ifrp)) != NO_ERROR) {
             return status;
         }
     }
 
     return SIGAR_OK;
-}
-
-static int netif_hash(char *s)
-{
-    int hash = 0;
-    while (*s) {
-        hash = 31*hash + *s++; 
-    }
-    return hash;
 }
 
 /* Vista and later, wireless network cards are reported as IF_TYPE_IEEE80211 */
@@ -2843,7 +2926,9 @@ static int sigar_net_interface_ipv6_config_find(sigar_t *sigar, int index,
     int status;
     PIP_ADAPTER_ADDRESSES aa = (PIP_ADAPTER_ADDRESSES)sigar->ifconf_buf, addrs;
     ULONG flags = GAA_FLAG_INCLUDE_PREFIX;
-    status = sigar_get_adapters_addresses(sigar, AF_UNSPEC, flags, &aa, &sigar->ifconf_len);
+    ULONG size = sigar->ifconf_len;
+    status = sigar_get_adapters_addresses(sigar, AF_UNSPEC, flags, &aa, &size);
+    sigar->ifconf_len = size;
 
     if (status != SIGAR_OK) {
         return status;
@@ -2970,16 +3055,16 @@ sigar_net_interface_stat_get(sigar_t *sigar, const char *name,
     if (status != SIGAR_OK) {
         return status;
     }
-    
+
     ifstat->rx_bytes    = ifr->dwInOctets;
-    ifstat->rx_packets  = ifr->dwInUcastPkts + ifr->dwInNUcastPkts; 
+    ifstat->rx_packets  = ifr->dwInUcastPkts + ifr->dwInNUcastPkts;
     ifstat->rx_errors   = ifr->dwInErrors;
     ifstat->rx_dropped  = ifr->dwInDiscards;
     ifstat->rx_overruns = SIGAR_FIELD_NOTIMPL;
     ifstat->rx_frame    = SIGAR_FIELD_NOTIMPL;
 
     ifstat->tx_bytes      = ifr->dwOutOctets;
-    ifstat->tx_packets    = ifr->dwOutUcastPkts + ifr->dwOutNUcastPkts; 
+    ifstat->tx_packets    = ifr->dwOutUcastPkts + ifr->dwOutNUcastPkts;
     ifstat->tx_errors     = ifr->dwOutErrors;
     ifstat->tx_dropped    = ifr->dwOutDiscards;
     ifstat->tx_overruns   = SIGAR_FIELD_NOTIMPL;
@@ -3109,6 +3194,15 @@ static int net_conn_get_tcp(sigar_net_connection_walker_t *walker)
 
 static int net_conn_get_udp(sigar_net_connection_walker_t *walker)
 {
+    /* Disabled because it isn't properly implemented and
+     * cause the windows runtime to abort due to use
+     * of uninitialized variable in the for-loop below.
+     * IS_UDP_SERVER(conn, flags) We don't use this
+     * functionality anyway
+     */
+    return SIGAR_ENOTIMPL;
+
+#if 0
     sigar_t *sigar = walker->sigar;
     int flags = walker->flags;
     int status;
@@ -3160,6 +3254,7 @@ static int net_conn_get_udp(sigar_net_connection_walker_t *walker)
 
     free(udp);
     return SIGAR_OK;
+#endif
 }
 
 SIGAR_DECLARE(int)
@@ -3289,7 +3384,7 @@ SIGAR_DECLARE(int) sigar_proc_port_get(sigar_t *sigar,
             }
 
             *pid = tcp->table[i].dwProcessId;
-            
+
             return SIGAR_OK;
         }
     }
@@ -3313,7 +3408,7 @@ SIGAR_DECLARE(int) sigar_proc_port_get(sigar_t *sigar,
             }
 
             *pid = udp->table[i].dwProcessId;
-            
+
             return SIGAR_OK;
         }
     }
@@ -3471,7 +3566,7 @@ static int get_logon_info(HKEY users,
                              NULL, NULL, NULL, NULL, NULL,
                              NULL, NULL, NULL, NULL, NULL,
                              &wtime);
-    
+
     if (status == ERROR_SUCCESS) {
         FileTimeToLocalFileTime(&wtime, &wtime);
         who->time = sigar_FileTimeToTime(&wtime) / 1000000;
@@ -3544,7 +3639,7 @@ static int sigar_who_registry(sigar_t *sigar,
         }
 
         if (LookupAccountSid(NULL, /* server */
-                             sid, 
+                             sid,
                              username, &username_len,
                              domain, &domain_len,
                              &type))
@@ -3553,13 +3648,13 @@ static int sigar_who_registry(sigar_t *sigar,
 
             SIGAR_WHO_LIST_GROW(wholist);
             who = &wholist->data[wholist->number++];
-            
+
             SIGAR_SSTRCPY(who->user, username);
             SIGAR_SSTRCPY(who->host, domain);
             SIGAR_SSTRCPY(who->device, "console");
 
             get_logon_info(users, subkey, who);
-        }               
+        }
 
         LocalFree(sid);
     }
@@ -3618,7 +3713,7 @@ static int sigar_who_wts(sigar_t *sigar,
                                              &buffer,
                                              &bytes))
         {
-            int isConsole = 
+            int isConsole =
                 (*buffer == WTS_PROTOCOL_TYPE_CONSOLE);
 
             sigar_WTSFreeMemory(buffer);
@@ -3730,7 +3825,7 @@ int sigar_os_sys_info_get(sigar_t *sigar,
     char *vendor_name, *vendor_version, *code_name=NULL;
 
     version.dwOSVersionInfoSize = sizeof(version);
-    GetVersionEx((OSVERSIONINFO *)&version); 
+    GetVersionEx((OSVERSIONINFO *)&version);
 
     if (version.dwMajorVersion == 4) {
         vendor_name = "Windows NT";
@@ -3967,7 +4062,8 @@ int sigar_file_version_get(sigar_file_version_t *version,
                            char *name,
                            sigar_proc_env_t *infocb)
 {
-    DWORD handle, len;
+    DWORD handle;
+    UINT len;
     LPTSTR data;
     VS_FIXEDFILEINFO *info;
     int status;
@@ -3980,9 +4076,9 @@ int sigar_file_version_get(sigar_file_version_t *version,
         return !SIGAR_OK;
     }
     data = malloc(len);
- 
+
     if (GetFileVersionInfo(name, handle, len, data)) {
-        if (VerQueryValue(data, "\\", &info, &len)) {
+        if (VerQueryValue(data, "\\", (void **)&info, &len)) {
             version->product_major = HIWORD(info->dwProductVersionMS);
             version->product_minor = LOWORD(info->dwProductVersionMS);
             version->product_build = HIWORD(info->dwProductVersionLS);
@@ -4008,7 +4104,7 @@ int sigar_file_version_get(sigar_file_version_t *version,
         } *trans;
 
         if (VerQueryValue(data, "\\VarFileInfo\\Translation",
-                          &trans, &len))
+                          (void **)&trans, &len))
         {
             int i;
             char buf[1024];

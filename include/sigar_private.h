@@ -368,7 +368,7 @@ int sigar_group_name_get(sigar_t *sigar, int gid, char *buf, int buflen);
 /* key used for filesystem (/) -> device (/dev/hda1) mapping */
 /* and disk_usage cache for service_time */
 #define SIGAR_FSDEV_ID(sb) \
-    (S_ISBLK((sb).st_mode) ? (sb).st_rdev : ((sb).st_ino + (sb).st_dev))
+    (S_ISBLK((sb).st_mode) ? (sigar_uint64_t)((sb).st_rdev) : (sigar_uint64_t)(((sigar_uint64_t)((sb).st_ino) << 32) + (sb).st_dev))
 
 #if defined(WIN32) || defined(NETWARE)
 int sigar_get_iftype(const char *name, int *type, int *inst);

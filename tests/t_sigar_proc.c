@@ -120,8 +120,6 @@ TEST(test_sigar_proc_list_get) {
 			/* Freebsd */
 			assert(proc_time.start_time > 0);
 #endif
-			assert(proc_time.user >= 0);
-			assert(proc_time.sys >= 0);
 			assert(proc_time.total == proc_time.user + proc_time.sys);
 		} else {
 			switch (ret) {

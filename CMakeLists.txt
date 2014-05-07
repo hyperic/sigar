@@ -29,7 +29,12 @@ IF(WIN32)
 	ADD_DEFINITIONS(-D_CRT_SECURE_NO_WARNINGS)
 ENDIF(WIN32)
 
+IF ("${CMAKE_C_COMPILER_ID}" STREQUAL "Clang")
+   # CLang emits a warning for all asm blocks
+   SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-language-extension-token")
+ENDIF ("${CMAKE_C_COMPILER_ID}" STREQUAL "Clang")
+
+
 ADD_SUBDIRECTORY(src build-src)
 ADD_SUBDIRECTORY(tests build-tests)
 ADD_SUBDIRECTORY(include build-include)
-

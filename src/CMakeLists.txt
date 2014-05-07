@@ -59,7 +59,8 @@ IF (CMAKE_SYSTEM_NAME MATCHES "(Solaris|SunOS)" )
 
   INCLUDE_DIRECTORIES(os/solaris/)
   ADD_DEFINITIONS(-DSOLARIS)
-  SET(SIGAR_LINK_FLAGS -lkstat -ldl -lnsl -lsocket -lresolv)
+  ADD_DEFINITIONS(-DHAVE_LIBDLPI_H)
+  SET(SIGAR_LINK_FLAGS "-lkstat -ldl -lnsl -lsocket -lresolv -ldlpi")
 ENDIF(CMAKE_SYSTEM_NAME MATCHES "(Solaris|SunOS)" )
 
 ## solaris

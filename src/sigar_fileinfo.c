@@ -91,6 +91,9 @@
 #endif
 #include <errno.h>
 
+#include "sigar_private.h"
+#include "sigar_util.h"
+
 #define SIGAR_FS_BLOCKS_TO_BYTES(val, bsize) ((val * bsize) >> 1)
 
 int sigar_statvfs(sigar_t *sigar,

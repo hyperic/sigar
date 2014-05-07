@@ -670,6 +670,7 @@ int sigar_loadavg_get(sigar_t *sigar,
     int data[3];
     perfstat_cpu_total_t cpu_data;
 
+    loadavg->processor_queue = SIGAR_FIELD_NOTIMPL;
     if (sigar_perfstat_cpu(&cpu_data) == 1) {
         for (i=0; i<3; i++) {
             loadavg->loadavg[i] = FIXED_TO_DOUBLE(cpu_data.loadavg[i]);
@@ -679,6 +680,12 @@ int sigar_loadavg_get(sigar_t *sigar,
     else {
         return errno;
     }
+}
+
+int sigar_system_stats_get (sigar_t *sigar,
+                            sigar_system_stats_t *system_stats)
+{
+    return SIGAR_ENOTIMPL;
 }
 
 int sigar_os_proc_list_get(sigar_t *sigar,

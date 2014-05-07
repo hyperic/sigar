@@ -142,10 +142,12 @@ SIGAR_DECLARE(int) sigar_proc_cpu_get(sigar_t *sigar, sigar_pid_t pid,
     }
 
     time_diff = time_now - prev->last_time;
+
     proccpu->last_time = prev->last_time = time_now;
 
     if (time_diff == 0) {
         /* we were just called within < 1 second ago. */
+
         memcpy(proccpu, prev, sizeof(*proccpu));
         return SIGAR_OK;
     }
@@ -174,6 +176,7 @@ SIGAR_DECLARE(int) sigar_proc_cpu_get(sigar_t *sigar, sigar_pid_t pid,
     }
 
     total_diff = proccpu->total - otime;
+
     proccpu->percent = total_diff / (double)time_diff;
 
     return SIGAR_OK;
@@ -273,7 +276,7 @@ void get_cache_info(sigar_cache_t * cache, char * name){
 }
 
 SIGAR_DECLARE(int) sigar_dump_pid_cache_get(sigar_t *sigar, sigar_dump_pid_cache_t *info) {
-  
+
   get_cache_info(sigar->proc_cpu, "proc cpu cache");
   get_cache_info(sigar->proc_io, "proc io cache");
   return SIGAR_OK;
@@ -287,6 +290,7 @@ SIGAR_DECLARE(int) sigar_proc_stat_get(sigar_t *sigar,
 
     SIGAR_ZERO(procstat);
     procstat->threads = SIGAR_FIELD_NOTIMPL;
+    procstat->open_files = SIGAR_FIELD_NOTIMPL;
 
     if ((status = sigar_proc_list_get(sigar, NULL)) != SIGAR_OK) {
         return status;
@@ -304,7 +308,17 @@ SIGAR_DECLARE(int) sigar_proc_stat_get(sigar_t *sigar,
         }
 
         if (state.threads != SIGAR_FIELD_NOTIMPL) {
-            procstat->threads += state.threads;
+            if(procstat->threads == SIGAR_FIELD_NOTIMPL)
+                procstat->threads = state.threads;
+            else
+                procstat->threads += state.threads;
+        }
+
+        if (state.open_files != SIGAR_FIELD_NOTIMPL) {
+            if(procstat->open_files == SIGAR_FIELD_NOTIMPL)
+                procstat->open_files = state.open_files;
+            else
+                procstat->open_files += state.open_files;
         }
 
         switch (state.state) {
@@ -571,10 +585,10 @@ static int sigar_common_fs_type_get(sigar_file_system_t *fsp)
             fsp->type = SIGAR_FSTYPE_LOCAL_DISK;
         }
         break;
-      case 'z': 
-        if (strEQ(type, "zfs")) { 
-            fsp->type = SIGAR_FSTYPE_LOCAL_DISK; 
-        } 
+      case 'z':
+        if (strEQ(type, "zfs")) {
+            fsp->type = SIGAR_FSTYPE_LOCAL_DISK;
+        }
         break;
     }
 
@@ -811,10 +825,10 @@ sigar_net_connection_list_destroy(sigar_t *sigar,
 }
 
 #if !defined(__linux__)
-/* 
+/*
  * implement sigar_net_connection_list_get using sigar_net_connection_walk
  * linux has its own list_get impl.
- */  
+ */
 static int net_connection_list_walker(sigar_net_connection_walker_t *walker,
                                       sigar_net_connection_t *conn)
 {
@@ -955,7 +969,7 @@ sigar_net_stat_get(sigar_t *sigar,
     if (!sigar->net_listen) {
         sigar->net_listen = sigar_cache_new(32);
     }
-    
+
     SIGAR_ZERO(netstat);
 
     getter.netstat = netstat;
@@ -1474,6 +1488,33 @@ int sigar_resource_limit_get(sigar_t *sigar,
 }
 #endif
 
+#ifdef HAVE_LIBDLPI_H
+#include <libdlpi.h>
+
+static void hwaddr_libdlpi_lookup(sigar_t *sigar, sigar_net_interface_config_t *ifconfig)
+{
+    dlpi_handle_t handle;
+    dlpi_info_t linkinfo;
+    uchar_t addr[DLPI_PHYSADDR_MAX];
+    uint_t alen = sizeof(addr);
+
+    if (dlpi_open(ifconfig->name, &handle, 0) != DLPI_SUCCESS) {
+        return;
+    }
+
+    if (dlpi_get_physaddr(handle, DL_CURR_PHYS_ADDR, addr, &alen) == DLPI_SUCCESS &&
+        dlpi_info(handle, &linkinfo, 0) == DLPI_SUCCESS) {
+        if (alen < sizeof(ifconfig->hwaddr.addr.mac)) {
+            sigar_net_address_mac_set(ifconfig->hwaddr, addr, alen);
+            SIGAR_SSTRCPY(ifconfig->type, dlpi_mactype(linkinfo.di_mactype));
+        }
+    }
+
+    dlpi_close(handle);
+}
+#endif
+
+
 #if !defined(WIN32) && !defined(NETWARE) && !defined(DARWIN) && \
     !defined(__FreeBSD__) && !defined(__OpenBSD__) && !defined(__NetBSD__)
 
@@ -1533,7 +1574,7 @@ static void hwaddr_arp_lookup(sigar_net_interface_config_t *ifconfig, int sock)
     sa = (struct sockaddr_in *)&areq.arp_pa;
     sa->sin_family = AF_INET;
     sa->sin_addr.s_addr = ifconfig->address.addr.in;
-    
+
     if (ioctl(sock, SIOCGARP, &areq) < 0) {
         /* ho-hum */
         sigar_hwaddr_set_null(ifconfig);
@@ -1671,7 +1712,7 @@ int sigar_net_interface_config_get(sigar_t *sigar, const char *name,
         sigar_net_address_set(ifconfig->netmask,
                               ifr_s_addr(ifr));
     }
-    
+
     if (!ioctl(sock, SIOCGIFFLAGS, &ifr)) {
         sigar_uint64_t flags = ifr.ifr_flags;
 #ifdef __linux__
@@ -1731,7 +1772,9 @@ int sigar_net_interface_config_get(sigar_t *sigar, const char *name,
                                   ifr_s_addr(ifr));
         }
 
-#if defined(SIOCGIFHWADDR)
+#if defined(HAVE_LIBDLPI_H)
+        hwaddr_libdlpi_lookup(sigar, ifconfig);
+#elif defined(SIOCGIFHWADDR)
         if (!ioctl(sock, SIOCGIFHWADDR, &ifr)) {
             get_interface_type(ifconfig,
                                ifr.ifr_hwaddr.sa_family);
@@ -1769,7 +1812,7 @@ int sigar_net_interface_config_get(sigar_t *sigar, const char *name,
 #else
     ifconfig->mtu = 0; /*XXX*/
 #endif
-    
+
     if (!ioctl(sock, SIOCGIFMETRIC, &ifr)) {
         ifconfig->metric = ifr.ifr_metric ? ifr.ifr_metric : 1;
     }
@@ -1777,7 +1820,7 @@ int sigar_net_interface_config_get(sigar_t *sigar, const char *name,
 #if defined(SIOCGIFTXQLEN)
     if (!ioctl(sock, SIOCGIFTXQLEN, &ifr)) {
         ifconfig->tx_queue_len = ifr.ifr_qlen;
-    } 
+    }
     else {
         ifconfig->tx_queue_len = -1; /* net-tools behaviour */
     }
@@ -1888,7 +1931,7 @@ int sigar_net_interface_list_get(sigar_t *sigar,
 
     if (sock < 0) {
         return errno;
-    } 
+    }
 
     for (;;) {
         if (!sigar->ifconf_buf || lastlen) {
@@ -1945,7 +1988,7 @@ int sigar_net_interface_list_get(sigar_t *sigar,
         if (!sigar_netif_configured(sigar, ifr->ifr_name)) {
             continue;
         }
-#   endif        
+#   endif
 #endif
         iflist->data[iflist->number++] =
             sigar_strdup(ifr->ifr_name);
@@ -2043,7 +2086,7 @@ struct hostent *sigar_gethostbyname(const char *name,
                                     sigar_hostent_t *data)
 {
     struct hostent *hp = NULL;
- 
+
 #if defined(__linux__)
     gethostbyname_r(name, &data->hs,
                     data->buffer, sizeof(data->buffer),
@@ -2302,7 +2345,7 @@ SIGAR_DECLARE(char *) sigar_password_get(const char *prompt)
             return NULL;
         }
         else if (ch == 0 || ch == 0xE0) {
-            /* FN Keys (0 or E0) are a sentinal for a FN code */ 
+            /* FN Keys (0 or E0) are a sentinal for a FN code */
             ch = (ch << 4) | _getch();
             /* Catch {DELETE}, {<--}, Num{DEL} and Num{<--} */
             if ((ch == 0xE53 || ch == 0xE4B || ch == 0x053 || ch == 0x04b) && n) {
@@ -2347,7 +2390,7 @@ SIGAR_DECLARE(char *) sigar_password_get(const char *prompt)
             fflush(stderr);
         }
     }
- 
+
     fputc('\n', stderr);
     fflush(stderr);
     password[n] = '\0';
@@ -2379,7 +2422,7 @@ static char *termios_getpass(const char *prompt)
 
     fputs(prompt, stderr);
     fflush(stderr);
-        
+
     if (tcgetattr(STDIN_FILENO, &attr) != 0) {
         return NULL;
     }
@@ -2391,8 +2434,8 @@ static char *termios_getpass(const char *prompt)
     }
 
     while ((password[n] = getchar()) != '\n') {
-        if (n < (sizeof(password) - 1) && 
-            (password[n] >= ' ') && 
+        if (n < (sizeof(password) - 1) &&
+            (password[n] >= ' ') &&
             (password[n] <= '~'))
         {
             n++;
@@ -2404,7 +2447,7 @@ static char *termios_getpass(const char *prompt)
             n = 0;
         }
     }
- 
+
     password[n] = '\0';
     printf("\n");
 
