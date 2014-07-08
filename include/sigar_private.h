@@ -73,7 +73,7 @@
 
 #if defined(WIN32)
 #   define SIGAR_INLINE __inline
-#elif defined(__GNUC__)
+#elif defined(__GNUC__) && !defined(__clang__)
 #   define SIGAR_INLINE inline
 #else
 #   define SIGAR_INLINE
