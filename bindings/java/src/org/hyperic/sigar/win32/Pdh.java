@@ -284,6 +284,24 @@ public class Pdh extends Win32 {
         return trans.toString();
     }
 
+    private long addPdhCounter(String path, boolean format) throws Win32Exception {
+        long counter;
+        /*
+         * Some metrics are missing the '/sec' suffix. This flow,
+         * first tries to add the counter without the '/sec' and
+         * if fails, try again with it. If the seconds call fails,
+         * throw an exception.This issue must be addressed
+         * at the java level (and not C code), since the counter
+         * names must be translated before.
+         */
+        try {
+            counter = pdhAddCounter(this.query, translate(path));
+        } catch (Win32Exception e) {
+            counter = pdhAddCounter(this.query, translate(path + "/sec"));
+        }
+        return counter;
+    }
+
     private double getValue(String path, boolean format)
         throws Win32Exception {
 
@@ -291,8 +309,8 @@ public class Pdh extends Win32 {
             pdhConnectMachine(this.hostname);
         }
 
-        long counter =
-            pdhAddCounter(this.query, translate(path));
+        long counter = addPdhCounter(path, format);
+
         try {
             return pdhGetValue(this.query, counter, format);
         } finally {
