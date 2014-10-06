@@ -16,11 +16,6 @@
  * limitations under the License.
  */
 
-#include "sigar.h"
-#include "sigar_private.h"
-#include "sigar_util.h"
-#include "sigar_os.h"
-
 #include <sys/param.h>
 #include <sys/mount.h>
 #if !(defined(__FreeBSD__) && (__FreeBSD_version >= 800000))
@@ -111,6 +106,11 @@
 #endif
 #include <netinet/tcp_var.h>
 #include <netinet/tcp_fsm.h>
+
+#include "sigar.h"
+#include "sigar_private.h"
+#include "sigar_util.h"
+#include "sigar_os.h"
 
 #define NMIB(mib) (sizeof(mib)/sizeof(mib[0]))
 
