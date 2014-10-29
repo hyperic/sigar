@@ -16,6 +16,12 @@
  * limitations under the License.
  */
 
+#ifdef DARWIN
+#include <sys/socket.h>
+#include <sys/fcntl.h>
+#include <mach/thread_info.h>
+#endif
+
 #include "sigar.h"
 #include "sigar_private.h"
 #include "sigar_util.h"
@@ -38,7 +44,6 @@
 #include <mach/mach_port.h>
 #include <mach/task.h>
 #include <mach/thread_act.h>
-#include <mach/thread_info.h>
 #include <mach/vm_map.h>
 #if !defined(HAVE_SHARED_REGION_H) && defined(__MAC_10_5) /* see Availability.h */
 #  define HAVE_SHARED_REGION_H /* suckit autoconf */
