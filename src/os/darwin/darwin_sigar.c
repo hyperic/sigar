@@ -61,14 +61,6 @@
 #include <stdio.h>
 #endif
 
-#if defined(__FreeBSD__) && (__FreeBSD_version >= 500013)
-#define SIGAR_FREEBSD5_NFSSTAT
-#include <nfsclient/nfs.h>
-#include <nfsserver/nfs.h>
-#else
-#include <nfs/nfs.h>
-#endif
-
 #include <sys/ioctl.h>
 #include <sys/mount.h>
 #include <sys/resource.h>
@@ -82,6 +74,14 @@
 #include <net/route.h>
 #include <netinet/in.h>
 #include <netinet/if_ether.h>
+
+#if defined(__FreeBSD__) && (__FreeBSD_version >= 500013)
+#define SIGAR_FREEBSD5_NFSSTAT
+#include <nfsclient/nfs.h>
+#include <nfsserver/nfs.h>
+#else
+#include <nfs/nfs.h>
+#endif
 
 #include <dirent.h>
 #include <errno.h>
