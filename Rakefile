@@ -1,5 +1,5 @@
 require 'rubygems'
-require 'rake/gempackagetask'
+require 'rubygems/package_task'
 require 'rake/testtask'
 
 #so we can: ssh host rake -f $hudson_workspace/sigar/Rakefile
@@ -22,7 +22,7 @@ spec = Gem::Specification.new do |s|
   s.name = GEM
 #  s.version = props['version.major'] + '.' + props['version.minor'] + '.' + props['version.maint']
 #  '0.7.x' until the sigar-1.7.0 release
-  s.version = '0' + '.' + props['version.minor'] + '.' + '2'
+  s.version = '0' + '.' + props['version.minor'] + '.' + '3'
   s.summary = props['project.summary']
   s.description = s.summary
   s.author = props['project.author']
@@ -40,7 +40,7 @@ spec = Gem::Specification.new do |s|
     Dir.glob("src/**/*.in")
 end
 
-Rake::GemPackageTask.new(spec) do |pkg|
+Gem::PackageTask.new(spec) do |pkg|
   pkg.gem_spec = spec
 end
 
