@@ -138,8 +138,10 @@ static int lua_sigar_new(lua_State *L) {
 		lua_setfield(L, -2, "mem");
 		lua_pushcfunction(L, lua_sigar_swap_get);
 		lua_setfield(L, -2, "swap");
+#if 0
 		lua_pushcfunction(L, lua_sigar_version_get);
 		lua_setfield(L, -2, "version");
+#endif
 		lua_pushcfunction(L, lua_sigar_sysinfo_get);
 		lua_setfield(L, -2, "sysinfo");
 		lua_setfield(L, -2, "__index");
@@ -167,7 +169,7 @@ static void set_info (lua_State *L) {
 }
 
 
-static const struct luaL_reg sigarlib[] = {
+static const struct luaL_Reg sigarlib[] = {
 	{"new", lua_sigar_new},
 	{NULL, NULL}
 };
