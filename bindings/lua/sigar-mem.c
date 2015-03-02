@@ -38,8 +38,13 @@
 int lua_sigar_mem_get(lua_State *L) {
 	sigar_t *s = *(sigar_t **)luaL_checkudata(L, 1, "sigar");
 	sigar_mem_t mem;
+  int rc;
 
-	sigar_mem_get(s, &mem);
+	rc = sigar_mem_get(s, &mem);
+	if (rc != SIGAR_OK) {
+    luaL_error(L, "sigar_mem_get error: %s", sigar_strerror(s, rc));
+    return 0;
+  }
 
 	lua_newtable(L);
 #define DATA \

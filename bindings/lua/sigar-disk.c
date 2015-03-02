@@ -148,7 +148,7 @@ static int lua_sigar_disks_get_disk(lua_State *L) {
 	}
 
 	disk = lua_newuserdata(L, sizeof(*disk));
-	disk->dev_name = strdup(disks->disks.data[ndx - 1].dir_name);
+	disk->dev_name = strdup(disks->disks.data[ndx - 1].dev_name);
 	disk->sigar = disks->sigar;
 	lua_sigar_disk_set_metatable(L, -1);
 
@@ -172,10 +172,17 @@ int lua_sigar_disk_get(lua_State *L) {
 int lua_sigar_disks_get(lua_State *L) {
 	sigar_t *s = *(sigar_t **)luaL_checkudata(L, 1, "sigar");
 	lua_sigar_disks_t *disks;
+  int rc;
 
 	disks = lua_newuserdata(L, sizeof(lua_sigar_disks_t));
 	disks->sigar = s;
-	sigar_file_system_list_get(s, &(disks->disks));
+
+	rc = sigar_file_system_list_get(s, &(disks->disks));
+	if (rc != SIGAR_OK) {
+    luaL_error(L, "sigar_file_system_list_get error: %s", sigar_strerror(s, rc));
+    return 0;
+  }
+
 	disks->ref_count = 1;
 	if (0 != luaL_newmetatable(L, "sigar_disks")) {
 		lua_pushcfunction(L, lua_sigar_disks_len);

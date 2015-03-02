@@ -22,6 +22,7 @@ AC_PROG_INSTALL
 AC_PROG_MAKE_SET
 AC_PROG_LIBTOOL
 AC_CONFIG_MACRO_DIR([m4])
+m4_pattern_allow([^AC_DEFINE]) 
 
 AC_MSG_CHECKING([for os type ($host_os)])
 FRAMEWORK=
