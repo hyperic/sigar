@@ -39,3 +39,4 @@ config.sub*
 config.guess*
 bindings/java/${dist}
 bindings/python/build
+.DS_Store
