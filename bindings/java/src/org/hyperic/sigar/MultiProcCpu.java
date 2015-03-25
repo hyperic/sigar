@@ -16,9 +16,6 @@
 
 package org.hyperic.sigar;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import org.hyperic.sigar.ptql.ProcessFinder;
 
 /**
@@ -63,7 +60,6 @@ public class MultiProcCpu extends ProcCpu {
     /**
      * @return Processes CPU usage percentage.
      */
-    @Override
     public double getPercent() {
         return this.percent;
     }
@@ -78,12 +74,10 @@ public class MultiProcCpu extends ProcCpu {
     /**
      * @return Pid of the process.
      */
-    @Override
     public int hashCode() {
         return (int)this.pid;
     }
 
-    @Override
     public boolean equals(Object cpu) {
         if (!(cpu instanceof MultiProcCpu)) {
             return false;
