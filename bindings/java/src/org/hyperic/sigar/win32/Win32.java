@@ -44,7 +44,8 @@ public abstract class Win32 {
         String ext = name.substring(ix+1);
         if (ext.equals("exe") ||
             ext.equals("bat") ||
-            ext.equals("com"))
+            ext.equals("com") ||
+            ext.equals("cmd") )
         {
             return null;
         }
