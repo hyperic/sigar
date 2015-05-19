@@ -82,7 +82,7 @@ IF(WIN32)
   ADD_DEFINITIONS(-DSIGAR_SHARED)
   SET(SIGAR_SRC os/win32/peb.c os/win32/win32_sigar.c)
   INCLUDE_DIRECTORIES(os/win32)
-  CHECK_STRUCT_MEMBER(MIB_IPADDRROW wType "windows.h;iphlpapi.h" wType_in_MIB_IPADDRROW)
+  CHECK_STRUCT_MEMBER(MIB_IPADDRROW wType "winsock2.h;windows.h;iphlpapi.h" wType_in_MIB_IPADDRROW)
   add_definitions(-DHAVE_MIB_IPADDRROW_WTYPE=${wType_in_MIB_IPADDRROW})
 ENDIF(WIN32)
 
