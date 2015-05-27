@@ -76,7 +76,8 @@
 #elif defined(__clang__)
 #   define SIGAR_INLINE
 #elif defined(__GNUC__)
-#   define SIGAR_INLINE inline
+/* inline disabled because of fedora22 gcc 5.1.1 */
+#   define SIGAR_INLINE
 #else
 #   define SIGAR_INLINE
 #endif
