@@ -93,9 +93,9 @@ typedef enum {
     PERF_IX_DISK_MAX
 } perf_disk_offsets_t;
 
-#define PERF_TITLE_DISK_TIME 200 /* % Disk Time */
-#define PERF_TITLE_DISK_READ_TIME 202 /* % Disk Read Time */
-#define PERF_TITLE_DISK_WRITE_TIME 204 /* % Disk Write Time */
+#define PERF_TITLE_DISK_TIME 1400 /* % Disk Time */
+#define PERF_TITLE_DISK_READ_TIME 1402 /* % Disk Read Time */
+#define PERF_TITLE_DISK_WRITE_TIME 1404 /* % Disk Write Time */
 #define PERF_TITLE_DISK_READ  214 /* Disk Reads/sec */
 #define PERF_TITLE_DISK_WRITE 216 /* Disk Writes/sec */
 #define PERF_TITLE_DISK_READ_BYTES  220 /* Disk Read Bytes/sec */
@@ -121,6 +121,11 @@ typedef enum {
 #define PERF_VAL(ix) \
     perf_offsets[ix] ? \
         *((DWORD *)((BYTE *)counter_block + perf_offsets[ix])) : 0
+
+#define PERF_VAL_LARGE(ix) \
+	perf_offsets[ix] ? \
+	*((ULONGLONG *)((BYTE *)counter_block + perf_offsets[ix])) : 0
+
 
 /* 1/100ns units to milliseconds */
 #define NS100_2MSEC(t) ((t) / 10000)
@@ -2056,13 +2061,13 @@ SIGAR_DECLARE(int) sigar_disk_usage_get(sigar_t *sigar,
         }
 
         if (strnEQ(drive, dirname, 2)) {
-            disk->time   = PERF_VAL(PERF_IX_DISK_TIME);
-            disk->rtime  = PERF_VAL(PERF_IX_DISK_READ_TIME);
-            disk->wtime  = PERF_VAL(PERF_IX_DISK_WRITE_TIME);
+            disk->time   = PERF_VAL_LARGE(PERF_IX_DISK_TIME);
+            disk->rtime  = PERF_VAL_LARGE(PERF_IX_DISK_READ_TIME);
+            disk->wtime  = PERF_VAL_LARGE(PERF_IX_DISK_WRITE_TIME);
             disk->reads  = PERF_VAL(PERF_IX_DISK_READ);
             disk->writes = PERF_VAL(PERF_IX_DISK_WRITE);
-            disk->read_bytes  = PERF_VAL(PERF_IX_DISK_READ_BYTES);
-            disk->write_bytes = PERF_VAL(PERF_IX_DISK_WRITE_BYTES);
+            disk->read_bytes  = PERF_VAL_LARGE(PERF_IX_DISK_READ_BYTES);
+            disk->write_bytes = PERF_VAL_LARGE(PERF_IX_DISK_WRITE_BYTES);
             disk->queue = PERF_VAL(PERF_IX_DISK_QUEUE);
             return SIGAR_OK;
         }
