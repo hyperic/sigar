@@ -583,7 +583,7 @@ struct sigar_t {
     int using_wide;
     long pagesize;
     HKEY handle;
-	buffer_t* performanceBuffer;
+	buffer_t** performanceBuffers;
 	buffer_t* processesBuffer;
     sigar_wtsapi_t wtsapi;
     sigar_iphlpapi_t iphlpapi;

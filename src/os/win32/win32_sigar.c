@@ -39,6 +39,15 @@
 #define PERF_TITLE_CPU_KEY   "238"
 #define PERF_TITLE_DISK_KEY  "236"
 
+typedef enum
+{
+	PERF_COUNTER_SYS
+	, PERF_COUNTER_MEM
+	, PERF_COUNTER_PROC
+	, PERF_COUNTER_CPU
+	, PERF_COUNTER_DISK
+} perf_counter_keys_t;
+
 #define PERF_TITLE_CPU_USER    142
 #define PERF_TITLE_CPU_IDLE    1746
 #define PERF_TITLE_CPU_SYS     144
@@ -111,11 +120,11 @@ typedef enum {
     (USING_WIDE() ? \
         RegQueryValueExW(sigar->handle, \
                          wcounter_key, NULL, &type, \
-                         sigar->performanceBuffer->buffer, \
+                         performanceBuffer->buffer, \
                          &bytes) : \
         RegQueryValueExA(sigar->handle, \
                          counter_key, NULL, &type, \
-                         sigar->performanceBuffer->buffer, \
+                         performanceBuffer->buffer, \
                          &bytes))
 
 #define PERF_VAL(ix) \
@@ -185,6 +194,33 @@ static char *get_counter_name(char *key)
     }
 }
 
+static int get_performance_buffer_by_counter_key(sigar_t* sigar, char* counterKey, buffer_t** performanceBuffer)
+{
+	int i;
+
+	if (strEQ(counterKey, PERF_TITLE_SYS_KEY)) {
+		i = PERF_COUNTER_SYS;
+	}
+	else if (strEQ(counterKey, PERF_TITLE_MEM_KEY)) {
+		i = PERF_COUNTER_MEM;
+	}
+	else if (strEQ(counterKey, PERF_TITLE_PROC_KEY)) {
+		i = PERF_COUNTER_PROC;
+	}
+	else if (strEQ(counterKey, PERF_TITLE_CPU_KEY)) {
+		i = PERF_COUNTER_CPU;
+	}
+	else if (strEQ(counterKey, PERF_TITLE_DISK_KEY)) {
+		i = PERF_COUNTER_DISK;
+	} else {
+		return -1;
+	}
+
+	*performanceBuffer = sigar->performanceBuffers[i];
+	 return SIGAR_OK;
+	
+}
+
 static PERF_OBJECT_TYPE *get_perf_object_inst(sigar_t *sigar,
                                               char *counter_key,
                                               DWORD inst, DWORD *err)
@@ -193,18 +229,28 @@ static PERF_OBJECT_TYPE *get_perf_object_inst(sigar_t *sigar,
     WCHAR wcounter_key[MAX_PATH+1];
     PERF_DATA_BLOCK *block;
     PERF_OBJECT_TYPE *object;
+	time_t timenow = time(NULL);
+	buffer_t* performanceBuffer;
+    *err = get_performance_buffer_by_counter_key(sigar, counter_key, &performanceBuffer);
+	
+	if (*err != SIGAR_OK) {
+		return NULL;
+	}
 
-    *err = SIGAR_OK;
-
-    if (USING_WIDE()) {
+	if ((timenow - performanceBuffer->create_time) < SIGAR_BUFFER_EXPIRE) {
+		return PdhFirstObject(((PERF_DATA_BLOCK *)performanceBuffer->buffer));
+	}
+	
+	
+	if (USING_WIDE()) {
         SIGAR_A2W(counter_key, wcounter_key, sizeof(wcounter_key));
     }
 
-    bytes = buffer_init(sigar->performanceBuffer);
+	bytes = buffer_init(performanceBuffer);
 	
     while ((retval = MyRegQueryValue()) != ERROR_SUCCESS) {
         if (retval == ERROR_MORE_DATA) {
-			bytes = buffer_grow(sigar->performanceBuffer);
+			bytes = buffer_grow(performanceBuffer);
         }
         else {
             *err = retval;
@@ -212,7 +258,8 @@ static PERF_OBJECT_TYPE *get_perf_object_inst(sigar_t *sigar,
         }
     }
 
-    block = (PERF_DATA_BLOCK *)sigar->performanceBuffer->buffer;
+	block = (PERF_DATA_BLOCK *)performanceBuffer->buffer;
+	
     if (block->NumObjectTypes == 0) {
         counter_key = get_counter_name(counter_key);
         sigar_strerror_printf(sigar, "No %s counters defined (disabled?)",
@@ -221,7 +268,9 @@ static PERF_OBJECT_TYPE *get_perf_object_inst(sigar_t *sigar,
         return NULL;
     }
 	
-	sigar->performanceBuffer->create_time = time(NULL);
+	performanceBuffer->buffer = block;
+	performanceBuffer->create_time = time(NULL);
+
     object = PdhFirstObject(block);
 
     /* 
@@ -545,13 +594,18 @@ int sigar_os_open(sigar_t **sigar_ptr)
     sigar->machine = ""; /* local machine */
     sigar->using_wide = 0; /*XXX*/
 
-	sigar->performanceBuffer = (buffer_t*) malloc(sizeof(buffer_t));
 	sigar->processesBuffer = (buffer_t*) malloc(sizeof(buffer_t));
-	sigar->performanceBuffer->buffer = NULL;
 	sigar->processesBuffer->buffer = NULL;
-	buffer_init(sigar->performanceBuffer);
 	buffer_init(sigar->processesBuffer);
 
+	sigar->performanceBuffers = (buffer_t**)malloc(sizeof(buffer_t *) * 5);
+	for (i = 0; i < 5; i++)
+	{
+		sigar->performanceBuffers[i] = (buffer_t*)malloc(sizeof(buffer_t));
+		sigar->performanceBuffers[i]->buffer = NULL;
+		buffer_init(sigar->performanceBuffers[i]);
+	}
+	
     version.dwOSVersionInfoSize = sizeof(version);
     GetVersionEx(&version);
 
@@ -624,7 +678,7 @@ void buffer_free(buffer_t* buffer)
 
 int sigar_os_close(sigar_t *sigar)
 {
-    int retval;
+    int retval, i;
 
     DLLMOD_FREE(wtsapi);
     DLLMOD_FREE(iphlpapi);
@@ -636,7 +690,14 @@ int sigar_os_close(sigar_t *sigar)
     DLLMOD_FREE(mpr);
 
 	buffer_free(sigar->processesBuffer);
-	buffer_free(sigar->performanceBuffer);
+	
+	if (sigar->performanceBuffers) {
+		for (i = 0; i < 5; i++)	{
+			buffer_free(sigar->performanceBuffers[i]);
+		}
+
+		free(sigar->performanceBuffers);
+	}
 
     retval = RegCloseKey(sigar->handle);
 
@@ -1420,11 +1481,7 @@ static int get_proc_info(sigar_t *sigar, sigar_pid_t pid)
 
     memset(&perf_offsets, 0, sizeof(perf_offsets));
 
-	if ((timenow - sigar->performanceBuffer->create_time) < SIGAR_BUFFER_EXPIRE) {
-		object = PdhFirstObject(((PERF_DATA_BLOCK *)sigar->performanceBuffer->buffer));
-	} else {
-		object = get_process_object(sigar, &err);
-	}
+    object = get_process_object(sigar, &err);
 
     if (object == NULL) {
         return err;
