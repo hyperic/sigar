@@ -3588,7 +3588,7 @@ int sigar_os_sys_info_get(sigar_t *sigar,
             	vendor_version = "2008";
 	        code_name = "Longhorn Server";
              }
-	     else  if (version.dwMinorVersion == 2 || version.dwMinorVersion == 3) {
+	     else if (version.dwMinorVersion == 2 || version.dwMinorVersion == 3) {
  	    	vendor_name = "Windows 2012";
             	vendor_version = "2012";
             	code_name = "Windows Server 8";
