@@ -718,14 +718,14 @@ SIGAR_DECLARE(int) sigar_swap_get(sigar_t *sigar, sigar_swap_t *swap)
             return GetLastError();
         }
 
-        swap->total = memstat.ullTotalPageFile;
-        swap->free  = memstat.ullAvailPageFile;
+        swap->total = memstat.ullTotalPageFile - memstat.ullTotalPhys;
+        swap->free  = memstat.ullAvailPageFile - memstat.ullAvailPhys;
     }
     else {
         MEMORYSTATUS memstat;
         GlobalMemoryStatus(&memstat);
-        swap->total = memstat.dwTotalPageFile;
-        swap->free  = memstat.dwAvailPageFile;
+        swap->total = memstat.dwTotalPageFile - memstat.dwTotalPhys;
+        swap->free  = memstat.dwAvailPageFile - memstat.dwAvailPhys;
     }
 
     swap->used = swap->total - swap->free;
