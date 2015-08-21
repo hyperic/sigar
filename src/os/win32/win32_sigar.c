@@ -35,6 +35,7 @@
 #define PERF_TITLE_PROC       230
 #define PERF_TITLE_SYS_KEY   "2"
 #define PERF_TITLE_MEM_KEY   "4"
+#define PERF_TITLE_PAGING_FILE_KEY "700"
 #define PERF_TITLE_PROC_KEY  "230"
 #define PERF_TITLE_CPU_KEY   "238"
 #define PERF_TITLE_DISK_KEY  "236"
@@ -290,6 +291,67 @@ static int get_mem_counters(sigar_t *sigar, sigar_swap_t *swap, sigar_mem_t *mem
             continue;
         }
     }
+
+    return SIGAR_OK;
+}
+
+static int get_swap_usage(sigar_t *sigar, sigar_swap_t *swap)
+{
+    int status;
+    PERF_OBJECT_TYPE *object =
+        get_perf_object_inst(sigar, PERF_TITLE_PAGING_FILE_KEY, 0, &status);
+    PERF_INSTANCE_DEFINITION *inst;
+    PERF_COUNTER_DEFINITION *counter;
+    PERF_COUNTER_BLOCK *block;
+    char name[MAX_PATH];
+    char *p;
+    BYTE *data;
+    DWORD i;
+
+    if (!object) {
+        return status;
+    }
+
+    inst = (PERF_INSTANCE_DEFINITION *)((BYTE *)object + object->DefinitionLength);
+
+    for (i = 0; i < object->NumInstances; i++) {
+        p = (char *)(((char *)inst) + inst->NameOffset);
+
+        SIGAR_W2A(p, name, sizeof(name));
+
+        if (stricmp(name, "_Total") == 0) {
+            break;
+        }
+
+        block = (PERF_COUNTER_BLOCK*)((LPBYTE)inst + inst->ByteLength);
+        inst = (PERF_INSTANCE_DEFINITION*)((LPBYTE)block + block->ByteLength);
+    }
+
+    block = (PERF_COUNTER_BLOCK*)((LPBYTE)inst + inst->ByteLength);
+
+
+    for (i=0, counter = PdhFirstCounter(object);
+        i<object->NumCounters;
+        i++, counter = PdhNextCounter(counter))
+    {
+        DWORD offset = counter->CounterOffset;
+
+        switch (counter->CounterNameTitleIndex) {
+        case 702:
+            data = (LPBYTE)block;
+
+            swap->used = (sigar_uint64_t)(swap->total * (
+                (*(DWORD *)(data + offset)) /
+                    (float)(*(DWORD *)(data + (counter+1)->CounterOffset))));
+            swap->free = swap->total - swap->used;
+
+            return SIGAR_OK;
+        default:
+            continue;
+        }
+    }
+
+    /* unreachable */
 
     return SIGAR_OK;
 }
@@ -719,16 +781,17 @@ SIGAR_DECLARE(int) sigar_swap_get(sigar_t *sigar, sigar_swap_t *swap)
         }
 
         swap->total = memstat.ullTotalPageFile - memstat.ullTotalPhys;
-        swap->free  = memstat.ullAvailPageFile - memstat.ullAvailPhys;
     }
     else {
         MEMORYSTATUS memstat;
         GlobalMemoryStatus(&memstat);
         swap->total = memstat.dwTotalPageFile - memstat.dwTotalPhys;
-        swap->free  = memstat.dwAvailPageFile - memstat.dwAvailPhys;
     }
 
-    swap->used = swap->total - swap->free;
+    status = get_swap_usage(sigar, swap);
+    if (status != SIGAR_OK) {
+        return status;
+    }
 
     if (get_mem_counters(sigar, swap, NULL) != SIGAR_OK) {
         swap->page_in = SIGAR_FIELD_NOTIMPL;
