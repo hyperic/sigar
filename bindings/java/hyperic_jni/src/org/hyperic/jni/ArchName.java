@@ -62,7 +62,10 @@ public class ArchName {
         }
         else if (name.equals("HP-UX")) {
             if (arch.startsWith("IA64")) {
-                arch = "ia64";
+                arch = "ia";
+                if (is64()) {
+                    arch += "64";
+                }
             }
             else {
                 arch = "pa";
