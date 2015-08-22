@@ -270,8 +270,9 @@
 	relentless="false">
 
       <!-- HPUX -->
-      <compiler name="hp"  if="hpux">
+      <compiler name="aCC"  if="hpux">
         <compilerarg value="+Z"/>
+        <compilerarg value="-Ae"/>
         <compilerarg value="+DD64" if="jni.arch64"/>
 
         <defineset>
@@ -281,7 +282,8 @@
         </defineset>
       </compiler>
 
-      <linker name="hp" if="hpux">
+      <linker name="aCC" if="hpux">
+      	<linkerarg value="+DD64" if="jni.arch64"/>
         <libset if="jni.libset.libs"
                 dir="${jni.libset.dir}"
                 libs="${jni.libset.libs}"/>
@@ -437,7 +439,7 @@
       </linker>
 
       <!-- AIX -->
-      <compiler name="xlc_r" if="aix">
+      <compiler name="xlC" if="aix">
         <compilerarg value="-q64" if="jni.arch64"/>
         <defineset>
           <define name="${jni.define.name}_AIX"/>
@@ -447,7 +449,7 @@
         </defineset>
       </compiler>
 
-      <linker name="xlc_r" if="aix">
+      <linker name="xlC" if="aix">
         <linkerarg value="-b64" if="jni.arch64"/>
         <libset if="jni.libset.libs"
                 dir="${jni.libset.dir}"
