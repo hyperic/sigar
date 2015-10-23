@@ -3670,6 +3670,18 @@ int sigar_os_sys_info_get(sigar_t *sigar,
           case 7:
             codename = "Lion";
             break;
+        case 8:
+            codename = "Mountain Lion";
+            break;
+        case 9:
+            codename = "Mavericks";
+            break;
+        case 10:
+            codename = "Yosemite";
+            break;
+        case 11:
+            codename = "El Capitan";
+            break;
           default:
             codename = "Unknown";
             break;
