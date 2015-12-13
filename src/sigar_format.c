@@ -376,12 +376,8 @@ static char *sigar_inet_ntop(int af, const void *src, char *dst, int cnt)
 }
 #define sigar_inet_ntop_errno GetLastError()
 #else
-
 #define sigar_inet_ntop inet_ntop
 #define sigar_inet_ntop_errno errno
-#else
-#define sigar_inet_ntop(af, src, dst, size) NULL
-#define sigar_inet_ntop_errno EINVAL
 #endif
 
 SIGAR_DECLARE(int) sigar_net_address_to_string(sigar_t *sigar,
