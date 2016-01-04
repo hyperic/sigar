@@ -48,11 +48,19 @@ func GetGoSlice(number int, pointer unsafe.Pointer ) reflect.SliceHeader{
         Len:  length,
         Cap:  length,
     }
-    
-    
-	
 	
 	return cObj
+}
+
+ 
+func CArr2SlicePtr(length int, cArray interface{}) unsafe.Pointer{
 	
+	vl := reflect.ValueOf(cArray)
+	header := reflect.SliceHeader{
+        Data: uintptr(unsafe.Pointer(vl.Pointer())),
+        Len:  length,
+        Cap:  length,
+    }
 	
+	return unsafe.Pointer(&header)
 }

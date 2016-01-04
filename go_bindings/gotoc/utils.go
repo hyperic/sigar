@@ -1,14 +1,17 @@
 package gotoc
 
 import (
-	
 	"unsafe"
 )
 
-
-//#include <stdlib.h>
+/*
+#include <stdlib.h>
+*/
 import "C"
 
+const (
+	SIGAR_OK = 0
+)
 
 func SigarStringToGoString(cstring *C.char) string{
 
@@ -18,3 +21,8 @@ func SigarStringToGoString(cstring *C.char) string{
 	return theString
 
 }
+
+func Free(cstring *C.char) { 
+	C.free(unsafe.Pointer(cstring)) 
+}
+
