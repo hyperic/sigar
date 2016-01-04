@@ -35,6 +35,7 @@
 #define PERF_TITLE_PROC       230
 #define PERF_TITLE_SYS_KEY   "2"
 #define PERF_TITLE_MEM_KEY   "4"
+#define PERF_TITLE_PAGING_FILE_KEY "700"
 #define PERF_TITLE_PROC_KEY  "230"
 #define PERF_TITLE_CPU_KEY   "238"
 #define PERF_TITLE_DISK_KEY  "236"
@@ -102,9 +103,9 @@ typedef enum {
     PERF_IX_DISK_MAX
 } perf_disk_offsets_t;
 
-#define PERF_TITLE_DISK_TIME 200 /* % Disk Time */
-#define PERF_TITLE_DISK_READ_TIME 202 /* % Disk Read Time */
-#define PERF_TITLE_DISK_WRITE_TIME 204 /* % Disk Write Time */
+#define PERF_TITLE_DISK_TIME 1400 /* % Disk Time */
+#define PERF_TITLE_DISK_READ_TIME 1402 /* % Disk Read Time */
+#define PERF_TITLE_DISK_WRITE_TIME 1404 /* % Disk Write Time */
 #define PERF_TITLE_DISK_READ  214 /* Disk Reads/sec */
 #define PERF_TITLE_DISK_WRITE 216 /* Disk Writes/sec */
 #define PERF_TITLE_DISK_READ_BYTES  220 /* Disk Read Bytes/sec */
@@ -130,6 +131,11 @@ typedef enum {
 #define PERF_VAL(ix) \
     perf_offsets[ix] ? \
         *((DWORD *)((BYTE *)counter_block + perf_offsets[ix])) : 0
+
+#define PERF_VAL_LARGE(ix) \
+	perf_offsets[ix] ? \
+	*((ULONGLONG *)((BYTE *)counter_block + perf_offsets[ix])) : 0
+
 
 /* 1/100ns units to milliseconds */
 #define NS100_2MSEC(t) ((t) / 10000)
@@ -337,6 +343,67 @@ static int get_mem_counters(sigar_t *sigar, sigar_swap_t *swap, sigar_mem_t *mem
             continue;
         }
     }
+
+    return SIGAR_OK;
+}
+
+static int get_swap_usage(sigar_t *sigar, sigar_swap_t *swap)
+{
+    int status;
+    PERF_OBJECT_TYPE *object =
+        get_perf_object_inst(sigar, PERF_TITLE_PAGING_FILE_KEY, 0, &status);
+    PERF_INSTANCE_DEFINITION *inst;
+    PERF_COUNTER_DEFINITION *counter;
+    PERF_COUNTER_BLOCK *block;
+    char name[MAX_PATH];
+    char *p;
+    BYTE *data;
+    DWORD i;
+
+    if (!object) {
+        return status;
+    }
+
+    inst = (PERF_INSTANCE_DEFINITION *)((BYTE *)object + object->DefinitionLength);
+
+    for (i = 0; i < object->NumInstances; i++) {
+        p = (char *)(((char *)inst) + inst->NameOffset);
+
+        SIGAR_W2A(p, name, sizeof(name));
+
+        if (stricmp(name, "_Total") == 0) {
+            break;
+        }
+
+        block = (PERF_COUNTER_BLOCK*)((LPBYTE)inst + inst->ByteLength);
+        inst = (PERF_INSTANCE_DEFINITION*)((LPBYTE)block + block->ByteLength);
+    }
+
+    block = (PERF_COUNTER_BLOCK*)((LPBYTE)inst + inst->ByteLength);
+
+
+    for (i=0, counter = PdhFirstCounter(object);
+        i<object->NumCounters;
+        i++, counter = PdhNextCounter(counter))
+    {
+        DWORD offset = counter->CounterOffset;
+
+        switch (counter->CounterNameTitleIndex) {
+        case 702:
+            data = (LPBYTE)block;
+
+            swap->used = (sigar_uint64_t)(swap->total * (
+                (*(DWORD *)(data + offset)) /
+                    (float)(*(DWORD *)(data + (counter+1)->CounterOffset))));
+            swap->free = swap->total - swap->used;
+
+            return SIGAR_OK;
+        default:
+            continue;
+        }
+    }
+
+    /* unreachable */
 
     return SIGAR_OK;
 }
@@ -788,17 +855,18 @@ SIGAR_DECLARE(int) sigar_swap_get(sigar_t *sigar, sigar_swap_t *swap)
             return GetLastError();
         }
 
-        swap->total = memstat.ullTotalPageFile;
-        swap->free  = memstat.ullAvailPageFile;
+        swap->total = memstat.ullTotalPageFile - memstat.ullTotalPhys;
     }
     else {
         MEMORYSTATUS memstat;
         GlobalMemoryStatus(&memstat);
-        swap->total = memstat.dwTotalPageFile;
-        swap->free  = memstat.dwAvailPageFile;
+        swap->total = memstat.dwTotalPageFile - memstat.dwTotalPhys;
     }
 
-    swap->used = swap->total - swap->free;
+    status = get_swap_usage(sigar, swap);
+    if (status != SIGAR_OK) {
+        return status;
+    }
 
     if (get_mem_counters(sigar, swap, NULL) != SIGAR_OK) {
         swap->page_in = SIGAR_FIELD_NOTIMPL;
@@ -2129,13 +2197,13 @@ SIGAR_DECLARE(int) sigar_disk_usage_get(sigar_t *sigar,
         }
 
         if (strnEQ(drive, dirname, 2)) {
-            disk->time   = PERF_VAL(PERF_IX_DISK_TIME);
-            disk->rtime  = PERF_VAL(PERF_IX_DISK_READ_TIME);
-            disk->wtime  = PERF_VAL(PERF_IX_DISK_WRITE_TIME);
+            disk->time   = PERF_VAL_LARGE(PERF_IX_DISK_TIME);
+            disk->rtime  = PERF_VAL_LARGE(PERF_IX_DISK_READ_TIME);
+            disk->wtime  = PERF_VAL_LARGE(PERF_IX_DISK_WRITE_TIME);
             disk->reads  = PERF_VAL(PERF_IX_DISK_READ);
             disk->writes = PERF_VAL(PERF_IX_DISK_WRITE);
-            disk->read_bytes  = PERF_VAL(PERF_IX_DISK_READ_BYTES);
-            disk->write_bytes = PERF_VAL(PERF_IX_DISK_WRITE_BYTES);
+            disk->read_bytes  = PERF_VAL_LARGE(PERF_IX_DISK_READ_BYTES);
+            disk->write_bytes = PERF_VAL_LARGE(PERF_IX_DISK_WRITE_BYTES);
             disk->queue = PERF_VAL(PERF_IX_DISK_QUEUE);
             return SIGAR_OK;
         }
