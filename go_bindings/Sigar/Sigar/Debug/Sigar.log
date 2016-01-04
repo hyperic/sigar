@@ -1,0 +1,7 @@
+﻿  peb.c
+  wmi.cpp
+c:\users\iuriel\documents\visual studio 2015\projects\sigar\src\wmi.cpp(202): warning C4244: 'argument': conversion from 'sigar_pid_t' to 'DWORD', possible loss of data
+c:\users\iuriel\documents\visual studio 2015\projects\sigar\src\wmi.cpp(228): warning C4244: 'argument': conversion from 'sigar_pid_t' to 'DWORD', possible loss of data
+     Creating library c:\users\iuriel\documents\visual studio 2015\Projects\Sigar\Debug\Sigar.lib and object c:\users\iuriel\documents\visual studio 2015\Projects\Sigar\Debug\Sigar.exp
+  Sigar.vcxproj -> c:\users\iuriel\documents\visual studio 2015\Projects\Sigar\Debug\Sigar.dll
+  Sigar.vcxproj -> c:\users\iuriel\documents\visual studio 2015\Projects\Sigar\Debug\Sigar.pdb (Partial PDB)

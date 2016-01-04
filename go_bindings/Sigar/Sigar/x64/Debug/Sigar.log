@@ -1,0 +1,30 @@
+﻿  sigar.c
+c:\users\iuriel\documents\visual studio 2015\projects\sigar\src\sigar.c(52): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  c:\program files (x86)\windows kits\10\include\10.0.10240.0\ucrt\stdlib.h(1183): note: see declaration of 'getenv'
+c:\users\iuriel\documents\visual studio 2015\projects\sigar\src\sigar.c(114): warning C4013: 'getpid' undefined; assuming extern returning int
+c:\users\iuriel\documents\visual studio 2015\projects\sigar\src\sigar.c(210): warning C4244: '=': conversion from 'double' to 'sigar_uint64_t', possible loss of data
+c:\users\iuriel\documents\visual studio 2015\projects\sigar\src\sigar.c(299): warning C4018: '<': signed/unsigned mismatch
+c:\users\iuriel\documents\visual studio 2015\projects\sigar\src\sigar.c(598): warning C4996: 'strcpy': This function or variable may be unsafe. Consider using strcpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  c:\program files (x86)\windows kits\10\include\10.0.10240.0\ucrt\string.h(119): note: see declaration of 'strcpy'
+c:\users\iuriel\documents\visual studio 2015\projects\sigar\src\sigar.c(1249): warning C4311: 'type cast': pointer truncation from 'MEMORY_BASIC_INFORMATION *' to 'DWORD'
+c:\users\iuriel\documents\visual studio 2015\projects\sigar\src\sigar.c(1249): warning C4311: 'type cast': pointer truncation from 'PVOID' to 'DWORD'
+c:\users\iuriel\documents\visual studio 2015\projects\sigar\src\sigar.c(1251): warning C4311: 'type cast': pointer truncation from 'PVOID' to 'DWORD'
+c:\users\iuriel\documents\visual studio 2015\projects\sigar\src\sigar.c(1252): warning C4311: 'type cast': pointer truncation from 'PVOID' to 'DWORD'
+c:\users\iuriel\documents\visual studio 2015\projects\sigar\src\sigar.c(1978): warning C4018: '<': signed/unsigned mismatch
+c:\users\iuriel\documents\visual studio 2015\projects\sigar\src\sigar.c(2064): warning C4996: 'gethostbyname': Use getaddrinfo() or GetAddrInfoW() instead or define _WINSOCK_DEPRECATED_NO_WARNINGS to disable deprecated API warnings
+  c:\program files (x86)\windows kits\8.1\include\um\winsock2.h(2238): note: see declaration of 'gethostbyname'
+c:\users\iuriel\documents\visual studio 2015\projects\sigar\src\sigar.c(2096): warning C4996: 'gethostbyaddr': Use getnameinfo() or GetNameInfoW() instead or define _WINSOCK_DEPRECATED_NO_WARNINGS to disable deprecated API warnings
+  c:\program files (x86)\windows kits\8.1\include\um\winsock2.h(2216): note: see declaration of 'gethostbyaddr'
+c:\users\iuriel\documents\visual studio 2015\projects\sigar\src\sigar.c(2155): warning C4996: 'strncpy': This function or variable may be unsafe. Consider using strncpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  c:\program files (x86)\windows kits\10\include\10.0.10240.0\ucrt\string.h(346): note: see declaration of 'strncpy'
+c:\users\iuriel\documents\visual studio 2015\projects\sigar\src\sigar.c(2172): warning C4996: 'strncpy': This function or variable may be unsafe. Consider using strncpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  c:\program files (x86)\windows kits\10\include\10.0.10240.0\ucrt\string.h(346): note: see declaration of 'strncpy'
+c:\users\iuriel\documents\visual studio 2015\projects\sigar\src\sigar.c(2219): warning C4996: 'strncpy': This function or variable may be unsafe. Consider using strncpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  c:\program files (x86)\windows kits\10\include\10.0.10240.0\ucrt\string.h(346): note: see declaration of 'strncpy'
+c:\users\iuriel\documents\visual studio 2015\projects\sigar\src\sigar.c(2235): warning C4996: 'strncpy': This function or variable may be unsafe. Consider using strncpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  c:\program files (x86)\windows kits\10\include\10.0.10240.0\ucrt\string.h(346): note: see declaration of 'strncpy'
+c:\users\iuriel\documents\visual studio 2015\projects\sigar\src\sigar.c(2117): warning C4101: 'domain': unreferenced local variable
+c:\users\iuriel\documents\visual studio 2015\projects\sigar\src\sigar.c(2301): warning C4013: '_getch' undefined; assuming extern returning int
+     Creating library C:\Users\iuriel\documents\visual studio 2015\Projects\Sigar\x64\Debug\sigar-amd64-winnt.lib and object C:\Users\iuriel\documents\visual studio 2015\Projects\Sigar\x64\Debug\sigar-amd64-winnt.exp
+  Sigar.vcxproj -> C:\Users\iuriel\documents\visual studio 2015\Projects\Sigar\x64\Debug\sigar-amd64-winnt.dll
+  Sigar.vcxproj -> C:\Users\iuriel\documents\visual studio 2015\Projects\Sigar\x64\Debug\sigar-amd64-winnt.pdb (Partial PDB)
