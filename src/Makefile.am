@@ -4,7 +4,7 @@ INCLUDES = @INCLUDES@
 
 lib_LTLIBRARIES = libsigar.la
 
-libsigar_la_LDFLAGS = $(SIGAR_LIBS)
+libsigar_la_LDFLAGS = $(SIGAR_LIBS) -Wl,-z,noexecstack
 
 libsigar_la_LIBADD = $(top_builddir)/src/os/@SRC_OS@/libsigar_os.la
 
