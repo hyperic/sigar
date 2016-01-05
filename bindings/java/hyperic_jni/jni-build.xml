@@ -161,7 +161,7 @@
     <echo message="jni.src=${jni.src}, jni.jdk.os=${jni.jdk.os}, ${sun.arch.data.model}-bit"/>
 
     <javac srcdir="${jni.src.java}" destdir="${build}/classes" debug="true"
-           source="1.4" target="1.4"
+           source="1.5" target="1.5"
 	   includes="org/hyperic/jni/*.java"/>
 
     <taskdef name="libarch" classname="org.hyperic.jni.ArchNameTask">
@@ -224,37 +224,23 @@
     <antcall target="${jni.cc}" inheritRefs="true"/>
   </target>
 
-  <!-- run jni-cc twice {ppc,i386}, then feed both to lipo to build a universal binary -->
   <target name="uni-cc" if="jni.libarch">
     <property name="shlib" value="${jni.objdir}/lib/lib${jni.libname}.dylib"/>
 
-    <!-- ppc -->
-    <echo message="build 'ppc' arch"/>
+    <echo message="build 'x86_64' arch"/>
     <antcall target="jni-cc" inheritRefs="true">
-      <param name="uni.arch" value="ppc"/>
+      <param name="uni.arch" value="x86_64"/>
     </antcall>
 
-    <copy file="${shlib}" tofile="${shlib}.ppc"/>
+    <copy file="${shlib}" tofile="${shlib}.x86_64"/>
 
-    <!-- i386 -->
-    <echo message="build 'i386' arch"/>
-    <delete>
-      <fileset dir="${jni.objdir}" includes="*.o"/>
-    </delete>
-
-    <antcall target="jni-cc" inheritRefs="true">
-      <param name="uni.arch" value="i386"/>
-    </antcall>
-
-    <copy file="${shlib}" tofile="${shlib}.i386"/>
-
-    <echo message="lipo 'ppc'+'i386'"/>
+    <echo message="lipo 'x86_64'"/>
     <exec executable="lipo">
-      <arg line="-create ${shlib}.ppc ${shlib}.i386 -output ${jni.objdir}/lib/lib${jni.libname}.dylib"/>
+      <arg line="-create ${shlib}.x86_64 -output ${jni.objdir}/lib/lib${jni.libname}.dylib"/>
     </exec>
 
     <delete>
-      <fileset dir="${jni.objdir}/lib" includes="*.ppc,*.i386"/>
+      <fileset dir="${jni.objdir}/lib" includes="*.x86_64"/>
     </delete>
   </target>
 
@@ -372,6 +358,8 @@
         <!-- for Gestalt() -->
         <linkerarg value="-framework"/>
         <linkerarg value="CoreServices"/>
+        <linkerarg value="-framework"/>
+        <linkerarg value="IOKit"/>
 
         <linkerarg value="-sectcreate,__TEXT,__info_plist,${jni.info.plist}" if="jni.info.plist"/>
 
@@ -379,7 +367,6 @@
                 dir="${jni.libset.dir}"
                 libs="${jni.libset.libs}"/>
 
-        <syslibset libs="IOKit"/>
       </linker>
 
       <!-- Freebsd -->

@@ -96,7 +96,7 @@
       <classpath refid="alljars"/>
     </available>
     <javac destdir="${build}/classes"
-           source="1.4" target="1.4"
+           source="1.5" target="1.5"
            sourcepath=""
            debug="true"
            classpathref="libjars">

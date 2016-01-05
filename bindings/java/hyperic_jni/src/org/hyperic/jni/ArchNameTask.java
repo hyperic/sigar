@@ -24,6 +24,7 @@ import java.io.FileFilter;
 import java.io.FileReader;
 import java.io.Reader;
 import java.util.Arrays;
+import java.util.Comparator;
 
 import org.apache.tools.ant.Task;
 import org.apache.tools.ant.BuildException;
@@ -105,7 +106,17 @@ public class ArchNameTask extends Task {
                 });
 
             if (sdks != null) {
-                Arrays.sort(sdks);
+                Arrays.sort(sdks, new Comparator<File>() {
+
+                    @Override
+                    public int compare(File o1, File o2) {
+                        String name1 = o1.getName();
+                        String name2 = o2.getName();
+                        String v1 = name1.substring("MacOSX10.".length(),name1.length()-".sdk".length());
+                        String v2 = name2.substring("MacOSX10.".length(),name2.length()-".sdk".length());
+                        return Integer.parseInt(v1)-Integer.parseInt(v2);
+                    }
+                });
                 String prop = "uni.sdk";
                 String sdk = getProject().getProperty(prop);
                 String defaultMin = "10.3";
