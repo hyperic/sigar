@@ -360,9 +360,12 @@ static void     search_forw(int s);     /* look forw for current string */
 #if defined(__linux__) && defined(__alpha__)
 #   define R__ALPHALINUX    // = linux on Alpha
 #endif
+#if defined(__linux__) && defined(__mips__)
+#   define R__MIPSLINUX    // = linux on MIPS
+#endif
 
 #if defined(TIOCGETP) && !defined(__sgi) && !defined(R__MKLINUX) && \
-   !defined(R__ALPHALINUX)  /* use BSD interface if possible */
+   !defined(R__ALPHALINUX) &&!defined(R__MIPSLINUX)  /* use BSD interface if possible */
 #include <sgtty.h>
 static struct sgttyb   new_tty, old_tty;
 static struct tchars   tch;
@@ -371,7 +374,7 @@ static struct ltchars  ltch;
 #ifdef SIGTSTP          /* need POSIX interface to handle SUSP */
 #include <termios.h>
 #if defined(__sun) || defined(__sgi) || defined(R__MKLINUX) || \
-    defined(R__ALPHALINUX)
+    defined(R__ALPHALINUX) || defined(R__MIPSLINUX)
 #undef TIOCGETP         /* Solaris and SGI define TIOCGETP in <termios.h> */
 #undef TIOCSETP
 #endif
