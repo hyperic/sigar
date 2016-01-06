@@ -1,4 +1,8 @@
-PROJECT(sigar C)
+IF(WIN32) 
+	PROJECT(sigar)
+ELSE()
+	PROJECT(sigar C)
+ENDIF()
 
 cmake_minimum_required(VERSION 2.6)
 

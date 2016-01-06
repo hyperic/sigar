@@ -1575,6 +1575,11 @@ static int get_proc_info(sigar_t *sigar, sigar_pid_t pid)
     return SIGAR_NO_SUCH_PROCESS;
 }
 
+#ifdef MSVC
+/* in wmi.cpp */
+extern int sigar_proc_args_wmi_get(sigar_t *sigar, sigar_pid_t pid, sigar_proc_args_t *procargs);
+#endif
+
 static int sigar_remote_proc_args_get(sigar_t *sigar, sigar_pid_t pid,
                                       sigar_proc_args_t *procargs)
 {
