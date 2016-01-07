@@ -3226,6 +3226,9 @@ static int net_conn_get_udp(sigar_net_connection_walker_t *walker)
 
         conn.send_queue = conn.receive_queue = SIGAR_FIELD_NOTIMPL;
 
+        //state is undefined for UDP, set this to match linux behavior
+        conn.state = SIGAR_TCP_CLOSE;
+
         if (walker->add_connection(walker, &conn) != SIGAR_OK) {
             break;
         }
