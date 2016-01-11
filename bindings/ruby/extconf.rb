@@ -31,6 +31,12 @@ when /darwin/
   end
   $CPPFLAGS += ' -DDARWIN'
   $LDFLAGS += ' -framework CoreServices -framework IOKit'
+
+  # only for Yosemite
+  if ENV['_system_version'] =~ /\A10\.10/
+    cc = ENV['CC'] || %x(which clang).chop
+    CONFIG['CC']= cc
+  end
 when /bsd/
   os = 'darwin'
   have_library("kvm")
