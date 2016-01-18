@@ -171,7 +171,7 @@ int sigar_cpu_list_get(sigar_t *sigar, sigar_cpu_list_t *cpulist)
     struct pst_dynamic stats;
 
     pstat_getdynamic(&stats, sizeof(stats), 1, 0);
-    sigar->ncpu = stats.psd_proc_cnt;
+    sigar->ncpu = stats.psd_max_proc_cnt;
 
     sigar_cpu_list_create(cpulist);
 
@@ -180,14 +180,18 @@ int sigar_cpu_list_get(sigar_t *sigar, sigar_cpu_list_t *cpulist)
         struct pst_processor proc;
 
         if (pstat_getprocessor(&proc, sizeof(proc), 1, i) < 0) {
+            perror("pstat_getprocessor");
             continue;
         }
 
-        SIGAR_CPU_LIST_GROW(cpulist);
+        if(proc.psp_processor_state == PSP_SPU_ENABLED) {
 
-        cpu = &cpulist->data[cpulist->number++];
+            SIGAR_CPU_LIST_GROW(cpulist);
 
-        get_cpu_metrics(sigar, cpu, proc.psp_cpu_time);
+            cpu = &cpulist->data[cpulist->number++];
+
+            get_cpu_metrics(sigar, cpu, proc.psp_cpu_time);
+		}
     }
 
     return SIGAR_OK;
@@ -714,7 +718,7 @@ int sigar_cpu_info_list_get(sigar_t *sigar,
     struct pst_dynamic stats;
 
     pstat_getdynamic(&stats, sizeof(stats), 1, 0);
-    sigar->ncpu = stats.psd_proc_cnt;
+    sigar->ncpu = stats.psd_max_proc_cnt;
 
     sigar_cpu_info_list_create(cpu_infos);
 
@@ -726,28 +730,30 @@ int sigar_cpu_info_list_get(sigar_t *sigar,
             perror("pstat_getprocessor");
             continue;
         }
+        if(proc.psp_processor_state == PSP_SPU_ENABLED) {
 
-        SIGAR_CPU_INFO_LIST_GROW(cpu_infos);
+            SIGAR_CPU_INFO_LIST_GROW(cpu_infos);
 
-        info = &cpu_infos->data[cpu_infos->number++];
+            info = &cpu_infos->data[cpu_infos->number++];
 
-        info->total_cores = sigar->ncpu;
-        info->cores_per_socket = 1; /*XXX*/
-        info->total_sockets = sigar->ncpu; /*XXX*/
+            info->total_cores = sigar->ncpu;
+            info->cores_per_socket = 1; /*XXX*/
+            info->total_sockets = sigar->ncpu; /*XXX*/
 
 #ifdef __ia64__
-        SIGAR_SSTRCPY(info->vendor, "Intel"); /*XXX*/
-        SIGAR_SSTRCPY(info->model, "Itanium"); /*XXX*/
+            SIGAR_SSTRCPY(info->vendor, "Intel"); /*XXX*/
+            SIGAR_SSTRCPY(info->model, "Itanium"); /*XXX*/
 #else
-        SIGAR_SSTRCPY(info->vendor, "HP"); /*XXX*/
-        SIGAR_SSTRCPY(info->model, "PA RISC"); /*XXX*/
+            SIGAR_SSTRCPY(info->vendor, "HP"); /*XXX*/
+            SIGAR_SSTRCPY(info->model, "PA RISC"); /*XXX*/
 #endif
 #ifdef PSP_MAX_CACHE_LEVELS /* 11.31+; see SIGAR-196 */
-        info->mhz = proc.psp_cpu_frequency / 1000000;
+            info->mhz = proc.psp_cpu_frequency / 1000000;
 #else
-        info->mhz = sigar->ticks * proc.psp_iticksperclktick / 1000000;
+            info->mhz = sigar->ticks * proc.psp_iticksperclktick / 1000000;
 #endif
-        info->cache_size = SIGAR_FIELD_NOTIMPL; /*XXX*/
+            info->cache_size = SIGAR_FIELD_NOTIMPL; /*XXX*/
+        }
     }
 
     return SIGAR_OK;
