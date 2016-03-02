@@ -322,7 +322,7 @@ static SIGAR_INLINE sigar_uint64_t sigar_meminfo(char *buffer,
 
 int sigar_mem_get(sigar_t *sigar, sigar_mem_t *mem)
 {
-    sigar_uint64_t buffers, cached, kern;
+    sigar_uint64_t kern = 0;
     char buffer[BUFSIZ];
 
     int status = sigar_file2str(PROC_MEMINFO,
@@ -336,10 +336,11 @@ int sigar_mem_get(sigar_t *sigar, sigar_mem_t *mem)
     mem->free   = sigar_meminfo(buffer, MEMINFO_PARAM("MemFree"));
     mem->used   = mem->total - mem->free;
 
-    buffers = sigar_meminfo(buffer, MEMINFO_PARAM("Buffers"));
-    cached  = sigar_meminfo(buffer, MEMINFO_PARAM("Cached"));
+    /* Filesystem cache; the 'Cached' item includes swap-backed shmem */
+    kern += sigar_meminfo(buffer, MEMINFO_PARAM("Active(file)"));
+    kern += sigar_meminfo(buffer, MEMINFO_PARAM("Inactive(file)"));
+    kern += sigar_meminfo(buffer, MEMINFO_PARAM("SReclaimable"));
 
-    kern = buffers + cached;
     mem->actual_free = mem->free + kern;
     mem->actual_used = mem->used - kern;
 
