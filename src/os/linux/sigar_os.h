@@ -70,7 +70,7 @@ struct sigar_t {
 };
 
 #define HAVE_STRERROR_R
-#ifndef __USE_XOPEN2K
+#if !defined(__USE_XOPEN2K) && defined(__GLIBC__)
 /* use gnu version of strerror_r */
 #define HAVE_STRERROR_R_GLIBC
 #endif
