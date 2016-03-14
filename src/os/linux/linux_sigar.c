@@ -46,6 +46,10 @@
 #define PROC_PARTITIONS PROC_FS_ROOT "partitions"
 #define PROC_DISKSTATS  PROC_FS_ROOT "diskstats"
 
+#ifndef HZ
+#define HZ 100
+#endif
+
 /*
  * /proc/self/stat fields:
  * 1 - pid
