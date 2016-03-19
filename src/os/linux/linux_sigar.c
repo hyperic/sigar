@@ -1762,6 +1762,37 @@ int sigar_net_route_list_get(sigar_t *sigar,
     return SIGAR_OK;
 }
 
+static SIGAR_INLINE char *nic_speed_filename(char *buf,
+                                             int buflen,
+                                             const char *nic)
+{
+    if (snprintf(buf, buflen, "/sys/class/net/%s/speed", nic) < buflen) {
+        return buf;
+    }
+
+    return NULL;
+}
+
+static SIGAR_INLINE int nic_speed_get(const char *name)
+{
+    char buffer[BUFSIZ];
+    const char *fname = nic_speed_filename(buffer, BUFSIZ, name);
+
+    if (fname) {
+        FILE *fp = fopen(fname, "r");
+
+        if (fp) {
+            int speed;
+            int n = fscanf(fp, "%d", &speed);
+
+            fclose(fp);
+            return n == 1 ? speed : SIGAR_FIELD_NOTIMPL;
+        }
+    }
+
+    return SIGAR_FIELD_NOTIMPL;
+}
+
 int sigar_net_interface_stat_get(sigar_t *sigar, const char *name,
                                  sigar_net_interface_stat_t *ifstat)
 {
@@ -1814,7 +1845,7 @@ int sigar_net_interface_stat_get(sigar_t *sigar, const char *name,
         ifstat->tx_collisions = sigar_strtoull(ptr);
         ifstat->tx_carrier    = sigar_strtoull(ptr);
 
-        ifstat->speed         = SIGAR_FIELD_NOTIMPL;
+        ifstat->speed         = nic_speed_get(name);
 
         break;
     }
