@@ -570,14 +570,21 @@ typedef struct {
     sigar_dll_func_t end;
 } sigar_mpr_t;
 
+typedef struct
+{
+	char *buffer;
+	DWORD size;
+	time_t create_time;
+} buffer_t;
+
 struct sigar_t {
     SIGAR_T_BASE;
     char *machine;
     int using_wide;
     long pagesize;
     HKEY handle;
-    char *perfbuf;
-    DWORD perfbuf_size;
+	buffer_t** performanceBuffers;
+	buffer_t* processesBuffer;
     sigar_wtsapi_t wtsapi;
     sigar_iphlpapi_t iphlpapi;
     sigar_advapi_t advapi;

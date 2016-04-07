@@ -30,7 +30,7 @@
 #define USING_WIDE_S(s) (s)->using_wide
 #define USING_WIDE()    USING_WIDE_S(sigar)
 
-#define PERFBUF_SIZE 8192
+#define BUFFER_SIZE 8192
 
 #define PERF_TITLE_PROC       230
 #define PERF_TITLE_SYS_KEY   "2"
@@ -38,6 +38,15 @@
 #define PERF_TITLE_PROC_KEY  "230"
 #define PERF_TITLE_CPU_KEY   "238"
 #define PERF_TITLE_DISK_KEY  "236"
+
+typedef enum
+{
+	PERF_COUNTER_SYS
+	, PERF_COUNTER_MEM
+	, PERF_COUNTER_PROC
+	, PERF_COUNTER_CPU
+	, PERF_COUNTER_DISK
+} perf_counter_keys_t;
 
 #define PERF_TITLE_CPU_USER    142
 #define PERF_TITLE_CPU_IDLE    1746
@@ -111,11 +120,11 @@ typedef enum {
     (USING_WIDE() ? \
         RegQueryValueExW(sigar->handle, \
                          wcounter_key, NULL, &type, \
-                         sigar->perfbuf, \
+                         performanceBuffer->buffer, \
                          &bytes) : \
         RegQueryValueExA(sigar->handle, \
                          counter_key, NULL, &type, \
-                         sigar->perfbuf, \
+                         performanceBuffer->buffer, \
                          &bytes))
 
 #define PERF_VAL(ix) \
@@ -145,24 +154,25 @@ sigar_uint64_t sigar_FileTimeToTime(FILETIME *ft)
     return time;
 }
 
-static DWORD perfbuf_init(sigar_t *sigar)
+static DWORD buffer_init(buffer_t *buffer)
 {
-    if (!sigar->perfbuf) {
-        sigar->perfbuf = malloc(PERFBUF_SIZE);
-        sigar->perfbuf_size = PERFBUF_SIZE;
+    if (!buffer->buffer) {
+		buffer->buffer = malloc(BUFFER_SIZE);
+        buffer->size = BUFFER_SIZE;
+		buffer->create_time = 0;
     }
 
-    return sigar->perfbuf_size;
+	return BUFFER_SIZE;
 }
 
-static DWORD perfbuf_grow(sigar_t *sigar)
+static DWORD buffer_grow(buffer_t *buffer)
 {
-    sigar->perfbuf_size += PERFBUF_SIZE;
+	buffer->size += BUFFER_SIZE;
 
-    sigar->perfbuf =
-        realloc(sigar->perfbuf, sigar->perfbuf_size);
+	buffer->buffer =
+		realloc(buffer->buffer, buffer->size);
 
-    return sigar->perfbuf_size;
+	return buffer->size;
 }
 
 static char *get_counter_name(char *key)
@@ -184,6 +194,33 @@ static char *get_counter_name(char *key)
     }
 }
 
+static int get_performance_buffer_by_counter_key(sigar_t* sigar, char* counterKey, buffer_t** performanceBuffer)
+{
+	int i;
+
+	if (strEQ(counterKey, PERF_TITLE_SYS_KEY)) {
+		i = PERF_COUNTER_SYS;
+	}
+	else if (strEQ(counterKey, PERF_TITLE_MEM_KEY)) {
+		i = PERF_COUNTER_MEM;
+	}
+	else if (strEQ(counterKey, PERF_TITLE_PROC_KEY)) {
+		i = PERF_COUNTER_PROC;
+	}
+	else if (strEQ(counterKey, PERF_TITLE_CPU_KEY)) {
+		i = PERF_COUNTER_CPU;
+	}
+	else if (strEQ(counterKey, PERF_TITLE_DISK_KEY)) {
+		i = PERF_COUNTER_DISK;
+	} else {
+		return -1;
+	}
+
+	*performanceBuffer = sigar->performanceBuffers[i];
+	 return SIGAR_OK;
+	
+}
+
 static PERF_OBJECT_TYPE *get_perf_object_inst(sigar_t *sigar,
                                               char *counter_key,
                                               DWORD inst, DWORD *err)
@@ -192,18 +229,28 @@ static PERF_OBJECT_TYPE *get_perf_object_inst(sigar_t *sigar,
     WCHAR wcounter_key[MAX_PATH+1];
     PERF_DATA_BLOCK *block;
     PERF_OBJECT_TYPE *object;
+	time_t timenow = time(NULL);
+	buffer_t* performanceBuffer;
+    *err = get_performance_buffer_by_counter_key(sigar, counter_key, &performanceBuffer);
+	
+	if (*err != SIGAR_OK) {
+		return NULL;
+	}
 
-    *err = SIGAR_OK;
-
-    if (USING_WIDE()) {
+	if ((timenow - performanceBuffer->create_time) < SIGAR_BUFFER_EXPIRE) {
+		return PdhFirstObject(((PERF_DATA_BLOCK *)performanceBuffer->buffer));
+	}
+	
+	
+	if (USING_WIDE()) {
         SIGAR_A2W(counter_key, wcounter_key, sizeof(wcounter_key));
     }
 
-    bytes = perfbuf_init(sigar);
-
+	bytes = buffer_init(performanceBuffer);
+	
     while ((retval = MyRegQueryValue()) != ERROR_SUCCESS) {
         if (retval == ERROR_MORE_DATA) {
-            bytes = perfbuf_grow(sigar);
+			bytes = buffer_grow(performanceBuffer);
         }
         else {
             *err = retval;
@@ -211,7 +258,8 @@ static PERF_OBJECT_TYPE *get_perf_object_inst(sigar_t *sigar,
         }
     }
 
-    block = (PERF_DATA_BLOCK *)sigar->perfbuf;
+	block = (PERF_DATA_BLOCK *)performanceBuffer->buffer;
+	
     if (block->NumObjectTypes == 0) {
         counter_key = get_counter_name(counter_key);
         sigar_strerror_printf(sigar, "No %s counters defined (disabled?)",
@@ -219,6 +267,10 @@ static PERF_OBJECT_TYPE *get_perf_object_inst(sigar_t *sigar,
         *err = -1;
         return NULL;
     }
+	
+	performanceBuffer->buffer = block;
+	performanceBuffer->create_time = time(NULL);
+
     object = PdhFirstObject(block);
 
     /* 
@@ -542,9 +594,18 @@ int sigar_os_open(sigar_t **sigar_ptr)
     sigar->machine = ""; /* local machine */
     sigar->using_wide = 0; /*XXX*/
 
-    sigar->perfbuf = NULL;
-    sigar->perfbuf_size = 0;
+	sigar->processesBuffer = (buffer_t*) malloc(sizeof(buffer_t));
+	sigar->processesBuffer->buffer = NULL;
+	buffer_init(sigar->processesBuffer);
 
+	sigar->performanceBuffers = (buffer_t**)malloc(sizeof(buffer_t *) * 5);
+	for (i = 0; i < 5; i++)
+	{
+		sigar->performanceBuffers[i] = (buffer_t*)malloc(sizeof(buffer_t));
+		sigar->performanceBuffers[i]->buffer = NULL;
+		buffer_init(sigar->performanceBuffers[i]);
+	}
+	
     version.dwOSVersionInfoSize = sizeof(version);
     GetVersionEx(&version);
 
@@ -607,9 +668,17 @@ void dllmod_init_ntdll(sigar_t *sigar)
     DLLMOD_INIT(ntdll, FALSE);
 }
 
+void buffer_free(buffer_t* buffer)
+{
+	if (buffer) {
+		free(buffer->buffer);
+		free(buffer);
+	}
+}
+
 int sigar_os_close(sigar_t *sigar)
 {
-    int retval;
+    int retval, i;
 
     DLLMOD_FREE(wtsapi);
     DLLMOD_FREE(iphlpapi);
@@ -620,9 +689,15 @@ int sigar_os_close(sigar_t *sigar)
     DLLMOD_FREE(kernel);
     DLLMOD_FREE(mpr);
 
-    if (sigar->perfbuf) {
-        free(sigar->perfbuf);
-    }
+	buffer_free(sigar->processesBuffer);
+	
+	if (sigar->performanceBuffers) {
+		for (i = 0; i < 5; i++)	{
+			buffer_free(sigar->performanceBuffers[i]);
+		}
+
+		free(sigar->performanceBuffers);
+	}
 
     retval = RegCloseKey(sigar->handle);
 
@@ -1145,25 +1220,23 @@ int sigar_os_proc_list_get(sigar_t *sigar,
     if (sigar_EnumProcesses) {
         DWORD retval, *pids;
         DWORD size = 0, i;
+		
+		do {
+			if (size == 0) {
+				size = buffer_init(sigar->processesBuffer);
+			}
+			else {
+				size = buffer_grow(sigar);
+			}
 
-        do {
-            /* re-use the perfbuf */
-            if (size == 0) {
-                size = perfbuf_init(sigar);
-            }
-            else {
-                size = perfbuf_grow(sigar);
-            }
-
-            if (!sigar_EnumProcesses((DWORD *)sigar->perfbuf,
-                                     sigar->perfbuf_size,
-                                     &retval))
-            {
-                return GetLastError();
-            }
-        } while (retval == sigar->perfbuf_size); //unlikely
-
-        pids = (DWORD *)sigar->perfbuf;
+			if (!sigar_EnumProcesses((DWORD *)sigar->processesBuffer->buffer,
+				sigar->processesBuffer->size,
+				&retval)) {
+				return GetLastError();
+			}
+		} while (retval == sigar->processesBuffer->size); //unlikely 
+		
+		pids = (DWORD *)sigar->processesBuffer->buffer;
 
         size = retval / sizeof(DWORD);
 
@@ -3777,7 +3850,7 @@ int sigar_os_sys_info_get(sigar_t *sigar,
             	vendor_version = "2008";
 	        code_name = "Longhorn Server";
              }
-	     else  if (version.dwMinorVersion == 2) {
+	     else if (version.dwMinorVersion == 2 || version.dwMinorVersion == 3) {
  	    	vendor_name = "Windows 2012";
             	vendor_version = "2012";
             	code_name = "Windows Server 8";

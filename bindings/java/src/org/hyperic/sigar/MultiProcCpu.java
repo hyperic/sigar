@@ -16,9 +16,6 @@
 
 package org.hyperic.sigar;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import org.hyperic.sigar.ptql.ProcessFinder;
 
 /**
@@ -28,64 +25,33 @@ public class MultiProcCpu extends ProcCpu {
 
     private long pid;
     private int nproc = 0;
-    private static Map ptable = new HashMap();
+
 
     static synchronized MultiProcCpu get(Sigar sigar, String query)
-        throws SigarException {
+                throws SigarException {
 
-        MultiProcCpu cpu;
-
-        cpu = (MultiProcCpu)ptable.get(query);
-
-        if (cpu == null) {
-            cpu = new MultiProcCpu();
-            cpu.pid = query.hashCode(); //for equals()
-            ptable.put(query, cpu);
-        }
-
-        long timeNow = System.currentTimeMillis();
-        double diff = timeNow - cpu.lastTime;
-        if (diff == 0) {
-            return cpu; //we were just called within < 1 second ago.
-        }
-
-        cpu.lastTime = timeNow;
-
-        long otime = cpu.total;
+        MultiProcCpu cpu = new MultiProcCpu();
+        cpu.pid = query.hashCode(); //for equals()
 
         cpu.total = 0;
         cpu.user  = 0;
         cpu.sys   = 0;
-        cpu.nproc = 0;
+        cpu.percent = 0.0D;
 
         long[] pids = ProcessFinder.find(sigar, query);
         cpu.nproc = pids.length;
 
         for (int i=0; i<pids.length; i++) {
-            ProcTime time;
             try {
-                time = sigar.getProcTime(pids[i]);
+                ProcCpu procCpu = sigar.getProcCpu(pids[i]);
+                cpu.total += procCpu.getTotal();
+                cpu.user += procCpu.getUser();
+                cpu.sys += procCpu.getSys();
+                cpu.percent += procCpu.getPercent();
             } catch (SigarException e) {
                 //process may have gone away or EPERM
                 continue;
             }
-            cpu.total += time.total;
-            cpu.user  += time.user;
-            cpu.sys   += time.sys;
-        }
-
-        if (otime == 0) {
-            //XXX could/should pause first time called.
-            return cpu;
-        }
-
-        cpu.percent = ((cpu.total - otime) / diff);
-        if (cpu.percent < 0.0) {
-            //counter wrapped
-            cpu.percent = (0.0 - cpu.percent);
-        }
-        if (cpu.percent >= 1.0) {
-            cpu.percent = 0.99;
         }
 
         return cpu;
