@@ -162,6 +162,7 @@ static VALUE rb_sigar_new(VALUE module)
 {
     rb_sigar_t *rbsigar;
     rbsigar = ALLOC(rb_sigar_t);
+    rbsigar->logger = Qnil;
     sigar_open(&(rbsigar->sigar));
     return Data_Wrap_Struct(module, rb_sigar_mark, rb_sigar_close, rbsigar);
 }
