@@ -1434,17 +1434,8 @@ int sigar_disk_usage_get(sigar_t *sigar, const char *name,
         sigar_uptime_t uptime;
         sigar_uint64_t interval, ios;
         double tput, util;
-        sigar_disk_usage_t *partition_usage=NULL;
 
         sigar_uptime_get(sigar, &uptime);
-
-        if (iodev->is_partition &&
-            (sigar->iostat == IOSTAT_DISKSTATS))
-        {
-            /* 2.6 kernels do not have per-partition times */
-            partition_usage = disk;
-            disk = &device_usage;
-        }
 
         disk->snaptime = uptime.uptime;
 
@@ -1459,14 +1450,21 @@ int sigar_disk_usage_get(sigar_t *sigar, const char *name,
             (disk->reads - iodev->disk.reads) +
             (disk->writes - iodev->disk.writes);
 
+        if (disk->time == SIGAR_FIELD_NOTIMPL && device_usage.time != SIGAR_FIELD_NOTIMPL) {
+            disk->time = device_usage.time;
+        }
+
+        if (disk->queue == SIGAR_FIELD_NOTIMPL && device_usage.queue != SIGAR_FIELD_NOTIMPL) {
+            disk->queue = device_usage.queue;
+        }
+
         if (disk->time == SIGAR_FIELD_NOTIMPL) {
             disk->service_time = SIGAR_FIELD_NOTIMPL;
         }
         else {
-            tput = ((double)ios) * HZ / interval;
-            util = ((double)(disk->time - iodev->disk.time)) / interval * HZ;
-            disk->service_time = tput ? util / tput : 0.0;
+            disk->service_time = ios ? ((double)(disk->time - iodev->disk.time)) / ((double)ios) : 0.0;
         }
+
         if (disk->qtime == SIGAR_FIELD_NOTIMPL) {
             disk->queue = SIGAR_FIELD_NOTIMPL;
         }
@@ -1476,10 +1474,6 @@ int sigar_disk_usage_get(sigar_t *sigar, const char *name,
         }
 
         memcpy(&iodev->disk, disk, sizeof(iodev->disk));
-        if (partition_usage) {
-            partition_usage->service_time = disk->service_time;
-            partition_usage->queue = disk->queue;
-        }
     }
 
     return status;
