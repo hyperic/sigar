@@ -838,7 +838,7 @@ int sigar_file2str(const char *fname, char *buffer, int buflen)
         return ENOENT;
     }
 
-    if ((len = read(fd, buffer, buflen)) < 0) {
+    if ((len = read(fd, buffer, buflen - 1)) < 0) {
         status = errno;
     }
     else {
