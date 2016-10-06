@@ -76,11 +76,11 @@
 /* XXX: support CP_UTF8 ? */
 
 #define SIGAR_A2W(lpa, lpw, bytes) \
-    (lpw[0] = 0, MultiByteToWideChar(CP_ACP, 0, \
+    (lpw[0] = 0, MultiByteToWideChar(CP_UTF8, 0, \
                                      lpa, -1, lpw, (bytes/sizeof(WCHAR))))
 
 #define SIGAR_W2A(lpw, lpa, chars) \
-    (lpa[0] = '\0', WideCharToMultiByte(CP_ACP, 0, \
+    (lpa[0] = '\0', WideCharToMultiByte(CP_UTF8, 0, \
                                         lpw, -1, (LPSTR)lpa, chars, \
                                         NULL, NULL))
 
