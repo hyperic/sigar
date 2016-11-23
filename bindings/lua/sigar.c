@@ -31,10 +31,15 @@
 #include <lualib.h>
 
 #include <string.h>
+#include <stdio.h>
 #include <stdlib.h>
 
 #include "sigar.h"
 #include "lua-sigar.h"
+
+#ifdef WIN32
+#define snprintf _snprintf
+#endif
 
 /**
  * push the converted sigar_net_address_t as string on the stack
