@@ -3611,44 +3611,86 @@ int sigar_proc_port_get(sigar_t *sigar, int protocol,
 
 #endif
 
+#ifdef DARWIN
+
+/**
+ * OSX Stores the current version in these two plist files:
+ *    /System/Library/CoreServices/ServerVersion.plist
+ *    /System/Library/CoreServices/SystemVersion.plist
+ *
+ * We use the private CoreFoundations methods used by `/usr/bin/sw_vers`
+ * to access the contents of these files.
+ */
+
+extern CFDictionaryRef _CFCopyServerVersionDictionary();
+extern CFDictionaryRef _CFCopySystemVersionDictionary();
+
+#ifndef _kCFSystemVersionProductNameKey
+#define _kCFSystemVersionProductNameKey "ProductName"
+#endif
+
+#ifndef _kCFSystemVersionProductVersionKey
+#define _kCFSystemVersionProductVersionKey "ProductVersion"
+#endif
+
+#ifndef _kCFSystemVersionBuildVersionKey
+#define _kCFSystemVersionBuildVersionKey "ProductBuildVersion"
+#endif
+
+#endif
+
 int sigar_os_sys_info_get(sigar_t *sigar,
                           sigar_sys_info_t *sysinfo)
 {
 #ifdef DARWIN
     char *codename = NULL;
-    SInt32 version, version_major, version_minor, version_fix;
+    CFDictionaryRef dict = NULL;
+    CFStringRef str = NULL;
+    char buf[256];
+    int version_major = 0;
+    int version_minor = 0;
+    int version_fix = 0;
+    int rv;
+
+    dict = _CFCopyServerVersionDictionary();
+
+    if (dict == NULL) {
+      dict = _CFCopySystemVersionDictionary();
+    }
+
+    if (dict == NULL) {
+      return SIGAR_EPROC_NOENT;
+    }
+
+    str = CFDictionaryGetValue(dict, CFSTR(_kCFSystemVersionProductNameKey));
+    CFStringGetCString(str, buf, sizeof(buf), kCFStringEncodingUTF8);
 
     SIGAR_SSTRCPY(sysinfo->name, "MacOSX");
+    SIGAR_SSTRCPY(sysinfo->vendor_name, buf);
+
+    CFDictionaryGetValue(dict, CFSTR(_kCFSystemVersionProductVersionKey)),
+    CFStringGetCString(str, buf, sizeof(buf), kCFStringEncodingUTF8);
+
+    rv = sscanf(buf, "%d.%d.%d", &version_major, &version_minor, &version_fix);
+
+    CFRelease(dict);
+
+    if (rv != 3) {
+      return SIGAR_EPERM_KMEM;
+    }
+
     SIGAR_SSTRCPY(sysinfo->vendor_name, "Mac OS X");
     SIGAR_SSTRCPY(sysinfo->vendor, "Apple");
-
-    if (Gestalt(gestaltSystemVersion, &version) == noErr) {
-        if (version >= 0x00001040) {
-            Gestalt('sys1' /*gestaltSystemVersionMajor*/, &version_major);
-            Gestalt('sys2' /*gestaltSystemVersionMinor*/, &version_minor);
-            Gestalt('sys3' /*gestaltSystemVersionBugFix*/, &version_fix);
-        }
-        else {
-            version_fix = version & 0xf;
-            version >>= 4;
-            version_minor = version & 0xf;
-            version >>= 4;
-            version_major = version - (version >> 4) * 6;
-        }
-    }
-    else {
-        return SIGAR_ENOTIMPL;
-    }
 
     snprintf(sysinfo->vendor_version,
              sizeof(sysinfo->vendor_version),
              "%d.%d",
-             (int)version_major, (int)version_minor);
+             version_major, version_minor);
 
     snprintf(sysinfo->version,
              sizeof(sysinfo->version),
              "%s.%d",
-             sysinfo->vendor_version, (int)version_fix);
+             sysinfo->vendor_version, version_fix);
 
     if (version_major == 10) {
         switch (version_minor) {
@@ -3669,6 +3711,9 @@ int sigar_os_sys_info_get(sigar_t *sigar,
             break;
           case 7:
             codename = "Lion";
+            break;
+          case 8:
+            codename = "Mountain Lion";
             break;
           default:
             codename = "Unknown";

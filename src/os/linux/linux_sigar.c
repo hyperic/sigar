@@ -1196,7 +1196,7 @@ static int get_iostat_sys(sigar_t *sigar,
         name += SSTRLEN(SIGAR_DEV_PREFIX); /* strip "/dev/" */
     }
 
-    while (!sigar_isdigit(*fsdev)) {
+    while (!sigar_isdigit(*fsdev) && *fsdev != '\0') {
         fsdev++;
     }
 

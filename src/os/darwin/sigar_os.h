@@ -20,6 +20,7 @@
 #ifdef DARWIN
 #include <mach/port.h>
 #include <mach/host_info.h>
+#include <arpa/inet.h>
 #ifdef DARWIN_HAS_LIBPROC_H
 #include <mach-o/dyld.h>
 #include <libproc.h>

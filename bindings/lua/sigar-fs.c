@@ -166,10 +166,17 @@ static int lua_sigar_fses_get_fs(lua_State *L) {
 int lua_sigar_fses_get(lua_State *L) {
 	sigar_t *s = *(sigar_t **)luaL_checkudata(L, 1, "sigar");
 	lua_sigar_fses_t *fses;
+  int rc;
 
 	fses = lua_newuserdata(L, sizeof(lua_sigar_fses_t));
 	fses->sigar = s;
-	sigar_file_system_list_get(s, &(fses->fses));
+
+	rc = sigar_file_system_list_get(s, &(fses->fses));
+	if (rc != SIGAR_OK) {
+    luaL_error(L, "sigar_file_system_list_get error: %s", sigar_strerror(s, rc));
+    return 0;
+  }
+
 	fses->ref_count = 1;
 	if (0 != luaL_newmetatable(L, "sigar_fses")) {
 		lua_pushcfunction(L, lua_sigar_fses_len);

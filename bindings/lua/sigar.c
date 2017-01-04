@@ -34,60 +34,28 @@
 #include <stdlib.h>
 
 #include "sigar.h"
+#include "sigar_util.h"
+#include "sigar_os.h"
+#include "sigar_format.h"
 #include "lua-sigar.h"
+
+#ifdef WIN32
+#define snprintf _snprintf
+#endif
 
 /**
  * push the converted sigar_net_address_t as string on the stack
  */
 int lua_sigar_push_address(lua_State *L, sigar_net_address_t *addr) {
-	char s[24 + 1]; /* AF_LINK  is 2 * 8 + 7 colons = 23
-			   AF_INET6 is 4 * 4 + 3 colons = 17
-			   AF_INET  is 4 * 3 + 3 dots = 15
-			   */
-	size_t s_have = sizeof(s) - 1;
-	size_t s_need;
-
+	char s[SIGAR_INET6_ADDRSTRLEN + 1];
 	switch (addr->family) {
 	case SIGAR_AF_UNSPEC:
 		lua_pushnil(L);
 		return 1;
 	case SIGAR_AF_INET:
-		lua_pushfstring(L, "%d.%d.%d.%d",
-				(addr->addr.in >> 0) & 0xff,
-				(addr->addr.in >> 8) & 0xff,
-				(addr->addr.in >> 16) & 0xff,
-				(addr->addr.in >> 24) & 0xff);
-		return 1;
 	case SIGAR_AF_INET6:
-		s_need = snprintf(s, s_have, "%4x:%4x:%4x:%4x",
-				(addr->addr.in6[0]),
-				(addr->addr.in6[1]),
-				(addr->addr.in6[2]),
-				(addr->addr.in6[3]));
-
-		if (s_need > s_have) {
-			/* string is truncated, but written to s */
-			luaL_error(L, "can't convert INET6 address string, not enough memory: %d need, %d available",
-					s_need, s_have);
-		}
-		lua_pushstring(L, s);
-		return 1;
 	case SIGAR_AF_LINK:
-		s_need = snprintf(s, s_have, "%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x",
-				addr->addr.mac[0],
-				addr->addr.mac[1],
-				addr->addr.mac[2],
-				addr->addr.mac[3],
-				addr->addr.mac[4],
-				addr->addr.mac[5],
-				addr->addr.mac[6],
-				addr->addr.mac[7]);
-
-		if (s_need > s_have) {
-			/* string is truncated, but written to s */
-			luaL_error(L, "can't convert MAC address string, not enough memory: %d need, %d available",
-					s_need, s_have);
-		}
+		sigar_net_address_to_string(NULL, addr, s);
 		lua_pushstring(L, s);
 		return 1;
 	}
@@ -128,6 +96,8 @@ static int lua_sigar_new(lua_State *L) {
 		lua_setfield(L, -2, "disk");
 		lua_pushcfunction(L, lua_sigar_who_get);
 		lua_setfield(L, -2, "who");
+		lua_pushcfunction(L, lua_sigar_load_get);
+		lua_setfield(L, -2, "load");
 		lua_pushcfunction(L, lua_sigar_netifs_get);
 		lua_setfield(L, -2, "netifs");
 		lua_pushcfunction(L, lua_sigar_proc_get);
@@ -138,8 +108,10 @@ static int lua_sigar_new(lua_State *L) {
 		lua_setfield(L, -2, "mem");
 		lua_pushcfunction(L, lua_sigar_swap_get);
 		lua_setfield(L, -2, "swap");
+#if 0
 		lua_pushcfunction(L, lua_sigar_version_get);
 		lua_setfield(L, -2, "version");
+#endif
 		lua_pushcfunction(L, lua_sigar_sysinfo_get);
 		lua_setfield(L, -2, "sysinfo");
 		lua_setfield(L, -2, "__index");
@@ -167,7 +139,7 @@ static void set_info (lua_State *L) {
 }
 
 
-static const struct luaL_reg sigarlib[] = {
+static const struct luaL_Reg sigarlib[] = {
 	{"new", lua_sigar_new},
 	{NULL, NULL}
 };
