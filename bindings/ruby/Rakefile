@@ -6,7 +6,7 @@ require 'rake/testtask'
 Dir.chdir(File.dirname(__FILE__))
 
 props = {}
-File.open("version.properties").each { |line|
+File.open("../../version.properties").each { |line|
   next if line =~ /^#/
   line.chomp!
   line.strip!
