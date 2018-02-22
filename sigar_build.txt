@@ -1,0 +1,28 @@
+Make sure to build in a new cmd environment if previously different architecture build was executed in the current cmd to reset the environment variable to default.
+
+Use 64 bit machine with 64 bit Java (JAVA_HOME) for win64
+
+1) Initialize Visual Studio Environment in command prompt:
+Win32 : "C:\Program Files (x86)\Microsoft Visual Studio 9.0\VC\bin\vcvars32.bat"
+Uncomment the commented statements in sigar_get_pointer() and sigar_set_pointer() @ sigar-1.6.4\bindings\java\src\jni\javasigar.c for Win32 build.
+
+Win64 : "C:\Program Files (x86)\Microsoft Visual Studio 9.0\VC\bin\amd64\vcvarsamd64.bat"
+
+2) Install cmake and Perl5 and add it's executables to PATH. Make sure you use Strawberry perl and not the perl present in unix scripts we use.
+
+3) Set ANT build environment : ANT_HOME and add ANT_HOME/bin to PATH.
+
+4)To build dll files directly :
+Go to sigar-1.6\bindings\java and run :
+	a) ant clean
+	b) ant
+OR
+4) For Visual Studio Solution file creation (note: do not use this as it creates sigar dll without java bindings):
+(To build Visual Studio Configuration files for 32 bit remove 'Win64' from @SET GENERATOR="Visual Studio 12 2013 Win64" in winbuild.bat)
+Run winbuild.bat
+Open sigar.sln file from same command prompt. Make sure Linker-Command Line does not has X86 set as architecture in additional options of any project.
+
+Add wmi.cpp to sigar project
+In sigar project : C/C++ -> Advanced -> compile As -> Default
+
+Run Clean - Build
