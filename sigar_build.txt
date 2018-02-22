@@ -1,6 +1,6 @@
 Make sure to build in a new cmd environment if previously different architecture build was executed in the current cmd to reset the environment variable to default.
 
-Use 64 bit machine with 64 bit Java (JAVA_HOME)
+Use 64 bit machine with 64 bit Java (JAVA_HOME) for win64
 
 1) Initialize Visual Studio Environment in command prompt:
 Win32 : "C:\Program Files (x86)\Microsoft Visual Studio 9.0\VC\bin\vcvars32.bat"
