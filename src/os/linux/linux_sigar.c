@@ -23,7 +23,12 @@
 #include <sys/param.h>
 #include <sys/stat.h>
 #include <sys/times.h>
+#include <sys/types.h>
 #include <sys/utsname.h>
+
+#ifdef __GNU_LIBRARY__
+#include <sys/sysmacros.h>
+#endif
 
 #include "sigar.h"
 #include "sigar_private.h"
