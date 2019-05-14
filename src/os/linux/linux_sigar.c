@@ -1559,6 +1559,9 @@ static int get_cpu_info(sigar_t *sigar, sigar_cpu_info_t *info,
                 else if (strEQ(info->vendor, "AuthenticAMD")) {
                     SIGAR_SSTRCPY(info->vendor, "AMD");
                 }
+                else if (strEQ(info->vendor, "HygonGenuine")) {
+                    SIGAR_SSTRCPY(info->vendor, "Hygon");
+                }
             }
             break;
           case 'f':

@@ -554,6 +554,7 @@ static void sigar_cpuid(sigar_uint32_t request,
 
 #define INTEL_ID 0x756e6547
 #define AMD_ID   0x68747541
+#define HYGON_ID 0x6f677948
 
 int sigar_cpu_core_count(sigar_t *sigar)
 {
@@ -565,7 +566,7 @@ int sigar_cpu_core_count(sigar_t *sigar)
 
         sigar_cpuid(0, &id);
 
-        if ((id.ebx == INTEL_ID) || (id.ebx == AMD_ID)) {
+        if ((id.ebx == INTEL_ID) || (id.ebx == AMD_ID) || (id.ebx == HYGON_ID)) {
             sigar_cpuid(1, &id);
 
             if (id.edx & (1<<28)) {
