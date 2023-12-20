@@ -323,7 +323,8 @@
       <compiler name="gcc" debug="${jni.debug}" if="linux">
         <compilerarg value="-O2" if="jni.optim"/>
         <compilerarg value="-g" if="jni.debug"/>
-        <compilerarg value="-Wall"/>
+	<compilerarg value="-Wall"/>
+	<compilerarg value="-fgnu89-inline"/>
         <compilerarg value="-Werror" if="jni.werror"/>
         <compilerarg value="${jni.gccm}" if="jni.gccm"/>
         <defineset>
