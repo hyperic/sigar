@@ -30,6 +30,8 @@
 #include "sigar_util.h"
 #include "sigar_os.h"
 
+#include <sys/sysmacros.h>
+
 #define pageshift(x) ((x) << sigar->pagesize)
 
 #define PROC_MEMINFO PROC_FS_ROOT "meminfo"
